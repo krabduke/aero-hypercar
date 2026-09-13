@@ -193,7 +193,7 @@
   </div>
   <div id="groups"></div>
   <div id="controls">
-    <button class="btn" id="skin" type="button" aria-pressed="false">Show internals</button>
+    <button class="btn" id="skin" type="button" aria-pressed="false">Show engine</button>
     <button class="btn" id="tunnel-btn" type="button" aria-pressed="false">Wind tunnel</button>
     <button class="btn" id="fans" type="button" aria-pressed="false">Spin fans</button>
     <button class="btn" id="spin" type="button" aria-pressed="false">Turntable</button>
@@ -570,11 +570,12 @@ function buildRail(){
     const b = $('#skin');
     const showing = b.getAttribute('aria-pressed') === 'true';
     b.setAttribute('aria-pressed', String(!showing));
-    b.textContent = showing ? 'Show internals' : 'Hide internals';
+    b.textContent = showing ? 'Show engine' : 'Hide engine';
     for(const o of pickable) if(BODY.includes(o.name)) o.visible = showing;
     $('#note').textContent = showing
       ? 'Click an assembly to hide it. Drag to orbit.'
-      : 'Bodywork off — engine, radiators, fuel cell, battery and fans visible.';
+      : 'Bodywork off. The RX-8V V8 is installed as a stressed member between '
+        + 'the tub and the gearbox — with its radiators, fuel cell, battery and fans.';
   });
   $('#tunnel-btn').addEventListener('click', () => {
     setTunnel($('#tunnel-btn').getAttribute('aria-pressed') !== 'true');
