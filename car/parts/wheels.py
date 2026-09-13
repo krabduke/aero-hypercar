@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 
 W = spec.WHEEL
 S = spec.SUSP
@@ -200,7 +201,7 @@ def _cover(x, y, z, w):
     for k in range(W["cover_vanes"]):
         a = 2 * math.pi * k / W["cover_vanes"]
         r0, r1 = W["nut_r"] + 18.0, W["cover_r"] - 16.0
-        v, f = mesh.box(0.0, 0.0, 0.0, (r1 - r0), 9.0, 6.0)
+        v, f = shapes.rounded_box(0.0, 0.0, 0.0, (r1 - r0), 9.0, 6.0)
         rm = (r0 + r1) / 2
         ca, sa = math.cos(a), math.sin(a)
         v = [(rm * ca + px * ca - pz * sa, y0 - s * dish * 0.55 + py,
@@ -232,7 +233,7 @@ def _disc(x, y, z, w):
     for k in range(W["disc_vanes"]):
         a = 2 * math.pi * k / W["disc_vanes"]
         rm = (r_in + r_out) / 2
-        v, f = mesh.box(0.0, 0.0, 0.0, r_out - r_in - 8.0,
+        v, f = shapes.rounded_box(0.0, 0.0, 0.0, r_out - r_in - 8.0,
                         W["disc_t"] - 2 * ft, 7.0)
         ca, sa = math.cos(a), math.sin(a)
         v = [(rm * ca + px * ca - pz * sa, y0 + py,
@@ -256,14 +257,14 @@ def _caliper(x, y, z, w):
         for k in range(7):
             f = k / 6
             a = math.pi / 2 - arc / 2 + arc * f
-            v, fc = mesh.box(0.0, 0.0, 0.0, 46.0, 40.0, 62.0)
+            v, fc = shapes.rounded_box(0.0, 0.0, 0.0, 46.0, 40.0, 62.0)
             ca, sa = math.cos(a), math.sin(a)
             v = [((r - 16.0) * ca + px * sa + pz * ca,
                   y0 + side * (W["disc_t"] / 2 + 22.0) + py,
                   (r - 16.0) * sa - px * ca + pz * sa)
                  for (px, py, pz) in v]
             parts.append((_place(v, x, y, z), fc))
-    bv, bf = mesh.box(0.0, y0, r + 26.0, 150.0, 2 * half, 34.0)
+    bv, bf = shapes.rounded_box(0.0, y0, r + 26.0, 150.0, 2 * half, 34.0)
     parts.append((_place(bv, x, y, z), bf))
     # pistons, pressing the pads onto the disc
     for side in (-1.0, 1.0):
@@ -281,7 +282,7 @@ def _caliper(x, y, z, w):
         for k in range(5):
             f = k / 4
             a = math.pi / 2 - arc / 2 + arc * f
-            v, fc = mesh.box(0.0, 0.0, 0.0, 42.0, W["pad_t"], 54.0)
+            v, fc = shapes.rounded_box(0.0, 0.0, 0.0, 42.0, W["pad_t"], 54.0)
             ca, sa = math.cos(a), math.sin(a)
             rr = r - 30.0
             v = [(rr * ca + px * sa + pz * ca,

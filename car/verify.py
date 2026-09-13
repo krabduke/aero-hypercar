@@ -184,8 +184,8 @@ def main():
     want = ["tub", "sidepod_l", "sidepod_r", "sidepod_inlets", "sharkfin",
             "cockpit_coaming", "halo", "seat", "headrest", "steering",
             "floor_plank", "tunnel_l", "tunnel_r", "floor_strakes",
-            "floor_skirts", "front_endplates", "front_cascades",
-            "front_y250_vanes", "rear_wing", "rear_endplates", "rear_pylons",
+            "floor_skirts", "front_endplates", "front_diveplanes",
+            "front_y250_vanes", "rear_endplates", "rear_pylons",
             "rear_louvres", "rear_gurney", "beam_wing", "bargeboards",
             "rear_wing_main", "rear_flap", "fan_rotor_l", "fan_rotor_r",
             "fan_stators",
@@ -196,7 +196,10 @@ def main():
             "front_wing_main", "front_flap_1", "front_flap_3",
             "front_diveplanes", "wishbones",
             "pushrods", "driveshafts", "fanduct", "fan_rotors", "fan_motors",
-            "engine", "gearbox", "radiators", "battery", "fuel_cell"]
+            "engine", "gearbox", "radiator_l", "radiator_r", "rad_tanks_l",
+            "rad_hoses_r", "battery", "battery_modules", "fuel_cell",
+            "dampers_f", "dampers_r", "antiroll_f", "torsion_bars_r",
+            "heave_f", "steering_rack", "steering_column"]
     want = [w for w in want if w not in ("fan_rotors", "rear_wing")]
     missing = [w for w in want if w not in by]
     c.true("key components present", not missing, f"{len(want)} checked")

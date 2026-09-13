@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 from parts import common
 
 SEG = 52
@@ -203,12 +204,12 @@ def _halo():
 def _cockpit():
     out = {}
     sx = (T["cockpit_x0"] + T["cockpit_x1"]) / 2
-    out["seat"] = mesh.box(sx + 110.0, 0.0, 300.0, 640.0, 360.0, 290.0)
+    out["seat"] = shapes.rounded_box(sx + 110.0, 0.0, 300.0, 640.0, 360.0, 290.0)
     wv, wf = mesh.tube(-24.0, 24.0, 58.0, 112.0, 26)
     wv = [(pz + T["cockpit_x0"] + 140.0, py, px + 570.0) for (px, py, pz) in wv]
     out["steering"] = (wv, wf)
     # headrest / roll structure padding
-    out["headrest"] = mesh.box(T["cockpit_x1"] - 40.0, 0.0, 620.0, 220.0, 300.0, 130.0)
+    out["headrest"] = shapes.rounded_box(T["cockpit_x1"] - 40.0, 0.0, 620.0, 220.0, 300.0, 130.0)
     return out
 
 

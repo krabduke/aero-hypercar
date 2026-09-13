@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 from parts import common
 
 FW = spec.FRONT_WING
@@ -56,22 +57,16 @@ def _front():
 
     out.update(_front_endplates())
 
-    # cascade winglets above the outboard wing
-    cas = []
-    for sgn in (-1.0, 1.0):
-        for (dx, dz, span, chord, aoa) in FW["cascades"]:
-            cas.append(common.wing_element(
-                FW["x"] + dx, FW["z"] + dz, span, chord, aoa,
-                thickness=0.08, camber=0.08, n_span=5, taper=0.8,
-                y0=sgn * (half - FW["cascade_inset"] - span / 2)))
-    out["front_cascades"] = mesh.join(*cas)
-
     # the Y250 vortex vanes either side of the neutral centre section
     vanes = []
+    c = FW["chord"]
     for sgn in (-1.0, 1.0):
-        vanes.append(common.plate(FW["x"] + 30.0, FW["x"] + FW["chord"] - 40.0,
-                                  sgn * neutral, FW["z"] + 20.0,
-                                  FW["z"] + 150.0, 7.0, sweep_top=44.0))
+        # stand on the mainplane's upper surface, not through it
+        z0 = FW["z"] + FW["arch"] + 26.0
+        vanes.append(common.plate(FW["x"] + c * FW["y250_x0"],
+                                  FW["x"] + c * FW["y250_x1"],
+                                  sgn * neutral, z0, z0 + FW["y250_h"],
+                                  7.0, sweep_top=38.0))
     out["front_y250_vanes"] = mesh.join(*vanes)
     return out
 
@@ -93,8 +88,9 @@ def _front_endplates():
     # The top edge follows the flap stack: low ahead of the mainplane, rising
     # over each flap in turn, so the plate encloses the elements instead of
     # standing past them as a rectangle.
-    tops = [(0.00, z0 + 96.0), (0.22, z0 + 150.0), (0.48, z0 + 250.0),
-            (0.74, z0 + FW["endplate_h"]), (1.00, z0 + FW["endplate_h"] - 44.0)]
+    # the top edge follows the flap stack, which rises aft
+    tops = [(0.00, z0 + 86.0), (0.22, z0 + 140.0), (0.48, z0 + 218.0),
+            (0.74, z0 + FW["endplate_h"]), (1.00, z0 + FW["endplate_h"] - 34.0)]
     plates, planes = [], []
     for sgn in (-1.0, 1.0):
         y = sgn * half
@@ -117,9 +113,10 @@ def _front_endplates():
             # a dive plane hangs off the outer face of the endplate; it must
             # stay inside the legal width, which half + span/2 did not
             planes.append(common.wing_element(
-                FW["x"] + 30.0 + k * 40.0, zz, 92.0, 160.0 - k * 30.0,
-                20.0 + k * 4.0, thickness=0.07, camber=0.09, n_span=4,
-                taper=0.7, y0=sgn * (half + 44.0)))
+                FW["x"] + 30.0 + k * 40.0, zz, FW["diveplane_span"],
+                160.0 - k * 30.0, 20.0 + k * 4.0,
+                thickness=0.07, camber=0.09, n_span=4, taper=0.7,
+                y0=sgn * (half + FW["diveplane_span"] / 2 + 6.0)))
     out["front_endplates"] = mesh.join(*plates)
     out["front_diveplanes"] = mesh.join(*planes)
     return out
@@ -219,13 +216,13 @@ def _rear():
     for sgn in (-1.0, 1.0):
         y = sgn * RW["span"] / 2
         for k in range(5):
-            lv.append(mesh.box(RW["x"] - 60.0 + k * 52.0, y,
+            lv.append(shapes.rounded_box(RW["x"] - 60.0 + k * 52.0, y,
                                RW["z"] + 96.0 - k * 14.0, 40.0, 14.0, 56.0))
     out["rear_louvres"] = mesh.join(*lv)
 
     # gurney on the flap trailing edge
     g = []
-    g.append(mesh.box(RW["x"] + RW["chord"] * 0.46 + RW["chord"] * 0.58 * 0.5,
+    g.append(shapes.rounded_box(RW["x"] + RW["chord"] * 0.46 + RW["chord"] * 0.58 * 0.5,
                       0.0, RW["z"] + RW["gap"] + 26.0 + 34.0,
                       12.0, RW["span"] * 0.96, 26.0))
     out["rear_gurney"] = mesh.join(*g)

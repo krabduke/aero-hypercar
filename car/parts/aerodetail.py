@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 from parts import common, wheels
 
 BB = spec.BARGEBOARD
@@ -148,7 +149,7 @@ def _brake_ducts():
         vv = [(pz + x, px + y - sgn * w * 0.30, py + z) for (px, py, pz) in vv]
         parts.append((vv, ff))
         # inlet scoop facing forward
-        iv, if_ = mesh.box(x - r * 0.72, y - sgn * w * 0.34, z - r * 0.30,
+        iv, if_ = shapes.rounded_box(x - r * 0.72, y - sgn * w * 0.34, z - r * 0.30,
                            150.0, 54.0, BD["inlet_h"])
         parts.append((iv, if_))
     return {"brake_ducts": mesh.join(*parts)}
@@ -162,20 +163,20 @@ def _details():
                            (D["mirror_x"], sgn * D["mirror_y"], D["mirror_z"])],
                           13.0, 10)
         mirrors.append(stalk)
-        mv, mf = mesh.box(D["mirror_x"] + 24.0, sgn * (D["mirror_y"] + 18.0),
+        mv, mf = shapes.rounded_box(D["mirror_x"] + 24.0, sgn * (D["mirror_y"] + 18.0),
                           D["mirror_z"] + 8.0, 62.0, 30.0, 86.0)
         mirrors.append((mv, mf))
     out["mirrors"] = mesh.join(*mirrors)
 
     cams = []
     for sgn in (-1.0, 1.0):
-        cv, cf = mesh.box(D["camera_x"], sgn * 130.0, D["camera_z"], 130.0, 46.0, 46.0)
+        cv, cf = shapes.rounded_box(D["camera_x"], sgn * 130.0, D["camera_z"], 130.0, 46.0, 46.0)
         cams.append((cv, cf))
-    cv, cf = mesh.box(spec.TUB["cockpit_x1"] + 90.0, 0.0, 820.0, 150.0, 60.0, 52.0)
+    cv, cf = shapes.rounded_box(spec.TUB["cockpit_x1"] + 90.0, 0.0, 820.0, 150.0, 60.0, 52.0)
     cams.append((cv, cf))
     out["cameras"] = mesh.join(*cams)
 
-    lv, lf = mesh.box(D["rainlight_x"], 0.0, D["rainlight_z"], 44.0, 96.0, 70.0)
+    lv, lf = shapes.rounded_box(D["rainlight_x"], 0.0, D["rainlight_z"], 44.0, 96.0, 70.0)
     out["rainlight"] = (lv, lf)
 
     ex = []
@@ -195,7 +196,7 @@ def _details():
     for k in range(6):
         x = 3180.0 + k * 96.0
         for sgn in (-1.0, 1.0):
-            b, bf = mesh.box(x, sgn * 128.0, 520.0 - k * 22.0, 70.0, 8.0, 36.0)
+            b, bf = shapes.rounded_box(x, sgn * 128.0, 520.0 - k * 22.0, 70.0, 8.0, 36.0)
             lv2.append((b, bf))
     out["cooling_louvres"] = mesh.join(*lv2)
     return out

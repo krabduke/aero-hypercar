@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 from parts import chassis, common, wheels
 
 BD = spec.BODY_DETAIL
@@ -50,7 +51,7 @@ def _gills():
                 f = k / max(n - 1, 1)
                 x = x0 + (x1 - x0) * f
                 px, py, pz = chassis.surface_point(x, a, -4.0)
-                v, fc = mesh.box(0.0, 0.0, 0.0, length, 10.0, h)
+                v, fc = shapes.rounded_box(0.0, 0.0, 0.0, length, 10.0, h)
                 # cant each blade so it stands off the skin at its trailing edge
                 t = math.radians(22.0)
                 ct, st = math.cos(t), math.sin(t)
@@ -66,7 +67,7 @@ def _gills():
                 f = k / max(n - 1, 1)
                 x = x0 + (x1 - x0) * f
                 px, py, pz = chassis.sidepod_point(x, sgn * 1.0, f_z, -6.0)
-                v, fc = mesh.box(0.0, 0.0, 0.0, length, 12.0, h)
+                v, fc = shapes.rounded_box(0.0, 0.0, 0.0, length, 12.0, h)
                 t = math.radians(20.0)
                 ct, st = math.cos(t), math.sin(t)
                 rot = [(vx * ct - vz * st, vy, vx * st + vz * ct)
@@ -235,7 +236,7 @@ def _driver():
     out["helmet"] = mesh.join(*parts)
 
     body = []
-    body.append(mesh.box(D["shoulder_x"], 0.0, D["helmet_z"] - 190.0,
+    body.append(shapes.rounded_box(D["shoulder_x"], 0.0, D["helmet_z"] - 190.0,
                          230.0, 2 * D["shoulder_w"], 200.0))
     for sgn in (-1.0, 1.0):
         body.append(mesh.pipe(

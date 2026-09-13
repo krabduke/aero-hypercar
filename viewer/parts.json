@@ -182,6 +182,24 @@
    "metal": 1.0,
    "rough": 0.58
   },
+  "rad_core": {
+   "rgb": [
+    0.18,
+    0.13,
+    0.08
+   ],
+   "metal": 0.9,
+   "rough": 0.52
+  },
+  "hose": {
+   "rgb": [
+    0.055,
+    0.056,
+    0.06
+   ],
+   "metal": 0.0,
+   "rough": 0.78
+  },
   "cf_disc": {
    "rgb": [
     0.09,
@@ -218,15 +236,6 @@
    "metal": 0.0,
    "rough": 0.8
   },
-  "rad_core": {
-   "rgb": [
-    0.18,
-    0.13,
-    0.08
-   ],
-   "metal": 0.9,
-   "rough": 0.52
-  },
   "anodised": {
    "rgb": [
     0.108,
@@ -259,28 +268,28 @@
    "label": "Floor",
    "color": "#46505A",
    "parts": 6,
-   "faces": 564
+   "faces": 580
   },
   {
    "key": "03 Wings",
    "label": "Wings",
    "color": "#6E7A86",
-   "parts": 11,
-   "faces": 2032
+   "parts": 10,
+   "faces": 1720
   },
   {
    "key": "04 Wheels and Brakes",
    "label": "Wheels",
    "color": "#3E4246",
    "parts": 28,
-   "faces": 12896
+   "faces": 17376
   },
   {
    "key": "05 Suspension",
    "label": "Suspension",
    "color": "#7C8690",
-   "parts": 4,
-   "faces": 580
+   "parts": 14,
+   "faces": 1006
   },
   {
    "key": "06 Fan System",
@@ -300,22 +309,22 @@
    "key": "08 Cooling and Energy",
    "label": "Cooling",
    "color": "#4E6E7A",
-   "parts": 3,
-   "faces": 24
+   "parts": 10,
+   "faces": 2720
   },
   {
    "key": "09 Aero Detail",
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 13,
-   "faces": 2160
+   "faces": 3408
   },
   {
    "key": "10 Cockpit",
    "label": "Cockpit",
    "color": "#9A5A52",
    "parts": 5,
-   "faces": 326
+   "faces": 374
   },
   {
    "key": "11 Structure and Service",
@@ -345,14 +354,14 @@
    "mat": "carbon_matte",
    "x0": 1830.0,
    "x1": 2050.0,
-   "f": 6
+   "f": 22
   },
   "seat": {
    "g": "10 Cockpit",
    "mat": "carbon_matte",
    "x0": 1370.0,
    "x1": 2010.0,
-   "f": 6
+   "f": 22
   },
   "sharkfin": {
    "g": "01 Bodywork",
@@ -401,7 +410,7 @@
    "mat": "wood",
    "x0": 1300.0,
    "x1": 4560.0,
-   "f": 6
+   "f": 22
   },
   "floor_skirts": {
    "g": "02 Floor and Diffuser",
@@ -437,13 +446,6 @@
    "x0": 1300.0,
    "x1": 4560.0,
    "f": 86
-  },
-  "front_cascades": {
-   "g": "03 Wings",
-   "mat": "carbon_gloss",
-   "x0": 144.0,
-   "x1": 340.7,
-   "f": 488
   },
   "front_diveplanes": {
    "g": "01 Bodywork",
@@ -532,8 +534,8 @@
   "front_y250_vanes": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 90.0,
-   "x1": 490.0,
+   "x0": 172.8,
+   "x1": 417.2,
    "f": 12
   },
   "rear_endplates": {
@@ -569,14 +571,14 @@
    "mat": "carbon_gloss",
    "x0": 4744.0,
    "x1": 4756.0,
-   "f": 6
+   "f": 22
   },
   "rear_louvres": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
    "x0": 4400.0,
    "x1": 4648.0,
-   "f": 60
+   "f": 220
   },
   "rear_pylons": {
    "g": "03 Wings",
@@ -597,35 +599,35 @@
    "mat": "alu_bright",
    "x0": 767.0,
    "x1": 1033.0,
-   "f": 510
+   "f": 910
   },
   "caliper_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
    "x0": 767.0,
    "x1": 1033.0,
-   "f": 510
+   "f": 910
   },
   "caliper_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
    "x0": 3917.0,
    "x1": 4183.0,
-   "f": 510
+   "f": 910
   },
   "caliper_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
    "x0": 3917.0,
    "x1": 4183.0,
-   "f": 510
+   "f": 910
   },
   "disc_fl": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
    "x0": 720.0,
    "x1": 1080.0,
-   "f": 696,
+   "f": 1272,
    "pivot": {
     "p": [
      900.0,
@@ -646,7 +648,7 @@
    "mat": "cf_disc",
    "x0": 720.0,
    "x1": 1080.0,
-   "f": 696,
+   "f": 1272,
    "pivot": {
     "p": [
      900.0,
@@ -667,7 +669,7 @@
    "mat": "cf_disc",
    "x0": 3870.0,
    "x1": 4230.0,
-   "f": 696,
+   "f": 1272,
    "pivot": {
     "p": [
      4050.0,
@@ -688,7 +690,7 @@
    "mat": "cf_disc",
    "x0": 3870.0,
    "x1": 4230.0,
-   "f": 696,
+   "f": 1272,
    "pivot": {
     "p": [
      4050.0,
@@ -905,7 +907,7 @@
    "mat": "carbon_gloss",
    "x0": 686.0,
    "x1": 1114.0,
-   "f": 374,
+   "f": 518,
    "pivot": {
     "p": [
      900.0,
@@ -926,7 +928,7 @@
    "mat": "carbon_gloss",
    "x0": 686.0,
    "x1": 1114.0,
-   "f": 374,
+   "f": 518,
    "pivot": {
     "p": [
      900.0,
@@ -947,7 +949,7 @@
    "mat": "carbon_gloss",
    "x0": 3836.0,
    "x1": 4264.0,
-   "f": 374,
+   "f": 518,
    "pivot": {
     "p": [
      4050.0,
@@ -968,7 +970,7 @@
    "mat": "carbon_gloss",
    "x0": 3836.0,
    "x1": 4264.0,
-   "f": 374,
+   "f": 518,
    "pivot": {
     "p": [
      4050.0,
@@ -1068,12 +1070,54 @@
     "role": "spin"
    }
   },
+  "antiroll_f": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 955.0,
+   "x1": 1065.0,
+   "f": 56
+  },
+  "antiroll_r": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 3815.0,
+   "x1": 3925.0,
+   "f": 56
+  },
+  "dampers_f": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 877.5,
+   "x1": 1161.2,
+   "f": 48
+  },
+  "dampers_r": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 3737.5,
+   "x1": 4021.2,
+   "f": 48
+  },
   "driveshafts": {
    "g": "05 Suspension",
    "mat": "steel",
    "x0": 4024.0,
    "x1": 4076.0,
    "f": 28
+  },
+  "heave_f": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 910.0,
+   "x1": 1155.0,
+   "f": 36
+  },
+  "heave_r": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 3770.0,
+   "x1": 4015.0,
+   "f": 36
   },
   "pushrods": {
    "g": "05 Suspension",
@@ -1087,7 +1131,35 @@
    "mat": "alu_bright",
    "x0": 955.0,
    "x1": 3965.0,
-   "f": 24
+   "f": 88
+  },
+  "steering_column": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 854.7,
+   "x1": 1526.6,
+   "f": 22
+  },
+  "steering_rack": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 785.0,
+   "x1": 935.0,
+   "f": 36
+  },
+  "torsion_bars_f": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 999.0,
+   "x1": 1041.0,
+   "f": 12
+  },
+  "torsion_bars_r": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 3859.0,
+   "x1": 3901.0,
+   "f": 12
   },
   "wishbones": {
    "g": "05 Suspension",
@@ -1164,7 +1236,14 @@
    "mat": "anodised",
    "x0": 2040.0,
    "x1": 2800.0,
-   "f": 6
+   "f": 286
+  },
+  "battery_modules": {
+   "g": "08 Cooling and Energy",
+   "mat": "alu_dark",
+   "x0": 2054.7,
+   "x1": 2785.3,
+   "f": 110
   },
   "engine": {
    "g": "07 Power Unit",
@@ -1178,7 +1257,14 @@
    "mat": "anodised",
    "x0": 2100.0,
    "x1": 2660.0,
-   "f": 6
+   "f": 30
+  },
+  "fuel_fittings": {
+   "g": "08 Cooling and Energy",
+   "mat": "alu_bright",
+   "x0": 2157.0,
+   "x1": 2721.1,
+   "f": 34
   },
   "gearbox": {
    "g": "07 Power Unit",
@@ -1187,12 +1273,47 @@
    "x1": 4120.0,
    "f": 128
   },
-  "radiators": {
+  "rad_hoses_l": {
+   "g": "08 Cooling and Energy",
+   "mat": "hose",
+   "x0": 1892.9,
+   "x1": 3248.4,
+   "f": 52
+  },
+  "rad_hoses_r": {
+   "g": "08 Cooling and Energy",
+   "mat": "hose",
+   "x0": 1892.9,
+   "x1": 3248.4,
+   "f": 52
+  },
+  "rad_tanks_l": {
+   "g": "08 Cooling and Energy",
+   "mat": "alu_bright",
+   "x0": 2026.0,
+   "x1": 2614.0,
+   "f": 44
+  },
+  "rad_tanks_r": {
+   "g": "08 Cooling and Energy",
+   "mat": "alu_bright",
+   "x0": 2026.0,
+   "x1": 2614.0,
+   "f": 44
+  },
+  "radiator_l": {
    "g": "08 Cooling and Energy",
    "mat": "rad_core",
-   "x0": 2020.0,
-   "x1": 2620.0,
-   "f": 12
+   "x0": 2017.0,
+   "x1": 2623.0,
+   "f": 1034
+  },
+  "radiator_r": {
+   "g": "08 Cooling and Energy",
+   "mat": "rad_core",
+   "x0": 2017.0,
+   "x1": 2623.0,
+   "f": 1034
   },
   "bargeboards": {
    "g": "09 Aero Detail",
@@ -1213,21 +1334,21 @@
    "mat": "carbon_matte",
    "x0": 673.8,
    "x1": 4280.7,
-   "f": 504
+   "f": 568
   },
   "cameras": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
    "x0": 635.0,
    "x1": 2145.0,
-   "f": 18
+   "f": 66
   },
   "cooling_louvres": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
    "x0": 3145.0,
    "x1": 3695.0,
-   "f": 72
+   "f": 264
   },
   "exhaust": {
    "g": "09 Aero Detail",
@@ -1255,14 +1376,14 @@
    "mat": "carbon_gloss",
    "x0": 1567.3,
    "x1": 1675.0,
-   "f": 36
+   "f": 68
   },
   "rainlight": {
    "g": "09 Aero Detail",
    "mat": "rubber_tyre",
    "x0": 4448.0,
    "x1": 4492.0,
-   "f": 6
+   "f": 22
   },
   "turning_vanes": {
    "g": "09 Aero Detail",
@@ -1290,14 +1411,14 @@
    "mat": "suit",
    "x0": 1143.5,
    "x1": 2015.0,
-   "f": 78
+   "f": 94
   },
   "gills": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
    "x0": 3000.2,
    "x1": 3654.7,
-   "f": 156
+   "f": 572
   },
   "helmet": {
    "g": "10 Cockpit",
@@ -1339,7 +1460,7 @@
    "mat": "carbon_gloss",
    "x0": 2544.4,
    "x1": 3255.6,
-   "f": 180
+   "f": 660
   },
   "tow_hooks": {
    "g": "11 Structure and Service",

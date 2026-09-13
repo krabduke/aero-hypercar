@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 from parts import common
 
 F = spec.FLOOR
@@ -91,7 +92,7 @@ def _surface():
 def _plank():
     """The reference plane -- a flat plank down the centreline between the
     tunnels, which is what actually sets ride height."""
-    v, f = mesh.box((F["x0"] + F["x1"]) / 2, 0.0, 26.0,
+    v, f = shapes.rounded_box((F["x0"] + F["x1"]) / 2, 0.0, 26.0,
                     F["x1"] - F["x0"], F["tunnel_inner_y"] * 2, 16.0)
     return {"floor_plank": (v, f)}
 

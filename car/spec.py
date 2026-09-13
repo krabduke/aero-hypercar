@@ -256,7 +256,10 @@ FRONT_WING = {
     "x": 60.0, "z": 112.0,
     "span": 1780.0, "chord": 470.0,
     "elements": 4, "gap": 16.0,
-    "endplate_h": 500.0, "endplate_t": 9.0,
+    # 280 mm, not 500. An endplate only has to enclose the flap stack, which
+    # tops out at 367 mm from a datum of 16; taller than that it stops being
+    # an endplate and becomes a wall, and it looked like one.
+    "endplate_h": 366.0, "endplate_t": 9.0,
     "aoa_root": 6.0, "aoa_tip": 14.0,
     "neutral_half_w": 250.0,   # regulated flat centre section
     "arch": 44.0,              # how much the mainplane arches over the nose
@@ -268,14 +271,17 @@ FRONT_WING = {
         ( 262.0, 124.0, 118.0, 110.0, 0.940,  23.0,  34.0, 116.0),
     ],
     "endplate_x0": -60.0, "endplate_x1": 420.0,
-    # cascades sit ABOVE the flap stack, near the endplate. Placed at the old
-    # heights they ran straight through the top two flaps.
-    "cascades": [
-        #  dx      dz   span  chord  aoa
-        (120.0, 300.0, 300.0, 150.0, 16.0),
-        (200.0, 372.0, 250.0, 116.0, 22.0),
-    ],
-    "cascade_inset": 180.0,
+    # No cascades. They were floating 130 mm above the top flap attached to
+    # nothing, which read as debris rather than aerodynamics -- and they have
+    # been illegal in Formula 1 since 2019 for exactly the reason they looked
+    # wrong here: they throw structure into a region that belongs to the
+    # outwash. The endplate does the job instead.
+    #
+    # Y250 vanes sit on the mainplane, just outboard of the mandated neutral
+    # section, and turn the vortex that forms at its edge.
+    "y250_x0": 0.24, "y250_x1": 0.76,      # of the wing's chord
+    "y250_h": 118.0,
+    "diveplane_span": 92.0,
     "footplate_h": 58.0,
     "diveplanes": 2,
 }
@@ -406,6 +412,17 @@ POWERTRAIN = {
 # --------------------------------------------------------------------------
 
 MATERIAL_MAP = {
+    "steering_column": "steel",
+    "steering_rack": "alu_bright",
+    "antiroll_": "steel",
+    "heave_": "alu_bright",
+    "torsion_bars": "steel",
+    "dampers_": "alu_bright",
+    "fuel_fittings": "alu_bright",
+    "battery_modules": "alu_dark",
+    "rad_hoses": "hose",
+    "rad_tanks": "alu_bright",
+    "radiator_": "rad_core",
     "tub": "carbon_gloss", "nose": "carbon_gloss", "floor": "carbon_matte",
     "tunnel": "carbon_matte", "diffuser": "carbon_matte", "strake": "carbon_matte",
     "wing": "carbon_gloss", "endplate": "carbon_gloss", "flap": "carbon_gloss",
@@ -448,6 +465,8 @@ PALETTE = {
     "alu_bright":   ((0.412, 0.424, 0.440), 1.00, 0.30),
     "alu_cast":     ((0.318, 0.326, 0.338), 1.00, 0.62),
     "magnesium":    ((0.276, 0.272, 0.258), 1.00, 0.58),
+    "rad_core":     ((0.140, 0.120, 0.095), 0.60, 0.62),
+    "hose":         ((0.055, 0.056, 0.060), 0.00, 0.78),
     "cf_disc":      ((0.090, 0.086, 0.082), 0.10, 0.66),
     "helmet":       ((0.480, 0.086, 0.062), 0.05, 0.16),
     "suit":         ((0.052, 0.056, 0.070), 0.00, 0.72),
