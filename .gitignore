@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+build/*
+!build/car.glb
+!build/parts.csv

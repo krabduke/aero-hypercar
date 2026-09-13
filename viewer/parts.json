@@ -1,0 +1,534 @@
+{
+ "name": "VX-1 Vortex",
+ "class": "Ground-effect fan car, hybrid V8",
+ "length": 4980.0,
+ "width": 1980.0,
+ "height": 1015.0,
+ "wheelbase": 3150.0,
+ "mass": 700.0,
+ "cla": 5.9,
+ "cda": 1.62,
+ "fan_kg": 650.0,
+ "power_kw": 935.0,
+ "hp": 1253.835,
+ "top_speed": 387.6926921471214,
+ "g_limit": 7.0,
+ "f1": {
+  "mass": 798.0,
+  "power_kw": 750.0,
+  "cla": 5.1,
+  "cda": 1.45,
+  "fan_downforce": 0.0,
+  "mu": 1.75
+ },
+ "grip": [
+  {
+   "kph": 60,
+   "ours": 3.4213908205989836,
+   "f1": 1.919604888661013
+  },
+  {
+   "kph": 80,
+   "ours": 3.5858512849637063,
+   "f1": 2.050110572778989
+  },
+  {
+   "kph": 100,
+   "ours": 3.795805909198022,
+   "f1": 2.216264070035387
+  },
+  {
+   "kph": 130,
+   "ours": 4.1939116741773494,
+   "f1": 2.530145757442337
+  },
+  {
+   "kph": 160,
+   "ours": 4.688677937803748,
+   "f1": 2.9185378814467677
+  },
+  {
+   "kph": 200,
+   "ours": 5.492553957633346,
+   "f1": 3.546626273854706
+  },
+  {
+   "kph": 250,
+   "ours": 6.7179551725448965,
+   "f1": 4.4992607979124095
+  },
+  {
+   "kph": 300,
+   "ours": 8.175630443663302,
+   "f1": 5.627600484662486
+  }
+ ],
+ "corners": [
+  {
+   "r": 20,
+   "ours": 97.93567404166855,
+   "f1": 71.08970296467402
+  },
+  {
+   "r": 30,
+   "ours": 125.47065417120166,
+   "f1": 90.13121561271295
+  },
+  {
+   "r": 45,
+   "ours": 165.55281239107347,
+   "f1": 116.738463648792
+  },
+  {
+   "r": 60,
+   "ours": 208.02891181925384,
+   "f1": 143.35600024654676
+  },
+  {
+   "r": 90,
+   "ours": 283.013582712915,
+   "f1": 202.84439220306976
+  },
+  {
+   "r": 120,
+   "ours": 326.79593632724385,
+   "f1": 281.2296944517486
+  },
+  {
+   "r": 180,
+   "ours": 400.2416470084042,
+   "f1": 400.2416470084042
+  }
+ ],
+ "palette": {
+  "carbon_gloss": {
+   "rgb": [
+    0.042,
+    0.044,
+    0.05
+   ],
+   "metal": 0.45,
+   "rough": 0.16
+  },
+  "carbon_matte": {
+   "rgb": [
+    0.052,
+    0.054,
+    0.06
+   ],
+   "metal": 0.3,
+   "rough": 0.48
+  },
+  "titanium": {
+   "rgb": [
+    0.372,
+    0.386,
+    0.408
+   ],
+   "metal": 1.0,
+   "rough": 0.34
+  },
+  "rubber_tyre": {
+   "rgb": [
+    0.03,
+    0.03,
+    0.032
+   ],
+   "metal": 0.0,
+   "rough": 0.82
+  },
+  "rubber_seal": {
+   "rgb": [
+    0.05,
+    0.048,
+    0.046
+   ],
+   "metal": 0.0,
+   "rough": 0.88
+  },
+  "alu_dark": {
+   "rgb": [
+    0.12,
+    0.124,
+    0.132
+   ],
+   "metal": 1.0,
+   "rough": 0.38
+  },
+  "alu_bright": {
+   "rgb": [
+    0.412,
+    0.424,
+    0.44
+   ],
+   "metal": 1.0,
+   "rough": 0.3
+  },
+  "alu_cast": {
+   "rgb": [
+    0.318,
+    0.326,
+    0.338
+   ],
+   "metal": 1.0,
+   "rough": 0.62
+  },
+  "magnesium": {
+   "rgb": [
+    0.276,
+    0.272,
+    0.258
+   ],
+   "metal": 1.0,
+   "rough": 0.58
+  },
+  "cf_disc": {
+   "rgb": [
+    0.09,
+    0.086,
+    0.082
+   ],
+   "metal": 0.1,
+   "rough": 0.66
+  },
+  "rad_core": {
+   "rgb": [
+    0.18,
+    0.13,
+    0.08
+   ],
+   "metal": 0.9,
+   "rough": 0.52
+  },
+  "anodised": {
+   "rgb": [
+    0.108,
+    0.136,
+    0.17
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "steel": {
+   "rgb": [
+    0.48,
+    0.492,
+    0.51
+   ],
+   "metal": 1.0,
+   "rough": 0.28
+  }
+ },
+ "groups": [
+  {
+   "key": "01 Bodywork",
+   "label": "Bodywork",
+   "color": "#5A6066",
+   "parts": 8,
+   "faces": 2508
+  },
+  {
+   "key": "02 Floor and Diffuser",
+   "label": "Floor",
+   "color": "#46505A",
+   "parts": 5,
+   "faces": 238
+  },
+  {
+   "key": "03 Wings",
+   "label": "Wings",
+   "color": "#6E7A86",
+   "parts": 5,
+   "faces": 1348
+  },
+  {
+   "key": "04 Wheels and Brakes",
+   "label": "Wheels",
+   "color": "#3E4246",
+   "parts": 5,
+   "faces": 2448
+  },
+  {
+   "key": "05 Suspension",
+   "label": "Suspension",
+   "color": "#7C8690",
+   "parts": 4,
+   "faces": 388
+  },
+  {
+   "key": "06 Fan System",
+   "label": "Fans",
+   "color": "#C06A30",
+   "parts": 3,
+   "faces": 880
+  },
+  {
+   "key": "07 Power Unit",
+   "label": "Power unit",
+   "color": "#A8763E",
+   "parts": 3,
+   "faces": 18322
+  },
+  {
+   "key": "08 Cooling and Energy",
+   "label": "Cooling",
+   "color": "#4E6E7A",
+   "parts": 3,
+   "faces": 24
+  }
+ ],
+ "parts": {
+  "airbox": {
+   "g": "01 Bodywork",
+   "mat": "carbon_gloss",
+   "x0": 1780.0,
+   "x1": 2100.0,
+   "f": 140
+  },
+  "engine_cover": {
+   "g": "07 Power Unit",
+   "mat": "carbon_gloss",
+   "x0": 1920.0,
+   "x1": 4060.0,
+   "f": 522
+  },
+  "halo": {
+   "g": "01 Bodywork",
+   "mat": "titanium",
+   "x0": 1092.0,
+   "x1": 2019.9,
+   "f": 90
+  },
+  "nose": {
+   "g": "01 Bodywork",
+   "mat": "carbon_gloss",
+   "x0": 0.0,
+   "x1": 760.0,
+   "f": 522
+  },
+  "seat": {
+   "g": "01 Bodywork",
+   "mat": "carbon_matte",
+   "x0": 1360.0,
+   "x1": 1980.0,
+   "f": 6
+  },
+  "sidepod_l": {
+   "g": "01 Bodywork",
+   "mat": "carbon_gloss",
+   "x0": 1720.0,
+   "x1": 3560.0,
+   "f": 522
+  },
+  "sidepod_r": {
+   "g": "01 Bodywork",
+   "mat": "carbon_gloss",
+   "x0": 1720.0,
+   "x1": 3560.0,
+   "f": 522
+  },
+  "steering": {
+   "g": "01 Bodywork",
+   "mat": "carbon_matte",
+   "x0": 1182.9,
+   "x1": 1417.1,
+   "f": 104
+  },
+  "tub": {
+   "g": "01 Bodywork",
+   "mat": "carbon_gloss",
+   "x0": 620.0,
+   "x1": 2360.0,
+   "f": 602
+  },
+  "floor_plank": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 600.0,
+   "x1": 4620.0,
+   "f": 6
+  },
+  "floor_skirts": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 720.0,
+   "x1": 4560.0,
+   "f": 12
+  },
+  "floor_strakes": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4530.0,
+   "f": 48
+  },
+  "tunnel_l": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 600.0,
+   "x1": 4620.0,
+   "f": 86
+  },
+  "tunnel_r": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 600.0,
+   "x1": 4620.0,
+   "f": 86
+  },
+  "front_endplates": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 70.0,
+   "x1": 660.0,
+   "f": 12
+  },
+  "front_wing": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 35.6,
+   "x1": 585.7,
+   "f": 848
+  },
+  "rear_endplates": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4500.0,
+   "x1": 5070.0,
+   "f": 12
+  },
+  "rear_pylons": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4411.5,
+   "x1": 4703.6,
+   "f": 52
+  },
+  "rear_wing": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4534.5,
+   "x1": 4921.6,
+   "f": 424
+  },
+  "calipers": {
+   "g": "04 Wheels and Brakes",
+   "mat": "alu_bright",
+   "x0": -75.0,
+   "x1": 3225.0,
+   "f": 24
+  },
+  "discs": {
+   "g": "04 Wheels and Brakes",
+   "mat": "cf_disc",
+   "x0": -180.0,
+   "x1": 3330.0,
+   "f": 640
+  },
+  "tyres": {
+   "g": "04 Wheels and Brakes",
+   "mat": "rubber_tyre",
+   "x0": -335.0,
+   "x1": 3495.0,
+   "f": 1120
+  },
+  "uprights": {
+   "g": "04 Wheels and Brakes",
+   "mat": "alu_bright",
+   "x0": -60.0,
+   "x1": 3210.0,
+   "f": 24
+  },
+  "wheelrims": {
+   "g": "04 Wheels and Brakes",
+   "mat": "alu_dark",
+   "x0": -228.6,
+   "x1": 3378.6,
+   "f": 640
+  },
+  "driveshafts": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 3124.0,
+   "x1": 3176.0,
+   "f": 28
+  },
+  "pushrods": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": -239.1,
+   "x1": 3359.0,
+   "f": 112
+  },
+  "rockers": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 55.0,
+   "x1": 3065.0,
+   "f": 24
+  },
+  "wishbones": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": -205.1,
+   "x1": 3354.2,
+   "f": 224
+  },
+  "fan_motors": {
+   "g": "06 Fan System",
+   "mat": "alu_bright",
+   "x0": 4228.6,
+   "x1": 4351.4,
+   "f": 176
+  },
+  "fan_rotors": {
+   "g": "06 Fan System",
+   "mat": "alu_bright",
+   "x0": 4106.0,
+   "x1": 4254.0,
+   "f": 348
+  },
+  "fanduct": {
+   "g": "06 Fan System",
+   "mat": "carbon_matte",
+   "x0": 3496.9,
+   "x1": 4490.0,
+   "f": 356
+  },
+  "battery": {
+   "g": "08 Cooling and Energy",
+   "mat": "anodised",
+   "x0": 2040.0,
+   "x1": 2800.0,
+   "f": 6
+  },
+  "engine": {
+   "g": "07 Power Unit",
+   "mat": "alu_cast",
+   "x0": 2640.0,
+   "x1": 3298.0,
+   "f": 17672
+  },
+  "fuel_cell": {
+   "g": "08 Cooling and Energy",
+   "mat": "anodised",
+   "x0": 2100.0,
+   "x1": 2660.0,
+   "f": 6
+  },
+  "gearbox": {
+   "g": "07 Power Unit",
+   "mat": "magnesium",
+   "x0": 3760.0,
+   "x1": 4280.0,
+   "f": 128
+  },
+  "radiators": {
+   "g": "08 Cooling and Energy",
+   "mat": "rad_core",
+   "x0": 2020.0,
+   "x1": 2620.0,
+   "f": 12
+  }
+ }
+}

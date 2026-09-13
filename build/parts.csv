@@ -1,0 +1,37 @@
+name,collection,material,verts,faces,x_min_mm,x_max_mm,y_min_mm,y_max_mm,z_min_mm,z_max_mm
+airbox,01 Bodywork,carbon_gloss,114,140,1780.0,2100.0,-160.0,160.0,510.0,700.0
+engine_cover,07 Power Unit,carbon_gloss,560,522,1920.0,4060.0,-250.0,250.0,220.0,790.0
+halo,01 Bodywork,titanium,120,90,1092.0,2019.9,-355.0,355.0,690.3,985.3
+nose,01 Bodywork,carbon_gloss,560,522,0.0,760.0,-240.0,240.0,99.0,464.0
+seat,01 Bodywork,carbon_matte,8,6,1360.0,1980.0,-190.0,190.0,150.0,450.0
+sidepod_l,01 Bodywork,carbon_gloss,560,522,1720.0,3560.0,-910.4,-32.0,120.0,560.0
+sidepod_r,01 Bodywork,carbon_gloss,560,522,1720.0,3560.0,32.0,910.4,120.0,560.0
+steering,01 Bodywork,carbon_matte,104,104,1182.9,1417.1,-118.0,118.0,534.0,586.0
+tub,01 Bodywork,carbon_gloss,640,602,620.0,2360.0,-390.0,390.0,60.0,720.0
+floor_plank,02 Floor and Diffuser,carbon_matte,8,6,600.0,4620.0,-210.0,210.0,18.0,34.0
+floor_skirts,02 Floor and Diffuser,carbon_matte,16,12,720.0,4560.0,-876.0,876.0,-14.0,40.0
+floor_strakes,02 Floor and Diffuser,carbon_matte,64,48,2300.0,4530.0,-701.0,701.0,12.0,344.9
+tunnel_l,02 Floor and Diffuser,carbon_matte,88,86,600.0,4620.0,-870.0,-210.0,10.0,410.0
+tunnel_r,02 Floor and Diffuser,carbon_matte,88,86,600.0,4620.0,210.0,870.0,10.0,410.0
+front_endplates,03 Wings,carbon_gloss,16,12,70.0,660.0,-894.5,894.5,20.0,240.0
+front_wing,03 Wings,carbon_gloss,960,848,35.6,585.7,-890.0,890.0,42.2,217.8
+rear_endplates,03 Wings,carbon_gloss,16,12,4500.0,5070.0,-715.0,715.0,650.0,1030.0
+rear_pylons,03 Wings,carbon_gloss,72,52,4411.5,4703.6,-195.9,195.9,431.8,850.9
+rear_wing,03 Wings,carbon_gloss,480,424,4534.5,4921.6,-710.0,710.0,796.4,953.4
+calipers,04 Wheels and Brakes,alu_bright,32,24,-75.0,3225.0,-810.1,810.1,495.0,595.0
+discs,04 Wheels and Brakes,cf_disc,640,640,-180.0,3330.0,-846.0,846.0,155.0,525.0
+tyres,04 Wheels and Brakes,rubber_tyre,1120,1120,-335.0,3495.0,-1002.5,1002.5,0.0,690.0
+uprights,04 Wheels and Brakes,alu_bright,32,24,-60.0,3210.0,-709.0,709.0,185.0,495.0
+wheelrims,04 Wheels and Brakes,alu_dark,640,640,-228.6,3378.6,-986.3,986.3,106.4,573.6
+driveshafts,05 Suspension,steel,48,28,3124.0,3176.0,-624.0,624.0,319.0,371.0
+pushrods,05 Suspension,carbon_matte,192,112,-239.1,3359.0,-624.0,624.0,141.1,568.9
+rockers,05 Suspension,alu_bright,32,24,55.0,3065.0,-320.0,320.0,120.0,640.0
+wishbones,05 Suspension,carbon_matte,384,224,-205.1,3354.2,-622.1,622.1,133.0,396.9
+fan_motors,06 Fan System,alu_bright,176,176,4228.6,4351.4,-522.0,522.0,276.0,384.0
+fan_rotors,06 Fan System,alu_bright,400,348,4106.0,4254.0,-745.2,745.2,47.8,614.0
+fanduct,06 Fan System,carbon_matte,384,356,3496.9,4490.0,-770.0,770.0,-25.2,440.3
+battery,08 Cooling and Energy,anodised,8,6,2040.0,2800.0,-150.0,150.0,95.0,205.0
+engine,07 Power Unit,alu_cast,17304,17672,2640.0,3298.0,-203.5,214.8,108.0,697.0
+fuel_cell,08 Cooling and Energy,anodised,8,6,2100.0,2660.0,-210.0,210.0,170.0,490.0
+gearbox,07 Power Unit,magnesium,128,128,3760.0,4280.0,-175.0,175.0,-175.0,175.0
+radiators,08 Cooling and Energy,rad_core,16,12,2020.0,2620.0,-384.0,384.0,155.0,485.0
