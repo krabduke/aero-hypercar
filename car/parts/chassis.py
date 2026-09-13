@@ -187,18 +187,45 @@ def _sharkfin():
 
 
 def _halo():
-    parts = []
+    """One continuous hoop and one central pillar.
+
+    This was built as two separate half-loops that both terminated at the same
+    point on the centreline, so the two tubes ran into and through each other
+    at the front -- which is what a halo must never be, because the whole
+    point of it is that it is a single closed loop with nothing to come apart.
+    It is one swept path now, from the left rear mount, round the front, to
+    the right rear mount, with a single pillar down the middle.
+    """
+    out = {}
     xf, xr, z, hw, r = H["x_front"], H["x_rear"], H["z"], H["half_w"], H["tube_r"]
+    apex = (xf + 30.0, 0.0, z - 30.0)
+
+    path = []
     for sgn in (-1.0, 1.0):
-        path = [(xr, sgn * hw * 0.60, z - 268.0),
-                (xr - 170.0, sgn * hw, z - 70.0),
-                (xf + 240.0, sgn * hw * 0.88, z - 6.0),
-                (xf + 60.0, sgn * 90.0, z - 28.0),
-                (xf, 0.0, z - 34.0)]
-        parts.append(mesh.pipe(path, r, spec.RES["pipe"]))
-    parts.append(mesh.pipe([(xf, 0.0, z - 34.0), (xf - 30.0, 0.0, z - 250.0)],
-                           r * 1.05, spec.RES["pipe"]))
-    return {"halo": mesh.join(*parts)}
+        side = [(xr, sgn * hw * 0.62, z - 262.0),      # rear mount, on the tub
+                (xr - 90.0, sgn * hw * 0.90, z - 120.0),
+                (xr - 210.0, sgn * hw, z - 46.0),
+                (xf + 300.0, sgn * hw * 0.95, z - 8.0),
+                (xf + 120.0, sgn * hw * 0.58, z - 16.0),
+                (xf + 52.0, sgn * hw * 0.22, z - 27.0)]
+        path.extend(side if sgn < 0 else [apex] + list(reversed(side)))
+    out["halo"] = mesh.pipe(path, r, spec.RES["pipe"])
+
+    # the pillar: it carries the load straight down into the tub's front
+    # bulkhead, and it is the only thing in a driver's forward view, which is
+    # why it is as slender as it is allowed to be
+    out["halo_pillar"] = mesh.pipe(
+        [apex, (apex[0] - 6.0, 0.0, z - 140.0), (apex[0] - 18.0, 0.0, z - 258.0)],
+        r * 0.86, spec.RES["pipe"])
+
+    mounts = []
+    for sgn in (-1.0, 1.0):
+        mounts.append(shapes.rounded_box(xr, sgn * hw * 0.62, z - 272.0,
+                                         70.0, 58.0, 34.0, 10.0))
+    mounts.append(shapes.rounded_box(apex[0] - 18.0, 0.0, z - 266.0,
+                                     58.0, 70.0, 30.0, 10.0))
+    out["halo_mounts"] = mesh.join(*mounts)
+    return out
 
 
 def _cockpit():

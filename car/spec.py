@@ -412,6 +412,8 @@ POWERTRAIN = {
 # --------------------------------------------------------------------------
 
 MATERIAL_MAP = {
+    "halo_mounts": "titanium",
+    "halo_pillar": "titanium",
     "exit_louvres": "carbon_matte",
     "tyre_sensors": "alu_dark",
     "fuel_coupling": "alu_bright",

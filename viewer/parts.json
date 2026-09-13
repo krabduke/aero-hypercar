@@ -260,8 +260,8 @@
    "key": "01 Bodywork",
    "label": "Bodywork",
    "color": "#5A6066",
-   "parts": 15,
-   "faces": 8400
+   "parts": 17,
+   "faces": 8524
   },
   {
    "key": "02 Floor and Diffuser",
@@ -345,9 +345,23 @@
   "halo": {
    "g": "01 Bodywork",
    "mat": "titanium",
-   "x0": 1103.0,
-   "x1": 2020.8,
-   "f": 114
+   "x0": 1164.2,
+   "x1": 2022.8,
+   "f": 146
+  },
+  "halo_mounts": {
+   "g": "01 Bodywork",
+   "mat": "titanium",
+   "x0": 1143.0,
+   "x1": 2035.0,
+   "f": 66
+  },
+  "halo_pillar": {
+   "g": "01 Bodywork",
+   "mat": "titanium",
+   "x0": 1149.8,
+   "x1": 1212.3,
+   "f": 26
   },
   "headrest": {
    "g": "10 Cockpit",
