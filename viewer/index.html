@@ -125,7 +125,7 @@
 </div>
 
 <div id="grip">
-  <div class="cap">Sustained lateral grip against speed</div>
+  <div class="cap">Sustained lateral grip against speed, km/h</div>
   <svg id="gsvg" viewBox="0 0 330 132" preserveAspectRatio="none"></svg>
   <div class="leg">
     <span class="a"><i style="background:#D8762F"></i>VX-1</span>
@@ -192,7 +192,7 @@ async function init(){
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(stage.clientWidth, stage.clientHeight);
   renderer.toneMapping = THREE.LinearToneMapping;
-  renderer.toneMappingExposure = 0.72;
+  renderer.toneMappingExposure = 0.62;
   stage.appendChild(renderer.domElement);
   clock = new THREE.Clock();
 
@@ -315,7 +315,7 @@ function drawGrip(){
     + `<polygon points="${band}" fill="#D8762F" opacity="0.16"/>`
     + `<path d="${path('f1')}" fill="none" stroke="#8E969C" stroke-width="1.6"/>`
     + `<path d="${path('ours')}" fill="none" stroke="#D8762F" stroke-width="2.2"/>`
-    + `<text x="${W-pad.r}" y="${pad.t+4}" fill="#6E767C" font-size="9" text-anchor="end">km/h</text>`;
+;
 }
 
 function ready(model){
@@ -357,7 +357,7 @@ function ready(model){
   renderer.setAnimationLoop(tick);
 }
 
-function fitDistance(dirv, margin = 1.16){
+function fitDistance(dirv, margin = 1.24){
   const up = new THREE.Vector3(0,1,0);
   const right = new THREE.Vector3().crossVectors(dirv, up).normalize();
   const camUp = new THREE.Vector3().crossVectors(right, dirv).normalize();
