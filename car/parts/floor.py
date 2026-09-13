@@ -144,7 +144,9 @@ def _strakes():
                        / max(F["n_strakes"] - 1, 1))
             parts.append(common.plate(x0, x1, y, 12.0, _floor_z(x1) - 26.0, 7.0,
                                       sweep_top=_floor_z(x1) - _floor_z(x0) - 60.0))
-    return {"floor_strakes": mesh.join(*parts)}
+    half = len(parts) // 2
+    return {f"floor_strake_{'lr'[i // half]}{i % half + 1}": m
+            for i, m in enumerate(parts)}
 
 
 def _skirts():

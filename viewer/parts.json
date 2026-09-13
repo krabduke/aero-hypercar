@@ -260,36 +260,36 @@
    "key": "01 Bodywork",
    "label": "Bodywork",
    "color": "#5A6066",
-   "parts": 12,
+   "parts": 15,
    "faces": 8400
   },
   {
    "key": "02 Floor and Diffuser",
    "label": "Floor",
    "color": "#46505A",
-   "parts": 6,
+   "parts": 13,
    "faces": 580
   },
   {
    "key": "03 Wings",
    "label": "Wings",
    "color": "#6E7A86",
-   "parts": 10,
+   "parts": 22,
    "faces": 1720
   },
   {
    "key": "04 Wheels and Brakes",
    "label": "Wheels",
    "color": "#3E4246",
-   "parts": 28,
-   "faces": 17376
+   "parts": 30,
+   "faces": 17486
   },
   {
    "key": "05 Suspension",
    "label": "Suspension",
    "color": "#7C8690",
-   "parts": 14,
-   "faces": 1006
+   "parts": 41,
+   "faces": 1072
   },
   {
    "key": "06 Fan System",
@@ -303,35 +303,35 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 2,
-   "faces": 17800
+   "faces": 66896
   },
   {
    "key": "08 Cooling and Energy",
    "label": "Cooling",
    "color": "#4E6E7A",
-   "parts": 10,
-   "faces": 2720
+   "parts": 11,
+   "faces": 2754
   },
   {
    "key": "09 Aero Detail",
    "label": "Aero detail",
    "color": "#8A929A",
-   "parts": 13,
-   "faces": 3408
+   "parts": 53,
+   "faces": 4636
   },
   {
    "key": "10 Cockpit",
    "label": "Cockpit",
    "color": "#9A5A52",
-   "parts": 5,
-   "faces": 374
+   "parts": 12,
+   "faces": 756
   },
   {
    "key": "11 Structure and Service",
    "label": "Structure",
    "color": "#6A6E72",
-   "parts": 5,
-   "faces": 554
+   "parts": 16,
+   "faces": 1786
   }
  ],
  "parts": {
@@ -419,12 +419,61 @@
    "x1": 4500.0,
    "f": 204
   },
-  "floor_strakes": {
+  "floor_strake_l1": {
    "g": "02 Floor and Diffuser",
    "mat": "carbon_matte",
    "x0": 2300.0,
    "x1": 4470.0,
-   "f": 48
+   "f": 6
+  },
+  "floor_strake_l2": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4470.0,
+   "f": 6
+  },
+  "floor_strake_l3": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4470.0,
+   "f": 6
+  },
+  "floor_strake_l4": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4470.0,
+   "f": 6
+  },
+  "floor_strake_r1": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4470.0,
+   "f": 6
+  },
+  "floor_strake_r2": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4470.0,
+   "f": 6
+  },
+  "floor_strake_r3": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4470.0,
+   "f": 6
+  },
+  "floor_strake_r4": {
+   "g": "02 Floor and Diffuser",
+   "mat": "carbon_matte",
+   "x0": 2300.0,
+   "x1": 4470.0,
+   "f": 6
   },
   "floor_surface": {
    "g": "02 Floor and Diffuser",
@@ -447,19 +496,47 @@
    "x1": 4560.0,
    "f": 86
   },
-  "front_diveplanes": {
+  "front_diveplane_l1": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
    "x0": 56.2,
-   "x1": 210.2,
-   "f": 368
+   "x1": 191.5,
+   "f": 92
   },
-  "front_endplates": {
+  "front_diveplane_l2": {
+   "g": "01 Bodywork",
+   "mat": "carbon_matte",
+   "x0": 103.3,
+   "x1": 210.2,
+   "f": 92
+  },
+  "front_diveplane_r1": {
+   "g": "01 Bodywork",
+   "mat": "carbon_matte",
+   "x0": 56.2,
+   "x1": 191.5,
+   "f": 92
+  },
+  "front_diveplane_r2": {
+   "g": "01 Bodywork",
+   "mat": "carbon_matte",
+   "x0": 103.3,
+   "x1": 210.2,
+   "f": 92
+  },
+  "front_endplate_l": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
    "x0": 0.0,
    "x1": 480.0,
-   "f": 76
+   "f": 38
+  },
+  "front_endplate_r": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 0.0,
+   "x1": 480.0,
+   "f": 38
   },
   "front_flap_1": {
    "g": "01 Bodywork",
@@ -538,12 +615,19 @@
    "x1": 417.2,
    "f": 12
   },
-  "rear_endplates": {
+  "rear_endplate_l": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
    "x0": 4360.0,
    "x1": 4930.0,
-   "f": 12
+   "f": 6
+  },
+  "rear_endplate_r": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4360.0,
+   "x1": 4930.0,
+   "f": 6
   },
   "rear_flap": {
    "g": "01 Bodywork",
@@ -573,19 +657,89 @@
    "x1": 4756.0,
    "f": 22
   },
-  "rear_louvres": {
+  "rear_louvre_l1": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
    "x0": 4400.0,
-   "x1": 4648.0,
-   "f": 220
+   "x1": 4440.0,
+   "f": 22
   },
-  "rear_pylons": {
+  "rear_louvre_l2": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4452.0,
+   "x1": 4492.0,
+   "f": 22
+  },
+  "rear_louvre_l3": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4504.0,
+   "x1": 4544.0,
+   "f": 22
+  },
+  "rear_louvre_l4": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4556.0,
+   "x1": 4596.0,
+   "f": 22
+  },
+  "rear_louvre_l5": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4608.0,
+   "x1": 4648.0,
+   "f": 22
+  },
+  "rear_louvre_r1": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4400.0,
+   "x1": 4440.0,
+   "f": 22
+  },
+  "rear_louvre_r2": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4452.0,
+   "x1": 4492.0,
+   "f": 22
+  },
+  "rear_louvre_r3": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4504.0,
+   "x1": 4544.0,
+   "f": 22
+  },
+  "rear_louvre_r4": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4556.0,
+   "x1": 4596.0,
+   "f": 22
+  },
+  "rear_louvre_r5": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4608.0,
+   "x1": 4648.0,
+   "f": 22
+  },
+  "rear_pylon_l": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
    "x0": 4261.0,
    "x1": 4587.0,
-   "f": 76
+   "f": 38
+  },
+  "rear_pylon_r": {
+   "g": "03 Wings",
+   "mat": "carbon_gloss",
+   "x0": 4261.0,
+   "x1": 4587.0,
+   "f": 38
   },
   "rear_wing_main": {
    "g": "03 Wings",
@@ -1098,12 +1252,19 @@
    "x1": 4021.2,
    "f": 48
   },
-  "driveshafts": {
+  "driveshaft_rl": {
    "g": "05 Suspension",
    "mat": "steel",
    "x0": 4024.0,
    "x1": 4076.0,
-   "f": 28
+   "f": 14
+  },
+  "driveshaft_rr": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 4024.0,
+   "x1": 4076.0,
+   "f": 14
   },
   "heave_f": {
    "g": "05 Suspension",
@@ -1119,19 +1280,61 @@
    "x1": 4015.0,
    "f": 36
   },
-  "pushrods": {
+  "pushrod_fl": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 660.9,
-   "x1": 4259.0,
-   "f": 112
+   "x0": 887.7,
+   "x1": 1032.3,
+   "f": 14
   },
-  "rockers": {
+  "pushrod_fr": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 887.7,
+   "x1": 1032.3,
+   "f": 14
+  },
+  "pushrod_rl": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3888.3,
+   "x1": 4061.7,
+   "f": 14
+  },
+  "pushrod_rr": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3888.3,
+   "x1": 4061.7,
+   "f": 14
+  },
+  "rocker_fl": {
    "g": "05 Suspension",
    "mat": "alu_bright",
    "x0": 955.0,
+   "x1": 1105.0,
+   "f": 22
+  },
+  "rocker_fr": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 955.0,
+   "x1": 1105.0,
+   "f": 22
+  },
+  "rocker_rl": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 3815.0,
    "x1": 3965.0,
-   "f": 88
+   "f": 22
+  },
+  "rocker_rr": {
+   "g": "05 Suspension",
+   "mat": "alu_bright",
+   "x0": 3815.0,
+   "x1": 3965.0,
+   "f": 22
   },
   "steering_column": {
    "g": "05 Suspension",
@@ -1161,12 +1364,145 @@
    "x1": 3901.0,
    "f": 12
   },
-  "wishbones": {
+  "trackrod_fl": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 660.9,
+   "x1": 909.1,
+   "f": 14
+  },
+  "trackrod_fr": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 660.9,
+   "x1": 909.1,
+   "f": 14
+  },
+  "trackrod_rl": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 4041.0,
+   "x1": 4259.0,
+   "f": 14
+  },
+  "trackrod_rr": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 4041.0,
+   "x1": 4259.0,
+   "f": 14
+  },
+  "wishbone_fl_lower_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 833.5,
+   "x1": 1213.5,
+   "f": 26
+  },
+  "wishbone_fl_lower_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
    "x0": 643.5,
+   "x1": 1023.5,
+   "f": 26
+  },
+  "wishbone_fl_upper_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 833.5,
+   "x1": 1213.5,
+   "f": 26
+  },
+  "wishbone_fl_upper_fwd": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 643.5,
+   "x1": 1023.5,
+   "f": 26
+  },
+  "wishbone_fr_lower_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 833.5,
+   "x1": 1213.5,
+   "f": 26
+  },
+  "wishbone_fr_lower_fwd": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 643.5,
+   "x1": 1023.5,
+   "f": 26
+  },
+  "wishbone_fr_upper_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 833.5,
+   "x1": 1213.5,
+   "f": 26
+  },
+  "wishbone_fr_upper_fwd": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 643.5,
+   "x1": 1023.5,
+   "f": 26
+  },
+  "wishbone_rl_lower_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3983.5,
    "x1": 4363.5,
-   "f": 416
+   "f": 26
+  },
+  "wishbone_rl_lower_fwd": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3793.5,
+   "x1": 4173.5,
+   "f": 26
+  },
+  "wishbone_rl_upper_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3983.5,
+   "x1": 4363.5,
+   "f": 26
+  },
+  "wishbone_rl_upper_fwd": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3793.5,
+   "x1": 4173.5,
+   "f": 26
+  },
+  "wishbone_rr_lower_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3983.5,
+   "x1": 4363.5,
+   "f": 26
+  },
+  "wishbone_rr_lower_fwd": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3793.5,
+   "x1": 4173.5,
+   "f": 26
+  },
+  "wishbone_rr_upper_aft": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3983.5,
+   "x1": 4363.5,
+   "f": 26
+  },
+  "wishbone_rr_upper_fwd": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 3793.5,
+   "x1": 4173.5,
+   "f": 26
   },
   "fan_motors": {
    "g": "06 Fan System",
@@ -1250,7 +1586,7 @@
    "mat": "alu_cast",
    "x0": 2900.0,
    "x1": 3558.0,
-   "f": 17672
+   "f": 66768
   },
   "fuel_cell": {
    "g": "08 Cooling and Energy",
@@ -1315,12 +1651,61 @@
    "x1": 2623.0,
    "f": 1034
   },
-  "bargeboards": {
+  "bargeboard_l1": {
    "g": "09 Aero Detail",
    "mat": "carbon_gloss",
    "x0": 1180.0,
    "x1": 1760.0,
-   "f": 304
+   "f": 38
+  },
+  "bargeboard_l2": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1226.0,
+   "x1": 1736.0,
+   "f": 38
+  },
+  "bargeboard_l3": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1272.0,
+   "x1": 1712.0,
+   "f": 38
+  },
+  "bargeboard_l4": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1318.0,
+   "x1": 1688.0,
+   "f": 38
+  },
+  "bargeboard_r1": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1180.0,
+   "x1": 1760.0,
+   "f": 38
+  },
+  "bargeboard_r2": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1226.0,
+   "x1": 1736.0,
+   "f": 38
+  },
+  "bargeboard_r3": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1272.0,
+   "x1": 1712.0,
+   "f": 38
+  },
+  "bargeboard_r4": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1318.0,
+   "x1": 1688.0,
+   "f": 38
   },
   "beam_wing": {
    "g": "03 Wings",
@@ -1328,13 +1713,6 @@
    "x0": 4228.6,
    "x1": 4471.8,
    "f": 364
-  },
-  "brake_ducts": {
-   "g": "09 Aero Detail",
-   "mat": "carbon_matte",
-   "x0": 673.8,
-   "x1": 4280.7,
-   "f": 568
   },
   "cameras": {
    "g": "09 Aero Detail",
@@ -1364,12 +1742,75 @@
    "x1": 3582.6,
    "f": 304
   },
-  "floor_fences": {
+  "floor_fence_l1": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
    "x0": 1900.0,
+   "x1": 2200.0,
+   "f": 38
+  },
+  "floor_fence_l2": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2256.7,
+   "x1": 2556.7,
+   "f": 38
+  },
+  "floor_fence_l3": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2613.4,
+   "x1": 2913.4,
+   "f": 38
+  },
+  "floor_fence_l4": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2970.1,
+   "x1": 3270.1,
+   "f": 38
+  },
+  "floor_fence_l5": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3326.8,
    "x1": 3626.8,
-   "f": 380
+   "f": 38
+  },
+  "floor_fence_r1": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 1900.0,
+   "x1": 2200.0,
+   "f": 38
+  },
+  "floor_fence_r2": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2256.7,
+   "x1": 2556.7,
+   "f": 38
+  },
+  "floor_fence_r3": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2613.4,
+   "x1": 2913.4,
+   "f": 38
+  },
+  "floor_fence_r4": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2970.1,
+   "x1": 3270.1,
+   "f": 38
+  },
+  "floor_fence_r5": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3326.8,
+   "x1": 3626.8,
+   "f": 38
   },
   "mirrors": {
    "g": "09 Aero Detail",
@@ -1385,12 +1826,33 @@
    "x1": 4492.0,
    "f": 22
   },
-  "turning_vanes": {
+  "turning_vane_l1": {
    "g": "09 Aero Detail",
    "mat": "carbon_gloss",
    "x0": 1320.0,
    "x1": 1700.0,
-   "f": 152
+   "f": 38
+  },
+  "turning_vane_l2": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1380.0,
+   "x1": 1700.0,
+   "f": 38
+  },
+  "turning_vane_r1": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1320.0,
+   "x1": 1700.0,
+   "f": 38
+  },
+  "turning_vane_r2": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_gloss",
+   "x0": 1380.0,
+   "x1": 1700.0,
+   "f": 38
   },
   "airbox": {
    "g": "11 Structure and Service",
@@ -1468,6 +1930,314 @@
    "x0": 226.0,
    "x1": 4194.0,
    "f": 256
+  },
+  "bduct_drum_fl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 729.1,
+   "x1": 1070.9,
+   "f": 104
+  },
+  "bduct_drum_fr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 729.1,
+   "x1": 1070.9,
+   "f": 104
+  },
+  "bduct_drum_rl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3861.1,
+   "x1": 4238.9,
+   "f": 104
+  },
+  "bduct_drum_rr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3861.1,
+   "x1": 4238.9,
+   "f": 104
+  },
+  "bduct_fence_fl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 742.5,
+   "x1": 1057.5,
+   "f": 22
+  },
+  "bduct_fence_fr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 742.5,
+   "x1": 1057.5,
+   "f": 22
+  },
+  "bduct_fence_rl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3876.0,
+   "x1": 4224.0,
+   "f": 22
+  },
+  "bduct_fence_rr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3876.0,
+   "x1": 4224.0,
+   "f": 22
+  },
+  "bduct_inlet_fl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 661.8,
+   "x1": 751.8,
+   "f": 22
+  },
+  "bduct_inlet_fr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 661.8,
+   "x1": 751.8,
+   "f": 22
+  },
+  "bduct_inlet_rl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3791.6,
+   "x1": 3881.6,
+   "f": 22
+  },
+  "bduct_inlet_rr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3791.6,
+   "x1": 3881.6,
+   "f": 22
+  },
+  "bduct_pipe_fl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 705.5,
+   "x1": 927.0,
+   "f": 26
+  },
+  "bduct_pipe_fr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 705.5,
+   "x1": 927.0,
+   "f": 26
+  },
+  "bduct_pipe_rl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3836.5,
+   "x1": 4079.2,
+   "f": 26
+  },
+  "bduct_pipe_rr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3836.5,
+   "x1": 4079.2,
+   "f": 26
+  },
+  "bduct_vanes_fl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 783.6,
+   "x1": 1016.4,
+   "f": 110
+  },
+  "bduct_vanes_fr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 783.6,
+   "x1": 1016.4,
+   "f": 110
+  },
+  "bduct_vanes_rl": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3923.8,
+   "x1": 4176.2,
+   "f": 110
+  },
+  "bduct_vanes_rr": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 3923.8,
+   "x1": 4176.2,
+   "f": 110
+  },
+  "brake_lines": {
+   "g": "11 Structure and Service",
+   "mat": "steel",
+   "x0": 892.2,
+   "x1": 4052.6,
+   "f": 72
+  },
+  "bulkhead_dash": {
+   "g": "11 Structure and Service",
+   "mat": "carbon_matte",
+   "x0": 1171.0,
+   "x1": 1189.0,
+   "f": 72
+  },
+  "bulkhead_engine": {
+   "g": "11 Structure and Service",
+   "mat": "carbon_matte",
+   "x0": 2351.0,
+   "x1": 2369.0,
+   "f": 72
+  },
+  "bulkhead_front": {
+   "g": "11 Structure and Service",
+   "mat": "carbon_matte",
+   "x0": 611.0,
+   "x1": 629.0,
+   "f": 72
+  },
+  "bulkhead_rear": {
+   "g": "11 Structure and Service",
+   "mat": "carbon_matte",
+   "x0": 1971.0,
+   "x1": 1989.0,
+   "f": 72
+  },
+  "control_boxes": {
+   "g": "11 Structure and Service",
+   "mat": "alu_dark",
+   "x0": 2410.0,
+   "x1": 2590.0,
+   "f": 352
+  },
+  "dash": {
+   "g": "10 Cockpit",
+   "mat": "carbon_matte",
+   "x0": 1185.0,
+   "x1": 1255.0,
+   "f": 22
+  },
+  "drink_bottle": {
+   "g": "10 Cockpit",
+   "mat": "suit",
+   "x0": 1765.0,
+   "x1": 1915.0,
+   "f": 22
+  },
+  "exit_louvres_l": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2671.3,
+   "x1": 3268.6,
+   "f": 330
+  },
+  "exit_louvres_r": {
+   "g": "09 Aero Detail",
+   "mat": "carbon_matte",
+   "x0": 2671.3,
+   "x1": 3268.6,
+   "f": 330
+  },
+  "extinguisher": {
+   "g": "10 Cockpit",
+   "mat": "alu_bright",
+   "x0": 1760.0,
+   "x1": 2010.0,
+   "f": 96
+  },
+  "fuel_coupling": {
+   "g": "08 Cooling and Energy",
+   "mat": "alu_bright",
+   "x0": 1940.0,
+   "x1": 2391.1,
+   "f": 34
+  },
+  "gun_sockets": {
+   "g": "11 Structure and Service",
+   "mat": "alu_bright",
+   "x0": 856.0,
+   "x1": 4094.0,
+   "f": 160
+  },
+  "harness": {
+   "g": "10 Cockpit",
+   "mat": "suit",
+   "x0": 1340.0,
+   "x1": 1700.0,
+   "f": 110
+  },
+  "harness_buckle": {
+   "g": "10 Cockpit",
+   "mat": "suit",
+   "x0": 1525.0,
+   "x1": 1615.0,
+   "f": 22
+  },
+  "master_cylinders": {
+   "g": "11 Structure and Service",
+   "mat": "alu_bright",
+   "x0": 940.0,
+   "x1": 1090.0,
+   "f": 140
+  },
+  "pedal_box": {
+   "g": "10 Cockpit",
+   "mat": "alu_bright",
+   "x0": 495.0,
+   "x1": 625.0,
+   "f": 66
+  },
+  "shift_paddles": {
+   "g": "10 Cockpit",
+   "mat": "carbon_gloss",
+   "x0": 1282.0,
+   "x1": 1294.0,
+   "f": 44
+  },
+  "side_intrusion": {
+   "g": "11 Structure and Service",
+   "mat": "carbon_matte",
+   "x0": 1180.0,
+   "x1": 1980.0,
+   "f": 44
+  },
+  "starter_socket": {
+   "g": "11 Structure and Service",
+   "mat": "alu_bright",
+   "x0": 4180.0,
+   "x1": 4270.0,
+   "f": 60
+  },
+  "steering_wheel": {
+   "g": "05 Suspension",
+   "mat": "carbon_matte",
+   "x0": 1293.0,
+   "x1": 1327.0,
+   "f": 66
+  },
+  "tyre_sensors": {
+   "g": "04 Wheels and Brakes",
+   "mat": "alu_dark",
+   "x0": 596.6,
+   "x1": 3782.2,
+   "f": 88
+  },
+  "wheel_display": {
+   "g": "04 Wheels and Brakes",
+   "mat": "alu_dark",
+   "x0": 1319.0,
+   "x1": 1333.0,
+   "f": 22
+  },
+  "wiring_loom": {
+   "g": "11 Structure and Service",
+   "mat": "hose",
+   "x0": 656.6,
+   "x1": 4057.0,
+   "f": 116
   }
  },
  "tunnel": {

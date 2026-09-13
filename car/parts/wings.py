@@ -117,8 +117,11 @@ def _front_endplates():
                 160.0 - k * 30.0, 20.0 + k * 4.0,
                 thickness=0.07, camber=0.09, n_span=4, taper=0.7,
                 y0=sgn * (half + FW["diveplane_span"] / 2 + 6.0)))
-    out["front_endplates"] = mesh.join(*plates)
-    out["front_diveplanes"] = mesh.join(*planes)
+    for i, m in enumerate(plates):
+        out[f"front_endplate_{'lr'[i]}"] = m
+    half = len(planes) // 2
+    for i, m in enumerate(planes):
+        out[f"front_diveplane_{'lr'[i // half]}{i % half + 1}"] = m
     return out
 
 
@@ -197,7 +200,8 @@ def _rear():
         plates.append(common.plate(RW["x"] - 120.0, RW["x"] + RW["chord"] + 90.0,
                                    y, RW["z"] - 230.0, RW["z"] + 150.0,
                                    RW["endplate_t"], sweep_top=40.0))
-    out["rear_endplates"] = mesh.join(*plates)
+    for i, m in enumerate(plates):
+        out[f"rear_endplate_{'lr'[i]}"] = m
 
     # swan-neck pylons: they meet the mainplane on its UPPER surface, so the
     # working (lower) surface is left completely undisturbed
@@ -208,7 +212,8 @@ def _rear():
                 (RW["x"] - 70.0, sgn * 140.0, RW["z"] - 300.0),
                 (RW["x"] - 200.0, sgn * 118.0, RW["z"] - 440.0)]
         pylons.append(mesh.pipe(path, RW["pylon_t"], spec.RES["pipe"]))
-    out["rear_pylons"] = mesh.join(*pylons)
+    for i, m in enumerate(pylons):
+        out[f"rear_pylon_{'lr'[i]}"] = m
 
     # endplate louvres, bleeding the pressure difference at the tip to cut the
     # tip vortex and the drag that comes with it
@@ -218,7 +223,10 @@ def _rear():
         for k in range(5):
             lv.append(shapes.rounded_box(RW["x"] - 60.0 + k * 52.0, y,
                                RW["z"] + 96.0 - k * 14.0, 40.0, 14.0, 56.0))
-    out["rear_louvres"] = mesh.join(*lv)
+    # louvres are individually cut slots, not one lump
+    half = len(lv) // 2
+    for i, m in enumerate(lv):
+        out[f"rear_louvre_{'lr'[i // half]}{i % half + 1}"] = m
 
     # gurney on the flap trailing edge
     g = []

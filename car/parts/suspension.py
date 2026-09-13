@@ -39,32 +39,47 @@ def build():
             outb = (x, y * 0.74, z_out)
             for dx in (-190.0, 190.0):
                 inb = (x + dx, sgn * inb_y, z_in)
-                arms.append(detail.faired_leg(outb, inb, sect, chord))
+                leg = "fwd" if dx < 0 else "aft"
+                lvl = "upper" if z_out == S["upper_z"] else "lower"
+                arms.append((f"wishbone_{tag}_{lvl}_{leg}",
+                             detail.faired_leg(outb, inb, sect, chord)))
 
         # push/pull rod into a rocker on the chassis
         if front:
             rod = [(x, y * 0.74, S["lower_z"]), (x + 120.0, sgn * inb_y, 560.0)]
-            rockers.append(shapes.rounded_box(x + 130.0, sgn * inb_y, 580.0, 150.0, 40.0, 120.0))
+            rockers.append((f"rocker_{tag}", shapes.rounded_box(
+                x + 130.0, sgn * inb_y, 580.0, 150.0, 40.0, 120.0, 14.0)))
         else:
             rod = [(x, y * 0.74, S["upper_z"] + 60.0),
                    (x - 150.0, sgn * inb_y, 180.0)]
-            rockers.append(shapes.rounded_box(x - 160.0, sgn * inb_y, 180.0, 150.0, 40.0, 120.0))
-        rods.append(mesh.pipe(rod, S["rod_r"], P))
+            rockers.append((f"rocker_{tag}", shapes.rounded_box(
+                x - 160.0, sgn * inb_y, 180.0, 150.0, 40.0, 120.0, 14.0)))
+        rods.append((f"pushrod_{tag}", mesh.pipe(rod, S["rod_r"], P)))
 
         # track rod / toe link
         trk_x = x + (-230.0 if front else 200.0)
-        rods.append(mesh.pipe([(x, y * 0.74, S["lower_z"] + 70.0),
-                               (trk_x, sgn * inb_y * 0.8, S["lower_z"] + 90.0)],
-                              S["rod_r"] * 0.8, P))
+        rods.append((f"trackrod_{tag}",
+                     mesh.pipe([(x, y * 0.74, S["lower_z"] + 70.0),
+                                (trk_x, sgn * inb_y * 0.8, S["lower_z"] + 90.0)],
+                               S["rod_r"] * 0.8, P)))
 
         if not front:
-            shafts.append(mesh.pipe([(x, sgn * 180.0, od / 2),
-                                     (x, y * 0.78, od / 2)], 26.0, P))
+            shafts.append((f"driveshaft_{tag}",
+                           mesh.pipe([(x, sgn * 180.0, od / 2),
+                                      (x, y * 0.78, od / 2)], 26.0, P)))
 
-    out["wishbones"] = mesh.join(*arms)
-    out["pushrods"] = mesh.join(*rods)
-    out["rockers"] = mesh.join(*rockers)
-    out["driveshafts"] = mesh.join(*shafts)
+    # One object per member. A wishbone leg, a pushrod and a track rod are
+    # three different parts with three different loads and three different
+    # lengths; joining them into one mesh called "wishbones" makes them
+    # impossible to inspect and hides that there are sixteen of them.
+    for k, m in arms:
+        out[k] = m
+    for k, m in rods:
+        out[k] = m
+    for k, m in rockers:
+        out[k] = m
+    for k, m in shafts:
+        out[k] = m
     out.update(_inboard())
     return out
 

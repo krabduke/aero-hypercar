@@ -17,7 +17,7 @@ import mesh as meshlib   # noqa: E402
 import materials         # noqa: E402
 from parts import (chassis, floor, wings, wheels,        # noqa: E402
                    suspension, fans, powertrain, aerodetail,
-                   detail)
+                   detail, systems)
 
 MM = 0.001
 
@@ -25,7 +25,7 @@ MODULES = [
     ("chassis", chassis), ("floor", floor), ("wings", wings),
     ("wheels", wheels), ("suspension", suspension), ("fans", fans),
     ("powertrain", powertrain), ("aero detail", aerodetail),
-    ("body detail", detail),
+    ("body detail", detail), ("systems", systems),
 ]
 
 COLLECTIONS = ["01 Bodywork", "02 Floor and Diffuser", "03 Wings",
@@ -42,8 +42,8 @@ def collection_for(name):
         return "08 Cooling and Energy"
     if n.startswith("fan"):
         return "06 Fan System"
-    if n.startswith(("wishbone", "pushrod", "rocker", "driveshaft",
-                     "damper", "torsion", "heave", "antiroll",
+    if n.startswith(("wishbone", "pushrod", "trackrod", "rocker",
+                     "driveshaft", "damper", "torsion", "heave", "antiroll",
                      "steering_")):
         return "05 Suspension"
     if n.startswith(("tyre", "wheel", "rim", "disc", "caliper",
@@ -52,11 +52,18 @@ def collection_for(name):
     if n.startswith(("bargeboard", "turning_vane", "floor_fence",
                      "brake_duct", "mirror", "camera", "rainlight",
                      "exhaust", "cooling_louvre", "gills", "sidepod_gills",
-                     "nose_cape", "nose_pylon")):
+                     "nose_cape", "nose_pylon", "bargeboard", "turning_vane",
+                     "bduct_", "exit_louvres")):
         return "09 Aero Detail"
-    if n.startswith(("helmet", "driver", "seat", "steering", "headrest")):
+    if n.startswith(("helmet", "driver", "seat", "steering", "headrest",
+                     "harness", "dash", "extinguisher", "drink_bottle",
+                     "wheel_display", "shift_paddles", "pedal_box")):
         return "10 Cockpit"
-    if n.startswith(("crash_", "side_impact", "jack_", "tow_", "airbox")):
+    if n.startswith(("crash_", "side_impact", "jack_", "tow_", "airbox",
+                     "bulkhead_", "side_intrusion", "gun_socket",
+                     "starter_socket", "fuel_coupling", "tyre_sensors",
+                     "brake_lines", "master_cylinders", "wiring_loom",
+                     "control_boxes")):
         return "11 Structure and Service"
     if "wing" in n or "endplate" in n or "pylon" in n or "louvre" in n \
        or "gurney" in n or "cascade" in n or "y250" in n:

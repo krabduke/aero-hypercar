@@ -178,28 +178,44 @@ def main():
            spec.power_to_weight() > spec.f1_power_to_weight(),
            f"+{(spec.power_to_weight()/spec.f1_power_to_weight()-1)*100:.0f} %")
 
+    # The car does not re-model its engine, it vendors the sibling project's
+    # generators. That claim is only true while the copy is current, and it
+    # had silently fallen 111 parts behind.
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    try:
+        import vendor_engine
+        ok_v, why = vendor_engine.check()
+    except Exception as exc:
+        ok_v, why = False, str(exc)
+    c.true("vendored engine is current", ok_v, why)
+
     print("\nCOMPLETENESS")
     # the nose, tub and engine cover are one continuous lofted surface now,
     # which is what lets the body be waisted and curvature-continuous
     want = ["tub", "sidepod_l", "sidepod_r", "sidepod_inlets", "sharkfin",
-            "cockpit_coaming", "halo", "seat", "headrest", "steering",
-            "floor_plank", "tunnel_l", "tunnel_r", "floor_strakes",
-            "floor_skirts", "front_endplates", "front_diveplanes",
-            "front_y250_vanes", "rear_endplates", "rear_pylons",
-            "rear_louvres", "rear_gurney", "beam_wing", "bargeboards",
-            "rear_wing_main", "rear_flap", "fan_rotor_l", "fan_rotor_r",
-            "fan_stators",
-            "turning_vanes", "floor_fences", "floor_edge_wings", "brake_ducts",
-            "mirrors", "cameras", "rainlight", "exhaust", "cooling_louvres",
-            "tyre_fl", "tyre_rr", "rim_fl", "rim_rr", "wheelcover_fl",
-            "wheelnut_rr", "disc_fl", "disc_rr", "caliper_fl", "upright_rr",
+            "cockpit_coaming", "halo", "seat", "headrest", "steering_wheel",
+            "floor_plank", "floor_surface", "tunnel_l", "tunnel_r",
+            "floor_strake_l1", "floor_skirts", "floor_fence_l1",
             "front_wing_main", "front_flap_1", "front_flap_3",
-            "front_diveplanes", "wishbones",
-            "pushrods", "driveshafts", "fanduct", "fan_rotors", "fan_motors",
-            "engine", "gearbox", "radiator_l", "radiator_r", "rad_tanks_l",
-            "rad_hoses_r", "battery", "battery_modules", "fuel_cell",
-            "dampers_f", "dampers_r", "antiroll_f", "torsion_bars_r",
-            "heave_f", "steering_rack", "steering_column"]
+            "front_endplate_l", "front_diveplane_l1", "front_y250_vanes",
+            "rear_wing_main", "rear_flap", "rear_endplate_r",
+            "rear_pylon_l", "rear_louvre_r1", "rear_gurney", "beam_wing",
+            "bargeboard_l1", "turning_vane_r1", "floor_edge_wings",
+            "mirrors", "cameras", "rainlight", "exhaust", "cooling_louvres",
+            "tyre_fl", "tyre_rr", "rim_fl", "wheelcover_fl", "wheelnut_rr",
+            "disc_fl", "caliper_fl", "upright_rr",
+            "wishbone_fl_upper_fwd", "pushrod_rr", "trackrod_fl",
+            "rocker_fl", "driveshaft_rl",
+            "dampers_f", "antiroll_f", "torsion_bars_r", "heave_f",
+            "steering_rack", "steering_column",
+            "bduct_inlet_fl", "bduct_drum_rr", "bduct_fence_fr",
+            "brake_lines", "master_cylinders", "pedal_box", "wiring_loom",
+            "harness", "dash", "extinguisher", "bulkhead_dash",
+            "side_intrusion", "gun_sockets", "tyre_sensors",
+            "exit_louvres_l", "fanduct", "fan_rotor_l", "fan_rotor_r",
+            "fan_stators", "engine", "gearbox", "radiator_l", "radiator_r",
+            "rad_tanks_l", "rad_hoses_r", "battery", "battery_modules",
+            "fuel_cell"]
     want = [w for w in want if w not in ("fan_rotors", "rear_wing")]
     missing = [w for w in want if w not in by]
     c.true("key components present", not missing, f"{len(want)} checked")
@@ -210,7 +226,7 @@ def main():
     c.true("no empty meshes", all(int(r["verts"]) > 0 for r in rows), "all non-empty")
     c.true("body is one continuous surface", "nose" not in by and "tub" in by,
            "nose, tub and cover lofted together")
-    c.band("object count", len(rows), 45, 200, "", "assemblies")
+    c.band("object count", len(rows), 60, 400, "", "assemblies")
 
     print("\n" + "=" * 70)
     if c.fails:

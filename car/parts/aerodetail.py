@@ -28,7 +28,6 @@ def build():
     out.update(_turning_vanes())
     out.update(_floor_edge())
     out.update(_beam_wing())
-    out.update(_brake_ducts())
     out.update(_details())
     return out
 
@@ -71,7 +70,11 @@ def _bargeboards():
             z1 = BB["z1"] - k * 46.0
             parts.append(_curved_vane(x0, x1, y, y + sgn * 62.0, z0, z1,
                                       BB["t"], bow=sgn * 34.0))
-    return {"bargeboards": mesh.join(*parts)}
+    # Each board is a separate element, trimmed on its own. Half the list is
+    # the left side and half the right, in build order.
+    half = len(parts) // 2
+    return {f"bargeboard_{'lr'[i // half]}{i % half + 1}": m
+            for i, m in enumerate(parts)}
 
 
 def _turning_vanes():
@@ -84,7 +87,9 @@ def _turning_vanes():
                                       y, y + sgn * 40.0,
                                       TV["z0"], TV["z1"] - k * 48.0,
                                       TV["t"], bow=sgn * 22.0))
-    return {"turning_vanes": mesh.join(*parts)}
+    half = len(parts) // 2
+    return {f"turning_vane_{'lr'[i // half]}{i % half + 1}": m
+            for i, m in enumerate(parts)}
 
 
 def _floor_edge():
@@ -106,7 +111,9 @@ def _floor_edge():
             fences.append(_curved_vane(x0, parts_x1, y, y - sgn * 40.0,
                                        10.0, 10.0 + FE["fence_h"],
                                        FE["t"], bow=-sgn * 16.0))
-    out["floor_fences"] = mesh.join(*fences)
+    # each fence is set individually on a real car, so each is its own object
+    for i, m in enumerate(fences):
+        out[f"floor_fence_{'lr'[i // (len(fences) // 2)]}{i % (len(fences) // 2) + 1}"] = m
 
     wings = []
     for sgn in (-1.0, 1.0):
@@ -130,29 +137,6 @@ def _beam_wing():
             BW["aoa"] + k * 8.0, thickness=0.09, camber=0.07,
             n_span=7, taper=0.92))
     return {"beam_wing": mesh.join(*elems)}
-
-
-def _brake_ducts():
-    """Brake ducts and drums at each corner. At this downforce the brakes are
-    doing a great deal of work, and the drums also shield the wheel wake."""
-    parts = []
-    for (tag, x, y, w, od) in wheels.corners():
-        front = tag.startswith("f")
-        r = BD["front_r"] if front else BD["rear_r"]
-        z = od / 2
-        sgn = -1.0 if y < 0 else 1.0
-        v, f = mesh.tube(-BD["width"] / 2, BD["width"] / 2, r - 26.0, r, 30)
-        v = [(px + x, py + y - sgn * w * 0.30, pz + z) for (px, py, pz) in v]
-        # tube axis is +x; rotate so it lies about the wheel's +y axis
-        v = [(px, py, pz) for (px, py, pz) in v]
-        vv, ff = mesh.tube(-BD["width"] / 2, BD["width"] / 2, r - 26.0, r, 30)
-        vv = [(pz + x, px + y - sgn * w * 0.30, py + z) for (px, py, pz) in vv]
-        parts.append((vv, ff))
-        # inlet scoop facing forward
-        iv, if_ = shapes.rounded_box(x - r * 0.72, y - sgn * w * 0.34, z - r * 0.30,
-                           150.0, 54.0, BD["inlet_h"])
-        parts.append((iv, if_))
-    return {"brake_ducts": mesh.join(*parts)}
 
 
 def _details():

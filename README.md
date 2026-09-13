@@ -7,7 +7,7 @@ a Formula 1 car on a Formula 1 circuit?**
 The power unit is the [RX-8V V8 hybrid](https://github.com/krabduke/car-engine-v8-hybrid)
 from the sibling project, imported and installed — not re-modelled.
 
-**110 assemblies · 4,930 × 2,001 mm · 700 kg · 1,254 hp · 650 kg of fan downforce**
+**220 assemblies · 4,930 × 2,001 mm · 700 kg · 1,254 hp · 650 kg of fan downforce**
 
 ![hero](renders/01_hero.png)
 
@@ -73,7 +73,7 @@ Requires Blender (`brew install --cask blender`). Nothing else.
 
 ```
 make build      # generate geometry, assemble build/car.blend, write parts.csv
-make verify     # 40 dimensional, mass, aero, clash and performance checks
+make verify     # 41 dimensional, mass, aero, clash and performance checks
 make render     # hero, plan, cutaway and exploded views
 make export     # build/car.glb
 make manifest   # viewer/parts.json
@@ -82,7 +82,7 @@ make viewer     # serve the interactive viewer
 
 ## Verification
 
-`make verify` runs 40 checks. Dimensions are measured out of
+`make verify` runs 41 checks. Dimensions are measured out of
 `build/parts.csv`; the rest are design rules, including direct comparisons
 against the F1 reference:
 
@@ -174,6 +174,11 @@ car/
                  mirrors, cameras, rain light, exhaust
     detail.py    cooling gills, front wing pylons, nose cape, crash
                  structures, roll-hoop airbox, driver, jack and tow points
+    systems.py   brake duct internals, hydraulics, wiring loom, cockpit,
+                 survival cell bulkheads, pit hardware, cooling exits
+powerunit/       the engine, vendored from the sibling project by
+                 tools/vendor_engine.py — `make vendor` refreshes it and
+                 verify.py fails the build if the copy has gone stale
     fans.py      the fan system — shrouds, rotors, motors, plenum throats
     powertrain.py imports and installs the RX-8V, plus gearbox, radiators,
                  battery and fuel cell

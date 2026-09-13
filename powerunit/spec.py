@@ -118,6 +118,10 @@ HEAD = {
 
 VALVE = {
     "n_per_cyl": 4,
+    "seat_angle": 45.0,          # the classic seat, cut into head and valve
+    "margin": 1.4,               # flat land at the head's outer edge
+    "tulip": 0.62,               # how far the underhead blends into the stem
+    "keeper_groove": 1.1,        # where the collets grip the tip
     "intake_head_r": 17.0,
     "exhaust_head_r": 14.5,
     "stem_r": 2.6,
@@ -132,6 +136,16 @@ CAM = {
     "lobe_lift": 12.5,
     "lobe_w": 11.0,
     "n_cams": 4,
+    # A lobe is not a circle. Duration is the crank angle over which the valve
+    # is off its seat; the lobe occupies half that in cam angle, because the
+    # cam turns at half crank speed. 280 degrees at 16,000 rpm is a racing
+    # profile -- long enough to fill the cylinder at peak power, and the
+    # reason this engine has no low-speed manners to speak of.
+    "duration_in": 280.0,        # crank degrees
+    "duration_ex": 272.0,
+    "lobe_centre_in": 104.0,     # crank degrees after TDC overlap
+    "lobe_centre_ex": 108.0,     # before TDC
+    "ramp": 0.06,                # fraction of duration spent on the quiet ramp
 }
 
 # --------------------------------------------------------------------------
@@ -206,6 +220,50 @@ ANCILLARY = {
 # --------------------------------------------------------------------------
 
 MATERIAL_MAP = {
+    "accessory_belt": "rubber_blk",
+    "collets_": "steel_nitrided",
+    "ring_oil": "steel_nitrided",
+    "ring_second": "steel_nitrided",
+    "ring_top": "steel_nitrided",
+    "dipstick": "steel_nitrided",
+    "catch_tank": "alu_forged",
+    "breathers": "alu_forged",
+    "accessory_pulleys": "alu_forged",
+    "starter": "alu_cast",
+    "alternator": "alu_cast",
+    "cam_caps": "alu_forged",
+    "rod_bolts": "titanium",
+    "main_cap": "alu_forged",
+    "rod_shell": "copper_wound",
+    "main_shell": "copper_wound",
+    "hp_fuel_pump": "alu_cast",
+    "fuel_feeds": "steel_nitrided",
+    "fuel_rail": "alu_forged",
+    "runner_": "alu_forged",
+    "collector_": "inconel",
+    "primary_": "inconel",
+    "ecu_connector": "rubber_blk",
+    "battery_terminal": "copper_wound",
+    "battery_module": "anodised",
+    "inverter_conn": "rubber_blk",
+    "oil_filler": "anodised",
+    "camcover_bolt": "titanium",
+    "sump_baffle": "alu_forged",
+    "sump_drain": "steel_nitrided",
+    "mount_boss": "alu_cast",
+    "gallery_plug": "steel_nitrided",
+    "water_outlet": "alu_cast",
+    "tappet_": "steel_nitrided",
+    "retainer_": "titanium",
+    "valve_spring": "spring_steel",
+    "coil_": "rubber_blk",
+    "injector_": "steel_nitrided",
+    "sparkplug": "anodised",
+    "cam_journals": "steel_nitrided",
+    "camlobe": "steel_nitrided",
+    "camshaft": "steel_nitrided",
+    "valve_ex": "inconel",
+    "valve_in": "titanium",
     "block":      "alu_cast",
     "bedplate":   "alu_cast",
     "head":       "alu_cast",
@@ -234,6 +292,14 @@ MATERIAL_MAP = {
     "pump":       "alu_forged",
     "injector":   "steel_nitrided",
     "coil":       "rubber_blk",
+    "spring":     "spring_steel", "retainer": "titanium",
+    "bucket":     "steel_nitrided", "timing": "magnesium",
+    "gear":       "steel_nitrided", "stud": "steel_nitrided",
+    "bolt":       "steel_nitrided", "pickup": "alu_forged",
+    "plumbing":   "alu_forged", "sensor": "anodised",
+    "shield":     "inconel", "wheel": "titanium",
+    "ring":       "steel_nitrided", "cap": "titanium",
+    "gudgeon":    "steel_nitrided", "sump_line": "alu_forged",
 }
 DEFAULT_MATERIAL = "alu_cast"
 

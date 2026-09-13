@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 from parts import common
 
 B = spec.BLOCK
@@ -17,6 +18,7 @@ def build():
     out.update(_banks())
     out.update(_liners())
     out.update(_crankcase())
+    out.update(_block_detail())
     out.update(_bedplate())
     out.update(_sump())
     return out
@@ -31,8 +33,10 @@ def _banks():
         along1 = spec.DECK_HEIGHT
         half_len = (B["x_rear"] - B["x_front"]) / 2
         w = B["bank_half_width"]
-        v, f = mesh.box(0.0, 0.0, (along0 + along1) / 2,
-                        B["x_rear"] - B["x_front"], w * 2, along1 - along0)
+        v, f = shapes.rounded_box(
+            0.0, 0.0, (along0 + along1) / 2,
+            B["x_rear"] - B["x_front"], w * 2, along1 - along0,
+            r=14.0, seg=5, draft=1.5)
         # push the slab a little outboard so the two banks leave a vee valley
         # between them for the turbos, instead of merging into one lump
         v = [(px, py + 8.0, pz) for (px, py, pz) in v]
@@ -60,15 +64,62 @@ def _crankcase():
     parts = []
     x0, x1 = B["x_front"], B["x_rear"]
     hw = B["half_width"] * 0.86
-    parts.append(mesh.box(0.0, 0.0, -B["skirt_depth"] / 2 + 14.0,
-                          x1 - x0, hw * 2, B["skirt_depth"] + 28.0))
-    # main bearing webs
+    # a casting, with radiused edges and draft, not a rectangular prism
+    parts.append(shapes.rounded_box(0.0, 0.0, -B["skirt_depth"] / 2 + 14.0,
+                                    x1 - x0, hw * 2, B["skirt_depth"] + 28.0,
+                                    r=16.0, seg=5, draft=1.5))
     span = (spec.CRANK["n_mains"] - 1)
     for i in range(spec.CRANK["n_mains"]):
         x = x0 + 26.0 + (x1 - x0 - 52.0) * i / span
-        parts.append(mesh.box(x, 0.0, -B["skirt_depth"] * 0.30,
-                              B["main_web_t"], hw * 1.9, B["skirt_depth"] * 1.1))
+        parts.append(shapes.rounded_box(
+            x, 0.0, -B["skirt_depth"] * 0.30,
+            B["main_web_t"], hw * 1.9, B["skirt_depth"] * 1.1, r=7.0))
     return {"block_crankcase": mesh.join(*parts)}
+
+
+def _block_detail():
+    """The features a block actually has: water jacket outlets, oil gallery
+    plugs, breathers and the bosses the ancillaries hang off.
+
+    A block with nothing on its outside is a billet, not a casting."""
+    out = {}
+    x0, x1 = B["x_front"], B["x_rear"]
+    hw = B["half_width"] * 0.86
+
+    ports = []
+    for i in range(4):
+        f = (i + 0.5) / 4
+        x = x0 + (x1 - x0) * f
+        for sgn in (-1.0, 1.0):
+            v, fc = mesh.revolve_open(
+                [(0.0, 0.0), (0.0, 15.0), (10.0, 16.5), (18.0, 14.0),
+                 (18.0, 0.0)], 12, cap_start=True, cap_end=True)
+            v = [(pz + x, sgn * (hw + py), px + 22.0) for (px, py, pz) in v]
+            ports.append((v, fc))
+    out["water_outlets"] = mesh.join(*ports)
+
+    plugs = []
+    for i in range(6):
+        f = (i + 0.5) / 6
+        x = x0 + (x1 - x0) * f
+        for sgn in (-1.0, 1.0):
+            v, fc = mesh.revolve_open(
+                [(0.0, 0.0), (0.0, 8.0), (5.0, 8.0), (5.0, 0.0)], 8,
+                cap_start=True, cap_end=True)
+            v = [(pz + x, sgn * (hw + py), px - 42.0) for (px, py, pz) in v]
+            plugs.append((v, fc))
+    out["gallery_plugs"] = mesh.join(*plugs)
+
+    bosses = []
+    for (x, y, z) in ((x0 + 60.0, hw, 60.0), (x0 + 60.0, -hw, 60.0),
+                      (x1 - 60.0, hw, 60.0), (x1 - 60.0, -hw, 60.0),
+                      (x0 + 150.0, hw, -30.0), (x1 - 150.0, -hw, -30.0)):
+        bv, bf = shapes.bolt_boss(0, 0, 0, 13.0, 12.0)
+        sgn = 1.0 if y > 0 else -1.0
+        bosses.append(([(px * 0 + pz + x, y + sgn * py, px + z)
+                        for (px, py, pz) in bv], bf))
+    out["mount_bosses"] = mesh.join(*bosses)
+    return out
 
 
 def _bedplate():
@@ -78,10 +129,12 @@ def _bedplate():
     x0, x1 = B["x_front"], B["x_rear"]
     hw = B["half_width"] * 0.80
     z = -B["skirt_depth"]
-    parts.append(mesh.box(0.0, 0.0, z - 11.0, x1 - x0, hw * 2, 22.0))
+    parts.append(shapes.rounded_box(0.0, 0.0, z - 11.0, x1 - x0, hw * 2, 22.0,
+                                    r=12.0, seg=5, draft=1.0))
     for i in range(spec.CRANK["n_mains"]):
         x = x0 + 26.0 + (x1 - x0 - 52.0) * i / (spec.CRANK["n_mains"] - 1)
-        parts.append(mesh.box(x, 0.0, z * 0.55, 20.0, 74.0, abs(z) * 0.9))
+        parts.append(shapes.rounded_box(x, 0.0, z * 0.55, 20.0, 74.0,
+                                        abs(z) * 0.9, r=8.0))
         for sgn in (-1, 1):
             parts.append(_stud(x, sgn * 44.0, z))
     return {"bedplate": mesh.join(*parts)}
@@ -95,8 +148,31 @@ def _stud(x, y, z):
 
 
 def _sump():
+    """A dry-sump pan: a shallow tray with a deep local well, not a tank.
+
+    The oil has to end up somewhere the pickup can reach it under braking, so
+    the pan falls from a wide rail at the block face into a narrow keel. It
+    was a rectangular box bolted to the bottom of the engine.
+    """
     a = spec.ANCILLARY
     z = -spec.BLOCK["skirt_depth"] - 22.0
-    v, f = mesh.box(0.0, 0.0, z - a["sump_depth"] / 2,
-                    a["sump_len"], a["sump_w"], a["sump_depth"])
-    return {"sump": (v, f)}
+    out = {}
+    out["sump"] = shapes.tapered_pan(
+        -a["sump_len"] / 2, a["sump_len"] / 2,
+        a["sump_w"] / 2 * 0.98, a["sump_w"] / 2 * 0.70,
+        z, a["sump_depth"], a["sump_len"] * 0.26, a["sump_len"] * 0.18)
+    dv, df = mesh.revolve_open(
+        [(0.0, 0.0), (0.0, 11.0), (7.0, 13.0), (13.0, 11.0), (13.0, 0.0)],
+        8, cap_start=True, cap_end=True)
+    out["sump_drain"] = ([(pz + a["sump_len"] * 0.18, py,
+                           -px + z - a["sump_depth"] * 0.96)
+                          for (px, py, pz) in dv], df)
+    baff = []
+    for i in range(4):
+        f = (i + 0.5) / 4
+        baff.append(shapes.rounded_box(
+            -a["sump_len"] / 2 + a["sump_len"] * f, 0.0,
+            z - a["sump_depth"] * 0.42, 5.0, a["sump_w"] * 0.72,
+            a["sump_depth"] * 0.55, 3.0))
+    out["sump_baffles"] = mesh.join(*baff)
+    return out

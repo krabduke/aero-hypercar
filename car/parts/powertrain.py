@@ -32,9 +32,13 @@ def _load_engine():
     try:
         espec = importlib.import_module("spec")
         espec.RES.update({"revolve": 26, "small_revolve": 12, "pipe": 8})
+        # every module the engine's own assemble.py builds, in the same
+        # order. Miss one and the car quietly carries a different engine from
+        # the one in the engine project -- which is exactly what happened:
+        # detail and plumbing were absent and the car was 111 parts behind.
         mods = [importlib.import_module(f"parts.{m}") for m in
-                ("block", "bottomend", "heads", "induction", "turbo",
-                 "hybrid", "drive")]
+                ("block", "bottomend", "heads", "plumbing", "induction",
+                 "turbo", "hybrid", "drive", "detail")]
         built = {}
         for m in mods:
             built.update(m.build())
