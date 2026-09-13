@@ -2,7 +2,7 @@ BLENDER := /Applications/Blender.app/Contents/MacOS/Blender
 BLEND   := build/car.blend
 SAMPLES ?= 128
 
-.PHONY: all build verify render export stl manifest viewer clean
+.PHONY: all build verify render export stl manifest viewer validate aero clean
 
 all: build verify render export manifest
 
@@ -30,3 +30,11 @@ viewer:
 
 clean:
 	rm -rf build renders
+
+BPY := /Applications/Blender.app/Contents/Resources/5.2/python/bin/python3.13
+
+validate:
+	$(BPY) aero/validate.py
+
+aero:
+	$(BPY) aero/analyse.py

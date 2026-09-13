@@ -210,3 +210,31 @@ def _cockpit():
     # headrest / roll structure padding
     out["headrest"] = mesh.box(T["cockpit_x1"] - 40.0, 0.0, 620.0, 220.0, 300.0, 130.0)
     return out
+
+
+def surface_point(x, angle_deg, standoff=0.0):
+    """A point on (or just off) the central body at a clock angle.
+
+    Detail parts that lie on the bodywork -- gills, vanes, camera pods -- have
+    to start at the surface. Anything placed by eye either floats or sinks,
+    and the error changes along the car because the section does.
+    """
+    hw, z_bot, z_top, n, bias = _sample(spec.BODY, x)
+    zc = (z_bot + z_top) / 2 + bias * (z_top - z_bot) * 0.5
+    hz = (z_top - z_bot) / 2
+    a = math.radians(angle_deg)
+    ca, sa = math.cos(a), math.sin(a)
+    p = 2.0 / n
+    return (x,
+            (hw + standoff) * math.copysign(abs(ca) ** p, ca),
+            zc + (hz + standoff) * math.copysign(abs(sa) ** p, sa))
+
+
+def sidepod_point(x, f_y, f_z, standoff=0.0):
+    """A point on a sidepod flank: f_y 0 inboard to 1 outboard, f_z 0 low to
+    1 high, on the side the caller signs f_y with."""
+    y_in, y_out, z_bot, z_top, n = _sample(spec.SIDEPOD_TABLE, abs(x))
+    sgn = 1.0 if f_y >= 0 else -1.0
+    y = y_in + (y_out - y_in) * abs(f_y)
+    z = z_bot + (z_top - z_bot) * f_z
+    return (x, sgn * (y + standoff * abs(f_y)), z)

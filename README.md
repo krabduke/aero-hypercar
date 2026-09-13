@@ -7,7 +7,7 @@ a Formula 1 car on a Formula 1 circuit?**
 The power unit is the [RX-8V V8 hybrid](https://github.com/krabduke/car-engine-v8-hybrid)
 from the sibling project, imported and installed — not re-modelled.
 
-**36 assemblies · 4,980 × 1,980 mm · 700 kg · 1,254 hp · 650 kg of fan downforce**
+**91 assemblies · 4,930 × 2,001 mm · 700 kg · 1,254 hp · 650 kg of fan downforce**
 
 ![hero](renders/01_hero.png)
 
@@ -73,7 +73,7 @@ Requires Blender (`brew install --cask blender`). Nothing else.
 
 ```
 make build      # generate geometry, assemble build/car.blend, write parts.csv
-make verify     # 31 dimensional, mass, aero and performance checks
+make verify     # 40 dimensional, mass, aero, clash and performance checks
 make render     # hero, plan, cutaway and exploded views
 make export     # build/car.glb
 make manifest   # viewer/parts.json
@@ -82,7 +82,7 @@ make viewer     # serve the interactive viewer
 
 ## Verification
 
-`make verify` runs 31 checks. Dimensions are measured out of
+`make verify` runs 40 checks. Dimensions are measured out of
 `build/parts.csv`; the rest are design rules, including direct comparisons
 against the F1 reference:
 
@@ -111,6 +111,52 @@ matter, because without them it produces nonsense:
 - **A driver g-limit.** At large corner radii the car is limited by the human
   in it, and the model says so.
 
+## Aerodynamic simulation
+
+The wings are solved with a **vortex-lattice method** — a real three-dimensional
+potential-flow solve, not a coefficient lookup. Each panel carries a horseshoe
+vortex; flow tangency is enforced at every collocation point; induced drag comes
+from the Trefftz plane; and the track is made an exact streamline by mirroring
+the whole vortex system in it.
+
+```
+make validate    # check the solver against lifting-line theory first
+make aero        # solve the car's wings in ground effect
+```
+
+The solver is validated before it is used. Against lifting-line theory it gets
+the lift slope within 7.5 % across AR 4–12, returns a span efficiency of 0.99
+for a rectangular AR 8 wing, and reproduces ground effect correctly: +59 % lift
+at h/c = 0.25.
+
+Results for the car's wings, at 250 km/h:
+
+| | |
+|---|---|
+| Downforce, free air | 552 kg |
+| Downforce, in ground effect | **577 kg** (+4.5 %) |
+| Induced drag | 172 kg-force, CDi 0.232 |
+| Lift / induced drag | 3.4 |
+| At 300 km/h | 831 kg — 119 % of the car's mass |
+
+**What the solve does not cover, and why the numbers should not be over-read:**
+
+- It models the **wings only**. The floor, venturi tunnels, diffuser and fans
+  are the car's main downforce source, and they are viscous, ducted and
+  fan-driven — a potential-flow lattice cannot touch them. The floor and fan
+  figures in `spec.py` come from the performance model and this analysis does
+  not confirm them.
+- It **under-reads a slotted multi-element wing.** The slot flow that makes the
+  four front elements work is viscous; in a lattice they shadow each other. The
+  11.9 % front-wing share it reports is a floor, not a figure.
+- It is **inviscid**: no boundary layer, no separation, no stall, and no profile
+  or pressure drag. Total drag is higher than CDi.
+
+Fixing the Trefftz routine to work in the full crossflow plane was needed for
+this car: the original collapsed every wake onto the y axis, which is exact for
+one planar wing and nonsense for a front wing, rear wing and beam wing shedding
+at the same span stations at different heights. It reported CDi above 20.
+
 ## Layout
 
 ```
@@ -121,8 +167,13 @@ car/
     chassis.py   tub, nose, sidepods, engine cover, airbox, halo, cockpit
     floor.py     plank, venturi tunnels, diffuser, strakes, skirts
     wings.py     4-element front wing, 2-element rear wing, endplates, pylons
-    wheels.py    tyres, rims, brake discs, calipers, uprights
-    suspension.py wishbones, pushrods, pullrods, rockers, driveshafts
+    wheels.py    per corner: tyre, rim with spokes, wheel cover and nut,
+                 ventilated disc, six-pot caliper, upright
+    suspension.py wishbones as aerofoil fairings, pushrods, pullrods, rockers
+    aerodetail.py bargeboards, turning vanes, floor fences, brake ducts,
+                 mirrors, cameras, rain light, exhaust
+    detail.py    cooling gills, front wing pylons, nose cape, crash
+                 structures, roll-hoop airbox, driver, jack and tow points
     fans.py      the fan system — shrouds, rotors, motors, plenum throats
     powertrain.py imports and installs the RX-8V, plus gearbox, radiators,
                  battery and fuel cell
@@ -133,7 +184,8 @@ powerunit/       the engine generators, vendored from the sibling project
 ## Honesty
 
 This is a **design study with a coherent first-order performance model**, not a
-validated race car. There is no CFD, no structural analysis, no tyre model
+validated race car. There is a validated vortex-lattice solve of the wings (above) but no CFD of
+the floor or the fans, no structural analysis, no tyre model
 beyond a load-sensitivity exponent, no suspension kinematics solved through
 travel, and no lap simulation. The aerodynamic coefficients are targets chosen
 to be plausible for the configuration, not results.

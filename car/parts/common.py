@@ -98,3 +98,39 @@ def plate(x0, x1, y, z0, z1, t, sweep_top=0.0):
         i2 = (i + 1) % n
         faces.append((i, i2, n + i2, n + i))
     return verts, faces
+
+
+def lofted_element(stations, thickness=0.085, camber=0.075, n_chord=None):
+    """Loft one wing element through a list of spanwise stations.
+
+    Each station is (y, x_le, z, chord, aoa_deg). This is the general form that
+    `wing_element` is a special case of: it lets an element arch, rise towards
+    its tip, change chord and wash its incidence independently, which is what
+    separates a front wing from four flat plates.
+    """
+    n_chord = n_chord or spec.RES["airfoil_pts"]
+    sect = section_points(n_chord, thickness, camber)
+    n_sec = len(sect)
+    verts = []
+    for (y, x_le, z, chord, aoa) in stations:
+        a = math.radians(-aoa)
+        ca, sa = math.cos(a), math.sin(a)
+        for (u, v) in sect:
+            du = (u - 0.25) * chord
+            dv = -v * chord                  # inverted aerofoil
+            verts.append((x_le + 0.25 * chord + du * ca - dv * sa, y,
+                          z + du * sa + dv * ca))
+    faces = []
+    for j in range(len(stations) - 1):
+        a0, b0 = j * n_sec, (j + 1) * n_sec
+        for i in range(n_sec):
+            i2 = (i + 1) % n_sec
+            faces.append((a0 + i, a0 + i2, b0 + i2, b0 + i))
+    faces.append(tuple(range(n_sec - 1, -1, -1)))
+    base = (len(stations) - 1) * n_sec
+    faces.append(tuple(range(base, base + n_sec)))
+    return verts, faces
+
+
+def section_points(n_pts, tc, mc):
+    return airfoil.section_points(n_pts, tc, mc)

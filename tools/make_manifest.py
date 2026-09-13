@@ -15,6 +15,9 @@ GROUPS = [
     ("06 Fan System",          "Fans",       "#C06A30"),
     ("07 Power Unit",          "Power unit", "#A8763E"),
     ("08 Cooling and Energy",  "Cooling",    "#4E6E7A"),
+    ("09 Aero Detail",         "Aero detail", "#8A929A"),
+    ("10 Cockpit",             "Cockpit",    "#9A5A52"),
+    ("11 Structure and Service", "Structure", "#6A6E72"),
 ]
 
 

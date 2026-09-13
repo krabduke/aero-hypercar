@@ -58,8 +58,9 @@ def build():
     out["engine"] = mesh.join(*parts)
 
     gx = PT["gearbox_x"]
-    out["gearbox"] = mesh.tube(gx, gx + PT["gearbox_len"], 0.0,
-                               PT["gearbox_r"], 32)
+    gv, gf = mesh.tube(gx, gx + PT["gearbox_len"], 0.0, PT["gearbox_r"], 32)
+    out["gearbox"] = ([(px, py, pz + PT["gearbox_z"]) for (px, py, pz) in gv],
+                      gf)
     rads = []
     for sgn in (-1.0, 1.0):
         # Sat upright inside the sidepod, fed by the inlet. An earlier version

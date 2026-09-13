@@ -27,9 +27,11 @@ def build():
         ducts.append((v, f))
 
         # plenum throat feeding the fan from the tunnels
-        ducts.append(mesh.pipe([(cx - 620.0, cy * 0.55, 120.0),
-                                (cx - 260.0, cy * 0.85, 220.0),
-                                (cx - 60.0, cy, cz - 30.0)], 150.0, 16))
+        z_in = F["plenum_z0"]
+        ducts.append(mesh.pipe([(cx - 620.0, cy * 0.55, z_in),
+                                (cx - 260.0, cy * 0.85, z_in + 100.0),
+                                (cx - 60.0, cy, cz - 30.0)],
+                               F["plenum_r"], 16))
 
         # hub and blades
         hv, hf = mesh.tube(-60.0, 60.0, 0.0, 74.0, 24)

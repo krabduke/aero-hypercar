@@ -92,12 +92,16 @@ def _floor_edge():
     which is the same job the skirts do further inboard."""
     out = {}
     fences = []
+    from parts.floor import half_width
     for sgn in (-1.0, 1.0):
         for k in range(FE["fences"]):
             f = k / max(FE["fences"] - 1, 1)
             x0 = FE["x0"] + (FE["x1"] - FE["x0"]) * f * 0.82
             parts_x1 = x0 + 300.0
-            y = sgn * (spec.FLOOR["half_w"] - 30.0 - k * 22.0)
+            # sit on the floor's own edge, which waists in around the rear
+            # tyre. At a fixed half_w the aft fences ran into both wheels.
+            y = sgn * (min(half_width(x0), half_width(parts_x1))
+                       - 34.0 - k * 20.0)
             fences.append(_curved_vane(x0, parts_x1, y, y - sgn * 40.0,
                                        10.0, 10.0 + FE["fence_h"],
                                        FE["t"], bow=-sgn * 16.0))
@@ -105,10 +109,11 @@ def _floor_edge():
 
     wings = []
     for sgn in (-1.0, 1.0):
+        x_w = FE["x1"] - FE["wing_chord"]
         wings.append(common.wing_element(
-            FE["x1"] - FE["wing_chord"], 96.0, FE["wing_span"],
-            FE["wing_chord"], 8.0, thickness=0.07, camber=0.05,
-            n_span=6, taper=0.7, y0=sgn * (spec.FLOOR["half_w"] - 380.0)))
+            x_w, 96.0, FE["wing_span"], FE["wing_chord"], 8.0,
+            thickness=0.07, camber=0.05, n_span=6, taper=0.7,
+            y0=sgn * (half_width(x_w) - FE["wing_span"] / 2 - 40.0)))
     out["floor_edge_wings"] = mesh.join(*wings)
     return out
 
@@ -176,11 +181,12 @@ def _details():
     ex = []
     v, f = mesh.tube(D["exhaust_x"], D["exhaust_x"] + 130.0,
                      D["exhaust_r"] - 9.0, D["exhaust_r"], 26)
-    ex.append((v, f))
+    ex.append(([(px, py, pz + D["exhaust_z"]) for (px, py, pz) in v], f))
     for sgn in (-1.0, 1.0):
         wv, wf = mesh.tube(D["exhaust_x"] + 20.0, D["exhaust_x"] + 96.0,
                            26.0, 34.0, 20)
-        wv = [(px, py + sgn * 132.0, pz + 44.0) for (px, py, pz) in wv]
+        wv = [(px, py + sgn * 132.0, pz + D["wastegate_z"])
+              for (px, py, pz) in wv]
         ex.append((wv, wf))
     out["exhaust"] = mesh.join(*ex)
 

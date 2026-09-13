@@ -36,6 +36,44 @@ class Check:
         return False
 
 
+def _wheel_clashes():
+    """(ok, detail) -- does any vertex of a non-corner part lie inside a wheel?
+
+    A wheel is a cylinder about its own y axis. A part is allowed inside it
+    only if it belongs to that corner: the hub, brakes, uprights, suspension
+    and the brake duct all legitimately live there.
+    """
+    from parts import (chassis, floor as floormod, wings, wheels, suspension,
+                       fans, powertrain, aerodetail, detail)
+    allowed = ("tyre", "rim", "wheel", "disc", "caliper", "upright",
+               "wishbone", "pushrod", "driveshaft", "brake_duct", "rocker")
+    built = {}
+    for m in (chassis, floormod, wings, suspension, fans, powertrain,
+              aerodetail, detail):
+        try:
+            built.update(m.build())
+        except Exception as exc:                      # pragma: no cover
+            return False, f"could not rebuild geometry: {exc}"
+
+    hits = []
+    for (tag, cx, cy, cw, od) in wheels.corners():
+        r = od / 2
+        hw = cw / 2
+        cz = od / 2
+        for name, (verts, _) in built.items():
+            if name.startswith(allowed):
+                continue
+            for (x, y, z) in verts:
+                if abs(y - cy) > hw - 12.0:
+                    continue
+                if (x - cx) ** 2 + (z - cz) ** 2 < (r - 12.0) ** 2:
+                    hits.append(f"{name} into wheel {tag}")
+                    break
+    if hits:
+        return False, "; ".join(sorted(set(hits))[:5])
+    return True, "4 corners clear"
+
+
 def main():
     path = os.path.join(ROOT, "build", "parts.csv")
     if not os.path.exists(path):
@@ -54,6 +92,39 @@ def main():
     c.band("overall width", y1 - y0, 1500.0, 2100.0, " mm")
     c.band("overall height", z1 - z0, 800.0, 1300.0, " mm")
     c.band("wheelbase", spec.WHEELBASE, 2800.0, 3700.0, " mm")
+    # The axles have to sit ON the car. Left at x = 0 the front axle was at
+    # the nose tip: no front overhang, the front wing behind the front wheels,
+    # and a 1.4 m tail. Nothing else in the suite noticed.
+    fo = spec.FRONT_AXLE_X - x0
+    ro = x1 - spec.REAR_AXLE_X
+    c.band("front overhang", fo, 400.0, 1400.0, " mm", "nose to front axle")
+    c.band("rear overhang", ro, 400.0, 1500.0, " mm", "rear axle to tail")
+    c.true("overhangs are balanced", 0.45 < fo / max(ro, 1.0) < 2.2,
+           f"front/rear {fo / max(ro, 1.0):.2f}")
+    fw = by.get("front_wing_main")
+    if fw:
+        c.true("front wing is ahead of the front axle",
+               float(fw["x_max_mm"]) < spec.FRONT_AXLE_X,
+               f"TE at {float(fw['x_max_mm']):.0f} mm, axle at "
+               f"{spec.FRONT_AXLE_X:.0f} mm")
+    fl = by.get("floor_plank")
+    if fl:
+        c.true("floor starts behind the front tyre",
+               float(fl["x_min_mm"]) > spec.FRONT_AXLE_X
+               + spec.WHEEL["front_od"] / 2,
+               f"floor from {float(fl['x_min_mm']):.0f} mm")
+    c.true("nothing below the track surface", z0 > -1.0,
+           f"lowest point {z0:.0f} mm")
+
+    # Nothing but the corner's own hardware may occupy a wheel's space. The
+    # fan shrouds sat straight through both rear wheels and every other check
+    # passed, because none of them compared one part against another.
+    #
+    # Bounding boxes are useless here -- the floor and the fan duct both span
+    # the car, so their boxes overlap a wheel's box whatever their real shape.
+    # The geometry layer is pure Python, so this rebuilds it and tests actual
+    # vertices against each wheel's swept cylinder.
+    c.true("nothing occupies a wheel's space", *_wheel_clashes())
     c.band("front track", spec.TRACK_FRONT, 1400.0, 1800.0, " mm")
     c.true("track is inside overall width",
            spec.TRACK_FRONT + spec.WHEEL["front_w"] <= spec.WIDTH + 60.0,
@@ -113,12 +184,15 @@ def main():
     want = ["tub", "sidepod_l", "sidepod_r", "sidepod_inlets", "sharkfin",
             "cockpit_coaming", "halo", "seat", "headrest", "steering",
             "floor_plank", "tunnel_l", "tunnel_r", "floor_strakes",
-            "floor_skirts", "front_wing", "front_endplates", "front_cascades",
+            "floor_skirts", "front_endplates", "front_cascades",
             "front_y250_vanes", "rear_wing", "rear_endplates", "rear_pylons",
             "rear_louvres", "rear_gurney", "beam_wing", "bargeboards",
             "turning_vanes", "floor_fences", "floor_edge_wings", "brake_ducts",
             "mirrors", "cameras", "rainlight", "exhaust", "cooling_louvres",
-            "tyres", "wheelrims", "discs", "calipers", "uprights", "wishbones",
+            "tyre_fl", "tyre_rr", "rim_fl", "rim_rr", "wheelcover_fl",
+            "wheelnut_rr", "disc_fl", "disc_rr", "caliper_fl", "upright_rr",
+            "front_wing_main", "front_flap_1", "front_flap_3",
+            "front_diveplanes", "wishbones",
             "pushrods", "driveshafts", "fanduct", "fan_rotors", "fan_motors",
             "engine", "gearbox", "radiators", "battery", "fuel_cell"]
     missing = [w for w in want if w not in by]

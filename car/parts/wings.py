@@ -20,52 +20,138 @@ def build():
 
 
 def _front():
-    """Four-element front wing. The stack is what makes the aero balance
-    adjustable without changing the floor, which is the expensive end."""
-    out = {}
-    elems = []
-    for k in range(FW["elements"]):
-        frac = k / max(FW["elements"] - 1, 1)
-        chord = FW["chord"] * (0.46 + 0.54 * (1 - frac))
-        x = FW["x"] + k * (FW["chord"] * 0.20)
-        z = FW["z"] + k * (FW["gap"] + 14.0)
-        aoa = FW["aoa_root"] + (FW["aoa_tip"] - FW["aoa_root"]) * frac
-        elems.append(common.wing_element(
-            x, z, FW["span"], chord, aoa, thickness=0.085, camber=0.075,
-            taper=0.86, aoa_tip=aoa + 5.0))
-    out["front_wing"] = mesh.join(*elems)
+    """Four-element front wing, each element a separate lofted surface.
 
-    plates = []
-    for sgn in (-1.0, 1.0):
-        y = sgn * FW["span"] / 2
-        plates.append(common.plate(FW["x"] - 80.0, FW["x"] + FW["chord"] + 40.0,
-                                   y, 20.0, FW["endplate_h"], FW["endplate_t"],
-                                   sweep_top=70.0))
-        # footplate: turns the flow out around the front tyre, which is the
-        # single dirtiest thing on the car
-        plates.append(common.plate(FW["x"] + 60.0, FW["x"] + FW["chord"] + 30.0,
-                                   y + sgn * 44.0, 16.0, 62.0, 8.0))
-    out["front_endplates"] = mesh.join(*plates)
+    The shape that matters is the spanwise one. Across the regulated neutral
+    centre section the mainplane runs flat and almost unloaded; outboard of
+    that it washes in to its tip incidence and rises towards the endplate, so
+    the tip vortex is thrown outside the front tyre rather than into it.
+    """
+    out = {}
+    half = FW["span"] / 2
+    neutral = FW["neutral_half_w"]
+    n_span = 15
+
+    for k, (dx, dz, c_r, c_t, span_f, aoa_r, aoa_t, rise) in enumerate(
+            FW["stack"]):
+        stations = []
+        tip = half * span_f
+        for j in range(n_span):
+            f = -1.0 + 2.0 * j / (n_span - 1)
+            y = tip * f
+            t = abs(y)
+            # outboard fraction: 0 across the neutral section, 1 at the tip
+            o = 0.0 if t <= neutral else (t - neutral) / max(tip - neutral, 1.0)
+            o = o * o * (3 - 2 * o)          # smoothstep, so there is no crease
+            chord = c_r + (c_t - c_r) * o
+            aoa = aoa_r + (aoa_t - aoa_r) * o
+            z = FW["z"] + dz + rise * o
+            if k == 0:
+                # the mainplane arches over the nose: highest on centreline
+                z += FW["arch"] * max(0.0, 1.0 - (t / neutral) ** 2)
+            stations.append((y, FW["x"] + dx, z, chord, aoa))
+        name = "front_wing_main" if k == 0 else f"front_flap_{k}"
+        out[name] = common.lofted_element(stations, thickness=0.085,
+                                          camber=0.075)
+
+    out.update(_front_endplates())
 
     # cascade winglets above the outboard wing
     cas = []
     for sgn in (-1.0, 1.0):
-        for k in range(2):
+        for (dx, dz, span, chord, aoa) in FW["cascades"]:
             cas.append(common.wing_element(
-                FW["x"] + 120.0 + k * 90.0, FW["z"] + 150.0 + k * 62.0,
-                420.0, 150.0 - k * 34.0, 16.0 + k * 6.0,
+                FW["x"] + dx, FW["z"] + dz, span, chord, aoa,
                 thickness=0.08, camber=0.08, n_span=5, taper=0.8,
-                y0=sgn * (FW["span"] / 2 - 250.0)))
+                y0=sgn * (half - FW["cascade_inset"] - span / 2)))
     out["front_cascades"] = mesh.join(*cas)
 
     # the Y250 vortex vanes either side of the neutral centre section
     vanes = []
     for sgn in (-1.0, 1.0):
         vanes.append(common.plate(FW["x"] + 30.0, FW["x"] + FW["chord"] - 40.0,
-                                  sgn * 250.0, FW["z"] + 20.0, FW["z"] + 150.0,
-                                  7.0, sweep_top=44.0))
+                                  sgn * neutral, FW["z"] + 20.0,
+                                  FW["z"] + 150.0, 7.0, sweep_top=44.0))
     out["front_y250_vanes"] = mesh.join(*vanes)
     return out
+
+
+def _front_endplates():
+    """Endplate, footplate and dive planes.
+
+    The endplate is not a flat card: its lower edge rolls outboard into a
+    footplate, which is what actually turns the flow around the outside of the
+    front tyre -- the single dirtiest thing on the car.
+    """
+    out = {}
+    half = FW["span"] / 2
+    x0 = FW["x"] + FW["endplate_x0"]
+    x1 = FW["x"] + FW["endplate_x1"]
+    z0 = 16.0
+    t = FW["endplate_t"]
+    fh = FW["footplate_h"]
+    # The top edge follows the flap stack: low ahead of the mainplane, rising
+    # over each flap in turn, so the plate encloses the elements instead of
+    # standing past them as a rectangle.
+    tops = [(0.00, z0 + 96.0), (0.22, z0 + 150.0), (0.48, z0 + 250.0),
+            (0.74, z0 + FW["endplate_h"]), (1.00, z0 + FW["endplate_h"] - 44.0)]
+    plates, planes = [], []
+    for sgn in (-1.0, 1.0):
+        y = sgn * half
+        rows = []
+        # lower rows roll outboard into the footplate; the upper edge follows
+        # `tops`, interpolated at the same chordwise stations
+        for (lvl, dy) in ((0.0, sgn * 46.0), (0.30, sgn * 12.0),
+                          (0.66, 0.0), (1.0, 0.0)):
+            row = []
+            for (f, z_top) in tops:
+                x = x0 + (x1 - x0) * f
+                z_lo = z0 + (fh if lvl > 0.0 else 0.0) * min(lvl / 0.30, 1.0)
+                z = z_lo + (z_top - z_lo) * max(0.0, (lvl - 0.30) / 0.70)
+                row.append((x, y + dy * (1.0 - 0.3 * f), z))
+            rows.append(row)
+        plates.append(_skin(rows, t, sgn))
+
+        for k in range(FW["diveplanes"]):
+            zz = z0 + fh + 40.0 + k * 62.0
+            # a dive plane hangs off the outer face of the endplate; it must
+            # stay inside the legal width, which half + span/2 did not
+            planes.append(common.wing_element(
+                FW["x"] + 30.0 + k * 40.0, zz, 92.0, 160.0 - k * 30.0,
+                20.0 + k * 4.0, thickness=0.07, camber=0.09, n_span=4,
+                taper=0.7, y0=sgn * (half + 44.0)))
+    out["front_endplates"] = mesh.join(*plates)
+    out["front_diveplanes"] = mesh.join(*planes)
+    return out
+
+
+def _skin(rows, t, sgn):
+    """Give a grid of stations thickness in y, and close it into a solid."""
+    nr, nc = len(rows), len(rows[0])
+    inner = [(x, y - sgn * t / 2, z) for row in rows for (x, y, z) in row]
+    outer = [(x, y + sgn * t / 2, z) for row in rows for (x, y, z) in row]
+    verts = inner + outer
+    off = len(inner)
+    faces = []
+    for i in range(nr - 1):
+        for j in range(nc - 1):
+            k = i * nc + j
+            faces.append((k, k + 1, k + nc + 1, k + nc))
+            faces.append((off + k, off + k + nc, off + k + nc + 1,
+                          off + k + 1))
+    for i in range(nr - 1):
+        for j in (0, nc - 1):
+            k = i * nc + j
+            quad = ((k, k + nc, off + k + nc, off + k) if j == 0 else
+                    (k + nc, k, off + k, off + k + nc))
+            faces.append(quad)
+    for j in range(nc - 1):
+        for i in (0, nr - 1):
+            k = i * nc + j
+            quad = ((k + 1, k, off + k, off + k + 1) if i == 0 else
+                    (k, k + 1, off + k + 1, off + k))
+            faces.append(quad)
+    return verts, faces
 
 
 def _rear():

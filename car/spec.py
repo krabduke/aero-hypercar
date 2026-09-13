@@ -43,6 +43,12 @@ LENGTH = 4980.0
 WIDTH = 1980.0
 HEIGHT = 1015.0
 WHEELBASE = 3150.0
+# Where the axles actually sit along the body. Both were previously left at
+# x = 0 and x = WHEELBASE, which put the front axle at the nose tip: no front
+# overhang at all, the front wing behind the front wheels, and 1.4 m of car
+# hanging off the back. The nose is the x datum; the axles are placed on it.
+FRONT_AXLE_X = 900.0
+REAR_AXLE_X = FRONT_AXLE_X + WHEELBASE
 TRACK_FRONT = 1660.0
 TRACK_REAR = 1600.0
 
@@ -75,15 +81,21 @@ AERO = {
 
 FAN = {
     "n": 2,
-    "diameter": 560.0,
-    "x": 4180.0,
-    "y": 460.0,
-    "z": 330.0,
+    "diameter": 520.0,
+    # Behind the rear tyres and inboard of them. At x = 4180, y = 460 with a
+    # 310 mm duct the shrouds ran straight through both rear wheels.
+    "x": 4400.0,
+    "y": 300.0,
+    "z": 320.0,
     "blades": 13,
     "rpm": 7200.0,
     "power_kw": 62.0,          # drawn from the hybrid system
     "downforce_kg": 650.0,     # near-constant, this is the point of the car
-    "duct_r": 310.0,
+    "duct_r": 280.0,
+    # the plenum that feeds each fan from its tunnel. Its centreline has to
+    # clear its own radius above the track, or the duct digs into the surface.
+    "plenum_r": 150.0,
+    "plenum_z0": 200.0,
 }
 
 TYRE_MU = 1.80                 # bespoke slick at the reference load
@@ -101,6 +113,30 @@ WHEEL = {
     "spokes": 7,
     "disc_r": 180.0, "disc_t": 32.0,
     "caliper_r": 205.0,
+    # rim: flange, drop centre, spoke and centre-lock geometry
+    "flange_r": 240.0,         # outer lip, just proud of the bead seat
+    "bead_r": 228.6,
+    "drop_r": 198.0,           # drop centre, so a tyre can be fitted at all
+    "hub_r": 62.0,
+    "spoke_root_r": 74.0,
+    "spoke_w_root": 54.0,
+    "spoke_w_tip": 34.0,
+    "spoke_t": 15.0,
+    "nut_r": 44.0, "nut_h": 34.0,
+    "cover_dish": 26.0,        # how far the wheel cover is dished inboard
+    "cover_r": 214.0,
+    "cover_vanes": 9,
+    # tyre carcass: a slick still has a shoulder radius and a sidewall bulge
+    "shoulder_frac": 0.80,     # of half width, where the tread rolls off
+    "bulge": 14.0,             # how far the sidewall stands out past the bead
+    "lettering_r": 292.0,
+    "lettering_h": 3.0,
+    # brakes
+    "disc_vanes": 36,
+    "disc_face_t": 8.0,
+    "caliper_pistons": 6,
+    "caliper_arc": 62.0,       # deg of disc the caliper wraps
+    "pad_t": 14.0,
 }
 
 # --------------------------------------------------------------------------
@@ -125,14 +161,14 @@ BODY = [
     (1680.0, 256.0,  58.0, 742.0, 3.2,  0.02),
     (1980.0, 262.0,  60.0, 772.0, 3.1, -0.02),
     (2260.0, 268.0,  66.0, 742.0, 3.0, -0.06),
-    (2560.0, 252.0,  74.0, 688.0, 2.9, -0.08),
-    (2880.0, 218.0,  86.0, 624.0, 2.8, -0.10),
-    (3240.0, 176.0, 104.0, 556.0, 2.7, -0.10),
-    (3560.0, 138.0, 122.0, 492.0, 2.6, -0.08),
-    (3860.0, 108.0, 140.0, 436.0, 2.5, -0.06),
-    (4140.0,  86.0, 158.0, 392.0, 2.4, -0.04),
-    (4380.0,  72.0, 176.0, 356.0, 2.3, -0.02),
-    (4560.0,  62.0, 194.0, 326.0, 2.2,  0.00),
+    (2560.0, 300.0,  74.0, 706.0, 2.9, -0.08),
+    (2880.0, 292.0,  86.0, 722.0, 2.8, -0.10),
+    (3240.0, 268.0, 104.0, 692.0, 2.7, -0.10),
+    (3560.0, 240.0, 122.0, 622.0, 2.6, -0.08),
+    (3860.0, 206.0, 140.0, 544.0, 2.5, -0.06),
+    (4140.0, 168.0, 158.0, 434.0, 2.4, -0.04),
+    (4380.0, 140.0, 176.0, 392.0, 2.3, -0.02),
+    (4560.0, 118.0, 194.0, 358.0, 2.2,  0.00),
 ]
 
 # Sidepod: its own table, because the undercut is the whole point. The lower
@@ -166,27 +202,74 @@ NOSE = {
     "base_x": 760.0, "base_z": 430.0,
 }
 
+# The floor's plan outline. A rectangle is what makes a car look like it was
+# never in a wind tunnel: a real floor is narrow at its leading edge, full
+# width alongside the sidepod, and waisted hard in front of the rear tyres so
+# the tyre wake is kept off the diffuser. (x, half_width)
+FLOOR_PLAN = [
+    (1300.0, 630.0),
+    (1560.0, 800.0),
+    (1900.0, 866.0),
+    (2500.0, 876.0),
+    (3100.0, 862.0),
+    (3450.0, 764.0),
+    (3760.0, 612.0),
+    (4020.0, 548.0),   # tightest point, alongside the rear tyre
+    (4280.0, 556.0),
+    (4560.0, 620.0),   # diffuser exit
+]
+
 FLOOR = {
-    "x0": 600.0, "x1": 4620.0,
+    # starts behind the front tyre and ends with the bodywork
+    "x0": 1300.0, "x1": 4560.0,
     "half_w": 850.0,
     "tunnel_half_w": 330.0,
     "tunnel_inner_y": 210.0,
     "throat_x": 2600.0, "throat_z": 96.0,
-    "diffuser_x": 3780.0, "diffuser_exit_z": 392.0,
+    "diffuser_x": 3860.0, "diffuser_exit_z": 392.0,
     "skirt_depth": 26.0,
     "n_strakes": 4,
 }
 
+# Front wing. A real one is not a stack of flat panels: the mainplane is
+# nearly neutral across the mandated centre section, then works harder and
+# harder outboard, and every element rises towards the endplate so the tip
+# vortex is thrown outside the front tyre instead of into it.
+#
+# Per element: (x offset, z offset, chord at root, chord at tip, span
+# fraction, root AoA, tip AoA, tip rise). Offsets are from the wing datum.
 FRONT_WING = {
-    "x": 150.0, "z": 112.0,
+    # far enough forward that the endplate's trailing edge clears the front
+    # tyre; at x = 150 the whole outboard stack was inside the wheel
+    "x": 60.0, "z": 112.0,
     "span": 1780.0, "chord": 470.0,
     "elements": 4, "gap": 16.0,
-    "endplate_h": 240.0, "endplate_t": 9.0,
+    "endplate_h": 500.0, "endplate_t": 9.0,
     "aoa_root": 6.0, "aoa_tip": 14.0,
+    "neutral_half_w": 250.0,   # regulated flat centre section
+    "arch": 44.0,              # how much the mainplane arches over the nose
+    "stack": [
+        #  dx     dz   c_root  c_tip  span_f  aoa_r  aoa_t  tip_rise
+        (   0.0,   0.0, 330.0, 250.0, 1.000,   2.0,   5.0,   46.0),
+        (  96.0,  34.0, 190.0, 168.0, 0.985,   9.0,  17.0,   72.0),
+        ( 186.0,  76.0, 152.0, 138.0, 0.965,  16.0,  26.0,   96.0),
+        ( 262.0, 124.0, 118.0, 110.0, 0.940,  23.0,  34.0, 116.0),
+    ],
+    "endplate_x0": -60.0, "endplate_x1": 420.0,
+    # cascades sit ABOVE the flap stack, near the endplate. Placed at the old
+    # heights they ran straight through the top two flaps.
+    "cascades": [
+        #  dx      dz   span  chord  aoa
+        (120.0, 300.0, 300.0, 150.0, 16.0),
+        (200.0, 372.0, 250.0, 116.0, 22.0),
+    ],
+    "cascade_inset": 180.0,
+    "footplate_h": 58.0,
+    "diveplanes": 2,
 }
 
 REAR_WING = {
-    "x": 4620.0, "z": 880.0,
+    "x": 4480.0, "z": 880.0,
     "span": 1420.0, "chord": 360.0,
     "elements": 2, "gap": 22.0,
     "endplate_h": 360.0, "endplate_t": 10.0,
@@ -208,19 +291,19 @@ BARGEBOARD = {
 }
 
 TURNING_VANE = {
-    "x0": 760.0, "x1": 1160.0,
+    "x0": 1320.0, "x1": 1700.0,
     "y": 250.0, "z0": 110.0, "z1": 330.0,
     "elements": 2, "t": 7.0,
 }
 
 FLOOR_EDGE = {
-    "x0": 1900.0, "x1": 3900.0,
+    "x0": 1900.0, "x1": 3640.0,
     "fences": 5, "fence_h": 78.0, "t": 7.0,
     "wing_chord": 190.0, "wing_span": 900.0,
 }
 
 BEAM_WING = {
-    "x": 4340.0, "z": 430.0, "span": 1100.0, "chord": 210.0,
+    "x": 4280.0, "z": 430.0, "span": 1100.0, "chord": 210.0,
     "elements": 2, "aoa": 12.0,
 }
 
@@ -233,9 +316,46 @@ DETAIL = {
     "mirror_x": 1620.0, "mirror_y": 330.0, "mirror_z": 690.0,
     "sharkfin_x0": 3100.0, "sharkfin_x1": 4180.0,
     "sharkfin_z": 760.0, "sharkfin_t": 9.0,
-    "camera_x": 900.0, "camera_z": 430.0,
-    "rainlight_x": 4520.0, "rainlight_z": 330.0,
-    "exhaust_x": 4480.0, "exhaust_r": 62.0,
+    "camera_x": 700.0, "camera_z": 430.0,
+    "rainlight_x": 4470.0, "rainlight_z": 330.0,
+    "exhaust_x": 4400.0, "exhaust_r": 62.0,
+    # above the beam wing and clear of the diffuser exit; built about
+    # z = 0 it sat half under the track surface
+    "exhaust_z": 470.0, "wastegate_z": 438.0,
+}
+
+# Surface and hardware detail. These are the parts that separate a shape from
+# a car: cooling exits, the pylons that hold the front wing on, the fairings
+# over the suspension, the crash structures, and the driver in the seat.
+BODY_DETAIL = {
+    # (x0, x1, clock angle, count, length, height) -- louvre banks, each one
+    # mirrored to both flanks. Angles are measured from +y, so 36 and -36 are
+    # both on the same side; the mirror is applied in code, not by sign here.
+    # engine-cover louvres, on the central body: (x0, x1, angle, n, len, h)
+    "gills": [
+        (3060.0, 3520.0,  52.0, 7, 120.0, 22.0),
+        (3160.0, 3600.0,  22.0, 6, 110.0, 20.0),
+    ],
+    # sidepod cooling exits, on the flank: (x0, x1, f_z, n, len, h)
+    "sidepod_gills": [
+        (2620.0, 3180.0, 0.74, 8, 150.0, 30.0),
+        (2700.0, 3180.0, 0.50, 7, 130.0, 26.0),
+    ],
+    "nose_pylon_x": 300.0, "nose_pylon_y": 96.0, "nose_pylon_t": 34.0,
+    "cape_x0": 340.0, "cape_x1": 760.0, "cape_y": 300.0,
+    "susp_fairing_c": 190.0, "susp_fairing_t": 0.30,
+    "crash_r": 78.0,
+    "jack_r": 46.0,
+    "driver": {
+        "helmet_r": 132.0, "helmet_x": 1760.0, "helmet_z": 690.0,
+        "shoulder_x": 1900.0, "shoulder_w": 190.0,
+        "arm_r": 58.0, "leg_r": 72.0,
+        "knee_x": 1400.0, "foot_x": 1160.0,
+    },
+    "airbox_x": 2060.0, "airbox_w": 168.0, "airbox_h": 146.0,
+    "airbox_len": 340.0,
+    "tow_r": 34.0, "tow_z_front": 250.0, "tow_z_rear": 330.0,
+    "wing_mirror_stalk_r": 16.0,
 }
 
 HALO = {
@@ -248,7 +368,7 @@ HALO = {
 # --------------------------------------------------------------------------
 
 SUSP = {
-    "front_x": 0.0, "rear_x": WHEELBASE,
+    "front_x": FRONT_AXLE_X, "rear_x": REAR_AXLE_X,
     "upper_z": 340.0, "lower_z": 150.0,
     "inboard_front_y": 250.0, "inboard_rear_y": 300.0,
     "upright_h": 300.0,
@@ -257,8 +377,11 @@ SUSP = {
 }
 
 POWERTRAIN = {
-    "engine_x": 2980.0, "engine_z": 330.0,
-    "gearbox_x": 3760.0, "gearbox_len": 520.0, "gearbox_r": 175.0,
+    "engine_x": 3240.0, "engine_z": 300.0,
+    "gearbox_x": 3600.0, "gearbox_len": 520.0, "gearbox_r": 175.0,
+    # The gearbox hangs off the back of the engine on the crank centreline.
+    # Without this it was built about z = 0 -- half of it under the track.
+    "gearbox_z": 330.0,
     "radiator": (600.0, 96.0, 330.0),
     "rad_x": 2320.0, "rad_y": 336.0, "rad_z": 320.0,
     "battery": (760.0, 300.0, 110.0),
@@ -278,6 +401,7 @@ MATERIAL_MAP = {
     "airbox": "carbon_gloss", "halo": "titanium", "skirt": "rubber_seal",
     "tyre": "rubber_tyre", "rim": "alu_dark", "disc": "cf_disc",
     "caliper": "alu_bright", "upright": "alu_bright",
+    "wheelcover": "carbon_gloss", "wheelnut": "alu_bright",
     "wishbone": "carbon_matte", "pushrod": "carbon_matte", "pullrod": "carbon_matte",
     "trackrod": "carbon_matte", "rocker": "alu_bright",
     "fan": "alu_bright", "fanduct": "carbon_matte",
@@ -289,6 +413,11 @@ MATERIAL_MAP = {
     "floor_fence": "carbon_matte", "brake_duct": "carbon_matte",
     "mirror": "carbon_gloss", "camera": "carbon_matte",
     "rainlight": "rubber_tyre", "exhaust": "steel",
+    "gills": "carbon_matte", "nose_pylon": "carbon_gloss",
+    "nose_cape": "carbon_gloss", "susp_fairing": "carbon_gloss",
+    "crash_structure": "carbon_matte", "jack_point": "alu_bright",
+    "helmet": "helmet", "driver": "suit", "airbox": "carbon_gloss",
+    "tow_hook": "alu_bright", "floor_plank": "wood",
     "cooling_louvre": "carbon_matte", "sharkfin": "carbon_gloss",
     "coaming": "carbon_matte", "headrest": "carbon_matte",
     "cascade": "carbon_gloss", "y250": "carbon_gloss",
@@ -308,6 +437,9 @@ PALETTE = {
     "alu_cast":     ((0.318, 0.326, 0.338), 1.00, 0.62),
     "magnesium":    ((0.276, 0.272, 0.258), 1.00, 0.58),
     "cf_disc":      ((0.090, 0.086, 0.082), 0.10, 0.66),
+    "helmet":       ((0.480, 0.086, 0.062), 0.05, 0.16),
+    "suit":         ((0.052, 0.056, 0.070), 0.00, 0.72),
+    "wood":         ((0.300, 0.232, 0.140), 0.00, 0.80),
     "rad_core":     ((0.180, 0.130, 0.080), 0.90, 0.52),
     "anodised":     ((0.108, 0.136, 0.170), 1.00, 0.40),
     "steel":        ((0.480, 0.492, 0.510), 1.00, 0.28),

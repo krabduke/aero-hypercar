@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
-from parts import wheels
+from parts import wheels, common, detail
 
 S = spec.SUSP
 P = spec.RES["pipe"]
@@ -26,13 +26,18 @@ def build():
         sgn = -1.0 if y < 0 else 1.0
         hub = (x, y * 0.80, od / 2)
 
-        # upper and lower wishbones, each a pair of legs to the tub
+        # Upper and lower wishbones. Each leg is an aerofoil fairing, not a
+        # tube: at 300 km/h a round member is pure drag and produces nothing,
+        # and bare pipes are the clearest tell that a model stopped at
+        # "roughly the right shape".
+        sect = common.section_points(24, spec.BODY_DETAIL["susp_fairing_t"], 0.0)
+        chord = spec.BODY_DETAIL["susp_fairing_c"]
         for (z_out, z_in) in ((S["upper_z"], S["upper_z"] + 40.0),
                               (S["lower_z"], S["lower_z"] + 10.0)):
             outb = (x, y * 0.74, z_out)
             for dx in (-190.0, 190.0):
                 inb = (x + dx, sgn * inb_y, z_in)
-                arms.append(mesh.pipe([outb, inb], S["arm_r"], P))
+                arms.append(detail.faired_leg(outb, inb, sect, chord))
 
         # push/pull rod into a rocker on the chassis
         if front:

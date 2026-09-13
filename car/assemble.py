@@ -16,7 +16,8 @@ import spec              # noqa: E402
 import mesh as meshlib   # noqa: E402
 import materials         # noqa: E402
 from parts import (chassis, floor, wings, wheels,        # noqa: E402
-                   suspension, fans, powertrain, aerodetail)
+                   suspension, fans, powertrain, aerodetail,
+                   detail)
 
 MM = 0.001
 
@@ -24,11 +25,13 @@ MODULES = [
     ("chassis", chassis), ("floor", floor), ("wings", wings),
     ("wheels", wheels), ("suspension", suspension), ("fans", fans),
     ("powertrain", powertrain), ("aero detail", aerodetail),
+    ("body detail", detail),
 ]
 
 COLLECTIONS = ["01 Bodywork", "02 Floor and Diffuser", "03 Wings",
                "04 Wheels and Brakes", "05 Suspension", "06 Fan System",
-               "07 Power Unit", "08 Cooling and Energy", "09 Aero Detail"]
+               "07 Power Unit", "08 Cooling and Energy", "09 Aero Detail",
+               "10 Cockpit", "11 Structure and Service"]
 
 
 def collection_for(name):
@@ -41,12 +44,18 @@ def collection_for(name):
         return "06 Fan System"
     if n.startswith(("wishbone", "pushrod", "rocker", "driveshaft")):
         return "05 Suspension"
-    if n.startswith(("tyre", "wheelrim", "disc", "caliper", "upright")):
+    if n.startswith(("tyre", "wheel", "rim", "disc", "caliper",
+                     "upright")):
         return "04 Wheels and Brakes"
     if n.startswith(("bargeboard", "turning_vane", "floor_fence",
                      "brake_duct", "mirror", "camera", "rainlight",
-                     "exhaust", "cooling_louvre")):
+                     "exhaust", "cooling_louvre", "gills", "sidepod_gills",
+                     "nose_cape", "nose_pylon")):
         return "09 Aero Detail"
+    if n.startswith(("helmet", "driver", "seat", "steering", "headrest")):
+        return "10 Cockpit"
+    if n.startswith(("crash_", "side_impact", "jack_", "tow_", "airbox")):
+        return "11 Structure and Service"
     if "wing" in n or "endplate" in n or "pylon" in n or "louvre" in n \
        or "gurney" in n or "cascade" in n or "y250" in n:
         return "03 Wings"
