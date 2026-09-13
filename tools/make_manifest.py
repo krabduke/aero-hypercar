@@ -5,7 +5,8 @@ import csv, json, os, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "car"))
 import spec
-import tunnel_config  # noqa: E402  # noqa: E402
+import tunnel_config  # noqa: E402
+import body_panels  # noqa: E402
 
 GROUPS = [
     ("01 Bodywork",            "Bodywork",   "#5A6066"),
@@ -77,6 +78,7 @@ def main():
                     for k, v in spec.PALETTE.items()},
         "groups": groups, "parts": parts,
         "tunnel": tunnel_config.config(),
+        "body_panels": body_panels.build(),
     }
     p = os.path.join(ROOT, "viewer", "parts.json")
     json.dump(out, open(p, "w"), indent=1)

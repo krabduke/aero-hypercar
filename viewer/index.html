@@ -149,6 +149,12 @@
   #t-span{width:100%; height:76px; display:block}
   .tnote{font-size:10.5px; line-height:1.45; color:#7C8A92; margin:9px 0 0}
   .tnote.warn{color:#E0A05A}
+  .tstatus{font-size:10.5px; color:#7FB2C9; min-height:13px; margin:-4px 0 6px}
+  .tstatus.busy{color:#E0A05A}
+  #t-legend{width:100%; height:46px; display:block}
+  .tabout{font-size:10.5px; line-height:1.5; color:#8A969D;
+          margin:8px 0 0; padding-top:8px; border-top:1px solid #2C383E}
+
 </style>
 </head>
 <body>
@@ -223,6 +229,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
 import {WindTunnel, buildPanel, renderReadout, drawSpanLoad}
   from './tunnel-ui.js';
+import {drawLegend} from './cfd-view.js';
 
 const MM = 0.001;
 const $ = s => document.querySelector(s);
@@ -291,7 +298,14 @@ async function init(){
       $('#bar i').style.width = p + '%';
       $('#loadtxt').textContent = `Loading car… ${p}%`;
     },
-    () => fail('Could not load <code>build/car.glb</code>. Run <code>make export</code>.'));
+    // GLTFLoader routes anything thrown inside the success callback here too,
+    // so report what actually went wrong rather than always blaming the file.
+    e => {
+      console.error(e);
+      const why = e && e.message ? `<br><small>${e.message}</small>` : '';
+      fail('Could not load <code>build/car.glb</code>. Run '
+         + `<code>make export</code>.${why}`);
+    });
 }
 
 function dir(c, i, x, y, z){
@@ -442,11 +456,14 @@ function onResize(){
 
 function buildTunnel(box){
   if(!data.tunnel) return;
-  panel = buildPanel($('#tunnel-host'), data.tunnel, (id, v) => tunnel.set(id, v));
+  panel = buildPanel($('#tunnel-host'), data.tunnel,
+                     (id, v) => tunnel.set(id, v),
+                     () => retrace());
   tunnel = new WindTunnel({
     cfg: data.tunnel, scene, root, parts: byName, manifest: data.parts,
     bounds: box.clone().translate(root.position),
-    slowmo: 0.006,          // a car at 250 km/h crosses itself in 70 ms
+    bodyPanels: data.body_panels,
+    nLines: 170,
     onSolve: r => {
       // the fans add a near speed-independent term the lattice knows nothing
       // about, so it is reported separately rather than folded in
@@ -466,12 +483,41 @@ function buildTunnel(box){
         `${r.panels} panels · ${(r.v*3.6).toFixed(0)} km/h`;
       $('#t-note').className = 'tnote';
       $('#t-note').textContent =
-        `Wings only, in ground effect. The floor, the tunnels and the fans `
-        + `(a further ${fan} kg, near constant with speed) are not in this `
-        + `solve — a potential-flow lattice cannot model them.`;
+        `Forces are the wings only, in ground effect. The floor, the tunnels `
+        + `and the fans (a further ${fan} kg, near constant with speed) are `
+        + `not in the force solve. The streamlines do include the body: tub, `
+        + `sidepods, wheels and floor, as ${data.body_panels.n} source panels.`;
+      $('#t-about').textContent = ABOUT;
     },
   });
   panel.sync(tunnel.state);
+}
+
+const ABOUT =
+  'Two fans pull air out of a sealed underfloor. A wing makes downforce with '
+  + 'the square of speed, so in a hairpin it has almost none left; a fan holds '
+  + 'a pressure difference under a sealed floor, so its downforce barely '
+  + 'changes with speed — worth little at 300 km/h and everything at 80. It '
+  + 'also costs shaft power rather than induced drag, so the car can run less '
+  + 'wing for the same total load and go faster in a straight line. Brabham '
+  + 'won with one and withdrew it; the concept was banned, not beaten.';
+
+function retrace(){
+  if(!tunnel || !tunnel.state.on) return;
+  const st = $('#t-status');
+  st.className = 'tstatus busy';
+  st.textContent = 'Tracing streamlines…';
+  // let the browser paint the message before the solve blocks the thread
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const r = tunnel.retrace();
+    if(r){
+      drawLegend($('#t-legend'), r.vmin * 3.6, r.vmax * 3.6,
+                 'Velocity [km/h]');
+      st.className = 'tstatus';
+      st.textContent = `${r.lines} streamlines · ${r.ms.toFixed(0)} ms · `
+                     + `${data.body_panels.n} body panels`;
+    }
+  }));
 }
 
 function setTunnel(on){
@@ -481,6 +527,7 @@ function setTunnel(on){
   tunnel.setOn(on);
   if(on){
     panel.sync(tunnel.state);
+    retrace();
     spinning = false;
     $('#spin').setAttribute('aria-pressed', 'false');
   }
