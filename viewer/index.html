@@ -463,7 +463,7 @@ function buildTunnel(box){
     cfg: data.tunnel, scene, root, parts: byName, manifest: data.parts,
     bounds: box.clone().translate(root.position),
     bodyPanels: data.body_panels,
-    nLines: 170,
+    nLines: 230,
     onSolve: r => {
       // the fans add a near speed-independent term the lattice knows nothing
       // about, so it is reported separately rather than folded in
