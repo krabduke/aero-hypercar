@@ -110,6 +110,9 @@ def config():
         "v_default": 250 / 3.6, "v_min": 40 / 3.6, "v_max": 360 / 3.6,
         "v_unit": "km/h",
         "alpha_default": 0.0, "alpha_min": -2.0, "alpha_max": 3.0,
+        # a car yaws in a crosswind and in a corner, and the balance
+        # moves when it does
+        "beta_default": 0.0, "beta_min": -10.0, "beta_max": 10.0,
         "stall_alpha": 99.0,
         "ground": True,
         "cg_frac": 0.0,
