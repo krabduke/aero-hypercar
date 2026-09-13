@@ -16,19 +16,19 @@ import spec              # noqa: E402
 import mesh as meshlib   # noqa: E402
 import materials         # noqa: E402
 from parts import (chassis, floor, wings, wheels,        # noqa: E402
-                   suspension, fans, powertrain)
+                   suspension, fans, powertrain, aerodetail)
 
 MM = 0.001
 
 MODULES = [
     ("chassis", chassis), ("floor", floor), ("wings", wings),
     ("wheels", wheels), ("suspension", suspension), ("fans", fans),
-    ("powertrain", powertrain),
+    ("powertrain", powertrain), ("aero detail", aerodetail),
 ]
 
 COLLECTIONS = ["01 Bodywork", "02 Floor and Diffuser", "03 Wings",
                "04 Wheels and Brakes", "05 Suspension", "06 Fan System",
-               "07 Power Unit", "08 Cooling and Energy"]
+               "07 Power Unit", "08 Cooling and Energy", "09 Aero Detail"]
 
 
 def collection_for(name):
@@ -43,7 +43,12 @@ def collection_for(name):
         return "05 Suspension"
     if n.startswith(("tyre", "wheelrim", "disc", "caliper", "upright")):
         return "04 Wheels and Brakes"
-    if "wing" in n or "endplate" in n or "pylon" in n:
+    if n.startswith(("bargeboard", "turning_vane", "floor_fence",
+                     "brake_duct", "mirror", "camera", "rainlight",
+                     "exhaust", "cooling_louvre")):
+        return "09 Aero Detail"
+    if "wing" in n or "endplate" in n or "pylon" in n or "louvre" in n \
+       or "gurney" in n or "cascade" in n or "y250" in n:
         return "03 Wings"
     if n.startswith(("floor", "tunnel")):
         return "02 Floor and Diffuser"

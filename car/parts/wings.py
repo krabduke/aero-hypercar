@@ -41,7 +41,30 @@ def _front():
         plates.append(common.plate(FW["x"] - 80.0, FW["x"] + FW["chord"] + 40.0,
                                    y, 20.0, FW["endplate_h"], FW["endplate_t"],
                                    sweep_top=70.0))
+        # footplate: turns the flow out around the front tyre, which is the
+        # single dirtiest thing on the car
+        plates.append(common.plate(FW["x"] + 60.0, FW["x"] + FW["chord"] + 30.0,
+                                   y + sgn * 44.0, 16.0, 62.0, 8.0))
     out["front_endplates"] = mesh.join(*plates)
+
+    # cascade winglets above the outboard wing
+    cas = []
+    for sgn in (-1.0, 1.0):
+        for k in range(2):
+            cas.append(common.wing_element(
+                FW["x"] + 120.0 + k * 90.0, FW["z"] + 150.0 + k * 62.0,
+                420.0, 150.0 - k * 34.0, 16.0 + k * 6.0,
+                thickness=0.08, camber=0.08, n_span=5, taper=0.8,
+                y0=sgn * (FW["span"] / 2 - 250.0)))
+    out["front_cascades"] = mesh.join(*cas)
+
+    # the Y250 vortex vanes either side of the neutral centre section
+    vanes = []
+    for sgn in (-1.0, 1.0):
+        vanes.append(common.plate(FW["x"] + 30.0, FW["x"] + FW["chord"] - 40.0,
+                                  sgn * 250.0, FW["z"] + 20.0, FW["z"] + 150.0,
+                                  7.0, sweep_top=44.0))
+    out["front_y250_vanes"] = mesh.join(*vanes)
     return out
 
 
@@ -68,11 +91,31 @@ def _rear():
                                    RW["endplate_t"], sweep_top=40.0))
     out["rear_endplates"] = mesh.join(*plates)
 
+    # swan-neck pylons: they meet the mainplane on its UPPER surface, so the
+    # working (lower) surface is left completely undisturbed
     pylons = []
     for sgn in (-1.0, 1.0):
-        path = [(RW["x"] + 60.0, sgn * 170.0, RW["z"] - 40.0),
-                (RW["x"] - 60.0, sgn * 150.0, RW["z"] - 300.0),
-                (RW["x"] - 190.0, sgn * 120.0, RW["z"] - 430.0)]
+        path = [(RW["x"] + 90.0, sgn * 150.0, RW["z"] + 62.0),
+                (RW["x"] + 30.0, sgn * 148.0, RW["z"] + 10.0),
+                (RW["x"] - 70.0, sgn * 140.0, RW["z"] - 300.0),
+                (RW["x"] - 200.0, sgn * 118.0, RW["z"] - 440.0)]
         pylons.append(mesh.pipe(path, RW["pylon_t"], spec.RES["pipe"]))
     out["rear_pylons"] = mesh.join(*pylons)
+
+    # endplate louvres, bleeding the pressure difference at the tip to cut the
+    # tip vortex and the drag that comes with it
+    lv = []
+    for sgn in (-1.0, 1.0):
+        y = sgn * RW["span"] / 2
+        for k in range(5):
+            lv.append(mesh.box(RW["x"] - 60.0 + k * 52.0, y,
+                               RW["z"] + 96.0 - k * 14.0, 40.0, 14.0, 56.0))
+    out["rear_louvres"] = mesh.join(*lv)
+
+    # gurney on the flap trailing edge
+    g = []
+    g.append(mesh.box(RW["x"] + RW["chord"] * 0.46 + RW["chord"] * 0.58 * 0.5,
+                      0.0, RW["z"] + RW["gap"] + 26.0 + 34.0,
+                      12.0, RW["span"] * 0.96, 26.0))
+    out["rear_gurney"] = mesh.join(*g)
     return out

@@ -107,7 +107,53 @@ WHEEL = {
 # Chassis
 # --------------------------------------------------------------------------
 
+# The central body is one continuous surface from nose tip to the rear crash
+# structure. Defining it as a station table rather than three separate lofts is
+# what lets it be waisted and curvature-continuous -- which is what makes it
+# look, and behave, aerodynamic.
+# (x, half_width, z_bottom, z_top, section exponent, shoulder bias)
+BODY = [
+    (   0.0,  38.0, 242.0, 292.0, 2.2,  0.00),
+    (  90.0,  72.0, 214.0, 318.0, 2.3,  0.02),
+    ( 210.0, 116.0, 176.0, 352.0, 2.5,  0.05),
+    ( 380.0, 158.0, 132.0, 392.0, 2.7,  0.08),
+    ( 560.0, 196.0,  96.0, 430.0, 2.9,  0.10),
+    ( 760.0, 224.0,  74.0, 486.0, 3.1,  0.12),
+    ( 980.0, 240.0,  64.0, 556.0, 3.2,  0.12),
+    (1180.0, 248.0,  60.0, 618.0, 3.3,  0.10),
+    (1420.0, 252.0,  58.0, 690.0, 3.3,  0.06),
+    (1680.0, 256.0,  58.0, 742.0, 3.2,  0.02),
+    (1980.0, 262.0,  60.0, 772.0, 3.1, -0.02),
+    (2260.0, 268.0,  66.0, 742.0, 3.0, -0.06),
+    (2560.0, 252.0,  74.0, 688.0, 2.9, -0.08),
+    (2880.0, 218.0,  86.0, 624.0, 2.8, -0.10),
+    (3240.0, 176.0, 104.0, 556.0, 2.7, -0.10),
+    (3560.0, 138.0, 122.0, 492.0, 2.6, -0.08),
+    (3860.0, 108.0, 140.0, 436.0, 2.5, -0.06),
+    (4140.0,  86.0, 158.0, 392.0, 2.4, -0.04),
+    (4380.0,  72.0, 176.0, 356.0, 2.3, -0.02),
+    (4560.0,  62.0, 194.0, 326.0, 2.2,  0.00),
+]
+
+# Sidepod: its own table, because the undercut is the whole point. The lower
+# surface climbs steeply aft of the inlet to feed the tunnel, and the plan view
+# waists into a coke-bottle so the rear wing and beam wing see clean air.
+# (x, y_inboard, y_outboard, z_bottom, z_top, exponent)
+SIDEPOD_TABLE = [
+    (1700.0, 250.0, 300.0, 180.0, 300.0, 2.6),
+    (1790.0, 258.0, 560.0, 156.0, 430.0, 2.8),
+    (1900.0, 262.0, 700.0, 146.0, 500.0, 3.0),
+    (2080.0, 268.0, 762.0, 150.0, 534.0, 3.1),
+    (2320.0, 272.0, 770.0, 172.0, 540.0, 3.1),
+    (2600.0, 268.0, 742.0, 214.0, 524.0, 3.0),
+    (2900.0, 252.0, 664.0, 268.0, 494.0, 2.9),
+    (3200.0, 224.0, 552.0, 322.0, 452.0, 2.8),
+    (3480.0, 190.0, 424.0, 366.0, 414.0, 2.6),
+    (3700.0, 162.0, 316.0, 392.0, 392.0, 2.4),
+]
+
 TUB = {
+
     "x_front": 620.0, "x_rear": 2360.0,
     "top_z": 720.0, "floor_z": 60.0,
     "half_w_front": 240.0, "half_w_rear": 390.0,
@@ -153,6 +199,43 @@ SIDEPOD = {
     "inlet_h": 190.0, "inlet_w": 250.0,
     "max_half_w": 760.0,
     "top_z": 560.0,
+}
+
+BARGEBOARD = {
+    "x0": 1180.0, "x1": 1760.0,
+    "y": 430.0, "z0": 90.0, "z1": 400.0,
+    "elements": 4, "gap": 42.0, "t": 8.0, "sweep": 26.0,
+}
+
+TURNING_VANE = {
+    "x0": 760.0, "x1": 1160.0,
+    "y": 250.0, "z0": 110.0, "z1": 330.0,
+    "elements": 2, "t": 7.0,
+}
+
+FLOOR_EDGE = {
+    "x0": 1900.0, "x1": 3900.0,
+    "fences": 5, "fence_h": 78.0, "t": 7.0,
+    "wing_chord": 190.0, "wing_span": 900.0,
+}
+
+BEAM_WING = {
+    "x": 4340.0, "z": 430.0, "span": 1100.0, "chord": 210.0,
+    "elements": 2, "aoa": 12.0,
+}
+
+BRAKE_DUCT = {
+    "front_r": 210.0, "rear_r": 232.0,
+    "width": 120.0, "inlet_h": 130.0,
+}
+
+DETAIL = {
+    "mirror_x": 1620.0, "mirror_y": 330.0, "mirror_z": 690.0,
+    "sharkfin_x0": 3100.0, "sharkfin_x1": 4180.0,
+    "sharkfin_z": 760.0, "sharkfin_t": 9.0,
+    "camera_x": 900.0, "camera_z": 430.0,
+    "rainlight_x": 4520.0, "rainlight_z": 330.0,
+    "exhaust_x": 4480.0, "exhaust_r": 62.0,
 }
 
 HALO = {
@@ -202,12 +285,21 @@ MATERIAL_MAP = {
     "gearbox": "magnesium", "driveshaft": "steel",
     "seat": "carbon_matte", "wheelrim": "alu_dark", "steering": "carbon_matte",
     "engine": "alu_cast",
+    "bargeboard": "carbon_gloss", "turning_vane": "carbon_gloss",
+    "floor_fence": "carbon_matte", "brake_duct": "carbon_matte",
+    "mirror": "carbon_gloss", "camera": "carbon_matte",
+    "rainlight": "rubber_tyre", "exhaust": "steel",
+    "cooling_louvre": "carbon_matte", "sharkfin": "carbon_gloss",
+    "coaming": "carbon_matte", "headrest": "carbon_matte",
+    "cascade": "carbon_gloss", "y250": "carbon_gloss",
+    "louvre": "carbon_gloss", "gurney": "carbon_gloss",
+    "beam": "carbon_gloss", "inlet": "carbon_gloss",
 }
 DEFAULT_MATERIAL = "carbon_matte"
 
 PALETTE = {
-    "carbon_gloss": ((0.042, 0.044, 0.050), 0.45, 0.16),
-    "carbon_matte": ((0.052, 0.054, 0.060), 0.30, 0.48),
+    "carbon_gloss": ((0.048, 0.050, 0.056), 0.22, 0.30),
+    "carbon_matte": ((0.056, 0.058, 0.064), 0.14, 0.56),
     "titanium":     ((0.372, 0.386, 0.408), 1.00, 0.34),
     "rubber_tyre":  ((0.030, 0.030, 0.032), 0.00, 0.82),
     "rubber_seal":  ((0.050, 0.048, 0.046), 0.00, 0.88),

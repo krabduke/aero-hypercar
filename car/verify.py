@@ -108,13 +108,19 @@ def main():
            f"+{(spec.power_to_weight()/spec.f1_power_to_weight()-1)*100:.0f} %")
 
     print("\nCOMPLETENESS")
-    want = ["tub", "nose", "sidepod_l", "sidepod_r", "engine_cover", "airbox",
-            "halo", "seat", "floor_plank", "tunnel_l", "tunnel_r",
-            "floor_strakes", "floor_skirts", "front_wing", "front_endplates",
-            "rear_wing", "rear_endplates", "rear_pylons", "tyres", "wheelrims",
-            "discs", "calipers", "uprights", "wishbones", "pushrods",
-            "driveshafts", "fanduct", "fan_rotors", "fan_motors", "engine",
-            "gearbox", "radiators", "battery", "fuel_cell"]
+    # the nose, tub and engine cover are one continuous lofted surface now,
+    # which is what lets the body be waisted and curvature-continuous
+    want = ["tub", "sidepod_l", "sidepod_r", "sidepod_inlets", "sharkfin",
+            "cockpit_coaming", "halo", "seat", "headrest", "steering",
+            "floor_plank", "tunnel_l", "tunnel_r", "floor_strakes",
+            "floor_skirts", "front_wing", "front_endplates", "front_cascades",
+            "front_y250_vanes", "rear_wing", "rear_endplates", "rear_pylons",
+            "rear_louvres", "rear_gurney", "beam_wing", "bargeboards",
+            "turning_vanes", "floor_fences", "floor_edge_wings", "brake_ducts",
+            "mirrors", "cameras", "rainlight", "exhaust", "cooling_louvres",
+            "tyres", "wheelrims", "discs", "calipers", "uprights", "wishbones",
+            "pushrods", "driveshafts", "fanduct", "fan_rotors", "fan_motors",
+            "engine", "gearbox", "radiators", "battery", "fuel_cell"]
     missing = [w for w in want if w not in by]
     c.true("key components present", not missing, f"{len(want)} checked")
     for m in missing:
@@ -122,6 +128,9 @@ def main():
     c.true("every object has a material", all(r["material"] for r in rows),
            f"{len(rows)} objects")
     c.true("no empty meshes", all(int(r["verts"]) > 0 for r in rows), "all non-empty")
+    c.true("body is one continuous surface", "nose" not in by and "tub" in by,
+           "nose, tub and cover lofted together")
+    c.band("object count", len(rows), 45, 200, "", "assemblies")
 
     print("\n" + "=" * 70)
     if c.fails:

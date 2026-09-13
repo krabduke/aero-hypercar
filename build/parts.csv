@@ -1,22 +1,27 @@
 name,collection,material,verts,faces,x_min_mm,x_max_mm,y_min_mm,y_max_mm,z_min_mm,z_max_mm
-airbox,01 Bodywork,carbon_gloss,114,140,1780.0,2100.0,-160.0,160.0,510.0,700.0
-engine_cover,07 Power Unit,carbon_gloss,560,522,1920.0,4060.0,-250.0,250.0,220.0,790.0
-halo,01 Bodywork,titanium,120,90,1092.0,2019.9,-355.0,355.0,690.3,985.3
-nose,01 Bodywork,carbon_gloss,560,522,0.0,760.0,-240.0,240.0,99.0,464.0
-seat,01 Bodywork,carbon_matte,8,6,1360.0,1980.0,-190.0,190.0,150.0,450.0
-sidepod_l,01 Bodywork,carbon_gloss,560,522,1720.0,3560.0,-910.4,-32.0,120.0,560.0
-sidepod_r,01 Bodywork,carbon_gloss,560,522,1720.0,3560.0,32.0,910.4,120.0,560.0
-steering,01 Bodywork,carbon_matte,104,104,1182.9,1417.1,-118.0,118.0,534.0,586.0
-tub,01 Bodywork,carbon_gloss,640,602,620.0,2360.0,-390.0,390.0,60.0,720.0
+cockpit_coaming,01 Bodywork,carbon_matte,360,344,1166.1,1980.4,-217.4,217.4,581.8,764.6
+halo,01 Bodywork,titanium,144,114,1103.0,2020.8,-355.0,355.0,672.9,979.2
+headrest,01 Bodywork,carbon_matte,8,6,1830.0,2050.0,-150.0,150.0,555.0,685.0
+seat,01 Bodywork,carbon_matte,8,6,1370.0,2010.0,-180.0,180.0,155.0,445.0
+sharkfin,01 Bodywork,carbon_gloss,64,62,3100.0,4180.0,-4.5,4.5,377.5,760.0
+sidepod_inlets,01 Bodywork,carbon_gloss,224,224,1700.0,1810.0,-530.4,530.4,196.0,404.0
+sidepod_l,01 Bodywork,carbon_gloss,1200,1162,1700.0,3700.0,-772.0,-162.0,145.8,540.6
+sidepod_r,01 Bodywork,carbon_gloss,1200,1162,1700.0,3700.0,162.0,772.0,145.8,540.6
+steering,01 Bodywork,carbon_matte,104,104,1208.8,1431.2,-112.0,112.0,546.0,594.0
+tub,01 Bodywork,carbon_gloss,3536,3486,0.0,4560.0,-268.3,268.3,45.8,765.7
 floor_plank,02 Floor and Diffuser,carbon_matte,8,6,600.0,4620.0,-210.0,210.0,18.0,34.0
 floor_skirts,02 Floor and Diffuser,carbon_matte,16,12,720.0,4560.0,-876.0,876.0,-14.0,40.0
 floor_strakes,02 Floor and Diffuser,carbon_matte,64,48,2300.0,4530.0,-701.0,701.0,12.0,344.9
 tunnel_l,02 Floor and Diffuser,carbon_matte,88,86,600.0,4620.0,-870.0,-210.0,10.0,410.0
 tunnel_r,02 Floor and Diffuser,carbon_matte,88,86,600.0,4620.0,210.0,870.0,10.0,410.0
-front_endplates,03 Wings,carbon_gloss,16,12,70.0,660.0,-894.5,894.5,20.0,240.0
+front_cascades,03 Wings,carbon_gloss,600,488,234.0,440.7,-850.0,850.0,229.3,335.1
+front_endplates,03 Wings,carbon_gloss,32,24,70.0,660.0,-938.0,938.0,16.0,240.0
 front_wing,03 Wings,carbon_gloss,960,848,35.6,585.7,-890.0,890.0,42.2,217.8
+front_y250_vanes,03 Wings,carbon_gloss,16,12,180.0,580.0,-253.5,253.5,132.0,262.0
 rear_endplates,03 Wings,carbon_gloss,16,12,4500.0,5070.0,-715.0,715.0,650.0,1030.0
-rear_pylons,03 Wings,carbon_gloss,72,52,4411.5,4703.6,-195.9,195.9,431.8,850.9
+rear_gurney,03 Wings,carbon_gloss,8,6,4884.0,4896.0,-681.6,681.6,949.0,975.0
+rear_louvres,03 Wings,carbon_gloss,80,60,4540.0,4788.0,-717.0,717.0,892.0,1004.0
+rear_pylons,03 Wings,carbon_gloss,96,76,4401.0,4727.0,-176.0,176.0,422.3,961.7
 rear_wing,03 Wings,carbon_gloss,480,424,4534.5,4921.6,-710.0,710.0,796.4,953.4
 calipers,04 Wheels and Brakes,alu_bright,32,24,-75.0,3225.0,-810.1,810.1,495.0,595.0
 discs,04 Wheels and Brakes,cf_disc,640,640,-180.0,3330.0,-846.0,846.0,155.0,525.0
@@ -35,3 +40,14 @@ engine,07 Power Unit,alu_cast,17304,17672,2640.0,3298.0,-203.5,214.8,108.0,697.0
 fuel_cell,08 Cooling and Energy,anodised,8,6,2100.0,2660.0,-210.0,210.0,170.0,490.0
 gearbox,07 Power Unit,magnesium,128,128,3760.0,4280.0,-175.0,175.0,-175.0,175.0
 radiators,08 Cooling and Energy,rad_core,16,12,2020.0,2620.0,-384.0,384.0,155.0,485.0
+bargeboards,09 Aero Detail,carbon_gloss,320,304,1180.0,1760.0,-504.8,504.8,90.0,400.0
+beam_wing,03 Wings,carbon_gloss,420,364,4288.6,4531.8,-550.0,550.0,392.5,489.2
+brake_ducts,09 Aero Detail,carbon_matte,512,504,-226.2,3380.7,-798.5,798.5,113.0,577.0
+cameras,09 Aero Detail,carbon_matte,24,18,835.0,2145.0,-153.0,153.0,407.0,846.0
+cooling_louvres,09 Aero Detail,carbon_matte,96,72,3145.0,3695.0,-132.0,132.0,392.0,538.0
+exhaust,09 Aero Detail,steel,264,264,4480.0,4610.0,-166.0,166.0,-61.5,78.0
+floor_edge_wings,03 Wings,carbon_matte,360,304,3665.8,3842.6,-920.0,920.0,73.7,103.3
+floor_fences,09 Aero Detail,carbon_matte,400,380,1900.0,3840.0,-823.5,823.5,10.0,88.0
+mirrors,09 Aero Detail,carbon_gloss,56,36,1567.3,1675.0,-363.0,363.0,637.9,741.0
+rainlight,09 Aero Detail,rubber_tyre,8,6,4498.0,4542.0,-48.0,48.0,295.0,365.0
+turning_vanes,09 Aero Detail,carbon_gloss,160,152,760.0,1160.0,-299.2,299.2,110.0,330.0
