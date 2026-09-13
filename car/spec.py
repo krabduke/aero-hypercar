@@ -96,6 +96,18 @@ FAN = {
     # clear its own radius above the track, or the duct digs into the surface.
     "plenum_r": 150.0,
     "plenum_z0": 200.0,
+    # blade geometry. A fan blade is twisted: to pull a uniform axial velocity
+    # the blade angle has to fall with radius, beta = atan(Va / (omega r)).
+    "hub_r": 74.0,
+    "blade_root_chord": 96.0,
+    "blade_tip_chord": 62.0,
+    "blade_thickness": 0.10,
+    "blade_camber": 0.045,
+    "blade_beta_root": 52.0,     # deg from the disc plane
+    "blade_beta_tip": 24.0,
+    "blade_rake": 16.0,          # deg of sweep, for noise
+    "stator_vanes": 9,           # straighten the swirl before the exit
+    "axial_velocity": 42.0,      # m/s through the disc, sets the twist
 }
 
 TYRE_MU = 1.80                 # bespoke slick at the reference load

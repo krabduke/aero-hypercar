@@ -187,6 +187,8 @@ def main():
             "floor_skirts", "front_endplates", "front_cascades",
             "front_y250_vanes", "rear_wing", "rear_endplates", "rear_pylons",
             "rear_louvres", "rear_gurney", "beam_wing", "bargeboards",
+            "rear_wing_main", "rear_flap", "fan_rotor_l", "fan_rotor_r",
+            "fan_stators",
             "turning_vanes", "floor_fences", "floor_edge_wings", "brake_ducts",
             "mirrors", "cameras", "rainlight", "exhaust", "cooling_louvres",
             "tyre_fl", "tyre_rr", "rim_fl", "rim_rr", "wheelcover_fl",
@@ -195,6 +197,7 @@ def main():
             "front_diveplanes", "wishbones",
             "pushrods", "driveshafts", "fanduct", "fan_rotors", "fan_motors",
             "engine", "gearbox", "radiators", "battery", "fuel_cell"]
+    want = [w for w in want if w not in ("fan_rotors", "rear_wing")]
     missing = [w for w in want if w not in by]
     c.true("key components present", not missing, f"{len(want)} checked")
     for m in missing:

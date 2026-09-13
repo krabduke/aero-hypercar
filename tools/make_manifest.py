@@ -4,7 +4,8 @@ import csv, json, os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "car"))
-import spec  # noqa: E402
+import spec
+import tunnel_config  # noqa: E402  # noqa: E402
 
 GROUPS = [
     ("01 Bodywork",            "Bodywork",   "#5A6066"),
@@ -31,9 +32,28 @@ def main():
         groups.append({"key": key, "label": label, "color": colour,
                        "parts": len(mine),
                        "faces": sum(int(r["faces"]) for r in mine)})
-    parts = {r["name"]: {"g": r["collection"], "mat": r["material"],
-                         "x0": float(r["x_min_mm"]), "x1": float(r["x_max_mm"]),
-                         "f": int(r["faces"])} for r in rows}
+    def pivot(r):
+        """Objects that rotate carry their own origin and axis, so the viewer
+        can spin a fan about its own shaft and hinge a flap about its own
+        hinge line rather than about the middle of the car."""
+        if not r.get("pivot_x_mm"):
+            return None
+        return {"p": [float(r["pivot_x_mm"]), float(r["pivot_y_mm"]),
+                      float(r["pivot_z_mm"])],
+                "axis": [float(r["axis_x"]), float(r["axis_y"]),
+                         float(r["axis_z"])],
+                "spin": float(r["spin"]) if r.get("spin") else 1.0,
+                "role": r.get("role") or "spin"}
+
+    parts = {}
+    for r in rows:
+        e = {"g": r["collection"], "mat": r["material"],
+             "x0": float(r["x_min_mm"]), "x1": float(r["x_max_mm"]),
+             "f": int(r["faces"])}
+        pv = pivot(r)
+        if pv:
+            e["pivot"] = pv
+        parts[r["name"]] = e
 
     speeds = [60, 80, 100, 130, 160, 200, 250, 300]
     grip = [{"kph": k, "ours": spec.lateral_g(k), "f1": spec.f1_lateral_g(k)}
@@ -56,6 +76,7 @@ def main():
         "palette": {k: {"rgb": list(v[0]), "metal": v[1], "rough": v[2]}
                     for k, v in spec.PALETTE.items()},
         "groups": groups, "parts": parts,
+        "tunnel": tunnel_config.config(),
     }
     p = os.path.join(ROOT, "viewer", "parts.json")
     json.dump(out, open(p, "w"), indent=1)

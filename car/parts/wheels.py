@@ -38,6 +38,16 @@ def corners():
     return out
 
 
+def pivots():
+    """Everything that turns with a wheel turns about that wheel's own axis."""
+    out = {}
+    for (tag, x, y, w, od) in corners():
+        hub = (x, y, od / 2)
+        for stem in ("tyre", "rim", "wheelcover", "disc", "wheelnut"):
+            out[f"{stem}_{tag}"] = (hub, (0.0, 1.0, 0.0), 1.0, "spin")
+    return out
+
+
 def build():
     out = {}
     for (tag, x, y, w, od) in corners():

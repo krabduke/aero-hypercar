@@ -105,6 +105,50 @@
     #probe{left:16px; right:16px; max-width:none}
   }
   @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+  /* --- wind tunnel ---------------------------------------------------- */
+  /* An instrument panel, not a dashboard: the numbers are the content, so
+     they get a tabular monospace face and everything else stays quiet. */
+  #tunnel{
+    position:absolute; left:16px; top:96px; width:302px; z-index:6;
+    display:none;
+  }
+  #tunnel.on{display:block}
+  .twrap{
+    background:rgba(16,22,25,.93); border:1px solid #2C383E; border-radius:3px;
+    padding:12px 13px 10px;
+  }
+  .thead{display:flex; justify-content:space-between; align-items:baseline;
+         border-bottom:1px solid #2C383E; padding-bottom:7px; margin-bottom:9px}
+  .tt{font-weight:600; font-size:13px; letter-spacing:.01em}
+  .ts{font-size:11px; color:#6E7D86; font-variant-numeric:tabular-nums}
+  .trow{display:grid; grid-template-columns:82px 1fr 54px; align-items:center;
+        gap:8px; margin:7px 0}
+  .tlab{font-size:11px; color:#96A3AB}
+  .trow output{font-size:11px; color:#DCE6EB; text-align:right;
+               font-variant-numeric:tabular-nums}
+  .trow input[type=range]{
+    -webkit-appearance:none; appearance:none; height:2px; background:#36444B;
+    border-radius:2px; outline:none;
+  }
+  .trow input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:#8FB9CE; cursor:grab; border:2px solid #101619;
+  }
+  .trow input[type=range]::-moz-range-thumb{
+    width:13px; height:13px; border-radius:50%; background:#8FB9CE;
+    cursor:grab; border:2px solid #101619;
+  }
+  .trow input[type=range]:focus-visible{outline:2px solid #8FB9CE; outline-offset:3px}
+  .treadout{margin-top:11px; border-top:1px solid #2C383E; padding-top:9px}
+  .treadout .tr{display:flex; justify-content:space-between; padding:2.5px 0}
+  .treadout dt{font-size:11px; color:#96A3AB}
+  .treadout dd{font-size:11.5px; margin:0; font-variant-numeric:tabular-nums;
+               color:#E6EEF2}
+  .tplot{margin-top:10px}
+  .tcap{font-size:10px; color:#6E7D86; margin-bottom:3px}
+  #t-span{width:100%; height:76px; display:block}
+  .tnote{font-size:10.5px; line-height:1.45; color:#7C8A92; margin:9px 0 0}
+  .tnote.warn{color:#E0A05A}
 </style>
 </head>
 <body>
@@ -150,11 +194,14 @@
   <div id="groups"></div>
   <div id="controls">
     <button class="btn" id="skin" type="button" aria-pressed="false">Show internals</button>
+    <button class="btn" id="tunnel-btn" type="button" aria-pressed="false">Wind tunnel</button>
     <button class="btn" id="fans" type="button" aria-pressed="false">Spin fans</button>
     <button class="btn" id="spin" type="button" aria-pressed="false">Turntable</button>
     <button class="btn" id="reset" type="button">Reset view</button>
   </div>
 </div>
+
+<div id="tunnel-host"></div>
 
 <div id="load">
   <p id="loadtxt">Loading car…</p>
@@ -174,6 +221,8 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {WindTunnel, buildPanel, renderReadout, drawSpanLoad}
+  from './tunnel-ui.js';
 
 const MM = 0.001;
 const $ = s => document.querySelector(s);
@@ -182,7 +231,8 @@ const BODY = ['tub', 'nose', 'sidepod_l', 'sidepod_r', 'engine_cover', 'airbox']
 let scene, camera, renderer, controls, root, raycaster, clock;
 let data, byGroup = new Map(), info = new Map(), pickable = [];
 let hidden = new Set(), hovered = null, corners = [], viewDir;
-let spinning = false, fansOn = false, fanMesh = null;
+let spinning = false, fansOn = false;
+let spinners = [], byName = new Map(), tunnel = null, panel = null;
 
 init();
 
@@ -333,8 +383,11 @@ function ready(model){
     }
     o.material.side = THREE.DoubleSide;
     info.set(o, nfo);
+    byName.set(o.name, o);
     pickable.push(o);
-    if(o.name === 'fan_rotors') fanMesh = o;
+    // anything the manifest gave a pivot and a spin sign to is a rotor
+    if(nfo.pivot && nfo.pivot.role === 'spin')
+      spinners.push({o, pivot: nfo.pivot});
     if(!byGroup.has(nfo.g)) byGroup.set(nfo.g, []);
     byGroup.get(nfo.g).push(o);
   });
@@ -342,6 +395,7 @@ function ready(model){
   const box = new THREE.Box3().setFromObject(root);
   root.position.sub(box.getCenter(new THREE.Vector3()));
   scene.add(root);
+  buildTunnel(box);
   const size = box.getSize(new THREE.Vector3());
   corners = [];
   for(const sx of [-.5,.5]) for(const sy of [-.5,.5]) for(const sz of [-.5,.5])
@@ -352,7 +406,7 @@ function ready(model){
   addEventListener('resize', onResize);
   renderer.domElement.addEventListener('pointermove', onMove);
   renderer.domElement.addEventListener('pointerleave', () => setProbe(null));
-  window.__dbg = {scene, camera, renderer, root, byGroup};
+  window.__dbg = {scene, camera, renderer, root, byGroup, tunnel};
   $('#load').classList.add('done');
   renderer.setAnimationLoop(tick);
 }
@@ -386,10 +440,76 @@ function onResize(){
   renderer.setSize(s.clientWidth, s.clientHeight);
 }
 
+function buildTunnel(box){
+  if(!data.tunnel) return;
+  panel = buildPanel($('#tunnel-host'), data.tunnel, (id, v) => tunnel.set(id, v));
+  tunnel = new WindTunnel({
+    cfg: data.tunnel, scene, root, parts: byName, manifest: data.parts,
+    bounds: box.clone().translate(root.position),
+    slowmo: 0.006,          // a car at 250 km/h crosses itself in 70 ms
+    onSolve: r => {
+      // the fans add a near speed-independent term the lattice knows nothing
+      // about, so it is reported separately rather than folded in
+      const wings = Math.abs(r.lift_N/9.81);
+      const fan = data.tunnel.fan_kg;
+      let front = 0, tot = 0;
+      // read it off the report, not off `tunnel` -- the first solve happens
+      // inside the constructor, before `tunnel` has been assigned
+      for(const [k, v] of Object.entries(r.bySurface)){
+        tot += v;
+        if(data.tunnel.front_surfaces.includes(k)) front += v;
+      }
+      renderReadout($('#t-readout'), {...r, frontFrac: tot ? front/tot : 0},
+                    data.tunnel, 'car');
+      drawSpanLoad($('#t-span'), r.strips);
+      $('#t-panels').textContent =
+        `${r.panels} panels · ${(r.v*3.6).toFixed(0)} km/h`;
+      $('#t-note').className = 'tnote';
+      $('#t-note').textContent =
+        `Wings only, in ground effect. The floor, the tunnels and the fans `
+        + `(a further ${fan} kg, near constant with speed) are not in this `
+        + `solve — a potential-flow lattice cannot model them.`;
+    },
+  });
+  panel.sync(tunnel.state);
+}
+
+function setTunnel(on){
+  if(!tunnel) return;
+  $('#tunnel').classList.toggle('on', on);
+  $('#tunnel-btn').setAttribute('aria-pressed', String(on));
+  tunnel.setOn(on);
+  if(on){
+    panel.sync(tunnel.state);
+    spinning = false;
+    $('#spin').setAttribute('aria-pressed', 'false');
+  }
+}
+
 function tick(){
   const dt = Math.min(clock.getDelta(), 0.05);
   if(spinning && root) root.rotation.y += dt * 0.32;
-  if(fansOn && fanMesh) fanMesh.rotation.x += dt * 9.0;
+  /* Each fan turns about its own shaft.
+   *
+   * This used to rotate the single joined `fan_rotors` mesh about x. Two
+   * things were wrong with that: the object's origin was the middle of the
+   * car, so the fans swung around the centreline instead of turning; and the
+   * axis was wrong anyway, because the fans are vertical -- they pull air up
+   * out of the floor. The rotors are now separate objects whose origins sit
+   * on their own shafts, and the manifest carries the axis, so this just
+   * reads it. The two turn opposite ways, as they do on the car, so the
+   * change in fan speed leaves no net yaw torque. */
+  if(fansOn){
+    for(const s2 of spinners){
+      const ax = s2.pivot.axis;
+      const w = dt * 9.0 * s2.pivot.spin;
+      // Blender z is three.js y after the Y-up export
+      if(Math.abs(ax[2]) > 0.5) s2.o.rotation.y += w;
+      else if(Math.abs(ax[1]) > 0.5) s2.o.rotation.z -= w;
+      else s2.o.rotation.x += w;
+    }
+  }
+  if(tunnel) tunnel.update(dt);
   controls.update();
   renderer.render(scene, camera);
 }
@@ -456,6 +576,10 @@ function buildRail(){
       ? 'Click an assembly to hide it. Drag to orbit.'
       : 'Bodywork off — engine, radiators, fuel cell, battery and fans visible.';
   });
+  $('#tunnel-btn').addEventListener('click', () => {
+    setTunnel($('#tunnel-btn').getAttribute('aria-pressed') !== 'true');
+  });
+
   $('#fans').addEventListener('click', () => {
     fansOn = !fansOn;
     $('#fans').setAttribute('aria-pressed', String(fansOn));

@@ -154,20 +154,45 @@ def _skin(rows, t, sgn):
     return verts, faces
 
 
+def rear_element(k):
+    """(x, z, chord, aoa) for rear wing element k -- one definition, used by
+    the geometry, the hinge table and the aero solver alike."""
+    chord = RW["chord"] * (1.0 - 0.42 * k)
+    x = RW["x"] + k * RW["chord"] * 0.46
+    z = RW["z"] + k * (RW["gap"] + 26.0)
+    aoa = RW["aoa"] + k * 12.0
+    return x, z, chord, aoa
+
+
+def pivots():
+    """Hinge lines for every element that moves.
+
+    Each movable element pivots about its own leading edge, so a slider in the
+    viewer changes the element's incidence exactly the way the real actuator
+    would -- and the aero solver is fed the same angle.
+    """
+    out = {}
+    for k, (dx, dz, c_r, c_t, span_f, aoa_r, aoa_t, rise) in enumerate(
+            FW["stack"]):
+        if k == 0:
+            continue                      # the mainplane is fixed
+        out[f"front_flap_{k}"] = ((FW["x"] + dx, 0.0, FW["z"] + dz),
+                                  (0.0, 1.0, 0.0), 1.0, "hinge")
+    x, z, chord, aoa = rear_element(1)
+    out["rear_flap"] = ((x, 0.0, z), (0.0, 1.0, 0.0), 1.0, "hinge")
+    return out
+
+
 def _rear():
     """Two-element rear wing on swan-neck pylons, shown in its loaded
-    (non-DRS) position."""
+    (non-DRS) position. The flap is its own object hinged at its leading edge,
+    because it moves: this is the DRS element."""
     out = {}
-    elems = []
     for k in range(RW["elements"]):
-        chord = RW["chord"] * (1.0 - 0.42 * k)
-        x = RW["x"] + k * RW["chord"] * 0.46
-        z = RW["z"] + k * (RW["gap"] + 26.0)
-        aoa = RW["aoa"] + k * 12.0
-        elems.append(common.wing_element(
-            x, z, RW["span"], chord, aoa, thickness=0.10, camber=0.085,
-            taper=0.95))
-    out["rear_wing"] = mesh.join(*elems)
+        x, z, chord, aoa = rear_element(k)
+        el = common.wing_element(x, z, RW["span"], chord, aoa,
+                                 thickness=0.10, camber=0.085, taper=0.95)
+        out["rear_wing_main" if k == 0 else "rear_flap"] = el
 
     plates = []
     for sgn in (-1.0, 1.0):

@@ -251,8 +251,8 @@
    "key": "01 Bodywork",
    "label": "Bodywork",
    "color": "#5A6066",
-   "parts": 11,
-   "faces": 8188
+   "parts": 12,
+   "faces": 8400
   },
   {
    "key": "02 Floor and Diffuser",
@@ -266,7 +266,7 @@
    "label": "Wings",
    "color": "#6E7A86",
    "parts": 11,
-   "faces": 2244
+   "faces": 2032
   },
   {
    "key": "04 Wheels and Brakes",
@@ -286,8 +286,8 @@
    "key": "06 Fan System",
    "label": "Fans",
    "color": "#C06A30",
-   "parts": 3,
-   "faces": 880
+   "parts": 5,
+   "faces": 4760
   },
   {
    "key": "07 Power Unit",
@@ -464,21 +464,63 @@
    "mat": "carbon_gloss",
    "x0": 156.6,
    "x1": 344.2,
-   "f": 422
+   "f": 422,
+   "pivot": {
+    "p": [
+     156.0,
+     0.0,
+     146.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "hinge"
+   }
   },
   "front_flap_2": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
    "x0": 247.5,
    "x1": 393.6,
-   "f": 422
+   "f": 422,
+   "pivot": {
+    "p": [
+     246.0,
+     0.0,
+     188.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "hinge"
+   }
   },
   "front_flap_3": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
    "x0": 324.3,
    "x1": 433.0,
-   "f": 422
+   "f": 422,
+   "pivot": {
+    "p": [
+     322.0,
+     0.0,
+     236.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "hinge"
+   }
   },
   "front_wing_main": {
    "g": "03 Wings",
@@ -501,6 +543,27 @@
    "x1": 4930.0,
    "f": 12
   },
+  "rear_flap": {
+   "g": "01 Bodywork",
+   "mat": "carbon_gloss",
+   "x0": 4599.6,
+   "x1": 4781.6,
+   "f": 212,
+   "pivot": {
+    "p": [
+     4645.6,
+     0.0,
+     928.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "hinge"
+   }
+  },
   "rear_gurney": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
@@ -522,12 +585,12 @@
    "x1": 4587.0,
    "f": 76
   },
-  "rear_wing": {
+  "rear_wing_main": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
    "x0": 4394.5,
-   "x1": 4781.6,
-   "f": 424
+   "x1": 4736.4,
+   "f": 212
   },
   "caliper_fl": {
    "g": "04 Wheels and Brakes",
@@ -562,84 +625,252 @@
    "mat": "cf_disc",
    "x0": 720.0,
    "x1": 1080.0,
-   "f": 696
+   "f": 696,
+   "pivot": {
+    "p": [
+     900.0,
+     -830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "disc_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
    "x0": 720.0,
    "x1": 1080.0,
-   "f": 696
+   "f": 696,
+   "pivot": {
+    "p": [
+     900.0,
+     830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "disc_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
    "x0": 3870.0,
    "x1": 4230.0,
-   "f": 696
+   "f": 696,
+   "pivot": {
+    "p": [
+     4050.0,
+     -800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "disc_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
    "x0": 3870.0,
    "x1": 4230.0,
-   "f": 696
+   "f": 696,
+   "pivot": {
+    "p": [
+     4050.0,
+     800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "rim_fl": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_dark",
    "x0": 660.0,
    "x1": 1140.0,
-   "f": 766
+   "f": 766,
+   "pivot": {
+    "p": [
+     900.0,
+     -830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "rim_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_dark",
    "x0": 660.0,
    "x1": 1140.0,
-   "f": 766
+   "f": 766,
+   "pivot": {
+    "p": [
+     900.0,
+     830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "rim_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_dark",
    "x0": 3810.0,
    "x1": 4290.0,
-   "f": 766
+   "f": 766,
+   "pivot": {
+    "p": [
+     4050.0,
+     -800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "rim_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_dark",
    "x0": 3810.0,
    "x1": 4290.0,
-   "f": 766
+   "f": 766,
+   "pivot": {
+    "p": [
+     4050.0,
+     800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "tyre_fl": {
    "g": "04 Wheels and Brakes",
    "mat": "rubber_tyre",
    "x0": 565.0,
    "x1": 1235.0,
-   "f": 640
+   "f": 640,
+   "pivot": {
+    "p": [
+     900.0,
+     -830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "tyre_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "rubber_tyre",
    "x0": 565.0,
    "x1": 1235.0,
-   "f": 640
+   "f": 640,
+   "pivot": {
+    "p": [
+     900.0,
+     830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "tyre_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "rubber_tyre",
    "x0": 3705.0,
    "x1": 4395.0,
-   "f": 640
+   "f": 640,
+   "pivot": {
+    "p": [
+     4050.0,
+     -800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "tyre_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "rubber_tyre",
    "x0": 3705.0,
    "x1": 4395.0,
-   "f": 640
+   "f": 640,
+   "pivot": {
+    "p": [
+     4050.0,
+     800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "upright_fl": {
    "g": "04 Wheels and Brakes",
@@ -674,56 +905,168 @@
    "mat": "carbon_gloss",
    "x0": 686.0,
    "x1": 1114.0,
-   "f": 374
+   "f": 374,
+   "pivot": {
+    "p": [
+     900.0,
+     -830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "wheelcover_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "carbon_gloss",
    "x0": 686.0,
    "x1": 1114.0,
-   "f": 374
+   "f": 374,
+   "pivot": {
+    "p": [
+     900.0,
+     830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "wheelcover_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "carbon_gloss",
    "x0": 3836.0,
    "x1": 4264.0,
-   "f": 374
+   "f": 374,
+   "pivot": {
+    "p": [
+     4050.0,
+     -800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "wheelcover_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "carbon_gloss",
    "x0": 3836.0,
    "x1": 4264.0,
-   "f": 374
+   "f": 374,
+   "pivot": {
+    "p": [
+     4050.0,
+     800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "wheelnut_fl": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
    "x0": 861.9,
    "x1": 938.1,
-   "f": 24
+   "f": 24,
+   "pivot": {
+    "p": [
+     900.0,
+     -830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "wheelnut_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
    "x0": 861.9,
    "x1": 938.1,
-   "f": 24
+   "f": 24,
+   "pivot": {
+    "p": [
+     900.0,
+     830.0,
+     335.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "wheelnut_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
    "x0": 4011.9,
    "x1": 4088.1,
-   "f": 24
+   "f": 24,
+   "pivot": {
+    "p": [
+     4050.0,
+     -800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "wheelnut_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
    "x0": 4011.9,
    "x1": 4088.1,
-   "f": 24
+   "f": 24,
+   "pivot": {
+    "p": [
+     4050.0,
+     800.0,
+     345.0
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
   },
   "driveshafts": {
    "g": "05 Suspension",
@@ -756,23 +1099,65 @@
   "fan_motors": {
    "g": "06 Fan System",
    "mat": "alu_bright",
-   "x0": 4448.6,
-   "x1": 4571.4,
+   "x0": 4338.6,
+   "x1": 4461.4,
    "f": 176
   },
-  "fan_rotors": {
+  "fan_rotor_l": {
    "g": "06 Fan System",
    "mat": "alu_bright",
-   "x0": 4326.0,
-   "x1": 4474.0,
-   "f": 348
+   "x0": 4150.0,
+   "x1": 4649.9,
+   "f": 1898,
+   "pivot": {
+    "p": [
+     4400.0,
+     -300.0,
+     320.0
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "spin": 1.0,
+    "role": "spin"
+   }
+  },
+  "fan_rotor_r": {
+   "g": "06 Fan System",
+   "mat": "alu_bright",
+   "x0": 4150.0,
+   "x1": 4649.9,
+   "f": 1898,
+   "pivot": {
+    "p": [
+     4400.0,
+     300.0,
+     320.0
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "spin": -1.0,
+    "role": "spin"
+   }
+  },
+  "fan_stators": {
+   "g": "06 Fan System",
+   "mat": "alu_bright",
+   "x0": 4146.0,
+   "x1": 4651.0,
+   "f": 288
   },
   "fanduct": {
    "g": "06 Fan System",
    "mat": "carbon_matte",
    "x0": 3727.5,
    "x1": 4680.0,
-   "f": 356
+   "f": 500
   },
   "battery": {
    "g": "08 Cooling and Energy",
@@ -963,5 +1348,233 @@
    "x1": 4194.0,
    "f": 256
   }
+ },
+ "tunnel": {
+  "units": "m",
+  "kind": "car",
+  "s_ref": 2.4343476,
+  "c_ref": 0.47000000000000003,
+  "b_ref": 1.78,
+  "x_le_mac": 0.06,
+  "mass_kg": 700.0,
+  "v_default": 69.44444444444444,
+  "v_min": 11.11111111111111,
+  "v_max": 100.0,
+  "v_unit": "km/h",
+  "alpha_default": 0.0,
+  "alpha_min": -2.0,
+  "alpha_max": 3.0,
+  "stall_alpha": 99.0,
+  "ground": true,
+  "cg_frac": 0.0,
+  "front_surfaces": [
+   "front_0",
+   "front_1",
+   "front_2",
+   "front_3"
+  ],
+  "fan_kg": 650.0,
+  "controls": [
+   {
+    "id": "front_flap",
+    "label": "Front flap trim",
+    "unit": "deg",
+    "min": -4.0,
+    "max": 5.0,
+    "value": 0.0,
+    "baked": 0.0,
+    "objects": [
+     "front_flap_1",
+     "front_flap_2",
+     "front_flap_3"
+    ],
+    "sign": [
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "id": "drs",
+    "label": "DRS / rear flap",
+    "unit": "deg",
+    "min": 0.0,
+    "max": 28.0,
+    "value": 0.0,
+    "baked": 0.0,
+    "objects": [
+     "rear_flap"
+    ],
+    "sign": [
+     1.0
+    ]
+   }
+  ],
+  "surfaces": [
+   {
+    "name": "front_0",
+    "le_root": [
+     0.06,
+     0.0,
+     0.156
+    ],
+    "c_root": 0.33,
+    "le_tip": [
+     0.06,
+     0.89,
+     0.158
+    ],
+    "c_tip": 0.25,
+    "n_span": 8,
+    "n_chord": 3,
+    "twist_root": -2.0,
+    "twist_tip": -5.0
+   },
+   {
+    "name": "front_1",
+    "le_root": [
+     0.156,
+     0.0,
+     0.146
+    ],
+    "c_root": 0.19,
+    "le_tip": [
+     0.156,
+     0.87665,
+     0.218
+    ],
+    "c_tip": 0.168,
+    "n_span": 8,
+    "n_chord": 3,
+    "twist_root": -9.0,
+    "twist_tip": -17.0,
+    "control": "front_flap",
+    "control_tau": 1.0,
+    "control_sign": 1.0
+   },
+   {
+    "name": "front_2",
+    "le_root": [
+     0.246,
+     0.0,
+     0.188
+    ],
+    "c_root": 0.152,
+    "le_tip": [
+     0.246,
+     0.85885,
+     0.28400000000000003
+    ],
+    "c_tip": 0.138,
+    "n_span": 8,
+    "n_chord": 3,
+    "twist_root": -16.0,
+    "twist_tip": -26.0,
+    "control": "front_flap",
+    "control_tau": 1.0,
+    "control_sign": 1.0
+   },
+   {
+    "name": "front_3",
+    "le_root": [
+     0.322,
+     0.0,
+     0.23600000000000002
+    ],
+    "c_root": 0.11800000000000001,
+    "le_tip": [
+     0.322,
+     0.8365999999999999,
+     0.352
+    ],
+    "c_tip": 0.11,
+    "n_span": 8,
+    "n_chord": 3,
+    "twist_root": -23.0,
+    "twist_tip": -34.0,
+    "control": "front_flap",
+    "control_tau": 1.0,
+    "control_sign": 1.0
+   },
+   {
+    "name": "rear_0",
+    "le_root": [
+     4.48,
+     0.0,
+     0.88
+    ],
+    "c_root": 0.36,
+    "le_tip": [
+     4.48,
+     0.71,
+     0.88
+    ],
+    "c_tip": 0.342,
+    "n_span": 8,
+    "n_chord": 3,
+    "twist_root": -17.0,
+    "twist_tip": -17.0
+   },
+   {
+    "name": "rear_1",
+    "le_root": [
+     4.645600000000001,
+     0.0,
+     0.928
+    ],
+    "c_root": 0.2088,
+    "le_tip": [
+     4.645600000000001,
+     0.71,
+     0.928
+    ],
+    "c_tip": 0.19836,
+    "n_span": 8,
+    "n_chord": 3,
+    "twist_root": -29.0,
+    "twist_tip": -29.0,
+    "control": "drs",
+    "control_tau": 1.0,
+    "control_sign": 1.0
+   },
+   {
+    "name": "beam_0",
+    "le_root": [
+     4.28,
+     0.0,
+     0.43
+    ],
+    "c_root": 0.21,
+    "le_tip": [
+     4.28,
+     0.55,
+     0.43
+    ],
+    "c_tip": 0.1932,
+    "n_span": 6,
+    "n_chord": 2,
+    "twist_root": -12.0,
+    "twist_tip": -12.0
+   },
+   {
+    "name": "beam_1",
+    "le_root": [
+     4.385,
+     0.0,
+     0.47000000000000003
+    ],
+    "c_root": 0.147,
+    "le_tip": [
+     4.385,
+     0.55,
+     0.47000000000000003
+    ],
+    "c_tip": 0.13524,
+    "n_span": 6,
+    "n_chord": 2,
+    "twist_root": -12.0,
+    "twist_tip": -12.0
+   }
+  ]
  }
 }
