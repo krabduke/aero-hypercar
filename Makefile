@@ -4,10 +4,11 @@ SAMPLES ?= 128
 
 .PHONY: vendor all build verify render export stl manifest viewer validate aero clean
 
-all: build verify render export manifest
+all: build verify render export
 
 build:
 	$(BLENDER) --background --python car/assemble.py
+	python3 tools/make_manifest.py
 
 verify:
 	python3 car/verify.py
@@ -15,6 +16,7 @@ verify:
 	python3 tools/audit_geometry.py
 	python3 tools/audit_intersect.py
 	python3 tools/audit_fit.py
+	python3 tools/audit_manifest.py
 	python3 tools/check_vendor.py
 	node tools/validate_viewer.mjs .
 
