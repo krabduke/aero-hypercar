@@ -349,6 +349,8 @@ PALETTE = {
 # Matched to the F110 project's resolutions. That engine reads as real and
 # this one did not, and a large part of the difference was simply that its
 # surfaces of revolution have 96 segments and these had 48.
+TESS = 2.65  # global tessellation multiplier, applied in mesh.py
+
 RES = {
     "revolve": 96,
     "small_revolve": 28,

@@ -660,6 +660,8 @@ PALETTE = {
 # is fewer points than the engine spends on a single valve spring. These are
 # the same numbers the sibling turbofan project uses, and they are what makes
 # a tip look turned rather than chamfered.
+TESS = 1.8   # global tessellation multiplier, applied in mesh.py
+
 RES = {"revolve": 88, "small_revolve": 28, "pipe": 20,
        "airfoil_pts": 72, "wing_stations": 26}
 
