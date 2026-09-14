@@ -400,28 +400,126 @@ def _sheet(rows, t):
 
 
 def _heat_shields():
-    """Shields over the hot vee, keeping radiant heat off the plenum."""
+    """Blankets over the turbine housings and their collectors.
+
+    These were two pressed sheets stretched the length of the vee at a fixed
+    height, from the days when the exhaust was a pair of logs at that height.
+    The exhaust is not there any more: the primaries climb to z = 351 and the
+    collectors sit at 381, so the sheets were threading between them rather
+    than covering anything, and from above they read as two smooth logs lying
+    across the middle of the engine.
+
+    What a turbocharged engine actually carries is a blanket: a quilted wrap
+    laced over the turbine volute and the collector feeding it, which is the
+    hottest metal on the car and the part nearest the bodywork. It is tied on
+    rather than bolted, so it follows the shape underneath with a lace line
+    down the seam.
+    """
     parts = []
-    for sgn in (-1.0, 1.0):
-        # a heat shield is pressed sheet that wraps what it shields, with a
-        # swaged rib down it for stiffness -- not a flat plate floating above
-        x0 = spec.BLOCK["x_front"] + 45.0
-        x1 = spec.BLOCK["x_rear"] - 45.0
-        rows = []
-        for i in range(9):
-            fx = i / 8
-            x = x0 + (x1 - x0) * fx
-            row = []
-            for j in range(7):
-                fy = j / 6
-                y = sgn * (52.0 + 62.0 * fy)
-                # curve it around the manifold below
-                dz = -26.0 * (1 - math.cos((fy - 0.5) * 2.2)) \
-                     - 5.0 * math.sin(fx * math.pi * 3.0)
-                row.append((x, y, T["z"] + 62.0 + dz))
-            rows.append(row)
-        parts.append(_sheet(rows, 2.4))
+    for pair in (0, 2):
+        _, tx, _sgn, ib = gaspath.turbo_side(pair)
+        sc = gaspath.turbine_scroll(pair)
+        # a shell standing off the volute, open where the inlet flange and
+        # the outlet snout come through
+        def scroll_rings(off):
+            # only the outer two thirds of each section: a blanket is laced
+            # over the outside of a volute, and a full ring at this offset
+            # would pass through the wheel the volute is wrapped round
+            out = []
+            for (p, r) in sc:
+                x, y, z = p
+                m = math.hypot(y, z - T["z"]) or 1.0
+                uy, uz = y / m, (z - T["z"]) / m
+                ring = []
+                for k in range(13):
+                    a = math.radians(-115.0 + 230.0 * k / 12)
+                    rr = r + off
+                    ring.append((x + rr * math.cos(a) * 1.35,
+                                 y + rr * math.sin(a) * uy,
+                                 z + rr * math.sin(a) * uz))
+                out.append(ring)
+            return out
+        # a 4 mm wrap, not a solid: what is under a blanket is under it, not
+        # inside it, and the audit is right to say so
+        parts.append(_shell_rings(scroll_rings(9.0), scroll_rings(5.0),
+                                  closed=False))
+
+        # and the same over the collector that feeds it
+        cp = gaspath.collector_path(pair)
+        parts.append(_shell_rings(_sleeve(cp, gaspath.COLLECTOR_RADII, 9.0),
+                                  _sleeve(cp, gaspath.COLLECTOR_RADII, 5.0)))
+        # the lace line down the seam, which is how a blanket is held on
+        lace = []
+        for k in range(9):
+            f = (k + 0.5) / 9
+            idx = min(int(f * (len(sc) - 1)), len(sc) - 2)
+            (px, py, pz), r = sc[idx]
+            m = math.hypot(py, pz - T["z"]) or 1.0
+            lv, lf = mesh.ring_torus(0.0, 1.9, 0.9, 10, 6)
+            lv = mesh.translate(lv, px + (r + 6.0) * 1.35 * 0.72,
+                                py + (r + 6.0) * 0.5 * (py / m),
+                                pz + (r + 6.0) * 0.5 * ((pz - T["z"]) / m))
+            lace.append((lv, lf))
+        parts.append(mesh.join(*lace))
     return {"heat_shields": mesh.join(*parts)}
+
+
+def _shell_rings(outer, inner, closed=True):
+    """Close two stacks of rings into a thin shell, rimmed all the way round.
+
+    `closed` says whether each ring is a loop (a sleeve) or an arc (a wrap
+    with two free edges that need rims of their own).
+    """
+    n = len(outer[0])
+    m = len(outer)
+    verts = [v for r in outer for v in r] + [v for r in inner for v in r]
+    off = m * n
+    faces = []
+    span = n if closed else n - 1
+    for i in range(m - 1):
+        a, b = i * n, (i + 1) * n
+        for s in range(span):
+            s2 = (s + 1) % n
+            faces.append((a + s, a + s2, b + s2, b + s))
+            faces.append((off + a + s, off + b + s,
+                          off + b + s2, off + a + s2))
+    last = (m - 1) * n
+    for s in range(span):
+        s2 = (s + 1) % n
+        faces.append((s, off + s, off + s2, s2))
+        faces.append((last + s, last + s2, off + last + s2, off + last + s))
+    if not closed:
+        for i in range(m - 1):
+            a, b = i * n, (i + 1) * n
+            faces.append((a, b, off + b, off + a))
+            faces.append((a + n - 1, off + a + n - 1,
+                          off + b + n - 1, b + n - 1))
+    return verts, faces
+
+
+def _sleeve(path, radii, off):
+    """Rings of a given standoff around a path, framed against world up."""
+    rings = []
+    for i, p in enumerate(path):
+        if i == 0:
+            t = [path[1][k] - p[k] for k in range(3)]
+        elif i == len(path) - 1:
+            t = [p[k] - path[-2][k] for k in range(3)]
+        else:
+            t = [path[i + 1][k] - path[i - 1][k] for k in range(3)]
+        t = mesh._normalise(t)
+        up = (0.0, 1.0, 0.0) if abs(t[1]) < 0.9 else (0.0, 0.0, 1.0)
+        n1 = mesh._normalise(mesh._cross(t, up))
+        n2 = mesh._cross(t, n1)
+        r = radii[min(i, len(radii) - 1)] + off
+        ring = []
+        for k in range(16):
+            a = 2 * math.pi * k / 16
+            ca, sa = math.cos(a), math.sin(a)
+            ring.append(tuple(p[j] + n1[j] * r * ca + n2[j] * r * sa
+                              for j in range(3)))
+        rings.append(ring)
+    return rings
 
 
 def _dry_sump():
