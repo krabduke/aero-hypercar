@@ -80,11 +80,57 @@ def cylinder_path(bank, x):
     return [intake_port(bank, x), deck, mid, deck, exhaust_port(bank, x)]
 
 
+def turbine_path(bank_pair):
+    """Primary outlet, round the turbine scroll and out of the wheel.
+
+    The exhaust used to stop at the turbine inlet and the boost used to start
+    at the compressor outlet, so the gas arrived at the turbocharger, vanished,
+    and reappeared on the other side of it. The energy recovery is the whole
+    reason the turbo is there, and it was the one part of the path the air did
+    not travel.
+
+    The shaft lies along x: turbine housing inboard, compressor outboard,
+    centre section between them.
+    """
+    tx = T["x"][0 if bank_pair < 2 else 1]
+    hw = T["housing_w"] * 0.6
+    zc = T["z"]
+    r = T["turb_r"]
+    pts = [(tx - 46.0, 0.0, zc + 16.0)]
+    # round the volute, tightening as it feeds the wheel
+    for k in range(7):
+        f = k / 6.0
+        a = math.radians(90.0 - 300.0 * f)
+        rr = r * (0.92 - 0.46 * f)
+        pts.append((tx - hw, rr * math.cos(a), zc + rr * math.sin(a)))
+    # and out along the shaft axis, which is where a turbine discharges
+    pts.append((tx - hw - 18.0, 0.0, zc))
+    pts.append((tx - hw - 52.0, 0.0, zc))
+    return pts
+
+
+def compressor_path(bank_pair):
+    """Air in through the compressor eye, round the scroll and out."""
+    tx = T["x"][0 if bank_pair < 2 else 1]
+    hw = T["housing_w"] * 0.6
+    zc = T["z"]
+    r = T["comp_r"]
+    pts = [(tx + hw + 96.0, 0.0, zc), (tx + hw + 26.0, 0.0, zc)]
+    for k in range(7):
+        f = k / 6.0
+        a = math.radians(-120.0 + 300.0 * f)
+        rr = r * (0.34 + 0.58 * f)
+        pts.append((tx + hw, rr * math.cos(a), zc + rr * math.sin(a)))
+    return pts
+
+
 def boost_path(side):
     """Compressor outlet, along the charge pipe, through the cooler and into
     the plenum. `side` is -1 for the left bank's cooler, +1 for the right."""
     tx = T["x"][0 if side < 0 else 1]
-    return [(tx, side * 70.0, T["z"] - 18.0),
+    hw = T["housing_w"] * 0.6
+    return [(tx + hw, T["comp_r"] * 0.92, T["z"]),
+            (tx + hw * 0.4, side * 70.0, T["z"] - 18.0),
             (tx, side * 118.0, 216.0),
             (-152.0, side * 150.0, 250.0),
             (152.0, side * 150.0, 250.0),
@@ -96,9 +142,11 @@ def boost_path(side):
 def tailpipe_path(side):
     """Turbine outlet to the back of the tailpipe."""
     tx = T["x"][0 if side < 0 else 1]
-    return [(tx + 30.0, side * 40.0, T["z"] - 10.0),
-            (tx + 90.0, side * 60.0, T["z"] - 40.0),
-            (300.0, side * 70.0, 150.0)]
+    hw = T["housing_w"] * 0.6
+    return [(tx - hw - 52.0, 0.0, T["z"]),
+            (tx - hw - 90.0, side * 44.0, T["z"] - 26.0),
+            (tx + 40.0, side * 70.0, T["z"] - 48.0),
+            (300.0, side * 78.0, 150.0)]
 
 
 def valve_windows():
@@ -131,6 +179,10 @@ def build():
         })
     return {
         "cylinders": cyls,
+        "turbine": [[list(p) for p in turbine_path(0)],
+                    [list(p) for p in turbine_path(2)]],
+        "compressor": [[list(p) for p in compressor_path(0)],
+                       [list(p) for p in compressor_path(2)]],
         "boost": [[list(p) for p in boost_path(-1)],
                   [list(p) for p in boost_path(1)]],
         "tailpipe": [[list(p) for p in tailpipe_path(-1)],

@@ -4,7 +4,7 @@
   "spec.py": "27f47f9da555",
   "mesh.py": "78d6d5af664a",
   "shapes.py": "bf31bb0a9156",
-  "gaspath.py": "784e3747b56f",
+  "gaspath.py": "001ad69c2487",
   "parts/__init__.py": "e3b0c44298fc",
   "parts/common.py": "84b03b927a33",
   "parts/block.py": "e63a1b6fdf0e",
@@ -18,5 +18,5 @@
   "parts/detail.py": "92e01d0715d6",
   "parts/ancillaries.py": "05b886d4d285"
  },
- "commit": "7e2bf72"
+ "commit": "61a7fc7"
 }
