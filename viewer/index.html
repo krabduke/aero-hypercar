@@ -250,7 +250,21 @@ import {drawLegend, speedColour, pressureColour}
 
 const MM = 0.001;
 const $ = s => document.querySelector(s);
-const BODY = ['tub', 'nose', 'sidepod_l', 'sidepod_r', 'engine_cover', 'airbox'];
+
+// Anything inside named(...) or matching(...) is a claim that these are
+// parts or groups in viewer/parts.json, and tools/validate_viewer.mjs
+// checks the claim: a renamed part must not be able to go on quietly
+// not matching.
+const named = (...n) => n;
+const matching = (...n) => n;
+
+// The surfaces that come off when you look inside. `nose` and
+// `engine_cover` were in this list and neither is a part: the tub is lofted
+// in one piece from the nose to the tail, so hiding it hides both. The two
+// dead names meant nothing, quietly -- a name that is not there just never
+// matches.
+const BODY = named('tub', 'sidepod_l', 'sidepod_r', 'airbox',
+                   'sharkfin', 'cockpit_coaming');
 
 let keyLight = null;   // cast shadows, and sized to the model in ready()
 let scene, camera, renderer, controls, root, raycaster, clock;
