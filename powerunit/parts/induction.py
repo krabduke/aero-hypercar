@@ -6,6 +6,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+
+SM = spec.RES["small_revolve"]
 from parts import common
 
 I = spec.INTAKE

@@ -12,6 +12,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+
+SM = spec.RES["small_revolve"]
 from parts import common
 
 T = spec.TURBO
@@ -55,7 +57,7 @@ def _turbos():
                               T["housing_w"] * 0.9))
         # centre section
         cv, cf = mesh.tube(x - T["housing_w"] * 0.6, x + T["housing_w"] * 0.6,
-                           0.0, T["shaft_r"] * 2.6, 22)
+                           0.0, T["shaft_r"] * 2.6, SM)
         cv = [(px, py, pz + T["z"]) for (px, py, pz) in cv]
         parts.append((cv, cf))
         # wastegate

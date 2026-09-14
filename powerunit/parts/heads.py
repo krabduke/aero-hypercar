@@ -23,7 +23,114 @@ def build():
     out.update(_cams())
     out.update(_covers())
     out.update(_ignition())
+    out.update(_gaskets())
     return out
+
+
+def _gaskets():
+    """Multi-layer head gaskets, between each bank deck and its head.
+
+    The head was bolted straight onto the block deck with nothing in the
+    joint. An MLS gasket is mostly bore rings -- the folded steel beads that
+    actually do the sealing -- carried on a thin frame, so that is what it is
+    here rather than a plain shim.
+    """
+    out = {}
+    t = 1.6
+    for bank in (0, 1):
+        a = spec.bank_angle_rad(bank)
+        ca, sa = math.cos(a), math.sin(a)
+        dx = spec.cylinder_x(0, bank) - spec.cylinder_x(0)
+        parts = []
+        # the fire ring round each bore, folded proud of the sheet
+        for i in range(spec.N_CYL // 2):
+            cx = spec.cylinder_x(i) + dx
+            r0 = spec.BORE / 2
+            v, f = mesh.revolve_closed(
+                [(0.0, r0), (t, r0), (t, r0 + 5.0), (t * 1.9, r0 + 6.5),
+                 (0.0, r0 + 6.5), (0.0, r0 + 5.0)], 44)
+            v = [(py + cx, pz, px + spec.DECK_HEIGHT) for (px, py, pz) in v]
+            parts.append((v, f))
+            # coolant and oil transfer holes either side of each bore
+            for sy in (-1.0, 1.0):
+                hv, hf = mesh.revolve_closed(
+                    [(0.0, 5.0), (t, 5.0), (t, 8.5), (0.0, 8.5)], 12)
+                hv = [(py + cx, pz + sy * (r0 + 20.0), px + spec.DECK_HEIGHT)
+                      for (px, py, pz) in hv]
+                parts.append((hv, hf))
+        # the sheet the rings are carried on, as a perimeter rail
+        hw = H["half_width"] - 4.0
+        x0 = spec.cylinder_x(0) + dx - spec.BORE / 2 - 26.0
+        x1 = spec.cylinder_x(3) + dx + spec.BORE / 2 + 26.0
+        for sy in (-1.0, 1.0):
+            rv, rf = shapes.rounded_box(
+                (x0 + x1) / 2, sy * (hw - 7.0), spec.DECK_HEIGHT + t / 2,
+                x1 - x0, 14.0, t, r=0.6, seg=3)
+            parts.append((rv, rf))
+        for ex in (x0 + 7.0, x1 - 7.0):
+            rv, rf = shapes.rounded_box(
+                ex, 0.0, spec.DECK_HEIGHT + t / 2,
+                14.0, 2 * hw, t, r=0.6, seg=3)
+            parts.append((rv, rf))
+        v, f = mesh.join(*parts)
+        v = [(x, y * ca - (z) * sa, y * sa + (z) * ca) for (x, y, z) in v]
+        out[f"head_gasket_{'lr'[bank]}"] = (v, f)
+    return out
+
+
+def _head_features(bank):
+    """What is actually cut into and cast onto a cylinder head.
+
+    The head was a 120-vertex rounded box. It is the most complex casting on
+    the engine: a pent-roof chamber over every bore, a valve seat around every
+    valve, a plug well down the middle of each chamber, port bosses out both
+    faces, cam tunnel bosses along the top and a bolt boss at every stud.
+    """
+    parts = []
+    V_ = spec.VALVE
+    for (n, pair, b2, x, a) in spec.cylinders():
+        if b2 != bank:
+            continue
+        # pent-roof chamber: a shallow dome recessed into the deck face
+        prof = []
+        for i in range(9):
+            f = i / 8
+            prof.append((-8.0 * math.sin(math.pi * f * 0.5),
+                         spec.BORE * 0.5 * (1 - f * 0.06)))
+        cv, cf = mesh.revolve_open(prof, SM, cap_start=True, cap_end=True)
+        parts.append((common.along_bank(cv, x, spec.DECK_HEIGHT + 4.0, bank), cf))
+
+        # plug well
+        wv, wf = mesh.revolve_open(
+            [(0.0, 9.0), (0.0, 15.0), (30.0, 15.0), (30.0, 9.0)], SM,
+            cap_start=True, cap_end=True)
+        parts.append((common.along_bank(wv, x, spec.DECK_HEIGHT + 10.0, bank), wf))
+
+        # port bosses, one each side, around the valve pairs
+        for is_in, lat_sgn in ((True, -1.0), (False, 1.0)):
+            hr = V_["intake_head_r"] if is_in else V_["exhaust_head_r"]
+            pv, pf = mesh.revolve_open(
+                [(0.0, hr * 1.10), (0.0, hr * 1.45), (16.0, hr * 1.40),
+                 (16.0, hr * 1.05)], SM, cap_start=True, cap_end=True)
+            d = common.bank_dir(bank)
+            lat = common.bank_lat(bank)
+            off = lat_sgn * 44.0
+            base = spec.DECK_HEIGHT + 30.0
+            parts.append(([(px + x,
+                            py * lat[1] + (pz + base) * d[1] + off * lat[1],
+                            py * lat[2] + (pz + base) * d[2] + off * lat[2])
+                           for (px, py, pz) in pv], pf))
+
+        # cam tunnel bosses
+        for side in (-1, 1):
+            tv, tf = mesh.revolve_closed(
+                [(-11.0, 0.0), (-11.0, 21.0), (11.0, 21.0), (11.0, 0.0)], SM)
+            tv = [(z, y, px) for (px, y, z) in tv]
+            parts.append((common.along_bank(
+                tv, x - spec.CAM["lobe_w"] * 2.05,
+                spec.DECK_HEIGHT + H["cam_height"], bank,
+                side * H["cam_centres"] / 2), tf))
+    return mesh.join(*parts)
 
 
 def _heads():
@@ -31,14 +138,17 @@ def _heads():
     for bank in (0, 1):
         a = spec.bank_angle_rad(bank)
         ca, sa = math.cos(a), math.sin(a)
+        # each head bolts to its own bank, and the banks are staggered along
+        # the crank -- so the castings are too
         v, f = shapes.rounded_box(
-            0.0, 8.0, spec.DECK_HEIGHT + H["height"] / 2,
+            spec.cylinder_x(0, bank) - spec.cylinder_x(0), 8.0,
+            spec.DECK_HEIGHT + H["height"] / 2,
             H["x_rear"] - H["x_front"], H["half_width"] * 2, H["height"],
             r=11.0, seg=5, draft=1.2)
         v = [(x, y * ca - z * sa, y * sa + z * ca) for (x, y, z) in v]
         # the box was built about the world origin; rotate then it already sits
         # on the bank axis because its centre was placed along +z
-        out[f"head_{'lr'[bank]}"] = (v, f)
+        out[f"head_{'lr'[bank]}"] = mesh.join((v, f), _head_features(bank))
     return out
 
 
@@ -78,21 +188,37 @@ def _valve_profile(hr):
     tip = -V["length"]
     kg = V["keeper_groove"]
     st = V["stem_r"]
-    return [
+    out = [
         (0.0, 0.0),
-        (0.0, hr),                                  # head face, flat
+        (0.0, hr * 0.88),
+        (-0.35, hr * 0.97),                         # dished face, radiused
+        (-0.9, hr),                                 # head face
         (-m, hr),                                   # margin
         (-m - hr * 0.30 * sa, hr * 0.70),           # 45 degree seat face
-        (-m - hr * 0.52, hr * V["tulip"]),          # tulip
-        (-m - hr * 0.92, st * 1.5),
-        (-m - hr * 1.25, st),                       # stem
-        (tip + 9.0, st),
-        (tip + 7.0, st - kg),                       # keeper groove
-        (tip + 4.5, st - kg),
-        (tip + 2.5, st),
-        (tip, st),
+        (-m - hr * 0.33 * sa, hr * 0.63),           # back-cut below the seat
+    ]
+    # the tulip: a real underhead is a curve from the seat into the stem, not
+    # a chamfer. Twelve points along a blend makes it one.
+    x0, r0 = out[-1]
+    x1, r1 = -m - hr * 1.30, st
+    for i in range(1, 13):
+        t = i / 13.0
+        e = t * t * (3 - 2 * t)                     # smoothstep
+        out.append((x0 + (x1 - x0) * t,
+                    r0 + (r1 - r0) * e))
+    out += [
+        (x1, st),                                   # stem
+        (tip + 11.0, st),
+        (tip + 9.6, st - kg * 0.35),
+        (tip + 8.6, st - kg),                       # keeper groove, radiused
+        (tip + 5.6, st - kg),
+        (tip + 4.6, st - kg * 0.35),
+        (tip + 3.2, st),
+        (tip + 0.8, st),
+        (tip, st - 0.7),                            # chamfered tip
         (tip, 0.0),
     ]
+    return out
 
 
 def _valves():
@@ -103,7 +229,7 @@ def _valves():
     """
     out = {}
     for s in valve_seats():
-        vv, vf = mesh.revolve_open(_valve_profile(s["hr"]), SM,
+        vv, vf = mesh.revolve_open(_valve_profile(s["hr"]), SEG,
                                    cap_start=True, cap_end=True)
         t = s["tilt"]
         vv = [(px * math.cos(t) - py * math.sin(t),
@@ -116,11 +242,14 @@ def _valves():
 
         # the pair of collets that grip the keeper groove and hold the
         # retainer down. They are what actually keeps the valve in the engine.
+        # A collet is a tapered wedge: the outside matches the retainer's
+        # cone, the inside has the bead that sits in the valve's groove.
+        gr = V["stem_r"] - V["keeper_groove"] * 0.8
         cv, cf = mesh.revolve_closed(
-            [(-4.2, V["stem_r"] - V["keeper_groove"] * 0.8),
-             (4.2, V["stem_r"] - V["keeper_groove"] * 0.8),
-             (4.2, V["stem_r"] + 2.6), (-4.2, V["stem_r"] + 2.6)],
-            12, sweep=math.pi * 0.86)
+            [(-4.6, gr), (-4.6, V["stem_r"] + 3.4), (-1.4, V["stem_r"] + 2.6),
+             (1.8, V["stem_r"] + 1.4), (4.6, V["stem_r"] + 0.6), (4.6, gr),
+             (1.4, gr), (0.0, V["stem_r"] - 0.2), (-1.4, gr)],
+            SEG // 2, sweep=math.pi * 0.86)
         t = s["tilt"]
         cv = [(px - V["length"] + 6.0, py, pz) for (px, py, pz) in cv]
         cv = [(px * math.cos(t) - py * math.sin(t),
@@ -161,23 +290,34 @@ def lobe_profile(duration_crank, lift, segments=72):
 
 
 def _cam_lobe(x, lat, bank, phase_deg, duration, lift, width):
-    """One lobe: a swept profile, phased to when its valve should open."""
-    prof = lobe_profile(duration, lift)
+    """One lobe: a swept profile, phased to when its valve should open.
+
+    A lobe has width, and both faces are chamfered -- a sharp edge on a cam
+    would scuff the bucket the first time it ran. Two rings made a prism with
+    knife edges; five make the part.
+    """
+    prof = lobe_profile(duration, lift, segments=110)
     ph = math.radians(phase_deg)
+    ch = width * 0.13
     rings = []
-    for dx in (-width / 2, width / 2):
+    for (dx, shrink) in ((-width / 2, ch), (-width / 2 + ch, 0.0),
+                         (width / 2 - ch, 0.0), (width / 2, ch)):
         ring = []
         for (a, r) in prof:
-            ring.append((dx, r * math.cos(a + ph), r * math.sin(a + ph)))
+            rr = max(r - shrink, 1.0)
+            ring.append((dx, rr * math.cos(a + ph), rr * math.sin(a + ph)))
         rings.append(ring)
     n = len(prof)
-    verts = rings[0] + rings[1]
+    verts = [v for r in rings for v in r]
     faces = []
-    for i in range(n):
-        i2 = (i + 1) % n
-        faces.append((i, i2, n + i2, n + i))
+    for k in range(len(rings) - 1):
+        a, b = k * n, (k + 1) * n
+        for i in range(n):
+            i2 = (i + 1) % n
+            faces.append((a + i, a + i2, b + i2, b + i))
     faces.append(tuple(range(n - 1, -1, -1)))
-    faces.append(tuple(range(n, 2 * n)))
+    base = (len(rings) - 1) * n
+    faces.append(tuple(range(base, base + n)))
     verts = common.along_bank(verts, x, spec.DECK_HEIGHT + H["cam_height"],
                               bank, lat)
     return verts, faces
@@ -191,8 +331,35 @@ def _cams():
         for side, kind in ((-1, "in"), (1, "ex")):
             lat = side * H["cam_centres"] / 2
             tag = f"{'lr'[bank]}_{kind}"
-            cv, cf = mesh.tube(H["x_front"], H["x_rear"], 0.0,
-                               CM["journal_r"] * 0.72, SM)
+            # A camshaft is stepped: a drive nose at the front, a thrust
+            # flange, the running diameter, and a tapered tail. It was a tube.
+            jr = CM["journal_r"]
+            xf, xr = H["x_front"], H["x_rear"]
+            # Counter-clockwise in (x, r), the same winding `mesh.tube` uses,
+            # so the normals face out: along the axis first, up at the tail,
+            # then back along the outside through every step and undercut.
+            cv, cf = mesh.revolve_closed(
+                [(xf - 26.0, 0.0), (xr, 0.0),
+                 (xr, jr * 0.46), (xr - 3.0, jr * 0.58),
+                 (xr - 9.0, jr * 0.62),           # tapered tail
+                 (xr - 15.0, jr * 0.74), (xr - 17.0, jr * 0.74),
+                 (xr - 19.0, jr * 0.70),          # rear journal shoulder
+                 (xf + 10.0, jr * 0.70),          # running diameter
+                 (xf + 8.0, jr * 0.74),
+                 (xf + 4.0, jr * 0.74),
+                 (xf + 3.0, jr * 0.96),
+                 (xf - 1.0, jr * 0.96),           # thrust flange
+                 (xf - 2.0, jr * 0.74),
+                 (xf - 5.0, jr * 0.74),
+                 (xf - 6.0, jr * 0.56),
+                 (xf - 13.0, jr * 0.56),          # drive nose
+                 (xf - 14.0, jr * 0.50),
+                 (xf - 22.0, jr * 0.50),
+                 (xf - 23.0, jr * 0.34),
+                 (xf - 25.0, jr * 0.34),
+                 (xf - 26.0, jr * 0.26)], SM)
+            # the lathe runs along its own +x; along_bank reads the axial run
+            # out of z, so swap before placing it on the bank
             cv = [(z, y, px) for (px, y, z) in cv]
             cv = common.along_bank(cv, 0.0, spec.DECK_HEIGHT + H["cam_height"],
                                    bank, lat)
@@ -239,7 +406,7 @@ def _covers():
     for bank in (0, 1):
         a = spec.bank_angle_rad(bank)
         ca, sa = math.cos(a), math.sin(a)
-        z = spec.DECK_HEIGHT + H["height"] + 12.0
+        z = spec.DECK_HEIGHT + H["height"] + 1.0
         rot = lambda vs: [(x, y * ca - zz * sa, y * sa + zz * ca)
                           for (x, y, zz) in vs]
 
@@ -264,7 +431,7 @@ def _covers():
 
         fv, ff = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 21.0), (9.0, 23.0), (17.0, 20.0), (17.0, 0.0)],
-            16, cap_start=True, cap_end=True)
+            SM, cap_start=True, cap_end=True)
         fv = [(pz + H["x_front"] + 46.0, py + 8.0, px + z + 26.0)
               for (px, py, pz) in fv]
         out[f"oil_filler_{'lr'[bank]}"] = (rot(fv), ff)
@@ -284,7 +451,7 @@ def _ignition():
         iv, if_ = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 3.0), (6.0, 4.2), (14.0, 4.2),
              (18.0, 7.0), (48.0, 7.0), (52.0, 9.5), (62.0, 9.5), (62.0, 0.0)],
-            14, cap_start=True, cap_end=True)
+            SM, cap_start=True, cap_end=True)
         iv = [(z, y, px) for (px, y, z) in iv]
         out[f"injector_{n}"] = (common.along_bank(
             iv, x, spec.DECK_HEIGHT + 6.0, bank, spec.BORE * 0.40), if_)
@@ -292,7 +459,7 @@ def _ignition():
         cv, cf = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 5.5), (10.0, 6.5), (26.0, 7.5),
              (30.0, 11.0), (74.0, 11.0), (74.0, 0.0)],
-            14, cap_start=True, cap_end=True)
+            SM, cap_start=True, cap_end=True)
         cv = [(z, y, px) for (px, y, z) in cv]
         out[f"coil_{n}"] = (common.along_bank(
             cv, x, spec.DECK_HEIGHT + 10.0, bank, 0.0), cf)
@@ -300,7 +467,7 @@ def _ignition():
         pv, pf = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 2.4), (5.0, 3.1), (9.0, 7.8), (16.0, 7.8),
              (18.0, 6.2), (26.0, 6.2), (26.0, 0.0)],
-            10, cap_start=True, cap_end=True)
+            SM, cap_start=True, cap_end=True)
         pv = [(z, y, px) for (px, y, z) in pv]
         out[f"sparkplug_{n}"] = (common.along_bank(
             pv, x, spec.DECK_HEIGHT - 14.0, bank, 0.0), pf)

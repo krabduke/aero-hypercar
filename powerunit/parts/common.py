@@ -15,9 +15,19 @@ def bank_dir(bank):
 
 
 def bank_lat(bank):
-    """Unit vector across the bore axis, in the y-z plane."""
+    """Unit vector across the bore axis, in the y-z plane.
+
+    Positive lateral means the same side of the bore on both banks: inboard,
+    towards the vee, which on this engine is the hot side where the turbos
+    live. The first form was (cos a, -sin a) for both banks, which mirrors the
+    z component instead of the y one -- so `lateral` pointed inboard on the
+    left bank and outboard on the right, and every part placed with it came
+    out in a different place on each side. The fuel rails were 88 mm apart
+    across the centreline and nobody noticed for five sessions.
+    """
     a = spec.bank_angle_rad(bank)
-    return (0.0, math.cos(a), -math.sin(a))
+    s = 1.0 if bank == 0 else -1.0
+    return (0.0, s * math.cos(a), -s * math.sin(a))
 
 
 def bank_point(x, along, lateral=0.0, bank=0):

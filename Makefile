@@ -11,6 +11,11 @@ build:
 
 verify:
 	python3 car/verify.py
+	python3 tools/audit_structure.py
+	python3 tools/audit_geometry.py
+	python3 tools/audit_fit.py
+	python3 tools/check_vendor.py
+	node tools/validate_viewer.mjs .
 
 render:
 	$(BLENDER) -b $(BLEND) -P car/render.py -- all $(SAMPLES)
@@ -41,3 +46,6 @@ aero:
 
 vendor:
 	python3 tools/vendor_engine.py
+
+vendor-viewer:
+	python3 tools/vendor_viewer.py

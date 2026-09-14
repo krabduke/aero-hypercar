@@ -11,6 +11,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
+
+SM = spec.RES["small_revolve"]
 from parts import common
 
 C = spec.CRANK
@@ -24,6 +27,8 @@ def build():
     out = {}
     out.update(_crankshaft())
     out.update(_pistons_and_rods())
+    out.update(_damper())
+    out.update(_cap_bolts())
     return out
 
 
@@ -82,7 +87,46 @@ def _crankshaft():
     # nose and flywheel flange
     parts.append(mesh.tube(x0 - C["nose_len"], x0, 0.0, C["nose_r"], SEG))
     parts.append(mesh.tube(x1, x1 + C["flange_t"], 0.0, C["flange_r"], SEG))
-    return {"crankshaft": mesh.join(*parts)}
+    return {"crankshaft": mesh.join(*parts),
+            "crank_trigger": _crank_trigger(x0 - C["nose_len"] + 6.0)}
+
+
+def _crank_trigger(x):
+    """The toothed wheel the crank sensor reads, and the sensor reading it.
+
+    Without this the engine cannot be started, cannot be timed and cannot be
+    run: the ECU has no idea where the crank is. A 393-part model of an engine
+    that had every bearing shell and no way of knowing its own crank angle was
+    missing the one part that is not optional.
+
+    It is a 60-2 wheel -- sixty tooth positions with two teeth left out, so
+    the gap tells the ECU which revolution it is looking at.
+    """
+    parts = []
+    rw = C["nose_r"] + 26.0
+    parts.append(mesh.revolve_closed(
+        [(x - 3.0, C["nose_r"]), (x + 3.0, C["nose_r"]),
+         (x + 3.0, rw - 9.0), (x + 2.0, rw - 9.0),
+         (x + 2.0, rw - 3.0), (x - 2.0, rw - 3.0),
+         (x - 2.0, rw - 9.0), (x - 3.0, rw - 9.0)], SEG))
+    for i in range(60):
+        if i in (0, 1):                    # the missing pair: the index gap
+            continue
+        a = 2 * math.pi * i / 60
+        tv, tf = mesh.box(0.0, 0.0, 0.0, 4.0, 3.0, 6.4)
+        parts.append(([(px + x, py + math.cos(a) * (rw - 3.0)
+                        - math.sin(a) * pz,
+                        math.sin(a) * (rw - 3.0) + math.cos(a) * pz)
+                       for (px, py, pz) in tv], tf))
+    # the sensor on its bracket, looking at the teeth across an air gap
+    sv, sf = mesh.revolve_closed(
+        [(0.0, 0.0), (34.0, 0.0), (34.0, 7.0), (30.0, 9.5),
+         (10.0, 9.5), (8.0, 13.0), (0.0, 13.0)], SM)
+    parts.append(([(pz + x, py + 0.0, -px + rw + 35.0)
+                   for (px, py, pz) in sv], sf))
+    parts.append(shapes.rounded_box(x, 0.0, rw + 44.0, 10.0, 34.0, 22.0,
+                                    4.0, seg=5))
+    return mesh.join(*parts)
 
 
 def _pistons_and_rods():
@@ -111,11 +155,29 @@ def _pistons_and_rods():
         for tag, dz, rr, t, h in (("top", -2.2, r - 0.4, 2.6, 1.1),
                                   ("second", -5.4, r - 0.5, 2.9, 1.2),
                                   ("oil", -9.0, r - 0.6, 3.6, 1.5)):
-            rv, rf = mesh.tube(dz - h, dz + h, rr - t, rr, 28)
+            # Rings are chamfered: a square edge would not seal and would
+            # gall the bore. The oil ring is a scraper with a relieved waist.
+            if tag == "oil":
+                prof = [(dz - h, rr - t), (dz - h, rr - 0.3), (dz - h * 0.4, rr),
+                        (dz, rr - 0.7), (dz + h * 0.4, rr),
+                        (dz + h, rr - 0.3), (dz + h, rr - t)]
+            else:
+                prof = [(dz - h, rr - t), (dz - h, rr - 0.35),
+                        (dz - h * 0.5, rr), (dz + h * 0.5, rr),
+                        (dz + h, rr - 0.35), (dz + h, rr - t)]
+            rv, rf = mesh.revolve_closed(prof, spec.RES["revolve"] // 2)
             out[f"ring_{tag}_{n}"] = (common.along_bank(rv, x, along, bank), rf)
 
         # gudgeon pin
-        gv, gf = mesh.tube(-13.0, 13.0, 0.0, P["pin_r"], 16)
+        # A gudgeon pin is hollow, chamfered at both ends and grooved for
+        # the circlips that keep it in the piston. It was a plain tube.
+        pr = P["pin_r"]
+        gv, gf = mesh.revolve_closed(
+            [(-13.0, pr * 0.52), (-13.0, pr - 1.0), (-11.8, pr),
+             (-11.0, pr), (-10.4, pr - 1.3), (-9.6, pr - 1.3),
+             (-9.0, pr), (9.0, pr), (9.6, pr - 1.3), (10.4, pr - 1.3),
+             (11.0, pr), (11.8, pr), (13.0, pr - 1.0), (13.0, pr * 0.52)],
+            SM)
         gv = [(z, y, px) for (px, y, z) in gv]      # axis +x -> engine +x
         gv = common.along_bank(gv, x, along - P["crown_t"] - 12.0, bank)
         out[f"gudgeon_pin_{n}"] = (gv, gf)
@@ -132,7 +194,7 @@ def _pistons_and_rods():
 def _rod_cap(big):
     """Big-end cap and its two bolts."""
     parts = []
-    v, f = mesh.tube(-9.5, 9.5, C["pin_r"] + 1.2, R["big_end_r"], 24)
+    v, f = mesh.tube(-9.5, 9.5, C["pin_r"] + 1.2, R["big_end_r"], SM)
     parts.append(([(px + big[0], py + big[1], pz + big[2]) for (px, py, pz) in v], f))
     for sgn in (-1, 1):
         bv, bf = mesh.cylinder(0.0, 34.0, 4.2, 10)
@@ -148,7 +210,7 @@ def _rod(small, big):
     parts.append(mesh.pipe([small, big], R["beam_t"] * 0.62, 10))
     for (c, r_out, r_in, w) in ((small, R["small_end_r"], P["pin_r"] + 1.0, 15.0),
                                 (big, R["big_end_r"], C["pin_r"] + 1.2, 19.0)):
-        v, f = mesh.tube(-w / 2, w / 2, r_in, r_out, 24)
+        v, f = mesh.tube(-w / 2, w / 2, r_in, r_out, SM)
         v = [(px + c[0], py + c[1], pz + c[2]) for (px, py, pz) in v]
         parts.append((v, f))
     return mesh.join(*parts)
@@ -217,3 +279,64 @@ def pivots():
                            ("rod_cap", "rod")):
             out[f"{stem}_{n}"] = (pin, (1.0, 0.0, 0.0), 1.0, role, n)
     return out
+
+
+def _damper():
+    """Harmonic damper on the crank nose.
+
+    A flat-plane V8 has a first-order couple and a crank that rings; the
+    damper is the elastomer-bonded inertia ring that stops it. The engine had
+    a bare crank snout with a pulley behind the timing cover and nothing on
+    the front of it at all.
+    """
+    C = spec.CRANK
+    x0 = -300.0
+    parts = []
+
+    def lathe(profile, seg=36):
+        v, f = mesh.revolve_closed(list(profile), seg)
+        return ([(px, py, pz) for (px, py, pz) in v], f)
+
+    # hub, clamped on the nose
+    parts.append(lathe([(x0 + 4.0, 0.0), (x0 + 4.0, C["nose_r"] + 3.0),
+                        (x0 + 40.0, C["nose_r"] + 3.0), (x0 + 40.0, 0.0)], 28))
+    # the web out to the inertia ring
+    parts.append(lathe([(x0 + 10.0, C["nose_r"] + 3.0),
+                        (x0 + 10.0, 74.0), (x0 + 22.0, 74.0),
+                        (x0 + 22.0, C["nose_r"] + 3.0)]))
+    # the elastomer band, then the inertia ring outside it
+    parts.append(lathe([(x0 + 6.0, 74.0), (x0 + 6.0, 82.0),
+                        (x0 + 30.0, 82.0), (x0 + 30.0, 74.0)]))
+    parts.append(lathe([(x0 + 2.0, 82.0), (x0 + 2.0, 96.0),
+                        (x0 + 34.0, 96.0), (x0 + 34.0, 82.0)]))
+    # the belt grooves cut in its face -- this is also the crank pulley
+    for k in range(5):
+        gx = x0 + 8.0 + k * 5.0
+        parts.append(lathe([(gx, 96.0), (gx + 2.2, 99.5),
+                            (gx + 4.6, 96.0)], 36))
+    # and the timing mark notch
+    nv, nf = mesh.cylinder(x0 + 34.0, x0 + 38.0, 5.0, 8)
+    parts.append((mesh.translate(nv, 0.0, 90.0, 0.0), nf))
+    return {"crank_damper": mesh.join(*parts)}
+
+
+def _cap_bolts():
+    """Two studs and nuts per main cap.
+
+    Five main caps were holding the crank down with nothing through them.
+    """
+    parts = []
+    for i in range(spec.CRANK["n_mains"]):
+        x = -204.0 + i * 102.0
+        for sy in (-1.0, 1.0):
+            y = sy * 38.0
+            sv, sf = mesh.revolve_closed(
+                [(0.0, 0.0), (78.0, 0.0), (78.0, 8.0), (0.0, 8.0)], 12)
+            sv = [(py + x, pz + y, px - 82.0) for (px, py, pz) in sv]
+            parts.append((sv, sf))
+            nv, nf = mesh.revolve_closed(
+                [(0.0, 0.0), (16.0, 0.0), (16.0, 14.0), (12.0, 15.5),
+                 (4.0, 15.5), (0.0, 14.0)], 6)
+            nv = [(py + x, pz + y, px - 84.0) for (px, py, pz) in nv]
+            parts.append((nv, nf))
+    return {"main_cap_bolts": mesh.join(*parts)}

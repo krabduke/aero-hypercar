@@ -89,7 +89,31 @@ def main():
     y0 = min(f(r, "y_min_mm") for r in rows); y1 = max(f(r, "y_max_mm") for r in rows)
     z0 = min(f(r, "z_min_mm") for r in rows); z1 = max(f(r, "z_max_mm") for r in rows)
     c.band("overall length", x1 - x0, 4000.0, 5600.0, " mm")
-    c.band("overall width", y1 - y0, 1500.0, 2100.0, " mm")
+    c.band("overall width", y1 - y0, 1500.0, 2000.0, " mm")
+    # Nothing may stand outboard of the tyres. The pit crew's wheel gun
+    # sockets used to, by 24 mm, which made them the widest objects on the
+    # car and put it 49 mm over the legal width.
+    tyre_y = max(abs(float(r["y_min_mm"])) for r in rows
+                 if r["name"].startswith("tyre_"))
+    widest = max(rows, key=lambda r: max(abs(float(r["y_min_mm"])),
+                                         abs(float(r["y_max_mm"]))))
+    c.true("nothing stands outboard of the tyres",
+           widest["name"].startswith("tyre_"),
+           f"widest is {widest['name']}")
+    # The driver's feet have to be behind the front axle line. The pedal box
+    # sat 405 mm ahead of it, which is the one place a survival cell is not
+    # allowed to put them.
+    c.true("driver's feet are behind the front axle",
+           float(by["pedal_box"]["x_min_mm"]) >= spec.FRONT_AXLE_X,
+           f"pedals from {float(by['pedal_box']['x_min_mm']):.0f} mm, "
+           f"axle at {spec.FRONT_AXLE_X:.0f} mm")
+    # The plank is the reference plane: it is the lowest thing on the car.
+    lowest = min(rows, key=lambda r: float(r["z_min_mm"]))
+    c.true("the plank is the lowest part",
+           float(by["floor_plank"]["z_min_mm"])
+           <= float(lowest["z_min_mm"]) + 0.5,
+           f"lowest is {lowest['name']} at "
+           f"{float(lowest['z_min_mm']):.1f} mm")
     c.band("overall height", z1 - z0, 800.0, 1300.0, " mm")
     c.band("wheelbase", spec.WHEELBASE, 2800.0, 3700.0, " mm")
     # The axles have to sit ON the car. Left at x = 0 the front axle was at
@@ -193,7 +217,7 @@ def main():
     # the nose, tub and engine cover are one continuous lofted surface now,
     # which is what lets the body be waisted and curvature-continuous
     want = ["tub", "sidepod_l", "sidepod_r", "sidepod_inlets", "sharkfin",
-            "cockpit_coaming", "halo", "seat", "headrest", "steering_wheel",
+            "cockpit_coaming", "halo", "seat", "headrest", "steering",
             "floor_plank", "floor_surface", "tunnel_l", "tunnel_r",
             "floor_strake_l1", "floor_skirts", "floor_fence_l1",
             "front_wing_main", "front_flap_1", "front_flap_3",
@@ -223,6 +247,15 @@ def main():
         c.fails.append(f"missing component: {m}")
     c.true("every object has a material", all(r["material"] for r in rows),
            f"{len(rows)} objects")
+    # A name in MATERIAL_MAP that is not in PALETTE silently falls back to the
+    # default, so a part comes out the wrong material and nothing says so.
+    # Caught exactly that on the turbofan: six parts were assigned a
+    # "steel_polished" that does not exist -- the palette calls it "steel".
+    unknown = sorted({v for v in spec.MATERIAL_MAP.values()
+                      if v not in spec.PALETTE})
+    c.true("every material name is real", not unknown,
+           f"{len(spec.PALETTE)} in palette"
+           + (f", unknown: {', '.join(unknown)}" if unknown else ""))
     c.true("no empty meshes", all(int(r["verts"]) > 0 for r in rows), "all non-empty")
     c.true("body is one continuous surface", "nose" not in by and "tub" in by,
            "nose, tub and cover lofted together")

@@ -21,6 +21,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_SUBDIR = "engine"
 DEFAULT_SRC = os.path.join(os.path.dirname(ROOT), "car-engine")
 
 # What the car needs in order to build the engine. Anything the engine's own
@@ -76,8 +77,16 @@ def vendor(src=DEFAULT_SRC):
     return manifest
 
 
-def check():
-    """True if every vendored file still matches its recorded digest."""
+def check(src=DEFAULT_SRC):
+    """True if the vendored copy matches both its manifest and its source.
+
+    The first version compared each vendored file against a digest of itself,
+    which catches someone editing the copy but is blind to the thing that
+    actually went wrong: the source moving on while the copy stays put. That
+    is self-referential -- it can only ever say "this copy is the copy it was
+    when it was made". So it now also diffs against the upstream sources when
+    they are reachable, and says so when they are not.
+    """
     p = os.path.join(ROOT, "powerunit", "VENDOR.json")
     if not os.path.exists(p):
         return False, "powerunit/VENDOR.json missing -- run `make vendor`"
@@ -91,7 +100,23 @@ def check():
             bad.append(rel + " (changed)")
     if bad:
         return False, ", ".join(bad[:4])
-    return True, f"{len(man['files'])} files from {man.get('commit', '?')}"
+
+    eng = os.path.join(src, SRC_SUBDIR)
+    if not os.path.isdir(eng):
+        return True, (f"{len(man['files'])} files from "
+                      f"{man.get('commit', '?')} (source not reachable, "
+                      "upstream drift unchecked)")
+    drift = []
+    for rel in man["files"]:
+        up = os.path.join(eng, rel)
+        if not os.path.exists(up):
+            drift.append(rel + " (gone upstream)")
+        elif digest(up) != man["files"][rel]:
+            drift.append(rel + " (upstream changed)")
+    if drift:
+        return False, "stale, run `make vendor`: " + ", ".join(drift[:4])
+    return True, (f"{len(man['files'])} files from "
+                  f"{man.get('commit', '?')}, matching source")
 
 
 if __name__ == "__main__":

@@ -40,6 +40,8 @@ STROKE = 45.1                  # gives 250.0 cc/cylinder -> 2.0 L
 ROD_LENGTH = 86.0              # rod/stroke 1.91, inside the usual 1.6-2.1
 COMPRESSION_RATIO = 14.2       # high, with direct injection and heavy boost control
 BORE_SPACING = 102.0
+BANK_OFFSET = 19.0             # bank-to-bank stagger: the two rods
+                               # on a shared crankpin, side by side
 DECK_HEIGHT = 127.5            # = throw + rod + compression height + 0.5 deck clearance
 REDLINE_RPM = 16000.0
 BOOST_BAR = 3.4
@@ -194,8 +196,11 @@ HYBRID = {
     "mguh_len": 72.0,
     "inverter": (196.0, 146.0, 62.0),
     "inverter_pos": (0.0, 0.0, 336.0),
-    "battery": (392.0, 232.0, 88.0),
-    "battery_pos": (0.0, 0.0, -178.0),
+    "battery": (392.0, 300.0, 56.0),   # overall; built as two lobes
+    # Two lobes either side of the sump keel: clear of the pan, clear of the
+    # drain plug hanging out of it, and high enough that the engine still
+    # fits the car's engine bay when it is installed.
+    "battery_pos": (0.0, 0.0, -132.0),
 }
 
 # --------------------------------------------------------------------------
@@ -221,6 +226,30 @@ ANCILLARY = {
 
 MATERIAL_MAP = {
     "accessory_belt": "rubber_blk",
+    "head_gasket": "steel_nitrided",
+    "valve_guide": "copper_wound",
+    "valve_seat": "steel_nitrided",
+    "timing_chain": "steel_nitrided",
+    "timing_chain_guides": "alu_forged",
+    "timing_tensioner": "alu_forged",
+    "crank_damper": "steel_nitrided",
+    "flywheel_ring_gear": "steel_nitrided",
+    "oil_filter": "anodised",
+    "oil_cooler": "anodised",
+    "thermostat": "alu_cast",
+    "blowoff": "rubber_blk",
+    "intercooler": "anodised",
+    "charge_pipes": "rubber_blk",
+    "engine_mount": "rubber_blk",
+    "main_cap_bolts": "titanium",
+    "windage_tray": "steel_nitrided",
+    "scavenge_pumps": "alu_forged",
+    "belt_tensioner": "alu_forged",
+    "belt_idler": "steel_nitrided",
+    "knock_sensor": "anodised",
+    "cam_sensor": "anodised",
+    "exhaust_flange": "inconel",
+    "exhaust_gasket": "steel_nitrided",
     "collets_": "steel_nitrided",
     "ring_oil": "steel_nitrided",
     "ring_second": "steel_nitrided",
@@ -305,11 +334,11 @@ DEFAULT_MATERIAL = "alu_cast"
 
 PALETTE = {
     "alu_cast":       ((0.318, 0.326, 0.338), 1.00, 0.62),
-    "alu_forged":     ((0.402, 0.412, 0.428), 1.00, 0.42),
+    "alu_forged":     ((0.440, 0.450, 0.466), 1.00, 0.28),
     "magnesium":      ((0.276, 0.272, 0.258), 1.00, 0.58),
     "steel_nitrided": ((0.226, 0.232, 0.244), 1.00, 0.34),
-    "titanium":       ((0.372, 0.386, 0.408), 1.00, 0.36),
-    "spring_steel":   ((0.300, 0.306, 0.318), 1.00, 0.30),
+    "titanium":       ((0.360, 0.372, 0.398), 1.00, 0.22),
+    "spring_steel":   ((0.340, 0.348, 0.362), 1.00, 0.18),
     "carbon":         ((0.056, 0.058, 0.064), 0.30, 0.36),
     "inconel":        ((0.318, 0.246, 0.192), 1.00, 0.54),
     "copper_wound":   ((0.430, 0.226, 0.108), 1.00, 0.44),
@@ -317,10 +346,13 @@ PALETTE = {
     "rubber_blk":     ((0.042, 0.042, 0.046), 0.00, 0.86),
 }
 
+# Matched to the F110 project's resolutions. That engine reads as real and
+# this one did not, and a large part of the difference was simply that its
+# surfaces of revolution have 96 segments and these had 48.
 RES = {
-    "revolve": 48,
-    "small_revolve": 20,
-    "pipe": 14,
+    "revolve": 96,
+    "small_revolve": 28,
+    "pipe": 20,
 }
 
 
@@ -373,18 +405,33 @@ def bank_angle_rad(bank):
     return half if bank else -half
 
 
-def cylinder_x(i):
-    """Axial station of cylinder pair i (0..3), front to back."""
+def cylinder_x(i, bank=None):
+    """Axial station of cylinder pair i (0..3), front to back.
+
+    With `bank`, the station of that bank's cylinder -- which is NOT the same
+    as the pair's. Both rods on a shared crankpin have to fit on it side by
+    side, so the two banks are offset along the crank by one big-end width.
+    Without that offset the two rods of every pair are modelled inside each
+    other, which is exactly what this engine did: conrod_1 and conrod_2 had
+    identical bounding boxes, and so did all four pairs of rod caps.
+    """
     span = (N_CYL // 2 - 1) * BORE_SPACING
-    return -span / 2.0 + i * BORE_SPACING
+    x = -span / 2.0 + i * BORE_SPACING
+    if bank is None:
+        return x                      # the crankpin, centred between the two
+    return x + (-1.0 if bank == 0 else 1.0) * BANK_OFFSET / 2.0
 
 
 def cylinders():
-    """(index 1-8, pair, bank, x, bank_angle) for every cylinder."""
+    """(index 1-8, pair, bank, x, bank_angle) for every cylinder.
+
+    `x` is the bank's own station, offset from the crankpin's.
+    """
     out = []
     n = 1
     for pair in range(N_CYL // 2):
         for bank in (0, 1):
-            out.append((n, pair, bank, cylinder_x(pair), bank_angle_rad(bank)))
+            out.append((n, pair, bank, cylinder_x(pair, bank),
+                        bank_angle_rad(bank)))
             n += 1
     return out

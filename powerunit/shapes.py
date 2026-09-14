@@ -16,30 +16,51 @@ import math
 import mesh
 
 
-def rounded_box(cx, cy, cz, sx, sy, sz, r=6.0, seg=4, draft=0.0):
-    """A box with rounded vertical edges and optional draft.
+def rounded_box(cx, cy, cz, sx, sy, sz, r=6.0, seg=6, draft=0.0, rz=None):
+    """A cast box: filleted on all twelve edges, with draft.
 
-    Draft is the taper a casting needs to come out of its mould -- a degree or
-    two, always narrowing away from the parting line. It is a small thing and
-    it is why a real casting never looks like a rendered cube.
+    The first version rounded the four vertical edges and left the top and
+    bottom as sharp rims -- two rings of twenty points, forty vertices for a
+    whole casting. Nothing is cast with a sharp edge: a corner that sharp is a
+    stress raiser and a crack starter, and the mould could not fill it. Every
+    edge gets a radius now, which is both correct and where most of this
+    model's missing geometry was hiding.
+
+    `r` is the radius on the vertical edges, `rz` the one top and bottom
+    (defaults to r, clamped to fit).
     """
-    r = min(r, sx / 2 - 0.1, sy / 2 - 0.1)
+    r = max(0.2, min(r, sx / 2 - 0.05, sy / 2 - 0.05))
+    rz = r if rz is None else rz
+    rz = max(0.2, min(rz, sz / 2 - 0.05))
     hx, hy, hz = sx / 2, sy / 2, sz / 2
+    tan = math.tan(math.radians(draft))
+
+    # vertical stations: a quarter-round at the bottom, the straight flank,
+    # then a quarter-round at the top
+    caps = max(2, seg // 2)
+    levels = []
+    for i in range(caps + 1):                       # bottom fillet
+        a = (math.pi / 2) * i / caps
+        levels.append((-hz + rz * (1 - math.cos(a)), rz * math.sin(a)))
+    for i in range(1, caps + 1):                    # top fillet
+        a = (math.pi / 2) * i / caps
+        levels.append((hz - rz * (1 - math.sin(a)), rz * math.cos(a)))
+
     rings = []
-    for k in range(2):
-        f = k                                  # 0 at the bottom, 1 at the top
-        t = math.tan(math.radians(draft)) * sz * f
-        ax, ay = hx - t, hy - t
-        rr = max(r - t, 0.5)
+    for (z, inset) in levels:
+        shrink = rz - inset
+        t = tan * (z + hz)
+        ax = max(hx - t - shrink, 0.05)
+        ay = max(hy - t - shrink, 0.05)
+        rr = max(min(r, ax - 0.02, ay - 0.02), 0.02)
         ring = []
-        for corner, (sgx, sgy) in enumerate(((1, 1), (-1, 1), (-1, -1), (1, -1))):
+        for (sgx, sgy) in ((1, 1), (-1, 1), (-1, -1), (1, -1)):
             ox, oy = sgx * (ax - rr), sgy * (ay - rr)
             a0 = math.atan2(sgy, sgx) - math.pi / 4
             for i in range(seg + 1):
                 a = a0 + (math.pi / 2) * i / seg
                 ring.append((cx + ox + rr * math.cos(a),
-                             cy + oy + rr * math.sin(a),
-                             cz - hz + sz * f))
+                             cy + oy + rr * math.sin(a), cz + z))
         rings.append(ring)
     return _loft_closed(rings)
 
@@ -144,7 +165,7 @@ def tapered_pan(x0, x1, hw0, hw1, z_top, depth, sump_w, sump_x, seg=4):
     rectangular tank bolted to the bottom of the engine.
     """
     rings = []
-    n_st = 9
+    n_st = 21
     for i in range(n_st):
         f = i / (n_st - 1)
         x = x0 + (x1 - x0) * f
@@ -152,8 +173,9 @@ def tapered_pan(x0, x1, hw0, hw1, z_top, depth, sump_w, sump_x, seg=4):
         # the well is deepest around sump_x
         d = depth * (0.42 + 0.58 * math.exp(-((x - sump_x) / (sump_w)) ** 2))
         ring = []
-        for k in range(16):
-            a = 2 * math.pi * k / 16
+        n_a = 40
+        for k in range(n_a):
+            a = 2 * math.pi * k / n_a
             ca, sa = math.cos(a), math.sin(a)
             p = 2.0 / 3.0
             y = hw * math.copysign(abs(ca) ** p, ca)
@@ -161,3 +183,165 @@ def tapered_pan(x0, x1, hw0, hw1, z_top, depth, sump_w, sump_x, seg=4):
             ring.append((x, y, z_top - d / 2 + z))
         rings.append(ring)
     return _loft_closed(rings)
+
+
+def _loft_ring_pairs(rings, closed=False):
+    """Loft a sequence of equal-length rings; wrap the ends if `closed`."""
+    n = len(rings[0])
+    verts = [v for r in rings for v in r]
+    faces = []
+    m = len(rings) if closed else len(rings) - 1
+    for i in range(m):
+        a, b = i * n, ((i + 1) % len(rings)) * n
+        for j in range(n):
+            j2 = (j + 1) % n
+            faces.append((a + j, a + j2, b + j2, b + j))
+    return verts, faces
+
+
+def bearing_shell(x, r_in, wall, width, arc_seg=40, chamfer=0.8,
+                  groove=False, groove_w=5.0, groove_d=0.9, tang=True,
+                  sgn=1.0):
+    """One half of a plain bearing, the way a real shell is made.
+
+    A shell is not a half-tube. It is a steel back with a thin lining, so
+    every edge is chamfered where the lining is relieved; the upper half
+    carries a circumferential oil groove fed from the block gallery; and there
+    is a tang pressed out of the back at one parting face so it cannot spin in
+    its housing. That detail is the whole reason the part is recognisable.
+
+    `sgn` puts it above (+1) or below (-1) the journal.
+    """
+    hw = width / 2.0
+    c = min(chamfer, wall * 0.35, hw * 0.25)
+    r_o = r_in + wall
+    sect = [(-hw + c, r_in)]
+    if groove:
+        g = groove_w / 2.0
+        sect += [(-g - 0.6, r_in), (-g, r_in + groove_d),
+                 (g, r_in + groove_d), (g + 0.6, r_in)]
+    sect += [(hw - c, r_in), (hw, r_in + c),
+             (hw, r_o - c), (hw - c, r_o),
+             (-hw + c, r_o), (-hw, r_o - c), (-hw, r_in + c)]
+
+    angles = [math.pi * i / arc_seg for i in range(arc_seg + 1)]
+    if sgn < 0:
+        angles.reverse()
+    rings = []
+    for a in angles:
+        ca, sa = math.cos(a), math.sin(a)
+        rings.append([(px + x, r * ca, sgn * r * sa) for (px, r) in sect])
+    parts = [_loft_closed(rings)]
+
+    if tang:
+        # pressed out of the steel back at the parting face, sitting in its
+        # notch in the housing
+        parts.append(rounded_box(x, r_o + 0.7, sgn * (hw * 0.42),
+                                 width * 0.34, 2.0, 3.2, 0.5, seg=4))
+    return mesh.join(*parts)
+
+
+def gear_ring(x0, x1, r_root, r_tip, n_teeth, r_bore, chamfer=1.2):
+    """A toothed ring -- a starter ring gear, or a drive gear.
+
+    Six points per tooth: root, up the flank, across the tip and back down,
+    which is what a spur tooth looks like from the end. A smooth cylinder
+    where the starter engages says nobody thought about starting it.
+    """
+    pts = []
+    for t in range(n_teeth):
+        a0 = 2 * math.pi * t / n_teeth
+        p = 2 * math.pi / n_teeth
+        for (f, r) in ((0.00, r_root), (0.16, r_root), (0.30, r_tip),
+                       (0.50, r_tip), (0.64, r_root), (0.84, r_root)):
+            a = a0 + p * f
+            pts.append((r * math.cos(a), r * math.sin(a)))
+    n = len(pts)
+    bore = [(r_bore * math.cos(2 * math.pi * i / n),
+             r_bore * math.sin(2 * math.pi * i / n)) for i in range(n)]
+
+    verts, faces = [], []
+    for (xx, ring, shrink) in ((x0, pts, 1.0), (x0 + chamfer, pts, 1.0),
+                               (x1 - chamfer, pts, 1.0), (x1, pts, 1.0)):
+        for (y, z) in ring:
+            verts.append((xx, y * shrink, z * shrink))
+    # the chamfer rings pull in slightly at the two outer stations
+    for k in (0, 3):
+        for i in range(n):
+            (xx, y, z) = verts[k * n + i]
+            verts[k * n + i] = (xx, y * 0.985, z * 0.985)
+    for (xx, ring) in ((x0, bore), (x1, bore)):
+        for (y, z) in ring:
+            verts.append((xx, y, z))
+    OD = [0, n, 2 * n, 3 * n]
+    BI, BO = 4 * n, 5 * n
+    for i in range(n):
+        j = (i + 1) % n
+        for k in range(3):                       # outside, through the face
+            a, b = OD[k], OD[k + 1]
+            faces.append((a + i, a + j, b + j, b + i))
+        faces.append((BI + j, BI + i, OD[0] + i, OD[0] + j))     # front face
+        faces.append((OD[3] + j, OD[3] + i, BO + i, BO + j))     # rear face
+        faces.append((BI + i, BI + j, BO + j, BO + i))           # bore
+    return verts, faces
+
+
+def core(cx, cy, cz, sx, sy, sz, n_plates=12, r=3.0, gap=1.4, axis="x",
+         side_ties=2):
+    """A stacked-plate heat-exchanger core: an oil cooler and an
+    air-to-water charge cooler are both this -- a pack of thin plates with a
+    gap between each so the two fluids alternate, clamped between end bars.
+
+    The plate pack is what makes it read as a cooler. A smooth box says a
+    brick was bolted where a core should be.
+    """
+    parts = []
+    span = sx if axis == "x" else sy
+    thick = span / (n_plates * (1.0 + gap))
+    for i in range(n_plates):
+        f = (i + 0.5) / n_plates
+        off = -span / 2 + span * f
+        if axis == "x":
+            parts.append(rounded_box(cx + off, cy, cz, thick, sy * 0.94,
+                                     sz * 0.92, r=min(r, thick * 1.6), seg=4))
+        else:
+            parts.append(rounded_box(cx, cy + off, cz, sx * 0.94, thick,
+                                     sz * 0.92, r=min(r, thick * 1.6), seg=4))
+    # tie bars clamp the pack at each end
+    for s in (1.0, -1.0):
+        if axis == "x":
+            parts.append(rounded_box(cx, cy + sy * 0.5 * s, cz + sz * 0.5 * s,
+                                     sx * 1.04, thick * 2.2, thick * 2.2, 1.2,
+                                     seg=4))
+        else:
+            parts.append(rounded_box(cx + sx * 0.5 * s, cy, cz + sz * 0.5 * s,
+                                     thick * 2.2, sy * 1.04, thick * 2.2, 1.2,
+                                     seg=4))
+    return mesh.join(*parts)
+
+
+def volute(x_c, r_start, r_end, sect_r0, sect_r1, seg=48, sect=14, axis="x"):
+    """A pump scroll: a passage whose area grows with the angle it has swept.
+
+    A centrifugal pump housing is a spiral, not a cylinder -- the section has
+    to get bigger as more flow joins it, or the impeller just churns. The step
+    where the big end meets the small end is the cutwater.
+    """
+    rings = []
+    for k in range(seg):
+        f = k / seg
+        a = 2 * math.pi * f
+        R = r_start + (r_end - r_start) * f
+        rt = sect_r0 + (sect_r1 - sect_r0) * f
+        ca, sa = math.cos(a), math.sin(a)
+        ring = []
+        for i in range(sect):
+            ph = 2 * math.pi * i / sect
+            rr = R + rt * math.sin(ph)
+            ax = rt * math.cos(ph)
+            if axis == "x":
+                ring.append((x_c + ax, rr * ca, rr * sa))
+            else:
+                ring.append((rr * ca, rr * sa, x_c + ax))
+        rings.append(ring)
+    return _loft_ring_pairs(rings, closed=True)

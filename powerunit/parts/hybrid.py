@@ -7,6 +7,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+
+SM = spec.RES["small_revolve"]
 import shapes
 from parts import common
 
@@ -42,7 +44,7 @@ def _mguh():
     parts = []
     for x in spec.TURBO["x"]:
         v, f = mesh.tube(x - Y["mguh_len"] / 2, x + Y["mguh_len"] / 2,
-                         spec.TURBO["shaft_r"] + 2.0, Y["mguh_r"], 30)
+                         spec.TURBO["shaft_r"] + 2.0, Y["mguh_r"], SM)
         v = [(px, py, pz + spec.TURBO["z"]) for (px, py, pz) in v]
         parts.append((v, f))
     return {"mguh": mesh.join(*parts)}
@@ -68,15 +70,36 @@ def _electronics():
 
     bx, by, bz = Y["battery_pos"]
     sx, sy, sz = Y["battery"]
-    out["battery"] = shapes.finned_case(bx, by, bz, sx, sy, sz,
-                                        n_fins=14, fin_h=6.0, fin_t=3.0,
-                                        r=8.0, axis="x", side=-1.0)
+    # Two flat lobes straddling the sump keel, not one slab hung underneath
+    # it. Underneath, the pack was either inside the oil pan or -- once it had
+    # been dropped clear of it -- 106 mm below the floor of the engine bay
+    # when this engine is installed in the car. Beside the keel it clears the
+    # sump and stays inside the bay, which is also where a real energy store
+    # goes: low and flat, either side of the centreline.
+    # Each lobe's inboard face is set from the pan's own half-width, so the
+    # clearance holds if the pan is ever reshaped -- rather than from a
+    # fraction that happened to look right once.
+    lobe_y = sy * 0.28
+    inner = spec.ANCILLARY["sump_w"] / 2 + 10.0
+    lobe_c = inner + lobe_y / 2
+    out["battery"] = mesh.join(*[
+        shapes.finned_case(bx, by + sgn * lobe_c, bz,
+                           sx, lobe_y, sz, n_fins=14, fin_h=5.0, fin_t=3.0,
+                           r=8.0, axis="x", side=-1.0)
+        for sgn in (-1.0, 1.0)])
     # the modules inside it, visible when the case is hidden
     mods = []
     for i in range(6):
         f = (i + 0.5) / 6
-        mods.append(shapes.rounded_box(bx - sx / 2 + sx * f, by, bz,
-                                       sx / 7.6, sy * 0.82, sz * 0.72, 4.0))
+        for sgn in (-1.0, 1.0):
+            mods.append(shapes.rounded_box(
+                bx - sx / 2 + sx * f, by + sgn * lobe_c, bz,
+                sx / 7.6, lobe_y * 0.78, sz * 0.72, 4.0))
+    # a through-bolt strap: without it the modules float inside a case they
+    # never touch. The strap crosses both lobes and pierces their walls, so
+    # the pack is one structurally honest object.
+    mods.append(shapes.rounded_box(
+        bx, by, bz, sx * 0.42, lobe_c * 2 + lobe_y, sz * 0.30, 3.0))
     out["battery_modules"] = mesh.join(*mods)
     out["battery_terminals"] = mesh.join(
         shapes.connector(bx - sx * 0.3, by, bz + sz * 0.5 + 7.0, 34.0, 20.0, 14.0, 2),
