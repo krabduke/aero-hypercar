@@ -228,8 +228,127 @@ def floor_plate(n_x=14, n_y=6):
     return out
 
 
+def _thin_surface(stations, n_sect=10):
+    """Close a run of (le, te, thickness) stations into a thin lofted body.
+
+    A source panel method needs a closed surface -- a zero-thickness plate has
+    no inside for the boundary condition to be applied to. Each wing element
+    becomes a thin closed body: an ellipse of the element's own thickness
+    swept along its chord line, lofted across the span, capped at both tips.
+
+    Normals are resolved against the LOCAL chord line, not against one point
+    for the whole surface. _outward() points every normal away from a single
+    axis point, which is right for a fuselage and meaningless for a plate 1.8 m
+    across: at the tip it would send the upper and lower surface normals the
+    same way. Getting that wrong leaves the body leaking -- the net source
+    strength came out at 24.5 m3/s on a car whose panels should sum to zero.
+    """
+    rings, centres = [], []
+    for (le, te, t) in stations:
+        cx, cy, cz = te[0] - le[0], te[1] - le[1], te[2] - le[2]
+        L = math.sqrt(cx * cx + cy * cy + cz * cz) or 1.0
+        ux, uy, uz = cx / L, cy / L, cz / L
+        nx, ny, nz = 0.0, 0.0, 1.0
+        d = nx * ux + ny * uy + nz * uz
+        nx -= d * ux; ny -= d * uy; nz -= d * uz
+        m = math.sqrt(nx * nx + ny * ny + nz * nz) or 1.0
+        nx /= m; ny /= m; nz /= m
+        ring = []
+        for k in range(n_sect):
+            ang = 2.0 * math.pi * k / n_sect
+            f = 0.5 * (1.0 - math.cos(ang))
+            h = t * 0.5 * math.sin(ang)
+            ring.append((le[0] + ux * L * f + nx * h,
+                         le[1] + uy * L * f + ny * h,
+                         le[2] + uz * L * f + nz * h))
+        rings.append(ring)
+        centres.append((le[0] + ux * L * 0.5,
+                        le[1] + uy * L * 0.5,
+                        le[2] + uz * L * 0.5))
+
+    def fix(panels, ref):
+        out = []
+        for (c, n, ar) in panels:
+            vx = c[0] - ref[0] * MM
+            vy = c[1] - ref[1] * MM
+            vz = c[2] - ref[2] * MM
+            if n[0] * vx + n[1] * vy + n[2] * vz < 0.0:
+                n = [-n[0], -n[1], -n[2]]
+            out.append((c, n, ar))
+        return out
+
+    out = []
+    for i in range(len(rings) - 1):
+        ref = tuple((centres[i][k] + centres[i + 1][k]) / 2 for k in range(3))
+        out += fix(_loft([rings[i], rings[i + 1]]), ref)
+    for (ring, nrm) in ((rings[0], (0.0, -1.0, 0.0)),
+                        (rings[-1], (0.0, 1.0, 0.0))):
+        cx = sum(q[0] for q in ring) / len(ring)
+        cy = sum(q[1] for q in ring) / len(ring)
+        cz = sum(q[2] for q in ring) / len(ring)
+        out.extend(_cap(ring, (cx, cy, cz), nrm))
+    return out
+
+
+def wings(n_span=9):
+    """Front wing, rear wing and beam wing as flow obstacles.
+
+    They were not panelised at all: the lattice makes their lift but a lattice
+    is invisible to a streamline, so the air went straight through every wing
+    on the car exactly as it did through the aeroplane's.
+    """
+    out = []
+    FW, RW, BW = spec.FRONT_WING, spec.REAR_WING, spec.BEAM_WING
+
+    half = FW["span"] / 2.0
+    neutral = FW["neutral_half_w"]
+    for (dx, dz, c_r, c_t, span_f, aoa_r, aoa_t, rise) in FW["stack"]:
+        tip = half * span_f
+        st = []
+        for j in range(n_span):
+            f = -1.0 + 2.0 * j / (n_span - 1)
+            y = tip * f
+            t = abs(y)
+            o = 0.0 if t <= neutral else (t - neutral) / max(tip - neutral, 1.0)
+            o = o * o * (3 - 2 * o)
+            chord = c_r + (c_t - c_r) * o
+            aoa = math.radians(aoa_r + (aoa_t - aoa_r) * o)
+            z = FW["z"] + dz + rise * o
+            le = (FW["x"] + dx, y, z)
+            te = (le[0] + chord * math.cos(aoa), y, z - chord * math.sin(aoa))
+            st.append((le, te, max(6.0, chord * 0.09)))
+        out += _thin_surface(st)
+
+    for i in range(RW["elements"]):
+        chord = RW["chord"] * (1.0 - 0.42 * i)
+        aoa = math.radians(RW["aoa"] + 9.0 * i)
+        z = RW["z"] + i * (RW["chord"] * 0.30)
+        x = RW["x"] + i * (RW["chord"] * 0.34)
+        st = []
+        for j in range(n_span):
+            y = RW["span"] / 2.0 * (-1.0 + 2.0 * j / (n_span - 1))
+            le = (x, y, z)
+            te = (x + chord * math.cos(aoa), y, z - chord * math.sin(aoa))
+            st.append((le, te, max(6.0, chord * 0.08)))
+        out += _thin_surface(st)
+
+    for i in range(BW["elements"]):
+        chord = BW["chord"] * (1.0 - 0.34 * i)
+        aoa = math.radians(BW["aoa"] + 7.0 * i)
+        z = BW["z"] + i * (BW["chord"] * 0.34)
+        st = []
+        for j in range(n_span):
+            y = BW["span"] / 2.0 * (-1.0 + 2.0 * j / (n_span - 1))
+            le = (BW["x"] + i * chord * 0.3, y, z)
+            te = (le[0] + chord * math.cos(aoa), y, z - chord * math.sin(aoa))
+            st.append((le, te, max(5.0, chord * 0.08)))
+        out += _thin_surface(st)
+    return out
+
+
 def build():
-    panels = central_body() + sidepods() + tyres() + floor_plate()
+    panels = (central_body() + sidepods() + tyres() + floor_plate()
+              + wings())
     return {
         "n": len(panels),
         "c": [v for (c, n, a) in panels for v in c],
