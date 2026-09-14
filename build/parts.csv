@@ -6,7 +6,7 @@ halo_pillar,01 Bodywork,titanium,,,,,,,,,364,338,1101.2,1218.2,-16.7,16.7,620.0,
 headrest,10 Cockpit,carbon_matte,,,,,,,,,196,170,1830.0,2050.0,-150.0,150.0,555.0,685.0
 seat,10 Cockpit,carbon_matte,,,,,,,,,1296,1150,1370.0,2010.0,-256.0,255.9,204.0,483.0
 sharkfin,01 Bodywork,carbon_gloss,,,,,,,,,528,497,3100.0,4180.0,-5.6,5.6,413.7,758.3
-sidepod_inlets,01 Bodywork,carbon_gloss,,,,,,,,,872,820,1693.0,1812.0,-520.0,520.0,194.6,409.4
+sidepod_inlets,01 Bodywork,carbon_gloss,,,,,,,,,872,820,1721.0,1910.0,-518.0,518.0,196.6,407.4
 sidepod_l,01 Bodywork,carbon_gloss,,,,,,,,,1200,1162,1700.0,3700.0,-772.0,-162.0,145.8,540.6
 sidepod_r,01 Bodywork,carbon_gloss,,,,,,,,,1200,1162,1700.0,3700.0,162.0,772.0,145.8,540.6
 steering,10 Cockpit,carbon_matte,,,,,,,,,3072,2792,1291.0,1376.5,-129.0,129.0,469.0,671.0
@@ -96,25 +96,25 @@ wheelnut_fl,04 Wheels and Brakes,alu_bright,900.0,-830.0,335.0,0.0,1.0,0.0,1.0,s
 wheelnut_fr,04 Wheels and Brakes,alu_bright,900.0,830.0,335.0,0.0,1.0,0.0,1.0,spin,4194,4194,850.3,949.7,874.8,959.8,285.3,384.7
 wheelnut_rl,04 Wheels and Brakes,alu_bright,4050.0,-799.0,345.0,0.0,1.0,0.0,1.0,spin,4194,4194,4000.3,4099.7,-975.3,-890.3,295.3,394.7
 wheelnut_rr,04 Wheels and Brakes,alu_bright,4050.0,799.0,345.0,0.0,1.0,0.0,1.0,spin,4194,4194,4000.3,4099.7,890.3,975.3,295.3,394.7
-antiroll_f,05 Suspension,steel,,,,,,,,,5952,5730,943.0,1135.0,-230.1,230.1,534.3,683.0
-antiroll_r,05 Suspension,steel,,,,,,,,,5952,5730,3803.0,3995.0,-273.2,273.2,173.9,323.0
-dampers_f,05 Suspension,alu_bright,,,,,,,,,8284,8238,862.6,1165.4,-171.5,171.5,526.0,650.9
+antiroll_f,05 Suspension,steel,,,,,,,,,5952,5730,943.0,1135.0,-230.1,230.1,395.3,544.0
+antiroll_r,05 Suspension,steel,,,,,,,,,5952,5730,3803.0,3995.0,-273.2,273.2,139.9,289.0
+dampers_f,05 Suspension,alu_bright,,,,,,,,,8284,8238,862.6,1165.4,-171.5,171.5,421.0,545.9
 dampers_r,05 Suspension,alu_bright,,,,,,,,,8284,8238,3722.6,4025.4,-199.0,199.0,166.0,290.9
 driveshaft_rl,05 Suspension,steel,,,,,,,,,4343,4302,3999.6,4100.4,-699.1,-180.0,294.5,395.5
 driveshaft_rr,05 Suspension,steel,,,,,,,,,4343,4302,3999.6,4100.4,180.0,699.1,294.5,395.5
-heave_f,05 Suspension,alu_bright,,,,,,,,,4142,4119,847.6,1150.4,-34.0,34.0,676.0,800.9
-heave_r,05 Suspension,alu_bright,,,,,,,,,4142,4119,3707.6,4010.4,-34.0,34.0,316.0,440.9
-pushrod_fl,05 Suspension,carbon_matte,,,,,,,,,2510,2486,879.9,1040.1,-635.0,-229.2,129.5,580.5
-pushrod_fr,05 Suspension,carbon_matte,,,,,,,,,2510,2486,879.9,1040.1,229.2,635.0,129.5,580.5
+heave_f,05 Suspension,alu_bright,,,,,,,,,4142,4119,847.6,1150.4,-34.0,34.0,459.0,583.9
+heave_r,05 Suspension,alu_bright,,,,,,,,,4142,4119,3707.6,4010.4,-34.0,34.0,204.0,328.9
+pushrod_fl,05 Suspension,carbon_matte,,,,,,,,,2510,2486,879.7,1040.3,-634.6,-229.6,129.2,475.8
+pushrod_fr,05 Suspension,carbon_matte,,,,,,,,,2510,2486,879.7,1040.3,229.6,634.6,129.2,475.8
 pushrod_rl,05 Suspension,carbon_matte,,,,,,,,,2510,2486,3879.3,4070.7,-611.8,-279.5,159.2,420.8
 pushrod_rr,05 Suspension,carbon_matte,,,,,,,,,2510,2486,3879.3,4070.7,279.5,611.8,159.2,420.8
-rocker_fl,05 Suspension,alu_bright,,,,,,,,,1078,1134,931.0,1141.0,-280.0,-220.0,485.1,667.0
-rocker_fr,05 Suspension,alu_bright,,,,,,,,,1078,1134,931.0,1141.0,220.0,280.0,485.1,667.0
+rocker_fl,05 Suspension,alu_bright,,,,,,,,,1078,1134,931.0,1141.0,-280.0,-220.0,380.1,562.0
+rocker_fr,05 Suspension,alu_bright,,,,,,,,,1078,1134,931.0,1141.0,220.0,280.0,380.1,562.0
 rocker_rl,05 Suspension,alu_bright,,,,,,,,,1078,1134,3779.0,3989.0,-330.0,-270.0,85.1,267.0
 rocker_rr,05 Suspension,alu_bright,,,,,,,,,1078,1134,3779.0,3989.0,270.0,330.0,85.1,267.0
 steering_column,05 Suspension,steel,,,,,,,,,1546,1508,855.0,1563.3,-36.0,35.9,255.9,564.3
 steering_rack,05 Suspension,alu_bright,,,,,,,,,2860,2774,795.0,919.7,-236.2,236.2,190.0,346.2
-torsion_bars_f,05 Suspension,steel,,,,,,,,,1400,1200,1000.5,1104.0,-229.0,229.0,504.8,548.0
+torsion_bars_f,05 Suspension,steel,,,,,,,,,1400,1200,1000.5,1104.0,-229.0,229.0,399.8,443.0
 torsion_bars_r,05 Suspension,steel,,,,,,,,,1400,1200,3860.5,3964.0,-274.0,274.0,144.8,188.0
 trackrod_fl,05 Suspension,carbon_matte,,,,,,,,,2440,2418,652.6,917.4,-630.7,-183.5,204.5,255.5
 trackrod_fr,05 Suspension,carbon_matte,,,,,,,,,2440,2418,652.6,917.4,183.5,630.7,204.5,255.5
@@ -235,7 +235,6 @@ starter_socket,11 Structure and Service,alu_bright,,,,,,,,,1004,978,4122.0,4304.
 tyre_sensors,04 Wheels and Brakes,alu_dark,,,,,,,,,784,680,811.0,4003.0,-704.7,704.7,216.8,245.6
 wiring_loom,11 Structure and Service,hose,,,,,,,,,268,200,656.6,4057.0,-664.9,664.9,193.2,489.0
 accumulator,08 Cooling and Energy,anodised,,,,,,,,,2932,2688,2000.1,2175.2,-175.9,175.9,232.0,465.0
-aero_rake,09 Aero Detail,titanium,,,,,,,,,1548,994,1026.0,1315.0,-316.0,316.0,444.0,700.0
 antiroll_blade_f,05 Suspension,alu_bright,,,,,,,,,832,748,1008.8,1193.1,-249.7,249.7,576.0,640.0
 antiroll_blade_r,05 Suspension,alu_bright,,,,,,,,,832,748,3868.8,4053.1,-293.7,293.7,216.0,280.0
 drs_actuator,03 Wings,alu_bright,,,,,,,,,824,696,4616.0,4784.0,-25.5,25.5,758.0,883.0
@@ -243,8 +242,6 @@ fan_drive_l,06 Fan System,steel,,,,,,,,,978,925,3991.2,4451.9,-414.0,-135.3,419.
 fan_drive_r,06 Fan System,steel,,,,,,,,,978,925,3991.2,4451.9,135.3,414.0,419.2,580.8
 rear_light_panel,09 Aero Detail,alu_bright,,,,,,,,,628,602,4440.0,4466.0,-104.0,104.0,258.0,392.0
 roll_hoop,11 Structure and Service,titanium,,,,,,,,,1596,1460,2315.1,2545.0,-271.0,271.0,633.9,978.0
-spring_f,05 Suspension,strap,,,,,,,,,3992,3968,948.0,1080.0,-193.8,194.0,511.5,729.5
-spring_r,05 Suspension,strap,,,,,,,,,3628,3604,3802.0,3946.0,-221.8,222.0,151.5,372.5
 steering_arm_fl,05 Suspension,alu_bright,,,,,,,,,478,429,646.0,910.0,-689.9,-618.0,220.6,338.0
 steering_arm_fr,05 Suspension,alu_bright,,,,,,,,,478,429,646.0,910.0,618.1,690.0,220.6,338.0
 wing_mount_l,03 Wings,alu_bright,,,,,,,,,788,762,4428.0,4528.0,-185.0,-111.0,884.0,972.0

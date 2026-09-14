@@ -530,9 +530,14 @@ GURNEY = {
 
 # Sidepod inlet: a rolled lip, an internal diffuser and a splitter vane.
 INLET = {
-    "x_lip": 1702.0, "x_throat": 1812.0,
+    # x_lip was 1702, one millimetre ahead of the sidepod's own leading edge
+    # at 1700, so the duct stood out in front of the bodywork as a snout
+    # rather than reading as a mouth cut into it. Recessed 26 mm behind the
+    # face now, and the throat moved aft so the duct actually diffuses over
+    # its length instead of stepping down in 110 mm.
+    "x_lip": 1728.0, "x_throat": 1910.0,
     "y0": 336.0, "y1": 508.0, "z0": 206.0, "z1": 398.0,
-    "lip_r": 9.0, "wall": 12.0, "throat_f": 0.62, "vane_t": 7.0,
+    "lip_r": 7.0, "wall": 10.0, "throat_f": 0.68, "vane_t": 7.0,
 }
 
 # Fan motors: finned case, end bells, terminal block, mounting feet.

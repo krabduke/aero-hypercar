@@ -297,8 +297,8 @@
    "key": "05 Suspension",
    "label": "Suspension",
    "color": "#7C8690",
-   "parts": 46,
-   "faces": 124994
+   "parts": 44,
+   "faces": 117422
   },
   {
    "key": "06 Fan System",
@@ -325,8 +325,8 @@
    "key": "09 Aero Detail",
    "label": "Aero detail",
    "color": "#8A929A",
-   "parts": 55,
-   "faces": 41340
+   "parts": 54,
+   "faces": 40346
   },
   {
    "key": "10 Cockpit",
@@ -396,8 +396,8 @@
   "sidepod_inlets": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
-   "x0": 1693.0,
-   "x1": 1812.0,
+   "x0": 1721.0,
+   "x1": 1910.0,
    "f": 820
   },
   "sidepod_l": {
@@ -1530,15 +1530,15 @@
   "pushrod_fl": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 879.9,
-   "x1": 1040.1,
+   "x0": 879.7,
+   "x1": 1040.3,
    "f": 2486
   },
   "pushrod_fr": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 879.9,
-   "x1": 1040.1,
+   "x0": 879.7,
+   "x1": 1040.3,
    "f": 2486
   },
   "pushrod_rl": {
@@ -2472,13 +2472,6 @@
    "x1": 2175.2,
    "f": 2688
   },
-  "aero_rake": {
-   "g": "09 Aero Detail",
-   "mat": "titanium",
-   "x0": 1026.0,
-   "x1": 1315.0,
-   "f": 994
-  },
   "antiroll_blade_f": {
    "g": "05 Suspension",
    "mat": "alu_bright",
@@ -2527,20 +2520,6 @@
    "x0": 2315.1,
    "x1": 2545.0,
    "f": 1460
-  },
-  "spring_f": {
-   "g": "05 Suspension",
-   "mat": "strap",
-   "x0": 948.0,
-   "x1": 1080.0,
-   "f": 3968
-  },
-  "spring_r": {
-   "g": "05 Suspension",
-   "mat": "strap",
-   "x0": 3802.0,
-   "x1": 3946.0,
-   "f": 3604
   },
   "steering_arm_fl": {
    "g": "05 Suspension",

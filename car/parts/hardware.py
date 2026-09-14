@@ -170,23 +170,17 @@ def _coil(cx, cy, cz, r, wire, turns, pitch, per_turn):
 
 
 def _springs():
-    """Coil springs over the dampers, front and rear."""
-    S = spec.SPRING
-    out = {}
-    for tag, (x, z, rr, turns, pitch) in (
-            ("f", (1014.0, 526.0, S["r_f"], S["turns_f"], S["pitch_f"])),
-            ("r", (3874.0, 166.0, S["r_r"], S["turns_r"], S["pitch_r"]))):
-        parts = []
-        for sy in (-1.0, 1.0):
-            y = sy * (128.0 if tag == "f" else 150.0)
-            parts.append(_coil(x, y, z, rr, S["wire_r"], turns, pitch,
-                               S["per_turn"]))
-            # the perches the coil sits between
-            for dz in (-10.0, turns * pitch + 10.0):
-                parts.append(_disc(x, y, z + dz, rr + 14.0, 9.0,
-                                   axis="z", seg=24))
-        out[f"spring_{tag}"] = mesh.join(*parts)
-    return out
+    """Nothing: this car is sprung on torsion bars.
+
+    torsion_bars_f and torsion_bars_r have been in suspension.py from the
+    start, which is the right choice for a car of this shape -- a torsion bar
+    lies across the chassis and takes no frontal area at all. Coil springs
+    were added over the top of them last pass, which left the car sprung
+    twice and put two bright red coils 95 mm above the bodywork, directly in
+    the freestream ahead of the driver. They were the most obvious thing on
+    the car and the least aerodynamic.
+    """
+    return {}
 
 
 def _antiroll_blades():
@@ -216,28 +210,12 @@ def _antiroll_blades():
 
 
 def _aero_rake():
-    """The pitot rake behind the front wheels.
-
-    Test hardware, and the only thing on the car that says what it is for.
+    """Nothing. A pitot rake is something you bolt on for an aero test day and
+    take off before you race: three masts and fifteen probes standing 250 mm
+    into the flow ahead of the sidepods. On a car being shown as finished it
+    is drag with a clipboard attached.
     """
-    R = spec.AERO_RAKE
-    parts = []
-    for sy in (-1.0, 1.0):
-        y = sy * R["half_y"]
-        parts.append(mesh.pipe([(R["x"], y, R["mast_z0"]),
-                                (R["x"], y, R["mast_z1"])], 11.0, segments=14))
-        for b in range(R["booms"]):
-            z = R["mast_z0"] + (R["mast_z1"] - R["mast_z0"]) * (b + 0.5) / R["booms"]
-            parts.append(mesh.pipe([(R["x"], y, z),
-                                    (R["x"] - R["boom_len"], y, z)],
-                                   6.0, segments=10))
-            for k in range(5):
-                px = R["x"] - R["boom_len"] * (k + 0.5) / 5
-                parts.append(mesh.pipe([(px, y, z), (px - 34.0, y, z)],
-                                       R["probe_r"], segments=8))
-        parts.append(shapes.rounded_box(R["x"], y, R["mast_z0"] - 12.0,
-                                        60.0, 40.0, 24.0, r=4.0))
-    return {"aero_rake": mesh.join(*parts)}
+    return {}
 
 
 def _accumulator():

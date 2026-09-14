@@ -69,11 +69,12 @@ OUTSIDE = {
     "disc": "in the wheel", "caliper": "in the wheel",
     "upright": "in the wheel", "bduct": "in the wheel",
     "wishbone": "outboard", "pushrod": "outboard", "trackrod": "outboard",
-    "driveshaft": "outboard", "rocker": "inboard but above the tub line",
-    "damper": "inboard but above the tub line",
-    "antiroll": "inboard but above the tub line",
-    "torsion_bars": "inboard but above the tub line",
-    "heave": "inboard but above the tub line",
+    "driveshaft": "outboard",
+    # The inboard suspension used to be exempted here, with the reason
+    # "inboard but above the tub line" -- which is not a reason, it is the
+    # defect written down. The whole group sat up to 160 mm proud of the
+    # bodywork in clean air ahead of the driver, and the test had been told
+    # to expect that. It is under the skin now, so the test does its job.
     "steering_rack": "ahead of the tub, in the nose",
     "fan_": "in the fan duct under the floor",
     "fanduct": "under the floor",

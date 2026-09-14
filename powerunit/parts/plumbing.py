@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import spec
 import mesh
 import shapes
+import gaspath
 from parts import common
 
 B = spec.BLOCK
@@ -55,18 +56,10 @@ def _primaries():
         d = common.bank_dir(bank)
         lat = common.bank_lat(bank)
         # port face, on the inboard side of the head
-        start = (x,
-                 d[1] * (spec.DECK_HEIGHT + 34.0) + lat[1] * 44.0,
-                 d[2] * (spec.DECK_HEIGHT + 34.0) + lat[2] * 44.0)
-        tx = T["x"][0 if pair < 2 else 1]
-        path = [
-            start,
-            (x + (tx - x) * 0.22,
-             start[1] * 0.72, start[2] + 26.0),
-            (x + (tx - x) * 0.58,
-             start[1] * 0.34, T["z"] + 42.0),
-            (tx - 46.0, 0.0, T["z"] + 16.0),
-        ]
+        # the centreline lives in gaspath.py, so the flow animation in the
+        # viewer runs down the pipe that is actually here
+        path = gaspath.primary_path(pair, bank, x)
+        start = path[0]
         # A primary is not a constant-diameter tube. It leaves the port at
         # port size, is stepped out at the head flange, and tapers down into
         # the collector so the pulse arrives with some velocity behind it.
@@ -115,15 +108,13 @@ def _runners():
     for (n, pair, bank, x, a) in spec.cylinders():
         d = common.bank_dir(bank)
         lat = common.bank_lat(bank)
-        port = (x,
-                d[1] * (spec.DECK_HEIGHT + 30.0) + lat[1] * -50.0,
-                d[2] * (spec.DECK_HEIGHT + 30.0) + lat[2] * -50.0)
-        top = (x, port[1] * 0.30, I["plenum_z"] - 26.0)
+        # same centreline the viewer animates the induction along
+        flow = gaspath.runner_path(bank, x)
+        port, top = flow[-1], flow[1]
         # Bellmouth at the plenum end, tapering down to port size. The
         # bellmouth is what makes the runner fill at all -- a plain tube end
         # separates the flow the moment it turns the corner into it.
-        path = [port, ((port[0] + top[0]) / 2, port[1] * 0.74, port[2] + 46.0),
-                top, (top[0], top[1] * 0.9, top[2] + 14.0)]
+        path = list(reversed(flow))
         radii = [15.0, 16.5, 18.0, 25.0]
         tube = mesh.pipe(path, radii, spec.RES["pipe"], subdiv=7)
         flange = mesh.revolve_open(

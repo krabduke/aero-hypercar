@@ -26,10 +26,10 @@ DEFAULT_SRC = os.path.join(os.path.dirname(ROOT), "car-engine")
 
 # What the car needs in order to build the engine. Anything the engine's own
 # assemble.py pulls in has to be here, or the import fails at build time.
-FILES = ["spec.py", "mesh.py", "shapes.py", "airfoil.py"]
+FILES = ["spec.py", "mesh.py", "shapes.py", "airfoil.py", "gaspath.py"]
 PART_MODULES = ["__init__.py", "common.py", "block.py", "bottomend.py",
                 "heads.py", "plumbing.py", "induction.py", "turbo.py",
-                "hybrid.py", "drive.py", "detail.py"]
+                "hybrid.py", "drive.py", "detail.py", "ancillaries.py"]
 
 
 def digest(path):

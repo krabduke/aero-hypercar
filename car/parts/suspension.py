@@ -50,9 +50,9 @@ def build():
 
         # push/pull rod into a rocker on the chassis
         if front:
-            rod = [(x, y * 0.74, S["lower_z"]), (x + 120.0, sgn * inb_y, 560.0)]
+            rod = [(x, y * 0.74, S["lower_z"]), (x + 120.0, sgn * inb_y, 455.0)]
             rockers.append((f"rocker_{tag}",
-                            _rocker(x + 130.0, sgn * inb_y, 580.0, 1.0)))
+                            _rocker(x + 130.0, sgn * inb_y, 475.0, 1.0)))
         else:
             rod = [(x, y * 0.74, S["upper_z"] + 60.0),
                    (x - 150.0, sgn * inb_y, 180.0)]
@@ -106,7 +106,12 @@ def _inboard():
     for ax, tag in ((spec.FRONT_AXLE_X, "f"), (spec.REAR_AXLE_X, "r")):
         front = tag == "f"
         inb_y = S["inboard_front_y"] if front else S["inboard_rear_y"]
-        z = 560.0 if front else 200.0
+        # Referenced to what the bodywork does overhead, not picked.
+        # At the front axle the body's top surface runs z 555 to 600, and this
+        # group was placed at 560 with the anti-roll bar at 656 and the heave
+        # element at 710 -- so the whole inboard suspension stood up to 160 mm
+        # proud of the car, in clean air, ahead of the driver.
+        z = 455.0 if front else 200.0
         dx = 130.0 if front else -160.0
 
         dampers = []
@@ -120,10 +125,10 @@ def _inboard():
         # the heave element is a third damper, working only when both
         # wheels move together -- which is what holds the ride height under
         # aerodynamic load
-        out[f"heave_{tag}"] = _damper(ax + dx - 165.0, 0.0, z + 150.0)
+        out[f"heave_{tag}"] = _damper(ax + dx - 165.0, 0.0, z + 38.0)
 
         # anti-roll bar: a blade each side on a cross tube
-        out[f"antiroll_{tag}"] = _antiroll(ax + dx - 60.0, inb_y, z + 96.0)
+        out[f"antiroll_{tag}"] = _antiroll(ax + dx - 60.0, inb_y, z + 62.0)
 
     # steering: rack, column and track rods
     ax = spec.FRONT_AXLE_X

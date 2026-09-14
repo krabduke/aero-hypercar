@@ -1,0 +1,331 @@
+"""Everything that bolts to the outside of the engine and makes it run.
+
+Oil filter and cooler, thermostat, charge cooling and its pipework, the
+mounts that actually carry the engine, the belt tensioner and idler, the
+knock and cam sensors the control reads, and the port flanges and gaskets
+between head and manifold.
+
+None of this existed. The engine had a dry-sump tank, oil lines and a pump,
+but nothing to filter or cool the oil; two turbochargers with no charge
+cooler and no pipework between them and the plenum; mounting bosses with no
+mounts on them; and an accessory belt running over pulleys with nothing
+tensioning it.
+"""
+
+import math
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import spec
+import mesh
+import shapes
+from parts import common
+
+B = spec.BLOCK
+T = spec.TURBO
+
+
+def build():
+    out = {}
+    out.update(_oil_system())
+    out.update(_cooling())
+    out.update(_charge())
+    out.update(_mounts())
+    out.update(_belt())
+    out.update(_sensors())
+    out.update(_exhaust_joints())
+    return out
+
+
+def _lathe(profile, cx, cy, cz, axis="z", seg=24, flip=False):
+    """Revolve an (along, radius) profile and stand it on a given axis.
+
+    `flip` points the "along" direction the other way. A part on the left bank
+    has to grow outboard just as its twin does on the right, and a profile
+    that always runs +y grows outboard on one side and inboard on the other --
+    which is how the knock sensors and engine mounts came out 34 mm from
+    mirroring each other. Done as a rotation rather than by negating a
+    coordinate, so the winding stays right way out.
+    """
+    v, f = mesh.revolve_closed(list(profile), seg)
+    if flip:
+        v = mesh.rot_z(v, math.pi)
+    if axis == "z":
+        v = [(pz, py, px) for (px, py, pz) in v]
+    elif axis == "y":
+        v = [(pz, px, py) for (px, py, pz) in v]
+    return ([(px + cx, py + cy, pz + cz) for (px, py, pz) in v], f)
+
+
+# --------------------------------------------------------------------------
+
+def _oil_system():
+    """Spin-on filter on its pedestal, and the stacked-plate cooler beside it.
+
+    A dry sump with no filter is a pump circulating its own debris.
+    """
+    out = {}
+    y = -(B["half_width"] + 34.0)
+    x = -96.0
+    parts = []
+    # the pedestal casting on the block, with the two galleries through it
+    parts.append(shapes.rounded_box(x, y + 18.0, -6.0, 108.0, 44.0, 86.0, 8.0))
+    for dx in (-30.0, 30.0):
+        parts.append(_lathe(
+            [(0.0, 0.0), (26.0, 0.0), (26.0, 15.0), (0.0, 15.0)],
+            x + dx, y + 8.0, -6.0, axis="y", seg=14))
+    # the canister: rolled seam, fluted body, and the sealing face
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 52.0), (8.0, 58.0), (18.0, 58.0),
+         (24.0, 54.0), (132.0, 54.0), (140.0, 46.0), (140.0, 0.0)],
+        x, y - 6.0, -6.0, axis="y", seg=28))
+    for k in range(16):
+        a = 2 * math.pi * k / 16
+        fv, ff = mesh.cylinder(0.0, 104.0, 3.4, 6)
+        fv = [(56.0 * math.cos(a) + pz, -px, 56.0 * math.sin(a) + py)
+              for (px, py, pz) in fv]
+        parts.append(([(px + x, py + y - 26.0, pz - 6.0)
+                       for (px, py, pz) in fv], ff))
+    out["oil_filter"] = mesh.join(*parts)
+
+    # the cooler: a real plate pack, not a brick
+    cx, cy, cz = -10.0, -(B["half_width"] + 58.0), -74.0
+    parts = [shapes.core(cx, cy, cz, 190.0, 58.0, 76.0, n_plates=14)]
+    for dx in (-84.0, 84.0):
+        parts.append(_lathe(
+            [(0.0, 0.0), (30.0, 0.0), (30.0, 17.0), (22.0, 17.0),
+             (22.0, 13.0), (0.0, 13.0)],
+            cx + dx, cy + 34.0, cz, axis="y", seg=14))
+    # the bracket tying it back to the block
+    parts.append(shapes.rounded_box(cx, cy + 42.0, cz + 22.0,
+                                    150.0, 34.0, 14.0, 4.0))
+    out["oil_cooler"] = mesh.join(*parts)
+    return out
+
+
+def _cooling():
+    """Thermostat and its housing, on the front water outlet."""
+    out = {}
+    x = B["x_front"] - 16.0
+    parts = []
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 46.0), (12.0, 52.0), (44.0, 52.0),
+         (52.0, 44.0), (52.0, 0.0)], x, 0.0, 31.0, axis="x", seg=24))
+    # the outlet stub the top hose clamps onto, with its bead
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 27.0), (34.0, 27.0), (38.0, 31.0),
+         (44.0, 31.0), (48.0, 27.0), (62.0, 27.0), (62.0, 0.0)],
+        x - 50.0, 0.0, 31.0, axis="x", seg=20))
+    # the thermostat itself, inside: wax capsule, frame and jiggle pin
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 34.0), (6.0, 36.0), (12.0, 34.0), (12.0, 20.0),
+         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, 31.0, axis="x", seg=18))
+    for k in range(6):
+        a = 2 * math.pi * k / 6
+        bv, bf = mesh.cylinder(0.0, 16.0, 5.0, 8)
+        bv = [(px + x, 48.0 * math.cos(a) + py, 48.0 * math.sin(a) + pz + 31.0)
+              for (px, py, pz) in bv]
+        parts.append((bv, bf))
+    out["thermostat"] = mesh.join(*parts)
+    return out
+
+
+def _charge():
+    """Air-to-water charge coolers and the pipework from turbo to plenum.
+
+    Two turbochargers were feeding a plenum they were not connected to.
+    """
+    out = {}
+    runs = []
+    for bank, tag in ((0, "l"), (1, "r")):
+        s = -1.0 if bank == 0 else 1.0
+        cx, cy, cz = 0.0, s * 150.0, 250.0
+        parts = [shapes.core(cx, cy, cz, 230.0, 62.0, 96.0, n_plates=16)]
+        # end tanks, one each end, with the coolant unions on top
+        for dx in (-122.0, 122.0):
+            parts.append(_lathe(
+                [(0.0, 0.0), (0.0, 48.0), (10.0, 54.0), (28.0, 54.0),
+                 (34.0, 48.0), (34.0, 0.0)], cx + dx, cy, cz, axis="x", seg=20))
+            parts.append(_lathe(
+                [(0.0, 0.0), (26.0, 0.0), (26.0, 14.0), (20.0, 14.0),
+                 (20.0, 11.0), (0.0, 11.0)],
+                cx + dx, cy, cz + 52.0, axis="z", seg=12))
+        out[f"intercooler_{tag}"] = mesh.join(*parts)
+
+        # turbo compressor outlet -> cooler -> plenum
+        tx = T["x"][bank]
+        path_in = [(tx, s * 70.0, T["z"] - 18.0),
+                   (tx + s * 0.0, s * 118.0, 216.0),
+                   (cx - 122.0 - 30.0, cy, cz)]
+        path_out = [(cx + 122.0 + 30.0, cy, cz),
+                    (120.0, s * 120.0, 300.0),
+                    (140.0, s * 50.0, 316.0)]
+        pipe_parts = [mesh.pipe(path_in, 34.0, segments=18),
+                      mesh.pipe(path_out, 34.0, segments=18)]
+        # a coupling bead at each joint, which is where a hose clamp lands
+        for p in (path_in[0], path_in[-1], path_out[0], path_out[-1]):
+            pipe_parts.append(_lathe(
+                [(-7.0, 33.0), (7.0, 33.0), (7.0, 40.0), (-7.0, 40.0)],
+                p[0], p[1], p[2], axis="y", seg=18))
+        runs.extend(pipe_parts)
+
+    # The turbochargers are at x = -118 and +118 -- fore and aft on the vee,
+    # not left and right -- so the pipework between them and the coolers is
+    # one assembly. Naming it _l/_r would claim a mirror symmetry it does not
+    # have, and the structure audit would rightly call that a failure.
+    out["charge_pipes"] = mesh.join(*runs)
+
+    # recirculating blow-off valve, on the left charge pipe
+    parts = []
+    bx, by, bz = 120.0, -120.0, 300.0
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 30.0), (10.0, 34.0), (52.0, 34.0),
+         (58.0, 30.0), (58.0, 22.0), (70.0, 22.0), (70.0, 0.0)],
+        bx, by, bz, axis="z", seg=20))
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 17.0), (40.0, 17.0), (40.0, 0.0)],
+        bx, by - 44.0, bz + 18.0, axis="y", seg=14))
+    out["blowoff"] = mesh.join(*parts)
+    return out
+
+
+def _mounts():
+    """The mounts the engine actually hangs on.
+
+    There were bosses on the block and nothing bolted to them.
+    """
+    out = {}
+    for bank, tag in ((0, "l"), (1, "r")):
+        s = -1.0 if bank == 0 else 1.0
+        parts = []
+        y = s * (B["half_width"] - 4.0)
+        for x in (-150.0, 150.0):
+            # the bracket: a machined foot with a rubber bush in its eye
+            parts.append(shapes.rounded_box(x, y + s * 30.0, 30.0,
+                                            72.0, 60.0, 96.0, 6.0))
+            fl = s < 0
+            parts.append(_lathe(
+                [(0.0, 0.0), (0.0, 44.0), (34.0, 44.0), (34.0, 0.0)],
+                x, y + s * 62.0, 58.0, axis="y", seg=22, flip=fl))
+            parts.append(_lathe(
+                [(2.0, 0.0), (32.0, 0.0), (32.0, 26.0), (2.0, 26.0)],
+                x, y + s * 62.0, 58.0, axis="y", seg=18, flip=fl))
+            for dx in (-24.0, 24.0):
+                parts.append(_lathe(
+                    [(0.0, 0.0), (18.0, 0.0), (18.0, 9.0), (0.0, 9.0)],
+                    x + dx, y + s * 4.0, -6.0, axis="y", seg=10, flip=fl))
+        out[f"engine_mount_{tag}"] = mesh.join(*parts)
+    return out
+
+
+def _belt():
+    """Tensioner and idler on the accessory belt run.
+
+    A belt with no tensioner is a loop of rubber lying on some pulleys.
+    """
+    out = {}
+    x = -248.0
+    parts = []
+    # tensioner: sprung arm carrying a smooth pulley
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 30.0), (26.0, 30.0), (26.0, 0.0)],
+        x, -104.0, 74.0, axis="x", seg=20))
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 34.0), (6.0, 38.0), (30.0, 38.0),
+         (36.0, 34.0), (36.0, 0.0)], x - 10.0, -104.0, 74.0, axis="x", seg=24))
+    av, af = shapes.rounded_box(x, -78.0, 52.0, 26.0, 66.0, 30.0, 5.0)
+    parts.append((av, af))
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 22.0), (40.0, 22.0), (40.0, 0.0)],
+        x, -56.0, 34.0, axis="x", seg=16))
+    out["belt_tensioner"] = mesh.join(*parts)
+
+    parts = []
+    parts.append(_lathe(
+        [(0.0, 0.0), (0.0, 36.0), (6.0, 40.0), (28.0, 40.0),
+         (34.0, 36.0), (34.0, 0.0)], x - 8.0, 96.0, 60.0, axis="x", seg=24))
+    parts.append(_lathe(
+        [(0.0, 0.0), (34.0, 0.0), (34.0, 14.0), (0.0, 14.0)],
+        x + 26.0, 96.0, 60.0, axis="x", seg=14))
+    out["belt_idler"] = mesh.join(*parts)
+    return out
+
+
+def _sensors():
+    """Knock and cam position sensors: what the control actually listens to."""
+    out = {}
+    for bank, tag in ((0, "l"), (1, "r")):
+        s = -1.0 if bank == 0 else 1.0
+        parts = []
+        for x in (-102.0, 0.0, 102.0):
+            y = s * (B["half_width"] - 2.0)
+            parts.append(_lathe(
+                [(0.0, 0.0), (0.0, 15.0), (16.0, 15.0), (16.0, 22.0),
+                 (22.0, 22.0), (22.0, 11.0), (34.0, 11.0), (34.0, 0.0)],
+                x, y, 12.0, axis="y", seg=14, flip=s < 0))
+            parts.append(shapes.connector(x, y + s * 40.0, 12.0,
+                                          20.0, 15.0, 12.0, pins=2))
+        out[f"knock_sensor_{tag}"] = mesh.join(*parts)
+
+        parts = []
+        for j, cz in enumerate((0.0, 1.0)):
+            a = spec.bank_angle_rad(bank)
+            h = spec.DECK_HEIGHT + spec.HEAD["height"] * 0.62
+            off = spec.HEAD["cam_centres"] / 2 * (1 if j else -1)
+            y = s * (B["bank_half_width"] + 46.0 + off * 0.3)
+            z = h + abs(off) * 0.5 * (1 if j else -1)
+            parts.append(_lathe(
+                [(0.0, 0.0), (0.0, 13.0), (14.0, 13.0), (14.0, 19.0),
+                 (20.0, 19.0), (20.0, 10.0), (30.0, 10.0), (30.0, 0.0)],
+                spec.HEAD["x_rear"] - 6.0, y, z, axis="x", seg=14))
+            parts.append(shapes.connector(spec.HEAD["x_rear"] + 26.0, y, z,
+                                          18.0, 14.0, 11.0, pins=3))
+        out[f"cam_sensor_{tag}"] = mesh.join(*parts)
+    return out
+
+
+def _exhaust_joints():
+    """Port flanges and gaskets between head and manifold.
+
+    The primaries were growing straight out of the head casting.
+
+    Placed with common.bank_point, whose lateral axis runs across the bore and
+    is positive inboard -- which on this engine is the exhaust side, because
+    the turbochargers sit in the vee. The first attempt mixed a world y taken
+    from the bank normal with a world z taken from the deck height, which is
+    not a frame at all: the flanges came out 100 per cent inside the heads.
+    """
+    out = {}
+    H = spec.HEAD
+    for bank, tag in ((0, "l"), (1, "r")):
+        along = spec.DECK_HEIGHT + H["height"] * 0.45
+        lat_face = H["half_width"] + 9.0        # just clear of the casting
+        flanges, gaskets = [], []
+        for i in range(spec.N_CYL // 2):
+            x = spec.cylinder_x(i, bank)
+            c = common.bank_point(x, along, lat_face + 9.0, bank)
+            n = common.bank_lat(bank)
+            d = common.bank_dir(bank)
+            # the flange plate, its two bolt bosses and the port through it
+            fv, ff = shapes.rounded_box(0.0, 0.0, 0.0, 62.0, 18.0, 74.0, 5.0)
+            fv = [(px + c[0],
+                   c[1] + n[1] * py + d[1] * pz,
+                   c[2] + n[2] * py + d[2] * pz) for (px, py, pz) in fv]
+            flanges.append((fv, ff))
+            for dz in (-26.0, 26.0):
+                b = common.bank_point(x, along + dz, lat_face + 9.0, bank)
+                bv, bf = mesh.cylinder(0.0, 20.0, 10.0, 10)
+                bv = [(px + b[0], b[1] + n[1] * py + d[1] * pz,
+                       b[2] + n[2] * py + d[2] * pz) for (px, py, pz) in bv]
+                flanges.append((bv, bf))
+            # the gasket, in the joint face itself
+            g = common.bank_point(x, along, lat_face, bank)
+            gv, gf = mesh.revolve_closed(
+                [(0.0, 22.0), (2.4, 22.0), (2.4, 30.0), (0.0, 30.0)], 20)
+            gv = [(py + g[0] if False else g[0] + pz,
+                   g[1] + n[1] * px + d[1] * py,
+                   g[2] + n[2] * px + d[2] * py) for (px, py, pz) in gv]
+            gaskets.append((gv, gf))
+        out[f"exhaust_flange_{tag}"] = mesh.join(*flanges)
+        out[f"exhaust_gasket_{tag}"] = mesh.join(*gaskets)
+    return out
