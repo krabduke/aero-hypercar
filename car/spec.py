@@ -285,11 +285,16 @@ FRONT_WING = {
     "neutral_half_w": 250.0,   # regulated flat centre section
     "arch": 44.0,              # how much the mainplane arches over the nose
     "stack": [
+        # dz raised from 34/76/124. A cascade only works if the elements are
+        # separated: the slot is what re-energises the boundary layer over
+        # the one behind. At the old spacing ten per cent of element 1 was
+        # inside element 0 -- the slot was closed over part of the span, so
+        # there the two were one thick section instead of two thin ones.
         #  dx     dz   c_root  c_tip  span_f  aoa_r  aoa_t  tip_rise
         (   0.0,   0.0, 330.0, 250.0, 1.000,   2.0,   5.0,   46.0),
-        (  96.0,  34.0, 190.0, 168.0, 0.985,   9.0,  17.0,   72.0),
-        ( 186.0,  76.0, 152.0, 138.0, 0.965,  16.0,  26.0,   96.0),
-        ( 262.0, 124.0, 118.0, 110.0, 0.940,  23.0,  34.0, 116.0),
+        (  96.0,  64.0, 190.0, 168.0, 0.985,   9.0,  17.0,   72.0),
+        ( 186.0, 106.0, 152.0, 138.0, 0.965,  16.0,  26.0,   96.0),
+        ( 262.0, 168.0, 118.0, 110.0, 0.940,  23.0,  34.0, 116.0),
     ],
     "endplate_x0": -60.0, "endplate_x1": 420.0,
     # No cascades. They were floating 130 mm above the top flap attached to

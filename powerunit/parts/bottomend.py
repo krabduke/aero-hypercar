@@ -88,7 +88,8 @@ def _crankshaft():
     parts.append(mesh.tube(x0 - C["nose_len"], x0, 0.0, C["nose_r"], SEG))
     parts.append(mesh.tube(x1, x1 + C["flange_t"], 0.0, C["flange_r"], SEG))
     return {"crankshaft": mesh.join(*parts),
-            "crank_trigger": _crank_trigger(x0 - C["nose_len"] + 6.0)}
+            # between the damper and the timing case, not under the damper
+            "crank_trigger": _crank_trigger(x0 - C["nose_len"] + 40.0)}
 
 
 def _crank_trigger(x):
@@ -290,7 +291,11 @@ def _damper():
     the front of it at all.
     """
     C = spec.CRANK
-    x0 = -300.0
+    # ahead of the timing cover, which closes at x = -266 with its front face
+    # at -284. The damper was at -300..-260 and so was buried in it; the crank
+    # nose is 128 mm long now, which is what lets a damper mount in front of
+    # the case the way it does on a real engine.
+    x0 = -352.0
     parts = []
 
     def lathe(profile, seg=36):

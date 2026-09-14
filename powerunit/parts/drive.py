@@ -183,7 +183,10 @@ def _water_pump():
     """A centrifugal pump: a spiral scroll, a vaned impeller inside it, an
     axial inlet eye and a tangential outlet."""
     x0 = spec.BLOCK["x_front"] - 16.0
-    cy, cz = 86.0, -34.0
+    # Outboard of the MGU-K, which is a 84.5 mm radius rotor on the crank
+    # axis at this station -- the pump used to reach in to y = 1 and pass
+    # straight through it.
+    cy, cz = 148.0, -34.0
     R = A["water_pump_r"]
     parts = [shapes.volute(0.0, R * 0.62, R * 1.18, 11.0, 20.0, seg=56,
                            sect=16)]

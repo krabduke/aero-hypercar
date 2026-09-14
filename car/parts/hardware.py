@@ -219,22 +219,12 @@ def _aero_rake():
 
 
 def _accumulator():
-    """The ERS accumulator, finned, in the tub behind the driver."""
-    A = spec.ACCUMULATOR
-    parts = []
-    cx = (A["x0"] + A["x1"]) / 2
-    cz = (A["z0"] + A["z1"]) / 2
-    parts.append(shapes.finned_case(
-        cx, 0.0, cz, A["x1"] - A["x0"], A["half_w"] * 2, A["z1"] - A["z0"],
-        n_fins=A["fins"], fin_h=9.0, fin_t=4.0))
-    # the high-voltage terminals and the coolant unions
-    for sy in (-1.0, 1.0):
-        parts.append(shapes.connector(cx, sy * (A["half_w"] - 20.0),
-                                      A["z1"] + 14.0, 40.0, 30.0, 26.0, pins=3))
-        parts.append(mesh.pipe(
-            [(A["x1"], sy * 96.0, cz), (A["x1"] + 70.0, sy * 120.0, cz - 30.0)],
-            15.0, segments=12))
-    return {"accumulator": mesh.join(*parts)}
+    """Nothing. The car already stores its energy in `battery` and
+    `battery_modules`, under the fuel cell where it belongs. An "accumulator"
+    added on top of them was the same object a second time, and it was placed
+    in the driver's back: x 2000 to 2175 against a driver who ends at 2060.
+    """
+    return {}
 
 
 def _light_panel():

@@ -73,7 +73,9 @@ def _gaskets():
                 14.0, 2 * hw, t, r=0.6, seg=3)
             parts.append((rv, rf))
         v, f = mesh.join(*parts)
-        v = [(x, y * ca - (z) * sa, y * sa + (z) * ca) for (x, y, z) in v]
+        d, lat = common.bank_dir(bank), common.bank_lat(bank)
+        v = [(x, y * lat[1] + z * d[1], y * lat[2] + z * d[2])
+             for (x, y, z) in v]
         out[f"head_gasket_{'lr'[bank]}"] = (v, f)
     return out
 
@@ -145,9 +147,15 @@ def _heads():
             spec.DECK_HEIGHT + H["height"] / 2,
             H["x_rear"] - H["x_front"], H["half_width"] * 2, H["height"],
             r=11.0, seg=5, draft=1.2)
-        v = [(x, y * ca - z * sa, y * sa + z * ca) for (x, y, z) in v]
-        # the box was built about the world origin; rotate then it already sits
-        # on the bank axis because its centre was placed along +z
+        # Onto the bank frame, the same one _head_features and every other
+        # per-bank part uses. This was a raw rotation by bank_angle_rad, which
+        # for bank 0 put the casting at y +57..+186 while its own features sat
+        # at y -174..-59 -- the opposite bank. Each head was therefore half on
+        # one side of the engine and half on the other, and the two of them
+        # shared 68 per cent of one head's volume.
+        d, lat = common.bank_dir(bank), common.bank_lat(bank)
+        v = [(x, y * lat[1] + z * d[1], y * lat[2] + z * d[2])
+             for (x, y, z) in v]
         out[f"head_{'lr'[bank]}"] = mesh.join((v, f), _head_features(bank))
     return out
 

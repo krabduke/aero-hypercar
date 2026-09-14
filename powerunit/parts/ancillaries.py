@@ -66,7 +66,7 @@ def _oil_system():
     """
     out = {}
     y = -(B["half_width"] + 34.0)
-    x = -96.0
+    x = 26.0        # clear of the engine mounts, which are at x = +/-150
     parts = []
     # the pedestal casting on the block, with the two galleries through it
     parts.append(shapes.rounded_box(x, y + 18.0, -6.0, 108.0, 44.0, 86.0, 8.0))
@@ -104,26 +104,30 @@ def _oil_system():
 
 
 def _cooling():
-    """Thermostat and its housing, on the front water outlet."""
+    """Thermostat and its housing, on the front water outlet.
+
+    Up at z = 104, not 31: the crank nose runs down the centreline at the
+    front of the engine and the housing was sitting on top of it.
+    """
     out = {}
     x = B["x_front"] - 16.0
     parts = []
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 46.0), (12.0, 52.0), (44.0, 52.0),
-         (52.0, 44.0), (52.0, 0.0)], x, 0.0, 31.0, axis="x", seg=24))
+         (52.0, 44.0), (52.0, 0.0)], x, 0.0, 104.0, axis="x", seg=24))
     # the outlet stub the top hose clamps onto, with its bead
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 27.0), (34.0, 27.0), (38.0, 31.0),
          (44.0, 31.0), (48.0, 27.0), (62.0, 27.0), (62.0, 0.0)],
-        x - 50.0, 0.0, 31.0, axis="x", seg=20))
+        x - 50.0, 0.0, 104.0, axis="x", seg=20))
     # the thermostat itself, inside: wax capsule, frame and jiggle pin
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 34.0), (6.0, 36.0), (12.0, 34.0), (12.0, 20.0),
-         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, 31.0, axis="x", seg=18))
+         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, 104.0, axis="x", seg=18))
     for k in range(6):
         a = 2 * math.pi * k / 6
         bv, bf = mesh.cylinder(0.0, 16.0, 5.0, 8)
-        bv = [(px + x, 48.0 * math.cos(a) + py, 48.0 * math.sin(a) + pz + 31.0)
+        bv = [(px + x, 48.0 * math.cos(a) + py, 48.0 * math.sin(a) + pz + 104.0)
               for (px, py, pz) in bv]
         parts.append((bv, bf))
     out["thermostat"] = mesh.join(*parts)
@@ -201,19 +205,24 @@ def _mounts():
         y = s * (B["half_width"] - 4.0)
         for x in (-150.0, 150.0):
             # the bracket: a machined foot with a rubber bush in its eye
-            parts.append(shapes.rounded_box(x, y + s * 30.0, 30.0,
-                                            72.0, 60.0, 96.0, 6.0))
+            # z 30 put the bracket up the side of the head; the mount bolts
+            # to the block, which is below it
+            # Between the dry-sump pump below (its top is at z = 3) and the
+            # head above (its bottom is at 46). The bracket was at z -18..78
+            # and so was in both.
+            parts.append(shapes.rounded_box(x, y + s * 30.0, 24.0,
+                                            72.0, 60.0, 38.0, 6.0))
             fl = s < 0
             parts.append(_lathe(
                 [(0.0, 0.0), (0.0, 44.0), (34.0, 44.0), (34.0, 0.0)],
-                x, y + s * 62.0, 58.0, axis="y", seg=22, flip=fl))
+                x, y + s * 62.0, 30.0, axis="y", seg=22, flip=fl))
             parts.append(_lathe(
                 [(2.0, 0.0), (32.0, 0.0), (32.0, 26.0), (2.0, 26.0)],
-                x, y + s * 62.0, 58.0, axis="y", seg=18, flip=fl))
+                x, y + s * 62.0, 30.0, axis="y", seg=18, flip=fl))
             for dx in (-24.0, 24.0):
                 parts.append(_lathe(
                     [(0.0, 0.0), (18.0, 0.0), (18.0, 9.0), (0.0, 9.0)],
-                    x + dx, y + s * 4.0, -6.0, axis="y", seg=10, flip=fl))
+                    x + dx, y + s * 4.0, 12.0, axis="y", seg=10, flip=fl))
         out[f"engine_mount_{tag}"] = mesh.join(*parts)
     return out
 
@@ -224,7 +233,7 @@ def _belt():
     A belt with no tensioner is a loop of rubber lying on some pulleys.
     """
     out = {}
-    x = -248.0
+    x = -224.0      # aft of the timing gear train, which ends at x = -255
     parts = []
     # tensioner: sprung arm carrying a smooth pulley
     parts.append(_lathe(
@@ -298,8 +307,10 @@ def _exhaust_joints():
     out = {}
     H = spec.HEAD
     for bank, tag in ((0, "l"), (1, "r")):
-        along = spec.DECK_HEIGHT + H["height"] * 0.45
-        lat_face = H["half_width"] + 9.0        # just clear of the casting
+        # 0.30, not 0.45: at 0.45 the flange ran into the fuel rail above it
+        along = spec.DECK_HEIGHT + H["height"] * 0.16
+        lat_face = H["half_width"] + 15.0       # between the fuel rail above and
+                                        # the turbochargers in the vee
         flanges, gaskets = [], []
         for i in range(spec.N_CYL // 2):
             x = spec.cylinder_x(i, bank)

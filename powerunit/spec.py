@@ -80,10 +80,11 @@ CRANK = {
     "main_r": 27.0,
     "pin_r": 24.0,
     "throw": STROKE / 2.0,
-    "web_r": 58.0,
+    "web_r": 42.0,   # small: a 22.5 mm throw with a light rotating assembly
+                     #        needs little counterweight, and the skirts have to clear it
     "web_t": 13.0,
     "n_mains": 5,
-    "nose_len": 74.0,
+    "nose_len": 128.0,
     "nose_r": 20.0,
     "flange_r": 62.0,
     "flange_t": 14.0,
@@ -92,7 +93,7 @@ CRANK = {
 
 PISTON = {
     "crown_t": 6.5,
-    "skirt_len": 31.0,
+    "skirt_len": 18.0,   # short: at BDC the skirt has to clear the counterweights
     "pin_r": 9.5,
     "dome": 2.4,               # crown dome height, for the compression ratio
     "ring_grooves": 3,

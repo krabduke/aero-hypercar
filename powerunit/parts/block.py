@@ -76,7 +76,11 @@ def _liners():
     parts = []
     r = spec.BORE / 2
     for (n, pair, bank, x, a) in spec.cylinders():
-        along0 = spec.DECK_HEIGHT - B["vee_depth"] + 8.0
+        # The liner stops above the crank's rotating envelope. It used to run
+        # down to 37.5 mm from the crank axis while the counterweights sweep a
+        # 58 mm circle, so the bores passed through the crankshaft.
+        along0 = max(spec.DECK_HEIGHT - B["vee_depth"] + 8.0,
+                     spec.CRANK["web_r"] + 20.0)
         v, f = common.bore_tube(x, along0, spec.DECK_HEIGHT, r, r + 5.5, bank)
         parts.append((v, f))
     return {"block_liners": mesh.join(*parts)}
