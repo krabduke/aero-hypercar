@@ -1,9 +1,25 @@
-"""Twin turbochargers in the vee, exhaust manifolds, wastegates, tailpipes.
+"""Twin turbochargers in the vee, their wastegates and the tailpipes.
 
 Hot vee: the exhaust ports face inward into the vee and the turbos sit between
 the banks. It makes the shortest possible path from port to turbine, which is
 what the transient response depends on, and it keeps the outside of the engine
 cold so the car's bodywork can be tight around it.
+
+A turbocharger was two discs on a tube here -- `_housing` lathed a rectangle
+into a cylinder and called it a volute, twice, with a plain cylinder stuck on
+the side for a wastegate, all merged into one object named `turbos`. A
+turbocharger is the one part of this engine whose shape IS its function: the
+turbine passage tightens as it goes so the gas keeps its velocity round to the
+cutwater, the compressor passage opens as it goes because more flow joins it
+every degree, and both of those are visible from across a room. Drawn as
+cylinders they are decoration.
+
+So both housings are built on the spirals gaspath.py declares -- the same
+spirals the flow animation runs down -- and the rest of the turbocharger is
+here too: the bearing housing between them with its oil feed and drain, the
+V-band clamps that hold the three pieces together, an external wastegate with
+its actuator and dump pipe, and the inlet each compressor breathes through.
+Without that last one the engine had no air source at all.
 """
 
 import math
@@ -12,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 
 SM = spec.RES["small_revolve"]
 import gaspath
@@ -21,10 +38,20 @@ T = spec.TURBO
 E = spec.EXHAUST
 SEG = spec.RES["revolve"]
 
+# Numbered, not sided: these two are fore and aft of each other on the
+# engine's centreline, so _l / _r would claim a mirror in y that does not
+# exist -- and the structure audit checks exactly that claim. They pair
+# with collector_1 and collector_2, which were already numbered.
+SIDES = ((0, "1"), (2, "2"))          # bank_pair used to select the turbo
+
 
 def build():
     out = {}
-    out.update(_turbos())
+    out.update(_housings())
+    out.update(_centres())
+    out.update(_wastegates())
+    out.update(_oil())
+    out.update(_inlets())
     # `_manifolds` built a second complete set of exhaust primaries --
     # eight more pipes from the same eight ports to the same two turbines,
     # on a different route, by a module that had never heard of the first
@@ -36,59 +63,352 @@ def build():
     return out
 
 
-def _snail(cx, cz, r, w, sgn):
-    """A volute: a torus-ish housing with a tangential outlet."""
-    parts = []
-    prof = []
-    n = 22
-    for i in range(n):
-        ang = 2 * math.pi * i / n
-        rr = r * (0.62 + 0.30 * (i / n))          # spiral growth
-        prof.append((cx + (w / 2) * math.cos(ang), rr))
+# --------------------------------------------------------------------------
+# the volutes
+# --------------------------------------------------------------------------
+
+def _scroll(points, radii, sect=16, wall=None):
+    """Loft a circular section of varying radius along a spiral.
+
+    The section lies in the plane containing the shaft axis and the local
+    radius, which is what makes a scroll a scroll rather than a bent tube:
+    it is a passage wrapped round a wheel, so its section stands up out of
+    the plane of the spiral.
+    """
+    rings = []
+    for (p, r) in zip(points, radii):
+        x, y, z = p
+        m = math.hypot(y, z) or 1.0
+        uy, uz = y / m, z / m            # outward radial direction
+        ring = []
+        for i in range(sect):
+            a = 2 * math.pi * i / sect
+            ca, sa = math.cos(a), math.sin(a)
+            rr = r if wall is None else r + wall
+            ring.append((x + rr * ca, y + rr * sa * uy, z + rr * sa * uz))
+        rings.append(ring)
+    return rings
+
+
+def _loft_open(rings):
+    """Join a stack of rings, capped at both ends."""
+    n = len(rings[0])
+    verts = [v for r in rings for v in r]
+    faces = []
+    for i in range(len(rings) - 1):
+        a, b = i * n, (i + 1) * n
+        for s in range(n):
+            s2 = (s + 1) % n
+            faces.append((a + s, a + s2, b + s2, b + s))
+    faces.append(tuple(range(n - 1, -1, -1)))
+    base = (len(rings) - 1) * n
+    faces.append(tuple(range(base, base + n)))
+    return verts, faces
+
+
+def _housings():
+    """Turbine and compressor volutes, each on its declared spiral."""
+    out = {}
+    for pair, tag in SIDES:
+        _, tx, sgn, ib = gaspath.turbo_side(pair)
+
+        # ---- turbine: the passage tightens all the way to the cutwater ----
+        sc = gaspath.turbine_scroll(pair)
+        pts = [p for (p, _r) in sc]
+        rad = [r for (_p, r) in sc]
+        parts = [_loft_open(_scroll(pts, rad, 18))]
+        # the exhaust-side face closes the scroll onto the wheel: a disc
+        # standing inboard of it, bored for the outlet
+        # the back plate faces the bearing housing, the snout faces out
+        parts.append(_backplate(pts[0][0] + ib * 2.0, T["turb_r"] * 0.98,
+                                T["shaft_r"] * 3.4, ib * 9.0))
+        # the outlet snout, axial, which is where a radial turbine discharges
+        parts.append(_snout(pts[0][0] - ib * 6.0, -ib, 34.0, 30.0, 26.0))
+        # inlet flange, standing off the first section of the spiral
+        parts.append(_flange_at(pts[0], (pts[0][0], pts[0][1] * 1.7,
+                                         pts[0][2] * 1.0 + 26.0),
+                                rad[0], 8.0, 11.0))
+        out[f"turbine_housing_{tag}"] = mesh.join(*parts)
+
+        # ---- compressor: the passage opens as more flow joins it ----------
+        cs = gaspath.compressor_scroll(pair)
+        pts = [p for (p, _r) in cs]
+        rad = [r for (_p, r) in cs]
+        parts = [_loft_open(_scroll(pts, rad, 18))]
+        parts.append(_backplate(pts[0][0] - ib * 2.0, T["comp_r"] * 0.98,
+                                T["shaft_r"] * 3.2, -ib * 8.0))
+        # the eye: a bellmouth on the axis, which is the only way in
+        parts.append(_snout(pts[0][0] + ib * 6.0, ib, 30.0, 34.0, 30.0))
+        # and the outlet the charge pipe bolts to
+        last = pts[-1]
+        parts.append(_flange_at(last,
+                                (last[0], last[1] * 1.6, last[2]),
+                                rad[-1], 7.0, 10.0))
+        out[f"compressor_housing_{tag}"] = mesh.join(*parts)
+    return out
+
+
+def _backplate(x, r_out, r_bore, t):
+    """The flat face a volute closes onto, bored for the wheel."""
     v, f = mesh.revolve_closed(
-        [(cx - w / 2, r * 0.34), (cx + w / 2, r * 0.34),
-         (cx + w / 2, r), (cx - w / 2, r)], 30)
-    v = [(x, y * 0.0 + y, z + cz) for (x, y, z) in v]
-    parts.append((v, f))
-    return mesh.join(*parts)
+        [(x, r_bore), (x + t, r_bore), (x + t, r_out), (x, r_out)], SEG // 2)
+    return [(px, py, pz + T["z"]) for (px, py, pz) in v], f
 
 
-def _turbos():
-    parts = []
-    for i, x in enumerate(T["x"]):
-        sgn = -1 if i == 0 else 1
-        # turbine housing (hot, inboard) and compressor housing (cold)
-        parts.append(_housing(x - T["housing_w"] * 0.6, T["z"], T["turb_r"],
-                              T["housing_w"]))
-        parts.append(_housing(x + T["housing_w"] * 0.6, T["z"], T["comp_r"],
-                              T["housing_w"] * 0.9))
-        # centre section
-        cv, cf = mesh.tube(x - T["housing_w"] * 0.6, x + T["housing_w"] * 0.6,
-                           0.0, T["shaft_r"] * 2.6, SM)
-        cv = [(px, py, pz + T["z"]) for (px, py, pz) in cv]
-        parts.append((cv, cf))
-        # wastegate
-        wv, wf = mesh.cylinder(0.0, 64.0, T["wastegate_r"], 18)
-        wv = [(px + x, py + T["turb_r"] * 0.8, pz + T["z"] + 30.0)
-              for (px, py, pz) in wv]
-        parts.append((wv, wf))
-    return {"turbos": mesh.join(*parts)}
+def _snout(x, dirn, r_in, r_out, r_lip):
+    """The axial stub on a housing face: turbine outlet, compressor eye."""
+    L = 30.0
+    prof = [(x, r_in), (x + dirn * L * 0.45, r_in * 0.96),
+            (x + dirn * L, r_out), (x + dirn * (L + 7.0), r_out),
+            (x + dirn * (L + 7.0), r_lip), (x + dirn * L, r_lip),
+            (x + dirn * L * 0.45, r_in * 0.96 - 4.0), (x, r_in - 4.0)]
+    if dirn < 0:
+        prof = list(reversed(prof))
+    v, f = mesh.revolve_closed(prof, SEG // 2)
+    return [(px, py, pz + T["z"]) for (px, py, pz) in v], f
 
 
-def _housing(x, z, r, w):
-    v, f = mesh.revolve_closed(
-        [(x - w / 2, r * 0.30), (x + w / 2, r * 0.30),
-         (x + w / 2, r), (x - w / 2, r)], 30)
-    return [(px, py, pz + z) for (px, py, pz) in v], f
+def _flange_at(at, towards, r, thick, pad):
+    """A bolted flange standing normal to the duct it terminates."""
+    d = [towards[k] - at[k] for k in range(3)]
+    m = math.dist(at, towards) or 1.0
+    d = [c / m for c in d]
+    v, f = mesh.revolve_open(
+        [(0.0, r), (0.0, r + pad), (thick, r + pad), (thick, r)],
+        SM, cap_start=True, cap_end=True)
+    up = (0.0, 0.0, 1.0) if abs(d[2]) < 0.9 else (0.0, 1.0, 0.0)
+    n1 = mesh._normalise(mesh._cross(d, up))
+    n2 = mesh._cross(d, n1)
+    return ([(at[0] + d[0] * px + n1[0] * py + n2[0] * pz,
+              at[1] + d[1] * px + n1[1] * py + n2[1] * pz,
+              at[2] + d[2] * px + n1[2] * py + n2[2] * pz)
+             for (px, py, pz) in v], f)
+
+
+# --------------------------------------------------------------------------
+# what holds the two halves together
+# --------------------------------------------------------------------------
+
+def _centres():
+    """The bearing housing: the part that makes a turbocharger one machine.
+
+    It carries the shaft on two journal bearings and a thrust face, takes oil
+    in at the top under gallery pressure and drains it out of the bottom under
+    gravity -- which is why a turbo has to sit above the sump line -- and is
+    water-jacketed so it does not coke the oil when the engine is shut down
+    hot. Every one of those shows on the outside as a boss.
+    """
+    out = {}
+    for pair, tag in SIDES:
+        _, tx, sgn, ib = gaspath.turbo_side(pair)
+        hw = T["housing_w"] * 0.6
+        r = T["shaft_r"]
+        parts = []
+        # the housing itself: waisted in the middle, flanged at both ends
+        prof = [(tx - hw + 4.0, r * 1.25), (tx - hw + 4.0, r * 3.6),
+                (tx - hw + 12.0, r * 3.2), (tx - 6.0, r * 2.5),
+                (tx + 6.0, r * 2.5), (tx + hw - 12.0, r * 3.2),
+                (tx + hw - 4.0, r * 3.6), (tx + hw - 4.0, r * 1.25)]
+        # 28 segments, not 48: this is a 55 mm casting between two
+        # housings, and it was carrying 14,000 vertices of its own
+        v, f = mesh.revolve_open(prof, SM, cap_start=True, cap_end=True)
+        parts.append(([(px, py, pz + T["z"]) for (px, py, pz) in v], f))
+        # oil in at the top, out at the bottom, water across the middle
+        # Oil in at the side, out of the bottom. The feed boss is normally on
+        # top; here the exhaust collector passes directly over the bearing
+        # housing on its way to the turbine, so a line coming down onto a top
+        # boss would come down through it.
+        fv, ff = mesh.revolve_open(
+            [(0.0, 4.0), (0.0, 9.0), (26.0, 9.0), (26.0, 12.0),
+             (32.0, 12.0), (32.0, 4.0)], SM, cap_start=True, cap_end=True)
+        # straight down, beside the drain. There is nowhere else: above the
+        # bearing housing is the collector, on the bank side the compressor's
+        # own outlet and the charge pipe leaving it, on top the wastegate
+        # canister -- and out to either side the exhaust flange strips run
+        # the length of the vee from y = 16 to y = 77.
+        parts.append(([(pz + tx - 13.0, py, -px + T["z"] - r * 2.4)
+                       for (px, py, pz) in fv], ff))
+        dv, df = mesh.revolve_open(
+            [(0.0, 8.0), (0.0, 13.0), (20.0, 13.0), (20.0, 17.5),
+             (26.0, 17.5), (26.0, 8.0)], SM, cap_start=True, cap_end=True)
+        parts.append(([(pz + tx + 13.0, py, -px + T["z"] - r * 2.4)
+                       for (px, py, pz) in dv], df))
+        # and the water jacket unions, one each side
+        for s2 in (-1.0, 1.0):
+            wv, wf = mesh.revolve_open(
+                [(0.0, 4.0), (0.0, 7.5), (13.0, 7.5), (13.0, 4.0)],
+                SM, cap_start=True, cap_end=True)
+            parts.append(([(pz + tx + s2 * 18.0, s2 * px * 0.0 + py,
+                            s2 * 0.0 + px + T["z"] + r * 2.2)
+                           for (px, py, pz) in wv], wf))
+        # the V-band clamps, one at each joint
+        for x in (tx - hw + 2.0, tx + hw - 2.0):
+            cv, cf = mesh.ring_torus(x, r * 3.9, 3.6, 18, 8)
+            parts.append(([(px, py, pz + T["z"]) for (px, py, pz) in cv], cf))
+        out[f"turbo_centre_{tag}"] = mesh.join(*parts)
+    return out
+
+
+# --------------------------------------------------------------------------
+# boost control
+# --------------------------------------------------------------------------
+
+def _wastegates():
+    """Boost control, and the reason the engine can be told not to make any.
+
+    Internal, not external. This vee has no room for a pair of 40 mm gates
+    and their dump pipes: every place one will fit is already carrying a
+    primary climbing out of a head, a collector, or a tailpipe. An internal
+    gate is a flap in the turbine housing that lets gas past the wheel
+    straight into the outlet, opened by a rod off a diaphragm canister
+    mounted on the cold side -- which is where the boost reference it is
+    listening to comes from.
+
+    So what is modelled is what you can see of one: the canister, its bracket,
+    the rod, and the crank arm on the turbine housing the rod pulls.
+    """
+    out = {}
+    for pair, tag in SIDES:
+        _, tx, sgn, ib = gaspath.turbo_side(pair)
+        # the canister sits on the compressor housing, out of the exhaust's way
+        cx = tx + ib * T["housing_w"] * 0.6
+        cy, cz = -sgn * 38.0, T["z"] + 26.0
+        parts = []
+        for (z0, z1, rr) in ((0.0, 5.0, 26.0), (5.0, 26.0, 30.0),
+                             (26.0, 31.0, 26.0)):
+            v, f = mesh.revolve_open(
+                [(z0, 0.0), (z0, rr), (z1, rr), (z1, 0.0)],
+                SM, cap_start=True, cap_end=True)
+            parts.append(([(pz + cx, py + cy, px + cz)
+                           for (px, py, pz) in v], f))
+        # the reference nipple on the cap
+        nv, nf = mesh.revolve_open(
+            [(0.0, 0.0), (0.0, 3.2), (13.0, 3.2), (13.0, 0.0)],
+            14, cap_start=True, cap_end=True)
+        parts.append(([(pz + cx, py + cy + 12.0, px + cz + 31.0)
+                       for (px, py, pz) in nv], nf))
+        # the bracket that holds it off the housing
+        parts.append(shapes.rounded_box(cx, cy * 0.62, cz + 2.0,
+                                        10.0, abs(cy) * 0.76, 22.0, r=2.0))
+        # the rod down to the crank arm on the turbine housing, and the arm
+        arm = (tx - ib * (T["housing_w"] * 0.6 + 4.0), -sgn * 30.0,
+               T["z"] + 38.0)
+        parts.append(mesh.pipe([(cx, cy, cz - 2.0),
+                                (cx - ib * 20.0, cy * 0.92, cz - 10.0),
+                                arm], 3.0, 12, subdiv=3))
+        av, af = mesh.revolve_closed(
+            [(0.0, 0.0), (7.0, 0.0), (7.0, 9.0), (0.0, 9.0)], 14)
+        parts.append(([(pz + arm[0], py + arm[1], px + arm[2])
+                       for (px, py, pz) in av], af))
+        out[f"wastegate_{tag}"] = mesh.join(*parts)
+    return out
+
+
+def _oil():
+    """Feed into the top of the bearing housing, drain out of the bottom.
+
+    Short lines, both of them inside the vee, because that is where the
+    fittings are: a hot-vee block carries its turbo oil unions on the vee
+    faces, a few inches under the turbocharger. They were routed round the
+    outside of the engine before, which took the feed line through both
+    cylinder heads, a fuel rail, a valve spring and the top compression ring
+    of number two piston.
+
+    The drain is the fatter of the two and leaves the bottom, because oil
+    comes out of a turbocharger under nothing but gravity.
+    """
+    out = {}
+    for pair, tag in SIDES:
+        _, tx, sgn, ib = gaspath.turbo_side(pair)
+        r = T["shaft_r"]
+        top = (tx - 13.0, 0.0, T["z"] - r * 2.4 - 32.0)
+        bot = (tx + 13.0, 0.0, T["z"] - r * 2.4 - 26.0)
+        # straight up the station the bearing housing is on: the gap between
+        # the two volutes is eight millimetres wide and it is the only
+        # vertical corridor there is
+        # Both straight down the vee's own centreline: the exhaust flange
+        # strips run the length of the vee from y = 16 to y = 77 on each
+        # side, so the 32 mm between them is the only gap there is.
+        feed = [(tx - 13.0, 0.0, 150.0), top]
+        drain = [bot, (tx + 13.0, 0.0, 150.0)]
+        parts = [mesh.pipe(feed, 5.0, spec.RES["pipe"], subdiv=4),
+                 mesh.pipe(drain, 9.0, spec.RES["pipe"], subdiv=4)]
+        # the union at each end that screws into the block
+        for (at, rr) in ((feed[0], 7.0), (drain[-1], 11.0)):
+            bv, bf = mesh.revolve_closed(
+                [(0.0, 0.0), (9.0, 0.0), (9.0, rr * 1.5), (5.0, rr * 1.7),
+                 (0.0, rr * 1.5)], 14)
+            parts.append(([(pz + at[0], py + at[1], px + at[2])
+                           for (px, py, pz) in bv], bf))
+        out[f"turbo_oil_{tag}"] = mesh.join(*parts)
+    return out
+
+
+def _inlets():
+    """What each compressor breathes through.
+
+    There was nothing here: the compressors drew from a sealed vee. The engine
+    ends at a flange -- the car supplies the airbox behind it -- so this is the
+    bellmouth, a short trunk turning up out of the vee, and the flange the
+    car's ducting bolts to.
+    """
+    out = {}
+    for pair, tag in SIDES:
+        _, tx, sgn, ib = gaspath.turbo_side(pair)
+        eye = gaspath.compressor_path(pair)[0]
+        # up and out to its own side. The two eyes face each other across the
+        # middle of the vee 41 mm apart, so a duct that carried straight on
+        # would run into the other one.
+        # near enough vertical: the two banks' primaries climb the vee at
+        # y = +-85, so a duct that leans out at all lands in one of them
+        path = [(eye[0] - ib * 8.0, 0.0, T["z"]),
+                (eye[0] + ib * 2.0, sgn * 8.0, T["z"] + 30.0),
+                (eye[0] - ib * 2.0, sgn * 22.0, T["z"] + 72.0),
+                (eye[0] - ib * 8.0, sgn * 30.0, T["z"] + 106.0)]
+        parts = [mesh.pipe(path, [26.0, 27.0, 29.0, 30.0],
+                           spec.RES["pipe"], subdiv=5)]
+        parts.append(_flange_at(path[-1],
+                                (path[-1][0] + (path[-1][0] - path[-2][0]),
+                                 path[-1][1] + (path[-1][1] - path[-2][1]),
+                                 path[-1][2] + (path[-1][2] - path[-2][2])),
+                                30.0, 8.0, 11.0))
+        out[f"compressor_inlet_{tag}"] = mesh.join(*parts)
+    return out
 
 
 def _tailpipes():
+    """The elbow off each turbine, out to the flange the car's exhaust bolts to.
+
+    This is where the engine ends. It used to carry a full exhaust system --
+    two pipes running the length of the engine to a common exit behind the
+    gearbox -- and there is nowhere for them to run: outboard of the vee is
+    cam cover from y = 145 to 245, inboard of that the eight primaries climb
+    out of the heads at y = 90, above them the collectors and the heat
+    shields, and the charge pipes cross the whole of it on their way to the
+    plenums. Every route tried went through one of those, and the last one
+    also went through the car's engine-cover louvres.
+
+    A radial turbine discharges along its own axis, so each one gets the
+    elbow that turns that discharge outboard and down, and a V-band flange on
+    the end. What happens after that is the car's problem, which is correct:
+    this engine goes in a car that already builds its own exhaust exit.
+    """
     parts = []
-    for i, x in enumerate(T["x"]):
-        sgn = -1 if i == 0 else 1
-        start = (x - T["housing_w"] * 1.1, 0.0, T["z"])
-        parts.append(mesh.pipe(
-            [start, (x, sgn * 46.0, T["z"] + 24.0),
-             (spec.BLOCK["x_rear"] + 70.0, sgn * 52.0, T["z"] + 40.0)],
-            E["collector_r"], spec.RES["pipe"]))
+    for pair, _tag in SIDES:
+        _, tx, sgn, ib = gaspath.turbo_side(pair)
+        out_pt = gaspath.turbine_path(pair)[-1]
+        d = -ib                         # away from the middle of the engine
+        # out and very slightly up: the crankcase breathers stand to z = 247
+        # under the front of it and the cam sensor to 248 under the back
+        path = [out_pt,
+                (out_pt[0] + d * 26.0, sgn * 26.0, T["z"] + 8.0),
+                (out_pt[0] + d * 46.0, sgn * 62.0, T["z"] + 18.0),
+                (out_pt[0] + d * 58.0, sgn * 88.0, T["z"] + 26.0)]
+        parts.append(mesh.pipe(path, E["collector_r"],
+                               spec.RES["pipe"], subdiv=5))
+        parts.append(_flange_at(path[-1],
+                                (path[-1][0] + (path[-1][0] - path[-2][0]),
+                                 path[-1][1] + (path[-1][1] - path[-2][1]),
+                                 path[-1][2] + (path[-1][2] - path[-2][2])),
+                                E["collector_r"], 9.0, 13.0))
     return {"tailpipes": mesh.join(*parts)}

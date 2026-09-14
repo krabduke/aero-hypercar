@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import spec
 import mesh
 import shapes
+import gaspath
 from parts import common
 
 H = spec.HEAD
@@ -203,40 +204,130 @@ def _pumps():
 
 
 def _turbo_internals():
-    """Compressor and turbine wheels on the shaft inside each housing."""
-    parts = []
-    for i, x in enumerate(T["x"]):
-        shaft = mesh.tube(x - T["housing_w"], x + T["housing_w"],
-                          0.0, T["shaft_r"], 16)
-        parts.append(([(px, py, pz + T["z"]) for (px, py, pz)
-                       in shaft[0]], shaft[1]))
-        for (xc, r, blades, back) in ((x - T["housing_w"] * 0.6,
-                                       T["turb_r"] * 0.64, 11, True),
-                                      (x + T["housing_w"] * 0.6,
-                                       T["comp_r"] * 0.66, 9, False)):
-            hub = mesh.revolve_open(
-                [(xc - 16.0, 0.001), (xc - 16.0, 15.0), (xc + 16.0, 9.0),
-                 (xc + 16.0, 0.001)], SM, cap_start=True, cap_end=True)
-            parts.append(([(px, py, pz + T["z"]) for (px, py, pz) in hub[0]],
-                          hub[1]))
-            for k in range(blades):
-                a = 2 * math.pi * k / blades
-                # Build the blade at the ORIGIN, pitch it about its own
-                # centre, then put it on the wheel. Pitching it in place
-                # rotates it about x = 0, and the wheel is 118 mm from
-                # there -- which threw every blade 80 mm off the shaft and
-                # made a 41 mm wheel read as 96 mm of scattered metal that
-                # the exhaust primaries and the charge pipes ran into.
-                bv, bf = shapes.rounded_box(0.0, (15.0 + r) / 2, 0.0,
-                                            22.0, r - 15.0, 3.4, 1.0)
-                pitch = math.radians(34.0 if back else -30.0)
-                bv = [(px * math.cos(pitch) - pz * math.sin(pitch), py,
-                       px * math.sin(pitch) + pz * math.cos(pitch))
-                      for (px, py, pz) in bv]
-                bv = mesh.rot_x(bv, a)
-                parts.append(([(px + xc, py, pz + T["z"])
-                               for (px, py, pz) in bv], bf))
-    return {"turbo_wheels": mesh.join(*parts)}
+    """The two wheels on each shaft.
+
+    The blades were flat rounded boxes, twenty-two millimetres square, stood
+    up round a hub: a paddle wheel. A turbine blade and a compressor blade are
+    both twisted -- the metal has to meet the gas at the angle the gas is
+    arriving at, and that angle changes all the way from the hub to the tip
+    because the tip is going three times as fast. The twist is the part you
+    can see, and it is the part that was missing.
+
+    The compressor also gets splitter blades: half-length blades between the
+    full ones, which is how a modern wheel keeps the inducer throat open at
+    the eye and still fills the exducer. Count the blades on any turbo made
+    since about 1990 and they alternate.
+    """
+    out = {}
+    for pair, tag in ((0, "1"), (2, "2")):
+        _, tx, _sgn, ib = gaspath.turbo_side(pair)
+        hw = T["housing_w"] * 0.6
+
+        shaft = mesh.tube(tx - hw - 8.0, tx + hw + 8.0,
+                          0.0, T["shaft_r"], 20)
+        out[f"turbo_shaft_{tag}"] = (
+            [(px, py, pz + T["z"]) for (px, py, pz) in shaft[0]], shaft[1])
+
+        # turbine: inflow at the tip, out along the axis, so the hub grows
+        # towards the exducer and the blades sweep back against the rotation
+        xc = tx - ib * hw
+        out[f"turbine_wheel_{tag}"] = _wheel(
+            xc, -ib, T["turb_r"] * 0.62, 11, 0,
+            hub=[(0.00, 0.30), (0.25, 0.42), (0.55, 0.52), (0.80, 0.56),
+                 (1.00, 0.54)],
+            twist=(58.0, 18.0), chord=(0.62, 0.54))
+
+        # compressor: in along the axis at the eye, out at the tip, so the
+        # inducer is steeply raked and the exducer nearly radial
+        xc = tx + ib * hw
+        out[f"compressor_wheel_{tag}"] = _wheel(
+            xc, ib, T["comp_r"] * 0.66, 7, 7,
+            hub=[(0.00, 0.22), (0.25, 0.30), (0.55, 0.42), (0.80, 0.52),
+                 (1.00, 0.58)],
+            twist=(-62.0, -8.0), chord=(0.58, 0.46))
+    return out
+
+
+def _wheel(xc, dirn, r_tip, n_full, n_split, hub, twist, chord):
+    """A bladed wheel: hub of revolution, blades lofted from hub to tip.
+
+    `hub` is [(axial fraction, radius as a fraction of the tip)], `twist` the
+    blade angle at the hub and at the tip in degrees, and `chord` the blade
+    length at each as a fraction of the wheel's axial depth. A splitter blade
+    starts half way down and is half as long.
+    """
+    depth = r_tip * 0.96
+    prof = [(xc + dirn * f * depth, rr * r_tip) for (f, rr) in hub]
+    hv, hf = mesh.revolve_open(
+        [(prof[0][0], 0.001)] + prof + [(prof[-1][0], 0.001)],
+        SM, cap_start=True, cap_end=True)
+    parts = [([(px, py, pz + T["z"]) for (px, py, pz) in hv], hf)]
+
+    n_span, n_chord = 7, 9
+    for k in range(n_full + n_split):
+        split = k >= n_full
+        idx = (k - n_full) if split else k
+        a0 = 2 * math.pi * idx / max(n_full, 1)
+        if split:
+            a0 += math.pi / max(n_full, 1)
+        rings = []
+        for i in range(n_span):
+            fs = i / (n_span - 1)
+            r = r_tip * (0.34 + 0.66 * fs)
+            start = (0.50 if split else 0.0) * depth
+            c = (chord[0] + (chord[1] - chord[0]) * fs) * depth
+            if split:
+                c *= 0.5
+            ang = math.radians(twist[0] + (twist[1] - twist[0]) * fs)
+            t = r_tip * 0.05 * (1.0 - 0.45 * fs)
+            rings.append(_blade_ring(xc, dirn, start, c, ang, t, r, a0,
+                                     n_chord))
+        parts.append(_loft_blade(rings))
+    return mesh.join(*parts)
+
+
+def _blade_ring(xc, dirn, start, chord, ang, t, r, a0, n_chord):
+    """One closed aerofoil section, wrapped onto the wheel at radius r.
+
+    Built flat in (along the chord, across it), pitched by the local twist,
+    then bent round the hub -- so a section at the tip subtends less angle
+    than the same chord at the hub, which is what makes a blade look twisted
+    rather than sheared.
+    """
+    upper, lower = [], []
+    for j in range(n_chord):
+        u = j / (n_chord - 1)
+        cam = 0.16 * math.sin(math.pi * u)
+        half = t * math.sin(math.pi * min(max(u, 0.03), 0.97)) / chord
+        upper.append((u, cam + half))
+        lower.append((u, cam - half))
+    loop = upper + list(reversed(lower))
+    ring = []
+    for (u, v) in loop:
+        du = (u - 0.5) * chord
+        dv = v * chord
+        ax = du * math.cos(ang) - dv * math.sin(ang)
+        tg = du * math.sin(ang) + dv * math.cos(ang)
+        a = a0 + tg / max(r, 1e-3)
+        ring.append((xc + dirn * (start + chord * 0.5 + ax),
+                     r * math.cos(a), T["z"] + r * math.sin(a)))
+    return ring
+
+
+def _loft_blade(rings):
+    """Close a stack of aerofoil sections into a blade, tip included."""
+    n = len(rings[0])
+    verts = [v for r in rings for v in r]
+    faces = []
+    for i in range(len(rings) - 1):
+        a, b = i * n, (i + 1) * n
+        for s in range(n):
+            s2 = (s + 1) % n
+            faces.append((a + s, a + s2, b + s2, b + s))
+    faces.append(tuple(range(n - 1, -1, -1)))
+    base = (len(rings) - 1) * n
+    faces.append(tuple(range(base, base + n)))
+    return verts, faces
 
 
 def _fasteners():

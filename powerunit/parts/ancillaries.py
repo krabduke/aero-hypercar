@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import spec
 import mesh
 import shapes
+import gaspath
 from parts import common
 
 B = spec.BLOCK
@@ -135,7 +136,7 @@ def _cooling():
     for k in range(6):
         a = 2 * math.pi * k / 6
         bv, bf = mesh.cylinder(0.0, 16.0, 5.0, 8)
-        bv = [(px + x, 48.0 * math.cos(a) + py, 48.0 * math.sin(a) + pz + 190.0)
+        bv = [(px + x, 42.0 * math.cos(a) + py, 42.0 * math.sin(a) + pz + 190.0)
               for (px, py, pz) in bv]
         parts.append((bv, bf))
     out["thermostat"] = mesh.join(*parts)
@@ -179,15 +180,35 @@ def _charge():
                 dx, cy, cz + I["plenum_r"] * 0.62, axis="z", seg=12))
         out[f"intercooler_{tag}"] = mesh.join(*parts)
 
-        # compressor outlet -> over the cam cover -> that bank's throttle
+        # compressor outlet -> over the cam cover -> that bank's throttle.
+        # The start is the mouth of the volute gaspath declares, not a guess
+        # 96 mm out to the side of the turbo: the pipe used to leave the
+        # housing from a point that was not on it.
         tx = T["x"][bank]
+        mouth = gaspath.compressor_outlet(0 if bank == 0 else 2)
         thr_y = s_ * (I["plenum_y"] + I["plenum_r"] * 0.86 + 54.0)
         # and in on the throttle's own axis, so the pipe meets its mouth
         # instead of stopping in the air in front of the engine
-        path = [(tx + T["housing_w"] * 1.2, s_ * 96.0, T["z"] + 10.0),
-                (tx + 40.0, s_ * 190.0, T["z"] + 46.0),
-                (tx + 20.0, s_ * 316.0, 236.0),
-                (40.0, s_ * 336.0, 150.0),
+        # Out along the scroll's own tangent first, so the pipe leaves the
+        # volute the way the air does and clears the bearing housing beside
+        # it; then fore or aft to the station where this bank's primaries
+        # have already turned inboard; then straight out and down.
+        #
+        # The path is monotone in y from there. It used to double back in x
+        # halfway along, and a swept tube through a reversal folds in on
+        # itself -- the mesh bulged far enough to reach parts a hundred
+        # millimetres away.
+        # and it stays low while it crosses the plane the primaries climb
+        # in: this bank's two pipes go up at y = +-85, and the charge pipe
+        # leaves the volute at y = +-62, so the only way past them is under
+        # them -- they are 70 mm higher by the time they get there.
+        out_x = mouth[0] - (30.0 if bank == 0 else -30.0)
+        path = [mouth,
+                (out_x, s_ * 64.0, T["z"] - 14.0),
+                (out_x, s_ * 132.0, T["z"] + 8.0),
+                (out_x, s_ * 250.0, T["z"] + 12.0),
+                (out_x, s_ * 322.0, 176.0),
+                (out_x * 0.4, s_ * 350.0, 104.0),
                 (0.0, s_ * 352.0, cz),
                 (0.0, thr_y + 8.0, cz)]
         r = 30.0
@@ -199,7 +220,7 @@ def _charge():
             pipe_parts.append(mesh.pipe(
                 [tuple(pt[k] - step[k] * 0.2 for k in range(3)),
                  tuple(pt[k] + step[k] for k in range(3))],
-                r + 5.0, segments=20))
+                r + 3.5, segments=20))
         runs.extend(pipe_parts)
 
     # The turbochargers are at x = -118 and +118 -- fore and aft on the vee,
@@ -208,16 +229,21 @@ def _charge():
     # have, and the structure audit would rightly call that a failure.
     out["charge_pipes"] = mesh.join(*runs)
 
-    # recirculating blow-off valve, on the left charge pipe
+    # Recirculating blow-off valve, standing on the left charge pipe where it
+    # crosses out over the cam cover. It used to be at x = +120 in the middle
+    # of the vee, which is neither on that pipe nor on any other -- it was a
+    # valve bolted to the air.
     parts = []
-    bx, by, bz = 120.0, -120.0, 300.0
+    bx, by, bz = -120.4, -272.0, 228.0
+    # hanging under the pipe, not standing on top of it: the exhaust runs
+    # over the cam cover directly above this
     parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 30.0), (10.0, 34.0), (52.0, 34.0),
-         (58.0, 30.0), (58.0, 22.0), (70.0, 22.0), (70.0, 0.0)],
+        [(0.0, 0.0), (0.0, 30.0), (-10.0, 34.0), (-52.0, 34.0),
+         (-58.0, 30.0), (-58.0, 22.0), (-70.0, 22.0), (-70.0, 0.0)],
         bx, by, bz, axis="z", seg=20))
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 17.0), (40.0, 17.0), (40.0, 0.0)],
-        bx, by - 44.0, bz + 18.0, axis="y", seg=14))
+        bx, by + 34.0, bz - 30.0, axis="y", seg=14))
     out["blowoff"] = mesh.join(*parts)
     return out
 

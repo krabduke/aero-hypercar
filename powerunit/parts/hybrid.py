@@ -44,7 +44,7 @@ def _mguh():
     parts = []
     for x in spec.TURBO["x"]:
         v, f = mesh.tube(x - Y["mguh_len"] / 2, x + Y["mguh_len"] / 2,
-                         spec.TURBO["shaft_r"] + 2.0, Y["mguh_r"], SM)
+                         spec.TURBO["shaft_r"] * 2.5, Y["mguh_r"], SM)
         v = [(px, py, pz + spec.TURBO["z"]) for (px, py, pz) in v]
         parts.append((v, f))
     return {"mguh": mesh.join(*parts)}

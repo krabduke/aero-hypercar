@@ -68,17 +68,77 @@ def runner_path(bank, x):
             port]
 
 
+def collector_path(bank_pair):
+    """Four primaries merging, and turning into the turbine inlet.
+
+    The collector used to be a cone revolved about the turbo's own axis and
+    dropped 16 mm above it, which meant it neither met the primaries nor
+    pointed at the volute: it was a shape near the turbocharger. A merge
+    collector is a duct with a mouth at one end and a flange at the other,
+    and both ends are somewhere specific.
+    """
+    _, tx, _, ib = turbo_side(bank_pair)
+    inlet = turbine_scroll(bank_pair)[0][0]
+    # the mouth sits over the middle of the four cylinders it serves and
+    # falls into the turbine inlet; the four primaries land on its rim
+    # 92 mm above the shaft, not 66: the two inboard cylinders' primaries
+    # have to pass over the compressor housing to reach the mouth, and the
+    # top of that housing is 65 mm above the shaft. Not higher than 92
+    # either -- the car this engine goes in has cooling louvres in its engine
+    # cover 700 mm off the ground, and the collector is the tallest thing
+    # here.
+    return [(tx + ib * 16.0, 0.0, T["z"] + 92.0),
+            (tx + ib * 4.0, 0.0, T["z"] + 78.0),
+            (tx - ib * 12.0, 0.0, T["z"] + 58.0),
+            (inlet[0] + ib * 8.0, 0.0, inlet[2] + 3.4),
+            (inlet[0] - ib * 2.0, 0.0, inlet[2])]
+
+
+# Four 25 mm primaries merging: 1,960 mm2, which is a 25 mm radius. The
+# mouth is 30 so the four pipes land on its rim with room between them,
+# and it necks to the turbine inlet from there.
+COLLECTOR_RADII = [30.0, 29.0, 27.0, 25.0, 24.0]
+
+
 def primary_path(pair, bank, x):
-    """Exhaust port out into the vee and forward into the turbine inlet."""
+    """Exhaust port out into the vee and forward into the collector mouth.
+
+    Each pipe arrives at its own place on the mouth, spread round it by the
+    firing order's own spacing. Four pipes ending at one point on the axis is
+    a node, not a merge, and it put the last 40 mm of every primary inside
+    the other three.
+    """
     start = exhaust_port(bank, x)
-    tx = T["x"][0 if pair < 2 else 1]
-    # into the top of the volute, at its outer radius. Ending on the
-    # turbine's axis ends inside the turbine wheel, which is 41 mm across
-    # and exactly there.
+    i, tx, _, _ = turbo_side(pair)
+    mouth = collector_path(pair)[0]
+    # Where on the mouth ring this pipe lands: its own bank's side of it, and
+    # the nearer of that bank's two cylinders takes the upper slot. Four pipes
+    # ending at one point on the axis is a node, not a merge, and it put the
+    # last 40 mm of every primary inside the other three.
+    same = sorted(c[3] for c in spec.cylinders()
+                  if (0 if c[1] < 2 else 1) == i and c[2] == bank)
+    near = min(same, key=lambda v: abs(v - tx))
+    base = 150.0 if bank == 0 else 30.0
+    a = math.radians(base if x == near else
+                     (210.0 if bank == 0 else -30.0))
+    rr = COLLECTOR_RADII[0] * 0.56
+    end = (mouth[0], mouth[1] + rr * math.cos(a), mouth[2] + rr * math.sin(a))
+    # Straight up out of the port on the port's own lateral station, then
+    # over into the mouth. A primary that starts turning inboard as it leaves
+    # the head arrives in the middle of the vee at the height of the
+    # turbocharger, which is where the turbocharger is.
+    #
+    # The two pipes on a bank step apart in x as they climb: the cylinder
+    # outboard of its turbo leans further out, the inboard one leans in. That
+    # opens a 90 mm corridor between them at the turbo's own station, which
+    # is exactly what the charge pipe leaving the compressor needs -- it is
+    # 60 mm across and has to get from the middle of the vee to the outside
+    # of the engine through the plane these two climb in.
+    lean = -0.18 if abs(x) > abs(tx) else 0.14
     return [start,
-            (x + (tx - x) * 0.22, start[1] * 0.72, start[2] + 26.0),
-            (x + (tx - x) * 0.40, start[1] * 0.62, T["z"] + 52.0),
-            (tx - T["housing_w"] * 0.7, 0.0, T["z"] + T["turb_r"] * 0.95)]
+            (x + (tx - x) * lean, start[1] * 1.07, T["z"] + 46.0),
+            (x + (tx - x) * 0.58, start[1] * 1.00, T["z"] + 96.0),
+            end]
 
 
 def cylinder_path(bank, x):
@@ -89,6 +149,83 @@ def cylinder_path(bank, x):
     mid = (x, d[1] * (spec.DECK_HEIGHT - spec.STROKE * 0.5),
            d[2] * (spec.DECK_HEIGHT - spec.STROKE * 0.5))
     return [intake_port(bank, x), deck, mid, deck, exhaust_port(bank, x)]
+
+
+def turbo_side(bank_pair):
+    """Which turbo, which way its compressor discharges, and which way round
+    it sits on the engine.
+
+    Turbo 0 is at x = -118 and feeds the left bank, turbo 1 at +118 feeds the
+    right. `sgn` is the bank it discharges to: the compressor scroll has to
+    open towards the plenum it feeds, or the charge pipe leaves the housing on
+    the wrong side and crosses the vee to get back.
+
+    `ib` is the direction from the turbo towards the middle of the engine, and
+    the two turbos are mirror images about it. Both were laid out facing the
+    same way down +x before, which put the front turbo's collector mouth at
+    x = -214, 50 mm off the front of the block, and made the whole vee
+    asymmetric for no reason.
+
+    Turbines face outboard, compressors inboard. That is the way round the
+    exhaust decides: a radial turbine discharges along its own axis, so
+    turbines facing each other means one of them discharges forwards into the
+    other's downpipe. Facing out, the rear turbo goes straight out of the back
+    and the front one turns once, which is what a front-mounted turbo does on
+    any car that has one. The compressors then breathe from the middle of the
+    vee -- through ducts that climb out of it, because the vee itself is full
+    of exhaust.
+    """
+    i = 0 if bank_pair < 2 else 1
+    return i, T["x"][i], (-1.0 if i == 0 else 1.0), (1.0 if i == 0 else -1.0)
+
+
+def turbine_scroll(bank_pair):
+    """The turbine volute, as (point, passage radius) round the spiral.
+
+    This is the shape of the housing and the line the gas runs down, returned
+    once so they cannot disagree. An inflow turbine's passage tightens as it
+    goes: area falls with the mass still to be delivered, so the gas keeps its
+    velocity all the way round to the cutwater instead of stalling in a
+    constant-section ring.
+    """
+    _, tx, _, ib = turbo_side(bank_pair)
+    x = tx - ib * T["housing_w"] * 0.6
+    r = T["turb_r"]
+    out = []
+    for k in range(13):
+        f = k / 12.0
+        # The passage centreline has to clear the wheel: at 0.62 r it ran
+        # through the blade tips, so the volute and the turbine it wraps were
+        # the same metal.
+        a = math.radians(90.0 - 300.0 * f)
+        rr = r * (0.98 - 0.26 * f)
+        out.append(((x, rr * math.cos(a), T["z"] + rr * math.sin(a)),
+                    21.0 - 11.0 * f))
+    return out
+
+
+def compressor_scroll(bank_pair):
+    """The compressor volute, as (point, passage radius) round the spiral.
+
+    The mirror image of the turbine in every sense: the passage grows as more
+    flow joins it, and it grows towards the bank this turbo feeds.
+    """
+    _, tx, sgn, ib = turbo_side(bank_pair)
+    x = tx + ib * T["housing_w"] * 0.6
+    r = T["comp_r"]
+    out = []
+    for k in range(13):
+        f = k / 12.0
+        # 342 degrees, discharging down and outboard rather than straight
+        # out sideways. Sideways put the volute's mouth 42 mm from the line
+        # this bank's inboard primary climbs, and a 60 mm charge pipe needs
+        # 46. Downward-and-out is where the room is, and it is a perfectly
+        # ordinary way for a compressor housing to be clocked.
+        a = math.radians(-120.0 + 342.0 * f)
+        rr = r * (0.78 + 0.18 * f)
+        out.append(((x, sgn * -rr * math.cos(a), T["z"] + rr * math.sin(a)),
+                    9.0 + 7.5 * f))
+    return out
 
 
 def turbine_path(bank_pair):
@@ -103,36 +240,34 @@ def turbine_path(bank_pair):
     The shaft lies along x: turbine housing inboard, compressor outboard,
     centre section between them.
     """
-    tx = T["x"][0 if bank_pair < 2 else 1]
+    _, tx, _, ib = turbo_side(bank_pair)
     hw = T["housing_w"] * 0.6
-    zc = T["z"]
-    r = T["turb_r"]
-    pts = [(tx - 46.0, 0.0, zc + 16.0)]
-    # round the volute, tightening as it feeds the wheel
-    for k in range(7):
-        f = k / 6.0
-        a = math.radians(90.0 - 300.0 * f)
-        rr = r * (0.92 - 0.46 * f)
-        pts.append((tx - hw, rr * math.cos(a), zc + rr * math.sin(a)))
+    pts = [collector_path(bank_pair)[-1]]
+    pts.extend(p for (p, _r) in turbine_scroll(bank_pair))
     # and out along the shaft axis, which is where a turbine discharges
-    pts.append((tx - hw - 18.0, 0.0, zc))
-    pts.append((tx - hw - 52.0, 0.0, zc))
+    pts.append((tx - ib * (hw + 18.0), 0.0, T["z"]))
+    pts.append((tx - ib * (hw + 52.0), 0.0, T["z"]))
     return pts
 
 
 def compressor_path(bank_pair):
     """Air in through the compressor eye, round the scroll and out."""
-    tx = T["x"][0 if bank_pair < 2 else 1]
+    _, tx, _, ib = turbo_side(bank_pair)
     hw = T["housing_w"] * 0.6
-    zc = T["z"]
-    r = T["comp_r"]
-    pts = [(tx + hw + 96.0, 0.0, zc), (tx + hw + 26.0, 0.0, zc)]
-    for k in range(7):
-        f = k / 6.0
-        a = math.radians(-120.0 + 300.0 * f)
-        rr = r * (0.34 + 0.58 * f)
-        pts.append((tx + hw, rr * math.cos(a), zc + rr * math.sin(a)))
+    # 60 mm out: the eye has to clear the collector's mouth flange, which
+    # stands over the compressor, and the other turbo's inlet duct, which is
+    # coming up the other side of the middle of the vee
+    pts = [(tx + ib * (hw + 60.0), 0.0, T["z"]),
+           (tx + ib * (hw + 26.0), 0.0, T["z"])]
+    pts.extend(p for (p, _r) in compressor_scroll(bank_pair))
     return pts
+
+
+def compressor_outlet(bank_pair):
+    """Where the charge pipe has to start: the mouth of the scroll."""
+    (p, _r) = compressor_scroll(bank_pair)[-1]
+    return p
+
 
 
 def boost_path(side):

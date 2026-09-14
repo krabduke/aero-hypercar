@@ -217,8 +217,11 @@ HYBRID = {
     "mguk_r": 74.0,
     "mguk_len": 108.0,
     "mguk_x": -286.0,          # on the crank nose
-    "mguh_r": 40.0,
-    "mguh_len": 72.0,
+    # The rotor rides on the turbo shaft, so it lives inside the bearing
+    # housing's waist -- 72 mm long at 40 mm radius put it through both
+    # wheels and out of both ends of the housing it is supposed to be in.
+    "mguh_r": 32.0,
+    "mguh_len": 44.0,
     # 120 mm along the crank, not 196: the exhaust primaries converge on
     # the turbochargers at x = +/-118 and climb over them, and a box that
     # long in the vee is in the way of four of them.
@@ -341,6 +344,16 @@ MATERIAL_MAP = {
     "trumpet":    "carbon",
     "throttle":   "alu_forged",
     "turbo":      "inconel",
+    "turbine_housing": "inconel",
+    "turbine_wheel":   "inconel",
+    "turbo_centre":    "alu_cast",
+    "turbo_shaft":     "steel_nitrided",
+    "turbo_oil":       "braided",
+    # the cold side is aluminium, not Inconel: nothing on it ever
+    # sees more than about 200 degrees
+    "compressor_housing": "alu_cast",
+    "compressor_wheel":   "anodised",
+    "compressor_inlet":   "rubber_blk",
     "exhaust":    "inconel",
     "tailpipe":   "inconel",
     "wastegate":  "inconel",
@@ -377,6 +390,9 @@ PALETTE = {
     "copper_wound":   ((0.430, 0.226, 0.108), 1.00, 0.44),
     "anodised":       ((0.108, 0.136, 0.170), 1.00, 0.40),
     "rubber_blk":     ((0.042, 0.042, 0.046), 0.00, 0.86),
+    # stainless overbraid: the oil and coolant lines that have to take
+    # gallery pressure at 150 degrees are not rubber hose
+    "braided":        ((0.404, 0.414, 0.430), 0.90, 0.46),
 }
 
 # Matched to the F110 project's resolutions. That engine reads as real and

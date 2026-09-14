@@ -81,19 +81,50 @@ def _primaries():
 
 
 def _collectors():
-    """Where four primaries meet before the turbine."""
+    """Where four primaries meet before the turbine.
+
+    Four pipes' worth of area at the mouth, necked to the turbine's inlet
+    area at the flange, swept along the centreline gaspath declares so the
+    duct ends pointing into the volute. The previous one was a cone revolved
+    about the turbocharger's own axis and lifted 16 mm above it: it started
+    where no primary ended and finished pointing along the shaft, which is
+    the one direction a radial turbine does not take gas in.
+    """
     out = {}
-    for i, tx in enumerate(T["x"]):
-        # a merge collector: four pipes' worth of area, necked into the
-        # turbine inlet, with the flange that bolts it there
-        prof = [(tx - 86.0, 40.0), (tx - 70.0, 39.0), (tx - 52.0, 36.0),
-                (tx - 34.0, 32.0), (tx - 18.0, 28.0), (tx - 8.0, 26.0),
-                (tx - 8.0, 34.0), (tx + 2.0, 34.0), (tx + 2.0, 26.0)]
-        v, f = mesh.revolve_open(prof, spec.RES["revolve"] // 2,
-                                 cap_start=True, cap_end=True)
-        out[f"collector_{i + 1}"] = (
-            [(px, py, pz + T["z"] + 16.0) for (px, py, pz) in v], f)
+    for pair in (0, 2):
+        i = 0 if pair < 2 else 1
+        path = gaspath.collector_path(pair)
+        parts = [mesh.pipe(path, gaspath.COLLECTOR_RADII,
+                           spec.RES["pipe"], subdiv=6)]
+        # the mouth the four primaries land in, and the flange at the turbine
+        mouth, r0 = path[0], gaspath.COLLECTOR_RADII[0]
+        mv, mf = mesh.revolve_open(
+            [(-6.0, r0), (-6.0, r0 + 3.0), (3.0, r0 + 3.0), (3.0, r0)],
+            SM, cap_start=True, cap_end=True)
+        parts.append(([(px + mouth[0], py + mouth[1], pz + mouth[2])
+                       for (px, py, pz) in mv], mf))
+        parts.append(_inlet_flange(path[-1], path[-2],
+                                   gaspath.COLLECTOR_RADII[-1]))
+        out[f"collector_{i + 1}"] = mesh.join(*parts)
     return out
+
+
+def _inlet_flange(at, towards, r, thick=7.0, pad=11.0):
+    """A square-ish bolted flange standing normal to the duct it ends."""
+    d = [at[k] - towards[k] for k in range(3)]
+    m = math.dist(at, towards) or 1.0
+    d = [c / m for c in d]
+    v, f = mesh.revolve_open(
+        [(-thick, r), (-thick, r + pad), (0.0, r + pad), (0.0, r)],
+        SM, cap_start=True, cap_end=True)
+    # the lathe runs along +x; swing it onto the duct's own direction
+    up = (0.0, 0.0, 1.0) if abs(d[2]) < 0.9 else (0.0, 1.0, 0.0)
+    n1 = mesh._normalise(mesh._cross(d, up))
+    n2 = mesh._cross(d, n1)
+    return ([(at[0] + d[0] * px + n1[0] * py + n2[0] * pz,
+              at[1] + d[1] * px + n1[1] * py + n2[1] * pz,
+              at[2] + d[2] * px + n1[2] * py + n2[2] * pz)
+             for (px, py, pz) in v], f)
 
 
 def _runners():
