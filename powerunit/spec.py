@@ -233,7 +233,7 @@ HYBRID = {
     # fits the car's engine bay when it is installed.
     # Below the sump, which reaches z -180. At -132 the pack was inside it,
     # inside the oil pickup and inside the scavenge lines.
-    "battery_pos": (0.0, 0.0, -300.0),
+    "battery_pos": (0.0, 0.0, -244.0),   # tight under the sump
 }
 
 # --------------------------------------------------------------------------

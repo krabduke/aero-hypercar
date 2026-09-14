@@ -31,14 +31,41 @@ def _plenum():
     for bank, tag in ((0, "l"), (1, "r")):
         sgn = -1.0 if bank == 0 else 1.0
         y = sgn * I["plenum_y"]
-        v, f = mesh.tube(-I["plenum_len"] / 2, I["plenum_len"] / 2,
-                         0.0, I["plenum_r"], SEG)
+        # A closed vessel with domed ends and a bolted end cap, not an
+        # open-ended tube: as a tube it showed two black holes down the
+        # front of the engine and held no pressure at all.
+        L, R = I["plenum_len"] / 2, I["plenum_r"]
+        v, f = mesh.revolve_closed(
+            [(-L - 26.0, 0.0), (-L - 24.0, R * 0.34), (-L - 16.0, R * 0.72),
+             (-L - 6.0, R * 0.94), (-L, R), (-L + 8.0, R * 1.04),
+             (L - 8.0, R * 1.04), (L, R), (L + 6.0, R * 0.94),
+             (L + 16.0, R * 0.72), (L + 24.0, R * 0.34), (L + 26.0, 0.0)],
+            SEG)
         v = [(x, py + y, pz + I["plenum_z"]) for (x, py, pz) in v]
         out[f"plenum_{tag}"] = (v, f)
         # throttle body on the front face of each
-        tv, tf = mesh.tube(-I["plenum_len"] / 2 - 62.0, -I["plenum_len"] / 2,
-                           I["throttle_r"] - 7.0, I["throttle_r"], 32)
-        tv = [(x, py + y, pz + I["plenum_z"]) for (x, py, pz) in tv]
+        # body, mounting flange and the butterfly on its spindle
+        tr = I["throttle_r"]
+        # A stub on the plenum's OUTBOARD face at mid-length.
+        #
+        # Nowhere else will take it. The front of this engine is a gear
+        # tower reaching 241 mm out to drive the cams; aft of the block the
+        # car's bodywork has closed in to 252 mm; and the intake camshaft
+        # sits directly above the plenum's crown. Outboard is the sidepod,
+        # which is 456 mm of room at this height.
+        tr = I["throttle_r"]
+        h0 = I["plenum_r"] * 0.86
+        tparts = [mesh.tube(h0, h0 + 56.0, tr - 7.0, tr, 32)]
+        tparts.append(mesh.tube(h0 + 48.0, h0 + 56.0, tr, tr + 10.0, 32))
+        tparts.append(mesh.tube(h0, h0 + 7.0, tr, tr + 10.0, 32))
+        bv, bf = mesh.revolve_closed(
+            [(-2.0, 0.0), (-2.0, tr - 8.0), (2.0, tr - 8.0), (2.0, 0.0)], 32)
+        tparts.append(([(px + h0 + 27.0, py, pz) for (px, py, pz) in bv], bf))
+        sv, sf = mesh.cylinder(-tr, tr, 4.0, 14)
+        tparts.append(([(pz + h0 + 27.0, py, px) for (px, py, pz) in sv], sf))
+        tv, tf = mesh.join(*tparts)
+        # the lathe runs along its own +x; point it outboard, along y
+        tv = [(pz, sgn * px + y, py + I["plenum_z"]) for (px, py, pz) in tv]
         out[f"throttle_{tag}"] = (tv, tf)
     return out
 

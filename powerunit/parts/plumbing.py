@@ -185,10 +185,13 @@ def _fuel():
     # 92 mm from the centreline and below the deck it was inside the block,
     # the number two bore, its rings and an intake valve.
     out["hp_fuel_pump"] = shapes.finned_case(
-        # driven off the REAR of the exhaust cam, aft of the plenum and
-        # clear of the accessory drive at the front
-        H["x_rear"] + 6.0, 215.0, 105.0,
-        72.0, 62.0, 84.0, n_fins=6, fin_h=5.0, fin_t=3.0, r=12.0)
+        # driven off the rear of the exhaust cam, on the cover's outer
+        # face -- the plenum's throttle is on that end now
+        # Between two cylinders, on the cover's outer face. The coil wells
+        # reach y 188 and the car's bodywork closes to 248 at this height,
+        # so this is the 60 mm of flank there is.
+        0.0, 218.0, 165.0,
+        72.0, 54.0, 84.0, n_fins=6, fin_h=5.0, fin_t=3.0, r=12.0)
     return out
 
 

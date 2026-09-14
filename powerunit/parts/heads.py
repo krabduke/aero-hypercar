@@ -453,8 +453,10 @@ def _covers():
 
         v, f = shapes.ribbed_cover(
             H["x_front"] + 7.0, H["x_rear"] - 7.0,
-            H["half_width"] * 0.92, z, 34.0, n_ribs=9, rib_h=5.0, rib_w=8.0)
-        v = [(x, y + 8.0, zz) for (x, y, zz) in v]
+            H["half_width"] * 0.86, z, 34.0, n_ribs=9, rib_h=5.0, rib_w=8.0)
+        # centred on the head, not 8 mm outboard of it: offset, the cover's
+        # outer corner stood 3 mm proud of the casting it bolts to
+        v = [(x, y + 2.0, zz) for (x, y, zz) in v]
         out[f"camcover_{'lr'[bank]}"] = (rot(v), f)
 
         bolts = []

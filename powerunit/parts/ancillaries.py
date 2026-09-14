@@ -143,50 +143,63 @@ def _cooling():
 
 
 def _charge():
-    """Air-to-water charge coolers and the pipework from turbo to plenum.
+    """Water-to-air charge coolers, and the pipe from each turbo to them.
 
-    Two turbochargers were feeding a plenum they were not connected to.
+    The cooler cores live INSIDE the plenums, which is what a hot vee does
+    and the only thing that fits here: the vee is full of turbochargers and
+    exhaust, the cam covers reach y 252, and anything outboard of those is
+    wider than the car this engine goes in. It also makes the charge run
+    what it should be -- compressor outlet, up over the cam cover, straight
+    down into the throttle -- instead of a three-metre loop out to a cooler
+    on the roof and back, which is what was here: two open-ended trunks
+    arcing over and around the engine and touching nothing at the far end.
     """
     out = {}
     runs = []
+    I = spec.INTAKE
     for bank, tag in ((0, "l"), (1, "r")):
-        s = -1.0 if bank == 0 else 1.0
-        # above the cam covers, which reach z 252 on a 132 mm head, and
-        # outboard of the exhaust that fills the vee
-        cx, cy, cz = 0.0, s * 150.0, 320.0
-        parts = [shapes.core(cx, cy, cz, 230.0, 62.0, 96.0, n_plates=16)]
-        # end tanks, one each end, with the coolant unions on top
-        for dx in (-122.0, 122.0):
+        s_ = -1.0 if bank == 0 else 1.0
+        cy = s_ * I["plenum_y"]
+        cz = I["plenum_z"]
+        # the core, sitting in the plenum's own bore, with an end tank at
+        # each end carrying the water unions
+        parts = [shapes.core(0.0, cy, cz, I["plenum_len"] - 96.0,
+                             I["plenum_r"] * 1.05, I["plenum_r"] * 1.05,
+                             n_plates=16)]
+        for dx in (-(I["plenum_len"] / 2 - 34.0), I["plenum_len"] / 2 - 34.0):
             parts.append(_lathe(
-                [(0.0, 0.0), (0.0, 48.0), (10.0, 54.0), (28.0, 54.0),
-                 (34.0, 48.0), (34.0, 0.0)], cx + dx, cy, cz, axis="x", seg=20))
+                [(0.0, 0.0), (0.0, I["plenum_r"] * 0.72),
+                 (8.0, I["plenum_r"] * 0.80), (22.0, I["plenum_r"] * 0.80),
+                 (28.0, I["plenum_r"] * 0.72), (28.0, 0.0)],
+                dx, cy, cz, axis="x", seg=20))
+            # the water union out of the top of each end tank
             parts.append(_lathe(
-                [(0.0, 0.0), (26.0, 0.0), (26.0, 14.0), (20.0, 14.0),
-                 (20.0, 11.0), (0.0, 11.0)],
-                cx + dx, cy, cz + 52.0, axis="z", seg=12))
+                [(0.0, 0.0), (22.0, 0.0), (22.0, 12.0), (17.0, 12.0),
+                 (17.0, 9.0), (0.0, 9.0)],
+                dx, cy, cz + I["plenum_r"] * 0.62, axis="z", seg=12))
         out[f"intercooler_{tag}"] = mesh.join(*parts)
 
-        # turbo compressor outlet -> cooler -> plenum
+        # compressor outlet -> over the cam cover -> that bank's throttle
         tx = T["x"][bank]
-        path_in = [(tx + T["housing_w"] * 1.2, s * 112.0, T["z"] + 16.0),
-                   (tx + s * 0.0, s * 112.0, 258.0),
-                   (cx - 122.0 - 30.0, cy, cz)]
-        # cooler -> that bank's plenum, which is outboard of the cam cover
-        py_ = s * (spec.INTAKE["plenum_y"] - 4.0)
-        # over the cam cover, down the front of the engine and into that
-        # bank's throttle body -- the plenum is fed from its front face,
-        # not stabbed in the side where the runners leave it
-        path_out = [(cx + 122.0 + 30.0, cy, cz),
-                    (150.0, s * 230.0, 300.0),
-                    (-140.0, s * 330.0, 330.0),
-                    (-320.0, py_, spec.INTAKE["plenum_z"])]
-        pipe_parts = [mesh.pipe(path_in, 34.0, segments=18),
-                      mesh.pipe(path_out, 34.0, segments=18)]
-        # a coupling bead at each joint, which is where a hose clamp lands
-        for p in (path_in[0], path_in[-1], path_out[0], path_out[-1]):
-            pipe_parts.append(_lathe(
-                [(-7.0, 33.0), (7.0, 33.0), (7.0, 40.0), (-7.0, 40.0)],
-                p[0], p[1], p[2], axis="y", seg=18))
+        thr_y = s_ * (I["plenum_y"] + I["plenum_r"] * 0.86 + 54.0)
+        # and in on the throttle's own axis, so the pipe meets its mouth
+        # instead of stopping in the air in front of the engine
+        path = [(tx + T["housing_w"] * 1.2, s_ * 96.0, T["z"] + 10.0),
+                (tx + 40.0, s_ * 190.0, T["z"] + 46.0),
+                (tx + 20.0, s_ * 316.0, 236.0),
+                (40.0, s_ * 336.0, 150.0),
+                (0.0, s_ * 352.0, cz),
+                (0.0, thr_y + 8.0, cz)]
+        r = 30.0
+        pipe_parts = [mesh.pipe(path, r, segments=18, subdiv=3)]
+        # a coupling bead at each end, which is where a clamp lands
+        for pt, nxt in ((path[0], path[1]), (path[-1], path[-2])):
+            m = math.dist(pt, nxt) or 1.0
+            step = tuple((nxt[k] - pt[k]) / m * 14.0 for k in range(3))
+            pipe_parts.append(mesh.pipe(
+                [tuple(pt[k] - step[k] * 0.2 for k in range(3)),
+                 tuple(pt[k] + step[k] for k in range(3))],
+                r + 5.0, segments=20))
         runs.extend(pipe_parts)
 
     # The turbochargers are at x = -118 and +118 -- fore and aft on the vee,
