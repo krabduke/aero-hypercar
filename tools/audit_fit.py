@@ -83,11 +83,32 @@ OUTSIDE = {
 }
 
 
+def inside_sidepod(x, y, z, slack):
+    """Is (y, z) inside a sidepod at station x?
+
+    The sidepods are bodywork -- the list above says so -- but they are
+    separate surfaces from the central body, so anything packaged in them
+    reads as outside the car unless they are tested too. The V8's cam covers
+    sit in them, which is where a mid-engined car's cam covers go.
+    """
+    try:
+        y_in, y_out, z_bot, z_top, _n = chassis._sample(
+            spec.SIDEPOD_TABLE, abs(x))
+    except Exception:
+        return False
+    if y_out <= y_in:
+        return False
+    return (y_in - slack <= abs(y) <= y_out + slack
+            and z_bot - slack <= z <= z_top + slack)
+
+
 def inside_body(x, y, z, slack):
     """Is (y, z) inside the body section at station x, with `slack` to spare?
 
     Returns how far outside it is, in mm, or 0.0 when it is in.
     """
+    if inside_sidepod(x, y, z, slack):
+        return 0.0
     ring = chassis.body_section(x, inset=-slack, segments=96)
     if not ring:
         return 0.0

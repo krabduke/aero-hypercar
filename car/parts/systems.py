@@ -53,19 +53,27 @@ def _brake_ducts():
         sgn = 1.0 if y > 0 else -1.0
         z = od / 2
         inb = y - sgn * w * 0.30
+        # The inlet has to be clear of the TYRE, not merely inboard of the
+        # wheel centre. At 0.30 of the tread width from the centreline it was
+        # still 60 mm inside the sidewall -- a scoop buried in rubber, taking
+        # its air from inside the tyre. The feed station is the tyre's inner
+        # face plus the duct's own half width and some clearance.
+        feed = y - sgn * (w * 0.5 + BD["width"] * 0.55 + 10.0)
 
         # the scoop: a shaped inlet facing forward, inboard of the tyre
         out[f"bduct_inlet_{tag}"] = shapes.rounded_box(
-            x - r * 0.92, inb, z - r * 0.26, 90.0, BD["width"],
+            x - r * 0.92, feed, z - r * 0.26, 90.0, BD["width"],
             BD["inlet_h"], 16.0, draft=3.0)
         # the duct carrying it back to the drum
         # the duct narrows as it goes back, because the drum needs velocity
         # at the disc, not volume in the pipe
+        # it also works outboard as it goes back, from the feed station to
+        # the drum around the disc
         out[f"bduct_pipe_{tag}"] = mesh.pipe(
-            [(x - r * 0.86, inb, z - r * 0.22),
-             (x - r * 0.58, inb, z - r * 0.16),
-             (x - r * 0.30, inb, z - r * 0.05),
-             (x - r * 0.08, inb, z - r * 0.01),
+            [(x - r * 0.86, feed, z - r * 0.22),
+             (x - r * 0.58, feed + (inb - feed) * 0.22, z - r * 0.16),
+             (x - r * 0.30, feed + (inb - feed) * 0.58, z - r * 0.05),
+             (x - r * 0.08, feed + (inb - feed) * 0.88, z - r * 0.01),
              (x + r * 0.10, inb, z)],
             [BD["width"] * 0.42, BD["width"] * 0.39, BD["width"] * 0.35,
              BD["width"] * 0.31, BD["width"] * 0.28], 22, subdiv=3)
@@ -74,15 +82,19 @@ def _brake_ducts():
         # distributed round the whole disc, so it is deeper where the feed
         # comes in and it is finned inside to spread the flow. As a plain
         # annulus it directed nothing anywhere.
-        w = BD["width"]
-        drum = [shapes.volute(0.0, r * 0.60, r * 0.80, w * 0.16, w * 0.30,
+        # `w` is the TYRE's width and is still needed below, so the duct's
+        # own width gets its own name -- it used to shadow it, which is how
+        # the fence that stands the assembly off the tyre ended up placed
+        # off the duct's width instead and sat 125 mm inside the rubber.
+        dw = BD["width"]
+        drum = [shapes.volute(0.0, r * 0.60, r * 0.80, dw * 0.16, dw * 0.30,
                               seg=44, sect=14)]
         drum.append(mesh.revolve_closed(
-            [(-w * 0.32, r * 0.50), (-w * 0.24, r * 0.50),
-             (-w * 0.24, r * 0.88), (-w * 0.32, r * 0.88)], 40))
+            [(-dw * 0.32, r * 0.50), (-dw * 0.24, r * 0.50),
+             (-dw * 0.24, r * 0.88), (-dw * 0.32, r * 0.88)], 40))
         for k in range(9):
             a = 2 * math.pi * k / 9
-            fv, ff = mesh.box(0.0, 0.0, 0.0, w * 0.34, 4.0, r * 0.16)
+            fv, ff = mesh.box(0.0, 0.0, 0.0, dw * 0.34, 4.0, r * 0.16)
             drum.append(([(px, py + math.cos(a) * r * 0.70,
                            pz + math.sin(a) * r * 0.70)
                           for (px, py, pz) in fv], ff))
@@ -98,11 +110,15 @@ def _brake_ducts():
         # drum, is cut away behind the axle line where the wheel rim would
         # foul it, and rolls inboard at the trailing edge to keep the tyre
         # squirt out of the floor.
-        fy = inb - sgn * BD["width"] * 0.56
+        # clear of the tyre's inner face, which is what it stands the
+        # assembly off
+        fy = y - sgn * (w * 0.5 + 16.0)
         prof = shapes.panel_outline(
             [(x - r * 0.80, z - r * 0.62), (x + r * 0.44, z - r * 0.66),
-             (x + r * 0.74, z - r * 0.18), (x + r * 0.60, z + r * 0.34),
-             (x + r * 0.02, z + r * 0.50), (x - r * 0.66, z + r * 0.26),
+             (x + r * 0.74, z - r * 0.18), (x + r * 0.60, z + r * 0.26),
+             # the top edge clears the upper wishbone, which picks up at the
+             # top of the upright and used to run through this plate
+             (x + r * 0.02, z + r * 0.34), (x - r * 0.66, z + r * 0.18),
              (x - r * 0.86, z - r * 0.20)], subdiv=4)
         out[f"bduct_fence_{tag}"] = shapes.shaped_panel(
             prof, fy, 8.0, rim_seg=5,
@@ -113,22 +129,106 @@ def _brake_ducts():
         for k in range(5):
             a = math.pi * (0.2 + 0.6 * k / 4)
             vanes.append(shapes.rounded_box(
-                x + r * 0.82 * math.cos(a), inb + sgn * BD["width"] * 0.30,
+                x + r * 0.82 * math.cos(a), inb + sgn * dw * 0.30,
                 z + r * 0.82 * math.sin(a), 46.0, 6.0, 16.0, 2.5))
         out[f"bduct_vanes_{tag}"] = mesh.join(*vanes)
     return out
 
 
+def _ferrule(p, direction, r, length, hex_r=None):
+    """The crimped end of a braided hose: a knurled collar and a hex nut.
+
+    A hose does not merge into a caliper. It is crimped into a fitting, and
+    the fitting is a hex a spanner fits and a swaged collar over the braid.
+    """
+    hex_r = hex_r or r * 1.30
+    body, _f = mesh.revolve_closed(
+        [(0.0, r * 0.72), (length * 0.30, r), (length * 0.62, r),
+         (length * 0.62, r * 0.80), (length, r * 0.80)], 12)
+    parts = [(shapes.orient(body, p, direction), _f)]
+    hv, hf = mesh.revolve_closed(
+        [(length * 0.60, 0.0), (length * 0.60, hex_r), (length * 1.34, hex_r),
+         (length * 1.34, 0.0)], 6)
+    parts.append((shapes.orient(hv, p, direction), hf))
+    return mesh.join(*parts)
+
+
+def _p_clip(p, direction, r):
+    """A P-clip: the band round the hose, the tab, and the bolt through it.
+
+    Hose that is not clipped every few hundred millimetres chafes through on
+    whatever it is lying against, so every run on a real car is clipped, and
+    the clips are where the run changes direction.
+    """
+    band, bf = mesh.ring_torus(0.0, r + 2.6, 2.4, 18, 8)
+    parts = [(shapes.orient(band, p, direction), bf)]
+    tv, tf = mesh.box(0.0, 0.0, r + 8.0, 5.0, 9.0, 15.0)
+    parts.append((shapes.orient(tv, p, direction), tf))
+    bv, blf = mesh.revolve_closed(
+        [(0.0, 0.0), (0.0, 5.2), (3.4, 5.2), (3.4, 2.6), (9.0, 2.6),
+         (9.0, 0.0)], 8)                       # a bolt, axis out of the tab
+    bv = [(py, pz, px + r + 13.0) for (px, py, pz) in bv]
+    parts.append((shapes.orient(bv, p, direction), blf))
+    return mesh.join(*parts)
+
+
+def _run(path, r, clips=(), per_seg=7, seg=12):
+    """A fluid line: the hose itself, a fitting at each end, clips along it."""
+    dense = mesh.smooth_path(path, per_seg)
+    parts = [mesh.pipe(dense, r, seg)]
+    d0 = tuple(dense[1][k] - dense[0][k] for k in range(3))
+    d1 = tuple(dense[-1][k] - dense[-2][k] for k in range(3))
+    parts.append(_ferrule(dense[0], tuple(-c for c in d0), r,
+                          spec.SERVICE["line_fitting_r"] * 1.8))
+    parts.append(_ferrule(dense[-1], d1, r,
+                          spec.SERVICE["line_fitting_r"] * 1.8))
+    for f in clips:
+        i = max(1, min(len(dense) - 2, int(f * (len(dense) - 1))))
+        d = tuple(dense[i + 1][k] - dense[i - 1][k] for k in range(3))
+        parts.append(_p_clip(dense[i], d, r))
+    return mesh.join(*parts)
+
+
 def _hydraulics():
-    """Brake lines to every corner and the master cylinders that feed them."""
+    """Brake lines to every corner and the master cylinders that feed them.
+
+    Each corner is fed twice: a hard line from the master cylinder down the
+    chassis to a union on the upright's inboard side, then a short braided
+    flexible hose across the suspension travel to the caliper. That split is
+    not detail for its own sake -- it is why the line survives 60 mm of wheel
+    travel and full lock, and a single rigid tube from pedal to caliper would
+    not.
+    """
     out = {}
+    SV = spec.SERVICE
+    r_hard = SV["line_r"] * 0.72
     lines = []
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
-        lines.append(mesh.pipe(
-            [(spec.FRONT_AXLE_X + 60.0, sgn * 90.0, 300.0),
-             (x * 0.55 + spec.FRONT_AXLE_X * 0.45, sgn * 170.0, 260.0),
-             (x, y * 0.78, od / 2 + W["caliper_r"] * 0.8)], 8.0, 8))
+        front = tag.startswith("f")
+        z_cal = od / 2 + W["caliper_r"] * 0.8
+        y_union = y * 0.62
+        z_union = od / 2 + 40.0
+        hard = [(spec.FRONT_AXLE_X + 60.0, sgn * 88.0, 306.0),
+                (spec.FRONT_AXLE_X + 110.0, sgn * 150.0, 292.0)]
+        if front:
+            hard += [(x + 180.0, sgn * 250.0, 250.0),
+                     (x + 60.0, sgn * 330.0, 214.0)]
+        else:
+            # over the rear lower wishbone, not through it
+            hard += [(2100.0, sgn * 300.0, 250.0),
+                     (3050.0, sgn * 330.0, 262.0),
+                     (x - 260.0, sgn * 360.0, 330.0),
+                     (x - 60.0, sgn * 420.0, 352.0)]
+        hard.append((x - 10.0, y_union, z_union))
+        lines.append(_run(hard, r_hard,
+                          clips=[0.30, 0.58, 0.84] if not front else [0.42, 0.78]))
+        # the flexible loop across the travel -- slack enough to take droop
+        flex = [(x - 10.0, y_union, z_union),
+                (x + 26.0, y * 0.70, z_union - 26.0),
+                (x + 18.0, y * 0.76, z_cal + 34.0),
+                (x - 6.0, y * 0.78, z_cal)]
+        lines.append(_run(flex, SV["line_r"], per_seg=8))
     out["brake_lines"] = mesh.join(*lines)
 
     cyl = []
@@ -152,8 +252,9 @@ def _hydraulics():
                        for (px, py, pz) in uv], uf))
         parts.append(shapes.rod_end((160.0, 0.0, 0.0), (1.0, 0.0, 0.0), 10.0))
         v, f = mesh.join(*parts)
+        # below the front torsion bars, which live at z 400 and up
         cyl.append(([(px + spec.FRONT_AXLE_X + 40.0, py + sgn * 86.0,
-                      pz + 330.0) for (px, py, pz) in v], f))
+                      pz + 292.0) for (px, py, pz) in v], f))
     out["master_cylinders"] = mesh.join(*cyl)
 
     # The pedals go under the driver's feet, which are behind the front axle
@@ -172,22 +273,56 @@ def _electrical():
     """The loom, and the boxes it connects. Current has to get from the
     battery at the back to the dash at the front somehow."""
     out = {}
+    SV = spec.SERVICE
     runs = []
     spine = [(spec.POWERTRAIN["battery_x"], 60.0, 210.0),
              (2600.0, 90.0, 300.0), (2100.0, 96.0, 420.0),
              (T["cockpit_x0"], 70.0, 470.0), (T["x_front"] + 40.0, 40.0, 380.0)]
-    runs.append(mesh.pipe(spine, 19.0, 10))
-    runs.append(mesh.pipe([(p[0], -p[1], p[2]) for p in spine], 19.0, 10))
+    # A loom is a taped bundle, so it is fattest where the most circuits are
+    # still in it -- at the battery -- and thins as branches leave. Drawing it
+    # at one diameter end to end says every circuit runs the whole length.
+    grow = [1.00, 0.94, 0.86, 0.72, 0.52]
+    for sy in (1.0, -1.0):
+        path = [(px, sy * py, pz) for (px, py, pz) in spine]
+        dense = mesh.smooth_path(path, 8)
+        radii = []
+        for i in range(len(dense)):
+            f = i / (len(dense) - 1) * (len(grow) - 1)
+            k = min(int(f), len(grow) - 2)
+            radii.append(SV["loom_r"] * (grow[k] + (grow[k + 1] - grow[k]) * (f - k)))
+        runs.append(mesh.pipe(dense, radii, 14))
+        # tape wraps: the bundle is taped at intervals, and the tape stands
+        # proud of the bundle
+        for j in range(SV["loom_ties"]):
+            i = int((j + 0.5) / SV["loom_ties"] * (len(dense) - 2)) + 1
+            d = tuple(dense[i + 1][k] - dense[i - 1][k] for k in range(3))
+            tv, tf = mesh.revolve_closed(
+                [(-7.0, 0.0), (-7.0, radii[i] + 1.6), (7.0, radii[i] + 1.6),
+                 (7.0, 0.0)], 14)
+            runs.append((shapes.orient(tv, dense[i], d), tf))
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
-        runs.append(mesh.pipe(
-            [(x, sgn * 150.0, 330.0), (x, y * 0.8, od / 2 + 60.0)], 7.0, 6))
+        # it stops inboard of the brake duct fence rather than through it
+        branch = mesh.smooth_path(
+            [(x - 90.0, sgn * 130.0, 340.0), (x - 20.0, sgn * 210.0, 330.0),
+             (x + 30.0, y * 0.52, od / 2 + 120.0),
+             (x + 10.0, y * 0.64, od / 2 + 86.0)], 7)
+        runs.append(mesh.pipe(branch, 7.0, 10))
+        d = tuple(branch[-1][k] - branch[-2][k] for k in range(3))
+        cv, cf = shapes.connector(0.0, 0.0, 0.0, 30.0, 22.0, 16.0, pins=4)
+        runs.append((shapes.orient(cv, branch[-1], d), cf))
     out["wiring_loom"] = mesh.join(*runs)
 
+    # Outboard of the fuel cell, not inside it. At y 150 they were wholly
+    # within the bladder -- the electronics were swimming in the fuel.
+    # On top of the fuel cell, under the engine cover: the only place in
+    # this bay that is neither bladder nor radiator. At y 150 they were in
+    # the fuel; at y 288 they were in the radiator core.
+    fz = 330.0 + spec.POWERTRAIN["fuel"][2] / 2 + 62.0
     out["control_boxes"] = mesh.join(
-        shapes.finned_case(2500.0, 150.0, 330.0, 180.0, 120.0, 80.0,
+        shapes.finned_case(2500.0, 118.0, fz, 180.0, 120.0, 80.0,
                            n_fins=7, fin_h=6.0, fin_t=3.0, r=12.0),
-        shapes.finned_case(2500.0, -150.0, 330.0, 180.0, 120.0, 80.0,
+        shapes.finned_case(2500.0, -118.0, fz, 180.0, 120.0, 80.0,
                            n_fins=7, fin_h=6.0, fin_t=3.0, r=12.0))
     return out
 
@@ -320,19 +455,58 @@ def _pit_hardware():
     """What gets handled every stop: wheel guns' sockets, jack sockets, the
     starter socket, the fuel coupling, tyre-temperature sensors."""
     out = {}
+    SV = spec.SERVICE
     socks = []
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
-        v, f = mesh.revolve_open(
-            [(0.0, 0.0), (0.0, 44.0), (22.0, 44.0), (22.0, 0.0)], 8,
-            cap_start=True, cap_end=True)
         # Recessed into the wheel cover, where a gun socket lives. It used
         # to start 2 mm proud of the tyre and stick out 22 mm further, which
         # made the pit crew's sockets the widest objects on the car and put
         # it over the legal width.
         y_out = abs(y) + w * 0.5 - 42.0
-        socks.append(([(pz + x, sgn * (y_out + px), py + od / 2)
-                       for (px, py, pz) in v], f))
+        L = SV["gun_len"]
+        R = SV["gun_bore_r"]
+
+        def place(v):
+            return [(pz + x, sgn * (y_out + px), py + od / 2)
+                    for (px, py, pz) in v]
+
+        def lathe(profile, seg=36):
+            v, f = mesh.revolve_closed(list(profile), seg)
+            return (place(v), f)
+
+        parts = []
+        # the bezel: a funnel in the wheel cover, rolled at the mouth so a
+        # gun that arrives off-centre is pushed onto the axis rather than
+        # bouncing off the rim
+        parts.append(lathe([
+            (L, R + 16.0), (L, R + 3.0), (L - 5.0, R - 1.0),
+            (L - 14.0, R - 3.0), (4.0, R - 3.0), (0.0, R + 2.0),
+            (0.0, R + 16.0)]))
+        # the captive nut: the thing the gun actually turns
+        parts.append(lathe([
+            (2.0, 0.0), (2.0, R - 10.0), (6.0, R - 6.0), (16.0, R - 6.0),
+            (20.0, R - 11.0), (20.0, 14.0), (2.0, 14.0)], 30))
+        # its drive lugs -- this is the interface, and what makes the gun
+        # socket a socket rather than a cup
+        lr = SV["gun_lug_r"]
+        br = R - lr - 4.0
+        for k in range(SV["gun_lugs"]):
+            a = 2.0 * math.pi * k / SV["gun_lugs"]
+            lv, lf = mesh.revolve_closed(
+                [(18.0, 0.0), (18.0, lr), (L - 6.0, lr),
+                 (L - 3.0, lr - 2.5), (L - 3.0, 0.0)], 12)
+            parts.append((place([(px, py + br * math.cos(a),
+                                  pz + br * math.sin(a))
+                                 for (px, py, pz) in lv]), lf))
+        # the circlip that stops the nut leaving with the wheel
+        cv, cf = mesh.ring_torus(L - 2.0, R - 7.0, 2.4, 30, 8)
+        parts.append((place(cv), cf))
+        # and the axle stub the nut screws onto, seen down the bore
+        parts.append(lathe([
+            (-14.0, 0.0), (-14.0, 15.0), (24.0, 15.0), (26.0, 12.0),
+            (26.0, 0.0)], 20))
+        socks.append(mesh.join(*parts))
     out["gun_sockets"] = mesh.join(*socks)
 
     # The starter socket.
@@ -379,16 +553,43 @@ def _pit_hardware():
                       for (px, py, pz) in v], f)
     out["starter_socket"] = mesh.join(*parts)
 
+    # above the radiator, not through its core
     out["fuel_coupling"] = mesh.join(
-        shapes.rounded_box(2000.0, 300.0, 500.0, 120.0, 90.0, 90.0, 22.0),
-        mesh.pipe([(2000.0, 300.0, 500.0),
-                   (spec.POWERTRAIN["fuel_x"], 150.0, 400.0)], 26.0, 10))
+        shapes.rounded_box(1940.0, 296.0, 566.0, 120.0, 90.0, 90.0, 22.0),
+        mesh.pipe([(1940.0, 296.0, 566.0),
+                   (2140.0, 240.0, 520.0),
+                   (spec.POWERTRAIN["fuel_x"], 150.0, 470.0)], 26.0, 10))
 
     sens = []
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
-        sens.append(shapes.rounded_box(x - od * 0.10, y - sgn * w * 0.46,
-                                       od * 0.34, 44.0, 30.0, 22.0, 6.0))
+        # An infrared tyre array is a row of lenses aimed across the tread,
+        # because the temperature that matters is the difference between the
+        # inner shoulder and the outer one -- one lens on a box tells you
+        # nothing about how the car is using the tyre.
+        hx, hy, hz = x - od * 0.10, y - sgn * w * 0.46, od * 0.34
+        parts = [shapes.rounded_box(hx, hy, hz, 40.0, 26.0, 20.0, 5.0)]
+        for i in range(5):
+            f = (i + 0.5) / 5
+            lv, lf = mesh.revolve_closed(
+                [(0.0, 0.0), (0.0, 6.0), (4.0, 6.0), (6.0, 4.2), (6.0, 0.0)],
+                12)
+            parts.append(([(pz + hx - 16.0 + 32.0 * f,
+                            sgn * px + hy + sgn * 13.0, py + hz)
+                           for (px, py, pz) in lv], lf))
+        # the bracket that holds it off the duct, and the pigtail out of it
+        parts.append(shapes.rounded_box(hx, hy - sgn * 16.0, hz + 2.0,
+                                        16.0, 8.0, 26.0, 2.5))
+        parts.append(shapes.rounded_box(hx, hy - sgn * 30.0, hz + 13.0,
+                                        16.0, 24.0, 5.0, 2.0))
+        tail = mesh.smooth_path(
+            [(hx + 16.0, hy, hz - 6.0), (hx + 42.0, hy - sgn * 14.0, hz - 22.0),
+             (hx + 54.0, hy - sgn * 40.0, hz - 30.0)], 6)
+        parts.append(mesh.pipe(tail, 4.0, 10))
+        d = tuple(tail[-1][k] - tail[-2][k] for k in range(3))
+        cv, cf = shapes.connector(0.0, 0.0, 0.0, 22.0, 16.0, 12.0, pins=4)
+        parts.append((shapes.orient(cv, tail[-1], d), cf))
+        sens.append(mesh.join(*parts))
     out["tyre_sensors"] = mesh.join(*sens)
     return out
 

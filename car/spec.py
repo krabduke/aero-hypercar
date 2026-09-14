@@ -259,9 +259,12 @@ FLOOR = {
     "tunnel_half_w": 330.0,
     "tunnel_inner_y": 210.0,
     "throat_x": 2600.0, "throat_z": 96.0,
-    "diffuser_x": 3860.0, "diffuser_exit_z": 392.0,
+    # A 96 mm throat opening to 392 mm is a four-to-one expansion: no
+    # diffuser holds flow through that, and the roof climbed straight into
+    # the rear suspension on the way. 250 mm is a real exit height.
+    "diffuser_x": 3860.0, "diffuser_exit_z": 250.0,
     "skirt_depth": 26.0,
-    "n_strakes": 4,
+    "n_strakes": 4, "strake_t": 9.0,
 }
 
 # Front wing. A real one is not a stack of flat panels: the mainplane is
@@ -335,15 +338,23 @@ BARGEBOARD = {
 }
 
 TURNING_VANE = {
-    "x0": 1320.0, "x1": 1700.0,
-    "y": 250.0, "z0": 110.0, "z1": 330.0,
+    # ends ahead of the side impact tube, which starts at x 1658
+    "x0": 1320.0, "x1": 1638.0,
+    # The tub is 256 mm half width here and the seat fills it. At y 250 the
+    # inboard vane was inside the driver's seat; a turning vane hangs under
+    # the chassis OUTBOARD of the cell, where the flow it turns actually is.
+    "y": 350.0, "z0": 110.0, "z1": 330.0,
     "elements": 2, "t": 7.0,
 }
 
 FLOOR_EDGE = {
     "x0": 1900.0, "x1": 3640.0,
-    "fences": 5, "fence_h": 78.0, "t": 7.0,
-    "wing_chord": 190.0, "wing_span": 900.0,
+    "fences": 5, "fence_h": 48.0, "t": 7.0,
+    # the edge wing runs ALONG the floor edge, so its chord is measured
+    # across the section -- inboard root to outboard tip -- and `rise` is how
+    # far it climbs over that chord
+    "edge_chord": 132.0, "edge_rise": 0.82, "edge_t": 7.0,
+    "edge_root_dy": -18.0, "edge_root_z": 58.0,
 }
 
 BEAM_WING = {
@@ -365,7 +376,9 @@ DETAIL = {
     "exhaust_x": 4400.0, "exhaust_r": 62.0,
     # above the beam wing and clear of the diffuser exit; built about
     # z = 0 it sat half under the track surface
-    "exhaust_z": 470.0, "wastegate_z": 438.0,
+    # above the beam wing, which tops out at 489 -- the tailpipe used to
+    # end inside it
+    "exhaust_z": 560.0, "wastegate_z": 528.0,
 }
 
 # Surface and hardware detail. These are the parts that separate a shape from
@@ -413,15 +426,22 @@ HALO = {
 
 SUSP = {
     "front_x": FRONT_AXLE_X, "rear_x": REAR_AXLE_X,
-    "upper_z": 340.0, "lower_z": 150.0,
+    # The upper wishbone picks up at the TOP of the upright, above the
+    # driveshaft. At 340 it was level with the hub centre (335) and the rear
+    # shaft ran straight through both legs of it.
+    "upper_z": 462.0, "lower_z": 150.0,
+    # and the rear lower arm has to clear the diffuser roof, which is at
+    # 172 mm under the rear axle
+    "lower_z_rear": 240.0,
     "inboard_front_y": 250.0, "inboard_rear_y": 300.0,
     "upright_h": 300.0,
     "arm_r": 17.0, "rod_r": 13.0,
     "front_layout": "pushrod", "rear_layout": "pullrod",
+    "rear_rocker_z": 250.0,
 }
 
 POWERTRAIN = {
-    "engine_x": 3240.0, "engine_z": 300.0,
+    "engine_x": 3240.0, "engine_z": 314.0,
     "gearbox_x": 3600.0, "gearbox_len": 520.0, "gearbox_r": 175.0,
     # The gearbox hangs off the back of the engine on the crank centreline.
     # Without this it was built about z = 0 -- half of it under the track.
@@ -558,7 +578,9 @@ SERVICE = {
     "starter_bezel_r": 40.0, "starter_drive": 19.0,
     "jack_puck_r": 48.0, "jack_strap_w": 34.0,
     "tow_throat_r": 62.0, "tow_shank_r": 17.0, "hook_seg": 22,
-    "line_r": 7.5, "line_clip_every": 2,
+    # a -3 braided hose is 4 mm across the braid and about 15 mm across the
+    # crimped fitting, so the two get their own numbers
+    "line_r": 4.2, "line_fitting_r": 7.5, "line_clip_every": 2,
     "loom_r": 16.0, "loom_ties": 8,
 }
 

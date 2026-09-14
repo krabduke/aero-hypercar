@@ -148,7 +148,9 @@ def _oil_pump():
     # driven off the crank nose but lying back alongside the pan, which is
     # where there is room for a stack this long
     x0 = spec.BLOCK["x_front"] + 4.0
-    cy, cz = -116.0, -34.0
+    # outboard of the MGU-K rotor, which is 84 mm in radius on the crank
+    # nose and shares this station
+    cy, cz = -192.0, -14.0
     R = A["oil_pump_r"]
     parts = []
     x = 0.0
@@ -182,11 +184,14 @@ def _oil_pump():
 def _water_pump():
     """A centrifugal pump: a spiral scroll, a vaned impeller inside it, an
     axial inlet eye and a tangential outlet."""
-    x0 = spec.BLOCK["x_front"] - 16.0
+    # Aft of the MGU-K rotor, which occupies x -340..-232 on the crank
+    # nose. The pump's outlet scroll swings inboard to 62 mm from the
+    # centreline, so it cannot share a station with an 84 mm rotor.
+    x0 = spec.BLOCK["x_front"] + 14.0
     # Outboard of the MGU-K, which is a 84.5 mm radius rotor on the crank
     # axis at this station -- the pump used to reach in to y = 1 and pass
     # straight through it.
-    cy, cz = 148.0, -34.0
+    cy, cz = 200.0, -34.0
     R = A["water_pump_r"]
     parts = [shapes.volute(0.0, R * 0.62, R * 1.18, 11.0, 20.0, seg=56,
                            sect=16)]

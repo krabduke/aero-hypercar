@@ -111,12 +111,19 @@ ROD = {
 # --------------------------------------------------------------------------
 
 HEAD = {
-    "height": 74.0,
-    "half_width": 61.0,
+    # A head has to contain its own valvetrain. At 74 mm this one did not:
+    # the cams ran at 50 mm above the deck, the buckets were placed at 74 --
+    # ABOVE the cams that are supposed to push them -- and an 86 mm valve
+    # hanging off a 74 mm head is 12 mm longer than the casting it lives in,
+    # which is why the valves had been turned round to point down the bore
+    # into the crankcase instead. The stack sets the height: bucket under
+    # lobe, lobe on base circle, journal above that, cover over the journal.
+    "height": 132.0,
+    "half_width": 59.0,
     "x_front": -228.0,
     "x_rear": 228.0,
     "cam_centres": 78.0,       # between intake and exhaust cam axes
-    "cam_height": 50.0,        # above the deck face
+    "cam_height": 108.0,       # above the deck face
 }
 
 VALVE = {
@@ -128,7 +135,7 @@ VALVE = {
     "intake_head_r": 17.0,
     "exhaust_head_r": 14.5,
     "stem_r": 2.6,
-    "length": 86.0,
+    "length": 92.0,
     "included_angle": 22.0,    # narrow, for a compact pent-roof chamber
     "lift": 12.5,
 }
@@ -156,19 +163,36 @@ CAM = {
 # --------------------------------------------------------------------------
 
 INTAKE = {
-    "plenum_r": 62.0,
+    # Two plenums, one outboard of each bank.
+    #
+    # This is a hot vee: the turbochargers sit between the banks and the
+    # exhaust ports face inboard, which leaves the intake ports low on the
+    # OUTBOARD face of each head. A single plenum over the vee therefore had
+    # to reach across its own cylinder head to get to them, and every one of
+    # the eight runners went through the fuel rail, the exhaust valves, the
+    # camshaft, the MGU-H and a turbocharger on the way. Induction on a hot
+    # vee goes outboard, which is where every engine built this way puts it.
+    "plenum_r": 38.0,
     "plenum_len": 372.0,
-    "plenum_z": 292.0,
+    # Beside the heads, BELOW the cam covers rather than outboard of
+    # them. Outboard the engine came out 795 mm across, which is wider
+    # than the car it goes in; tucked under the covers it is 630, and the
+    # runner into the port is a short horizontal one instead of a hook
+    # over the top of the head.
+    "plenum_y": 232.0,
+    "plenum_z": 70.0,     # under the cam cover and under the cam itself
     "trumpet_r_in": 24.0,
     "trumpet_r_out": 33.0,
-    "trumpet_len": 96.0,
+    "trumpet_len": 52.0,   # the plenum is 62 mm off the port, not 130
     "throttle_r": 46.0,
 }
 
 TURBO = {
     "n": 2,
     "x": [-118.0, 118.0],
-    "z": 214.0,                # sits in the vee, between the banks
+    # In the vee, above the heads' inner faces. The head is 58 mm taller
+    # than it was, so the floor of the vee rose 41 mm with it.
+    "z": 255.0,
     "comp_r": 58.0,            # compressor housing
     "turb_r": 64.0,            # turbine housing
     "housing_w": 46.0,
@@ -195,13 +219,21 @@ HYBRID = {
     "mguk_x": -286.0,          # on the crank nose
     "mguh_r": 40.0,
     "mguh_len": 72.0,
-    "inverter": (196.0, 146.0, 62.0),
-    "inverter_pos": (0.0, 0.0, 336.0),
+    # 120 mm along the crank, not 196: the exhaust primaries converge on
+    # the turbochargers at x = +/-118 and climb over them, and a box that
+    # long in the vee is in the way of four of them.
+    "inverter": (100.0, 158.0, 74.0),
+    # On the bellhousing at the back, where there is room for it. In the
+    # vee it was the tallest thing on the engine and in the exhaust's way;
+    # outboard it made the engine wider than the car.
+    "inverter_pos": (276.0, 0.0, 190.0),
     "battery": (392.0, 300.0, 56.0),   # overall; built as two lobes
     # Two lobes either side of the sump keel: clear of the pan, clear of the
     # drain plug hanging out of it, and high enough that the engine still
     # fits the car's engine bay when it is installed.
-    "battery_pos": (0.0, 0.0, -132.0),
+    # Below the sump, which reaches z -180. At -132 the pack was inside it,
+    # inside the oil pickup and inside the scavenge lines.
+    "battery_pos": (0.0, 0.0, -300.0),
 }
 
 # --------------------------------------------------------------------------
@@ -218,7 +250,7 @@ ANCILLARY = {
     "flywheel_t": 22.0,
     "bellhousing_r": 152.0,
     "bellhousing_len": 78.0,
-    "ecu": (168.0, 118.0, 44.0),
+    "ecu": (168.0, 88.0, 34.0),   # flat, so it can lie on a plenum
 }
 
 # --------------------------------------------------------------------------

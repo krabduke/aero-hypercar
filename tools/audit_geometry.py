@@ -28,13 +28,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # A part may be simple only if it really is simple. Each entry is a prefix and
 # the reason it is allowed to be.
 EXEMPT = {
-    "starter_socket": "a socket: a hole with a lip",
-    "brake_lines": "braided line, which is a swept tube",
-    "wiring_loom": "a loom, which is a swept bundle",
-    "gun_sockets": "sockets, arrayed",
-    "jack_points": "a spigot",
     "helmet": "a moulded shell, and not a part of the car",
 }
+
+# Five names used to be listed above -- starter_socket, brake_lines,
+# wiring_loom, gun_sockets, jack_points -- each with a sentence explaining
+# why it was allowed to be a cylinder. Every one of those sentences was an
+# excuse: a brake line has fittings and clips, a loom has breakouts and
+# connectors, a gun socket is a drive interface, a jack point is a bore with
+# a pin in it. They are built now, so the exemptions are gone.
 
 FLOOR = 150          # vertices, for anything not exempt
 TOTAL = 1_520_000      # vertices, over the whole model

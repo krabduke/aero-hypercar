@@ -64,58 +64,73 @@ def _coil_spring(r, length, turns, wire_r, segs=26, sect=10, hand=1.0):
 
 
 def _valve_gear():
-    """Two springs, a retainer and a bucket tappet per valve."""
+    """Two springs, a retainer and a bucket tappet per valve.
+
+    All three sit ON the valve's own axis, which in a pent-roof head is not
+    the bore axis: it starts one valve radius to one side of it and leans
+    further out all the way up. They used to be placed on the bore centreline
+    with no lean, lying on their sides (a bucket is a cup that runs up and
+    down the bore, not a roller lying across it), at heights that put the
+    bucket above the camshaft that is supposed to push it.
+
+    The stack, from the deck up, is: spring seat, spring, retainer under the
+    collets at the valve tip, shim, bucket crown, lobe base circle. Each
+    height below is that chain, not a guess.
+    """
+    from parts.heads import valve_seats
+    H_SPRING, H_RETAINER, H_BUCKET = 16.0, 79.5, 82.8
     springs, retainers, buckets = [], [], []
-    inc = math.radians(V["included_angle"] / 2)
-    for (n, pair, bank, x, a) in spec.cylinders():
-        for k, (is_in, sgn_y) in enumerate(((True, -1), (True, 1),
-                                            (False, -1), (False, 1))):
-            hr = V["intake_head_r"] if is_in else V["exhaust_head_r"]
-            tilt = inc * (1 if is_in else -1)
-            xo = x + sgn_y * hr * 0.95
+    for seat in valve_seats():
+        n, k = seat["n"], seat["k"]
+        bank, tilt, xo = seat["bank"], seat["tilt"], seat["x"]
 
-            # A dual spring, wound opposite hands. At 16,000 rpm a single
-            # spring surges: the inner one damps it, and winding it the other
-            # way means a broken coil cannot nest into the outer.
-            sv, sf = mesh.join(
-                _coil_spring(9.6, 34.0, 6.0, 1.75),
-                _coil_spring(6.1, 32.4, 7.5, 1.25, hand=-1.0))
-            sv = [(px * math.cos(tilt) - py * math.sin(tilt),
-                   px * math.sin(tilt) + py * math.cos(tilt), pz)
-                  for (px, py, pz) in sv]
-            sv = common.along_bank(sv, xo, spec.DECK_HEIGHT + 26.0, bank)
-            springs.append((f"{n}_{k}", (sv, sf)))
+        def on_axis(v, height, flip=False):
+            """Put a part built about its own +x onto this valve's axis."""
+            if flip:
+                v = [(-px, py, pz) for (px, py, pz) in v]
+            v = [(px * math.cos(tilt) - py * math.sin(tilt),
+                  px * math.sin(tilt) + py * math.cos(tilt), pz)
+                 for (px, py, pz) in v]
+            return common.along_bank(
+                v, xo, spec.DECK_HEIGHT + height, bank,
+                seat["lat"] + height * math.tan(tilt))
 
-            # A retainer is a cone, not a washer: it seats both springs on its
-            # underside and tapers to the collet bore on top, which is what
-            # locks the two together under load. The step between the two
-            # seats is the only thing keeping the inner spring concentric.
-            rv, rf = mesh.revolve_closed(
-                [(-3.6, 3.15), (-3.6, 5.0), (-2.9, 5.0), (-2.9, 7.6),
-                 (-3.6, 7.6), (-3.6, 11.0), (-3.4, 12.6), (-2.2, 13.2),
-                 (-0.6, 13.2), (0.4, 11.8), (1.9, 9.3), (3.0, 7.0),
-                 (3.6, 5.4), (3.6, 3.85), (2.2, 3.5), (0.0, 3.3)], SEG)
-            rv = [(pz, py, px) for (px, py, pz) in rv]
-            rv = common.along_bank(rv, xo, spec.DECK_HEIGHT + 62.0, bank)
-            retainers.append((f"{n}_{k}", (rv, rf)))
+        # A dual spring, wound opposite hands. At 16,000 rpm a single
+        # spring surges: the inner one damps it, and winding it the other
+        # way means a broken coil cannot nest into the outer.
+        sv, sf = mesh.join(
+            _coil_spring(9.6, 60.0, 9.0, 1.75),
+            _coil_spring(6.1, 58.0, 11.0, 1.25, hand=-1.0))
+        springs.append((f"{n}_{k}", (on_axis(sv, H_SPRING), sf)))
 
-            # A bucket tappet is a closed cup running directly under the lobe:
-            # a DLC crown with a chamfer round it, a skirt with an oil groove
-            # so it does not pick up in the bore, and the shim that sets the
-            # clearance sitting in a pocket underneath the crown.
-            bv, bf = mesh.revolve_closed(
-                [(-9.2, 0.0), (-9.2, 9.8), (-8.6, 10.4), (-8.6, 13.0),
-                 (-9.0, 13.0), (-9.0, 13.6), (-8.4, 14.0),
-                 (2.4, 14.0), (2.4, 13.2), (3.6, 13.2),
-                 (3.6, 14.0), (7.4, 14.0), (8.6, 13.6),
-                 (9.2, 12.6), (9.2, 11.2), (8.0, 10.9),
-                 (7.0, 10.4), (7.0, 0.0)], SEG)
-            sh, shf = mesh.revolve_closed(
-                [(-9.2, 0.0), (-9.2, 8.9), (-6.9, 8.9), (-6.9, 0.0)], SEG)
-            bv, bf = mesh.join((bv, bf), (sh, shf))
-            bv = [(pz, py, px) for (px, py, pz) in bv]
-            bv = common.along_bank(bv, xo, spec.DECK_HEIGHT + 74.0, bank)
-            buckets.append((f"{n}_{k}", (bv, bf)))
+        # A retainer is a cone, not a washer: it seats both springs on its
+        # underside and tapers to the collet bore on top, which is what
+        # locks the two together under load. The step between the two
+        # seats is the only thing keeping the inner spring concentric.
+        rv, rf = mesh.revolve_closed(
+            [(-3.6, 3.15), (-3.6, 5.0), (-2.9, 5.0), (-2.9, 7.6),
+             (-3.6, 7.6), (-3.6, 11.0), (-3.4, 12.6), (-2.2, 13.2),
+             (-0.6, 13.2), (0.4, 11.8), (1.9, 9.3), (3.0, 7.0),
+             (3.6, 5.4), (3.6, 3.85), (2.2, 3.5), (0.0, 3.3)], SEG)
+        retainers.append((f"{n}_{k}",
+                          (on_axis(rv, H_RETAINER, flip=True), rf)))
+
+        # A bucket tappet is a closed cup running directly under the lobe:
+        # a DLC crown with a chamfer round it, a skirt with an oil groove
+        # so it does not pick up in the bore, and the shim that sets the
+        # clearance sitting in a pocket underneath the crown.
+        bv, bf = mesh.revolve_closed(
+            [(-9.2, 0.0), (-9.2, 9.8), (-8.6, 10.4), (-8.6, 13.0),
+             (-9.0, 13.0), (-9.0, 13.6), (-8.4, 14.0),
+             (2.4, 14.0), (2.4, 13.2), (3.6, 13.2),
+             (3.6, 14.0), (7.4, 14.0), (8.6, 13.6),
+             (9.2, 12.6), (9.2, 11.2), (8.0, 10.9),
+             (7.0, 10.4), (7.0, 0.0)], SEG)
+        sh, shf = mesh.revolve_closed(
+            [(-9.2, 0.0), (-9.2, 8.9), (-6.9, 8.9), (-6.9, 0.0)], SEG)
+        bv, bf = mesh.join((bv, bf), (sh, shf))
+        buckets.append((f"{n}_{k}", (on_axis(bv, H_BUCKET, flip=True), bf)))
+
     out = {}
     # one object per valve: a spring is a service item, not a texture
     for (tag, m) in springs:
@@ -206,13 +221,21 @@ def _turbo_internals():
                           hub[1]))
             for k in range(blades):
                 a = 2 * math.pi * k / blades
-                bv, bf = shapes.rounded_box(xc, (15.0 + r) / 2, 0.0, 22.0, r - 15.0, 3.4, 1.0)
+                # Build the blade at the ORIGIN, pitch it about its own
+                # centre, then put it on the wheel. Pitching it in place
+                # rotates it about x = 0, and the wheel is 118 mm from
+                # there -- which threw every blade 80 mm off the shaft and
+                # made a 41 mm wheel read as 96 mm of scattered metal that
+                # the exhaust primaries and the charge pipes ran into.
+                bv, bf = shapes.rounded_box(0.0, (15.0 + r) / 2, 0.0,
+                                            22.0, r - 15.0, 3.4, 1.0)
                 pitch = math.radians(34.0 if back else -30.0)
                 bv = [(px * math.cos(pitch) - pz * math.sin(pitch), py,
                        px * math.sin(pitch) + pz * math.cos(pitch))
                       for (px, py, pz) in bv]
                 bv = mesh.rot_x(bv, a)
-                parts.append(([(px, py, pz + T["z"]) for (px, py, pz) in bv], bf))
+                parts.append(([(px + xc, py, pz + T["z"])
+                               for (px, py, pz) in bv], bf))
     return {"turbo_wheels": mesh.join(*parts)}
 
 

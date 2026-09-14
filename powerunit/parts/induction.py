@@ -22,32 +22,45 @@ def build():
 
 
 def _plenum():
-    """A single plenum over the vee feeding both banks. It sits above the
-    turbos because this is a hot-vee: the hot side is inboard, the cold side
-    outboard, so the charge air comes over the top."""
-    v, f = mesh.tube(-I["plenum_len"] / 2, I["plenum_len"] / 2,
-                     0.0, I["plenum_r"], SEG)
-    v = [(x, y, z + I["plenum_z"]) for (x, y, z) in v]
-    # throttle body on the front face
-    tv, tf = mesh.tube(-I["plenum_len"] / 2 - 62.0, -I["plenum_len"] / 2,
-                       I["throttle_r"] - 7.0, I["throttle_r"], 32)
-    tv = [(x, y, z + I["plenum_z"]) for (x, y, z) in tv]
-    return {"plenum": (v, f), "throttle": (tv, tf)}
+    """A plenum outboard of each bank, feeding that bank's four ports.
+
+    See the note in `spec.INTAKE`: the hot vee puts the intake ports on the
+    outside of the heads, so this is where the air has to come from.
+    """
+    out = {}
+    for bank, tag in ((0, "l"), (1, "r")):
+        sgn = -1.0 if bank == 0 else 1.0
+        y = sgn * I["plenum_y"]
+        v, f = mesh.tube(-I["plenum_len"] / 2, I["plenum_len"] / 2,
+                         0.0, I["plenum_r"], SEG)
+        v = [(x, py + y, pz + I["plenum_z"]) for (x, py, pz) in v]
+        out[f"plenum_{tag}"] = (v, f)
+        # throttle body on the front face of each
+        tv, tf = mesh.tube(-I["plenum_len"] / 2 - 62.0, -I["plenum_len"] / 2,
+                           I["throttle_r"] - 7.0, I["throttle_r"], 32)
+        tv = [(x, py + y, pz + I["plenum_z"]) for (x, py, pz) in tv]
+        out[f"throttle_{tag}"] = (tv, tf)
+    return out
 
 
 def _trumpets():
-    """One velocity stack per cylinder, dropping from the plenum into each
-    bank's intake port."""
+    """One velocity stack per cylinder, standing inside its bank's plenum and
+    pointing at that cylinder's runner mouth."""
     parts = []
     for (n, pair, bank, x, a) in spec.cylinders():
-        prof = [(0.0, I["trumpet_r_in"]), (I["trumpet_len"] * 0.62, I["trumpet_r_in"]),
+        sgn = -1.0 if bank == 0 else 1.0
+        prof = [(0.0, I["trumpet_r_in"]),
+                (I["trumpet_len"] * 0.62, I["trumpet_r_in"]),
                 (I["trumpet_len"], I["trumpet_r_out"]),
                 (I["trumpet_len"], I["trumpet_r_out"] - 3.0),
                 (I["trumpet_len"] * 0.62, I["trumpet_r_in"] - 3.0),
                 (0.0, I["trumpet_r_in"] - 3.0)]
         tv, tf = mesh.revolve_closed(prof, 26)
-        tv = [(z, y, px) for (px, y, z) in tv]
-        tv = common.along_bank(tv, x, spec.DECK_HEIGHT + spec.HEAD["height"] + 6.0,
-                               bank, -spec.HEAD["cam_centres"] * 0.34)
+        # the lathe runs along its own +x; the stack points inboard, from the
+        # outboard wall of the plenum towards the runner mouth
+        tv = [(pz + x,
+               sgn * (I["plenum_y"] + I["plenum_r"] * 0.6 - px),
+               py + I["plenum_z"])
+              for (px, py, pz) in tv]
         parts.append((tv, tf))
     return {"trumpets": mesh.join(*parts)}

@@ -196,8 +196,15 @@ def _crash_structures():
     for sgn in (-1.0, 1.0):
         for zz in (250.0, 420.0):
             # inside the sidepod flank, allowing for the tube's own radius
-            a = chassis.sidepod_point(1740.0, sgn * 1.0, 0.0,
-                                      -BD["crash_r"])
+            #
+            # The inboard end anchors on the TUB's flank, because that is
+            # what a side impact structure loads into. It used to start at
+            # 55 percent of the sidepod's own half width, which is 60 mm
+            # inboard of the tub side -- through the survival cell, through
+            # the seat, and through the driver's hip.
+            hw = max(abs(p[1]) for p in chassis.body_section(1740.0,
+                                                             segments=64))
+            a = (1740.0, sgn * (hw + 44.0), 0.0)
             b = chassis.sidepod_point(1980.0, sgn * 0.94, 0.0,
                                       -BD["crash_r"])
             # A side impact tube is an oval so it crushes along its length
@@ -205,9 +212,8 @@ def _crash_structures():
             # outboard end where the load comes in.
             r = BD["crash_r"]
             sides.append(shapes.swept_profile(
-                [(a[0], a[1] * 0.55, zz),
-                 (a[0] + (b[0] - a[0]) * 0.5,
-                  a[1] * 0.55 + (b[1] - a[1] * 0.55) * 0.5, zz),
+                [(a[0], a[1], zz),
+                 (a[0] + (b[0] - a[0]) * 0.5, (a[1] + b[1]) * 0.5, zz),
                  (b[0], b[1], zz)],
                 shapes.rounded_polygon(
                     [(-r * 1.5, -r * 0.78), (r * 1.5, -r * 0.78),
@@ -422,12 +428,52 @@ def _service():
     """Jack points, tow hooks and the wear plank -- the small hardware that
     tells you this is a car that gets worked on between sessions."""
     out = {}
+    SV = spec.SERVICE
     parts = []
     for x in (420.0, spec.POWERTRAIN["gearbox_x"] + 460.0):
         under = chassis.surface_point(x, -90.0)
-        v, f = mesh.cylinder(0.0, 130.0, BD["jack_r"], 12)
-        parts.append(([(pz + x, py, px + under[2] - 40.0)
-                       for (px, py, pz) in v], f))
+        z0 = under[2] - 8.0
+
+        def place(v):
+            return [(pz + x, py, px + z0) for (px, py, pz) in v]
+
+        def lathe(profile, seg=28):
+            v, f = mesh.revolve_closed(list(profile), seg)
+            return (place(v), f)
+
+        r = BD["jack_r"]
+        puck = SV["jack_puck_r"]
+        # A jack point is a socket, not a peg: the jack's spigot goes UP into
+        # it and takes the car's weight on the cross pin, so what is modelled
+        # is the bore, the bell mouth that finds it, the pin, and the way the
+        # load is spread into the floor -- a bare cylinder hanging under the
+        # car is the one shape it cannot be.
+        parts.append(lathe([
+            (0.0, r + 3.0), (0.0, r + 12.0), (9.0, r + 12.0),
+            (16.0, r + 3.0), (100.0, r + 3.0), (100.0, r - 5.0),
+            (18.0, r - 5.0), (9.0, r - 1.0), (0.0, r + 3.0)]))
+        # the cross pin the spigot latches behind
+        pv, pf = mesh.cylinder(-r - 6.0, r + 6.0, 6.0, 12)
+        parts.append((place([(pz + 70.0, px, py) for (px, py, pz) in pv]), pf))
+        # the load-spreading pad bonded to the floor above it, and the
+        # gussets that take the bending out of the bore
+        parts.append(lathe([
+            (96.0, 0.0), (96.0, puck + 22.0), (108.0, puck + 16.0),
+            (108.0, 0.0)], 30))
+        rib_r = (r + 3.0 + puck + 20.0) / 2
+        for k in range(4):
+            a = math.pi / 2 * k + math.pi / 4
+            gv, gf = mesh.box(0.0, 0.0, 0.0, 44.0, 5.0,
+                              puck + 20.0 - (r + 3.0))
+            ca, sa = math.cos(a), math.sin(a)
+            gv = [(px + 74.0, py * ca - (pz + rib_r) * sa,
+                   py * sa + (pz + rib_r) * ca)
+                  for (px, py, pz) in gv]
+            parts.append((place(gv), gf))
+        # the retaining strap: what stops the jack dropping out of the socket
+        sv, sf = mesh.ring_torus(86.0, r + 6.0, SV["jack_strap_w"] * 0.18,
+                                 24, 8)
+        parts.append((place(sv), sf))
     out["jack_points"] = mesh.join(*parts)
 
     hooks = []

@@ -404,9 +404,14 @@ def turning_vane(camber, z_bot, z_top, t=0.085, twist=0.0, lean=0.0,
                 m = math.hypot(tx, ty) or 1.0
                 nx, ny = -ty / m, tx / m
                 h = _half_thickness(u, t) * chord * surf
-                z = z_bot + (z_top - z_bot) * fz
-                if top_cut is not None and k == n_z - 1:
-                    z = top_cut(u)
+                # `top_cut` is the vane's top edge. It used to be applied to
+                # the topmost ring only, so every ring below it stayed at the
+                # full height and the surface folded back on itself wherever
+                # the cut dropped -- a diffuser strake with a 90 mm roof over
+                # it was 318 mm tall two rings down. The cut is the ceiling,
+                # so every ring is a fraction of the way up to it.
+                z_hi = z_top if top_cut is None else top_cut(u)
+                z = z_bot + (z_hi - z_bot) * fz
                 if serrate and k == 0 and serr_depth:
                     z += serr_depth * (0.5 - 0.5 * math.cos(
                         2 * math.pi * serrate * u)) 

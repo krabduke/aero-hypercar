@@ -102,13 +102,22 @@ def _electronics():
         bx, by, bz, sx * 0.42, lobe_c * 2 + lobe_y, sz * 0.30, 3.0))
     out["battery_modules"] = mesh.join(*mods)
     out["battery_terminals"] = mesh.join(
-        shapes.connector(bx - sx * 0.3, by, bz + sz * 0.5 + 7.0, 34.0, 20.0, 14.0, 2),
-        shapes.connector(bx + sx * 0.3, by, bz + sz * 0.5 + 7.0, 34.0, 20.0, 14.0, 2))
+        # outboard of the bedplate, which fills the middle of this face
+        shapes.connector(bx - sx * 0.3, by + sy * 0.38, bz + sz * 0.5 + 7.0,
+                         34.0, 20.0, 14.0, 2),
+        shapes.connector(bx + sx * 0.3, by - sy * 0.38, bz + sz * 0.5 + 7.0,
+                         34.0, 20.0, 14.0, 2))
 
     a = spec.ANCILLARY
     sx, sy, sz = a["ecu"]
-    out["ecu"] = shapes.finned_case(0.0, 132.0, 176.0, sx, sy, sz,
+    # On top of the right bank's plenum. At y 132 it was inside the cam
+    # cover, the camshaft and four of the lobes.
+    # Low on the block's right flank, below the plenum and outboard of
+    # the engine mounts. On top of the plenum it was inside the cam cover;
+    # directly under it, it was in the intake runners.
+    ey, ez = 206.0, -80.0
+    out["ecu"] = shapes.finned_case(0.0, ey, ez, sx, sy, sz,
                                     n_fins=9, fin_h=5.0, fin_t=2.6, r=5.0)
-    out["ecu_connector"] = shapes.connector(-sx * 0.5 - 10.0, 132.0, 176.0,
+    out["ecu_connector"] = shapes.connector(-sx * 0.5 - 10.0, ey, ez,
                                             22.0, sy * 0.6, sz * 0.5, 10)
     return out

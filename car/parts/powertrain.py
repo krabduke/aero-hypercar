@@ -74,8 +74,18 @@ def build():
     built, espec = _load_engine()
     # the engine's +x is its crank axis; the car's +x is rearward, and the
     # engine sits with its flywheel toward the gearbox
+    # The engine comes with a hybrid pack and an inverter of its own,
+    # because as a standalone model it has to. This car has both already --
+    # its own pack sits in the tub at x 2040 and its own power electronics
+    # with it -- so the vendored copies are left out rather than carried
+    # twice. They were also the lowest and the widest things on the engine,
+    # which is why it would not fit between the floor and the sidepod.
+    CAR_PROVIDES = ("battery", "battery_modules", "battery_terminals",
+                    "inverter", "inverter_connectors", "mguk", "mguh")
     parts = []
     for name, (verts, faces) in built.items():
+        if name.startswith(CAR_PROVIDES):
+            continue
         parts.append(([(x + PT["engine_x"], y, z + PT["engine_z"])
                        for (x, y, z) in verts], faces))
     out["engine"] = mesh.join(*parts)
@@ -102,10 +112,14 @@ def build():
         out[f"rad_tanks_{tag}"] = mesh.join(*tanks)
         hoses = []
         for dz, xe in ((-sz / 2 - 26.0, -1.0), (sz / 2 + 26.0, 1.0)):
+            # The hose stays OUTBOARD of the fuel cell and the battery
+            # until it is past both of them, then comes in to the engine.
+            # Cutting the corner took it through the bladder and through
+            # the battery modules.
             path = [(x + sx * 0.42 * xe, y, z + dz),
-                    (x + sx * 0.58 * xe, y * 0.82, z + dz * 0.86),
-                    (x + sx * 0.70 * xe, y * 0.62, z + dz * 0.7),
-                    ((x + sx * 0.70 * xe + PT["engine_x"]) / 2, y * 0.44,
+                    (x + sx * 0.58 * xe, y * 0.97, z + dz * 0.92),
+                    (2760.0, y * 0.88, z + dz * 0.80),
+                    (2990.0, y * 0.58,
                      (z + dz * 0.7 + PT["engine_z"] + dz * 0.5) / 2),
                     (PT["engine_x"], y * 0.28, PT["engine_z"] + dz * 0.5)]
             # a moulded hose swells where it is unsupported and necks down
@@ -134,17 +148,87 @@ def build():
                                        sx / 6.2, sy * 0.8, sz * 0.7, 6.0))
     out["battery_modules"] = mesh.join(*mods)
 
-    # a fuel cell is a bladder in a shaped bay, not a cuboid
     fx, fy, fz = PT["fuel_x"], 0.0, 330.0
     sx, sy, sz = PT["fuel"]
-    out["fuel_cell"] = shapes.rounded_box(fx, fy, fz, sx, sy, sz,
-                                          r=60.0, seg=6, draft=3.0)
+    out["fuel_cell"] = _bladder(fx, fy, fz, sx, sy, sz)
     out["fuel_fittings"] = mesh.join(
         mesh.pipe([(fx + sx * 0.3, 0.0, fz + sz * 0.5),
                    (fx + sx * 0.6, 0.0, fz + sz * 0.62)], 24.0, 10),
         shapes.rounded_box(fx - sx * 0.3, 0.0, fz + sz * 0.5 + 18.0,
                            110.0, 110.0, 36.0, 12.0))
     return out
+
+
+def _bladder(cx, cy, cz, sx, sy, sz, n_z=18, n_a=44):
+    """The fuel cell: a rubber bladder that takes the shape of its bay.
+
+    The comment here used to say "a fuel cell is a bladder in a shaped bay,
+    not a cuboid" above a rounded box. It is not a cuboid: it is moulded to
+    the tub, so it is widest where the tub is widest and its shoulders pull
+    in under the engine cover, the bottom rolls into a sump the pickup can
+    empty, and the top carries the filler and the vent. Fuel sloshing in a
+    box is also why a real one is full of baffle foam -- that part is not
+    modelled, because none of it can be seen.
+    """
+    # (height fraction, half-x scale, half-y scale, section exponent)
+    table = [(0.00, 0.70, 0.58, 2.6), (0.10, 0.88, 0.86, 3.4),
+             (0.32, 0.99, 1.00, 4.2), (0.64, 1.00, 1.00, 4.2),
+             (0.86, 0.95, 0.90, 3.4), (1.00, 0.76, 0.66, 2.4)]
+
+    def lerp(t):
+        for i in range(len(table) - 1):
+            a, b = table[i], table[i + 1]
+            if t <= b[0] or i == len(table) - 2:
+                f = (t - a[0]) / ((b[0] - a[0]) or 1.0)
+                f = max(0.0, min(1.0, f))
+                return tuple(a[k] + (b[k] - a[k]) * f for k in range(1, 4))
+        return table[-1][1:]
+
+    rings = []
+    for k in range(n_z):
+        t = k / (n_z - 1)
+        hx, hy, n = lerp(t)
+        z = cz - sz / 2 + sz * t
+        ring = []
+        for j in range(n_a):
+            a = 2.0 * math.pi * j / n_a
+            ca, sa = math.cos(a), math.sin(a)
+            p = 2.0 / n
+            ring.append((cx + sx / 2 * hx * math.copysign(abs(ca) ** p, ca),
+                         cy + sy / 2 * hy * math.copysign(abs(sa) ** p, sa),
+                         z))
+        rings.append(ring)
+    verts = [v for r in rings for v in r]
+    faces = []
+    for k in range(n_z - 1):
+        a0, b0 = k * n_a, (k + 1) * n_a
+        for j in range(n_a):
+            j2 = (j + 1) % n_a
+            faces.append((a0 + j, a0 + j2, b0 + j2, b0 + j))
+    faces.append(tuple(range(n_a - 1, -1, -1)))
+    base = (n_z - 1) * n_a
+    faces.append(tuple(range(base, base + n_a)))
+    parts = [(verts, faces)]
+
+    # the collector: a small pot at the bottom that stays full under
+    # cornering, so the pickup never sees air
+    pv, pf = mesh.revolve_closed(
+        [(0.0, 0.0), (0.0, 92.0), (58.0, 92.0), (66.0, 74.0), (66.0, 0.0)], 26)
+    parts.append(([(py + cx + sx * 0.10, pz + cy, -px + cz - sz / 2 + 8.0)
+                   for (px, py, pz) in pv], pf))
+    # filler neck and the dry-break coupling on top of it
+    nv, nf = mesh.revolve_closed(
+        [(0.0, 0.0), (0.0, 54.0), (46.0, 54.0), (46.0, 62.0), (58.0, 62.0),
+         (58.0, 44.0), (52.0, 40.0), (6.0, 40.0), (6.0, 0.0)], 24)
+    parts.append(([(py + cx - sx * 0.26, pz + cy + sy * 0.20,
+                    px + cz + sz / 2 - 10.0) for (px, py, pz) in nv], nf))
+    # the roll-over vent valve, which is the other hole in the top
+    vv, vf = mesh.revolve_closed(
+        [(0.0, 0.0), (0.0, 26.0), (18.0, 26.0), (24.0, 20.0), (24.0, 9.0),
+         (44.0, 9.0), (44.0, 0.0)], 18)
+    parts.append(([(py + cx + sx * 0.24, pz + cy - sy * 0.24,
+                    px + cz + sz / 2 - 6.0) for (px, py, pz) in vv], vf))
+    return mesh.join(*parts)
 
 
 def _gearbox(x_front=None):

@@ -280,13 +280,96 @@ def _rear():
     for i, m in enumerate(lv):
         out[f"rear_louvre_{'lr'[i // half]}{i % half + 1}"] = m
 
-    # gurney on the flap trailing edge
-    g = []
-    g.append(shapes.rounded_box(RW["x"] + RW["chord"] * 0.46 + RW["chord"] * 0.58 - 6.0,
-                      0.0, RW["z"] + RW["gap"] + 26.0 + 30.0,
-                      12.0, RW["span"] * 0.96, 30.0))
-    out["rear_gurney"] = mesh.join(*g)
+    out["rear_gurney"] = _gurney(1, height=17.0, t=2.2, foot_from=0.72)
     return out
+
+
+def _gurney(k, height, t, foot_from, n_span=36, gap_end=14.0):
+    """The gurney on element k, standing on that element's own trailing edge.
+
+    A gurney is a lip perpendicular to the chord on the PRESSURE side, which
+    on an inverted wing is the top. It works by parking a pair of counter-
+    rotating vortices behind the trailing edge, which moves the rear
+    stagnation point and loads the whole underside -- so where it sits and
+    which way it faces is the entire point, and a box floated near the back
+    of the wing is not one.
+
+    It is built from the element's own section rather than placed by hand:
+    the foot is the aerofoil surface from `foot_from` chord back to the
+    trailing edge, laminated on at `t` thick and feathered out at its
+    forward edge the way a bonded strip is.
+    """
+    import airfoil
+    x0, z0, chord0, aoa = rear_element(k)
+    tc, mc, taper = 0.10, 0.085, 0.95
+    span = RW["span"]
+
+    def surface(xc):
+        """(u, v) on the pressure side -- the aerofoil's lower branch, which
+        is uppermost once the section is inverted."""
+        yt = airfoil.naca_thickness(xc, tc)
+        yc, dyc = airfoil.camber_line(xc, mc)
+        th = math.atan(dyc)
+        return (xc + yt * math.sin(th), yc - yt * math.cos(th))
+
+    # section in the chord frame (du along the chord, dv off the pressure
+    # face), walked as a closed loop: foot underside aft, up the back of the
+    # lip, over its radius, down the front, then the foot's outer face
+    # forward again.
+    n_foot, n_face, n_cap = 9, 4, 5
+
+    def section(c):
+        def at(xc, off=0.0):
+            u, v = surface(xc)
+            du, dv = (u - 0.25) * c, -v * c
+            if off:
+                e = 1e-3
+                u1, v1 = surface(min(xc + e, 1.0))
+                u0, v0 = surface(max(xc - e, 0.0))
+                tu, tv = (u1 - u0) * c, -(v1 - v0) * c
+                m = math.hypot(tu, tv) or 1.0
+                du, dv = du - tv / m * off, dv + tu / m * off
+            return (du, dv)
+
+        loop = []
+        for i in range(n_foot):                       # bonded face, fwd -> TE
+            loop.append(at(foot_from + (1.0 - foot_from) * i / (n_foot - 1)))
+        top = at(1.0, t)
+        for i in range(1, n_face + 1):                # up the trailing face
+            loop.append((top[0], top[1] + height * i / n_face))
+        base = loop[-1]
+        for i in range(1, n_cap):                     # radiused tip
+            a = math.pi * i / n_cap
+            loop.append((base[0] - t * math.sin(a), base[1] + t * 0.5 * (1 - math.cos(a))))
+        for i in range(n_face - 1, 0, -1):            # down the front face
+            loop.append((top[0] - t, top[1] + height * i / n_face))
+        for i in range(n_foot):                       # outer face, TE -> fwd
+            f = 1.0 - i / (n_foot - 1)
+            xc = foot_from + (1.0 - foot_from) * f
+            loop.append(at(xc, t * (0.12 + 0.88 * f ** 0.6)))
+        return loop
+
+    a = math.radians(-aoa)
+    ca, sa = math.cos(a), math.sin(a)
+    verts, n_sec = [], None
+    for j in range(n_span):
+        f = j / (n_span - 1)
+        y = -span / 2 + gap_end + (span - 2 * gap_end) * f
+        c = chord0 * (1.0 - (1.0 - taper) * abs(y) / (span / 2))
+        sec = section(c)
+        n_sec = len(sec)
+        for (du, dv) in sec:
+            verts.append((x0 + du * ca - dv * sa, y, z0 + du * sa + dv * ca))
+    faces = []
+    for j in range(n_span - 1):
+        a0, b0 = j * n_sec, (j + 1) * n_sec
+        for i in range(n_sec):
+            i2 = (i + 1) % n_sec
+            faces.append((a0 + i, a0 + i2, b0 + i2, b0 + i))
+    faces.append(tuple(range(n_sec - 1, -1, -1)))
+    base = (n_span - 1) * n_sec
+    faces.append(tuple(range(base, base + n_sec)))
+    return verts, faces
 
 
 def _rear_endplate(sgn):

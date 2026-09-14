@@ -34,29 +34,37 @@ I = spec.INTAKE
 
 def intake_port(bank, x):
     """Centre of the intake port face on the head."""
+    # up the head's own face, not a fixed 30 mm above the deck: the head is
+    # as tall as its valvetrain needs, and the port enters it four tenths of
+    # the way up. Pinned to 30 mm, every intake runner ended inside the block.
     d, lat = common.bank_dir(bank), common.bank_lat(bank)
-    return (x,
-            d[1] * (spec.DECK_HEIGHT + 30.0) + lat[1] * -50.0,
-            d[2] * (spec.DECK_HEIGHT + 30.0) + lat[2] * -50.0)
+    h = spec.DECK_HEIGHT + spec.HEAD["height"] * 0.40
+    return (x, d[1] * h + lat[1] * -50.0, d[2] * h + lat[2] * -50.0)
 
 
 def exhaust_port(bank, x):
     """Centre of the exhaust port face -- inboard, because the turbos sit in
     the vee."""
     d, lat = common.bank_dir(bank), common.bank_lat(bank)
-    return (x,
-            d[1] * (spec.DECK_HEIGHT + 34.0) + lat[1] * 44.0,
-            d[2] * (spec.DECK_HEIGHT + 34.0) + lat[2] * 44.0)
+    h = spec.DECK_HEIGHT + spec.HEAD["height"] * 0.38
+    return (x, d[1] * h + lat[1] * 58.0, d[2] * h + lat[2] * 58.0)
 
 
 def runner_path(bank, x):
-    """Plenum bellmouth down to the intake port. Ordered along the flow, so
-    the last point is the port."""
+    """Plenum bellmouth inboard and down to the intake port.
+
+    The plenum is outboard of the bank and the port is on the head's
+    outboard face, so this is a short run down the outside of the engine --
+    which is the point of putting the induction there. It used to start in
+    the vee and cross the whole cylinder head.
+    """
     port = intake_port(bank, x)
-    top = (x, port[1] * 0.30, I["plenum_z"] - 26.0)
-    return [(top[0], top[1] * 0.9, top[2] + 14.0),
-            top,
-            ((port[0] + top[0]) / 2, port[1] * 0.74, port[2] + 46.0),
+    sgn = -1.0 if bank == 0 else 1.0
+    y_pl = sgn * (spec.INTAKE["plenum_y"] - spec.INTAKE["plenum_r"] * 0.35)
+    z_pl = spec.INTAKE["plenum_z"]
+    return [(x, y_pl, z_pl),
+            (x, y_pl + (port[1] - y_pl) * 0.16, z_pl - 30.0),
+            (x, y_pl + (port[1] - y_pl) * 0.55, port[2] + 10.0),
             port]
 
 
@@ -64,10 +72,13 @@ def primary_path(pair, bank, x):
     """Exhaust port out into the vee and forward into the turbine inlet."""
     start = exhaust_port(bank, x)
     tx = T["x"][0 if pair < 2 else 1]
+    # into the top of the volute, at its outer radius. Ending on the
+    # turbine's axis ends inside the turbine wheel, which is 41 mm across
+    # and exactly there.
     return [start,
             (x + (tx - x) * 0.22, start[1] * 0.72, start[2] + 26.0),
-            (x + (tx - x) * 0.58, start[1] * 0.34, T["z"] + 42.0),
-            (tx - 46.0, 0.0, T["z"] + 16.0)]
+            (x + (tx - x) * 0.40, start[1] * 0.62, T["z"] + 52.0),
+            (tx - T["housing_w"] * 0.7, 0.0, T["z"] + T["turb_r"] * 0.95)]
 
 
 def cylinder_path(bank, x):

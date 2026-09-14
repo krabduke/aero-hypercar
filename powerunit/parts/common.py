@@ -43,15 +43,26 @@ def along_bank(verts, x, along, bank, lateral=0.0):
     the bore axis and translated into place -- which is how every cylinder,
     piston, valve and cam lobe in this engine gets positioned.
     """
-    a = spec.bank_angle_rad(bank)
-    # +x -> bore axis: rotate about +x is wrong, we need +x -> (0, sin a, cos a)
-    out = []
+    # The frame is `bank_dir` and `bank_lat`, the same two vectors
+    # `bank_point` uses.
+    #
+    # This used to build its own rotation from the bank angle, and that
+    # rotation's lateral axis is `bank_lat` on the left bank and MINUS
+    # `bank_lat` on the right -- because `bank_lat` deliberately mirrors its
+    # y component so that "positive lateral" means inboard on both banks,
+    # and a plain rotation by the bank angle mirrors the z component
+    # instead. So every part with lateral geometry of its own came out
+    # mirrored on one bank while its placement offset did not: the intake
+    # and exhaust valves of the right bank leaned across each other and
+    # their tips met on the bore axis.
+    d, l = bank_dir(bank), bank_lat(bank)
     cx, cy, cz = bank_point(x, along, lateral, bank)
+    out = []
     for (px, py, pz) in verts:
-        # px runs along the bore axis, (py, pz) is the section plane
-        by = math.sin(a) * px + math.cos(a) * py
-        bz = math.cos(a) * px - math.sin(a) * py
-        out.append((pz + cx, by + cy, bz + cz))
+        # px runs along the bore axis, py across it, pz along the crank
+        out.append((pz + cx,
+                    d[1] * px + l[1] * py + cy,
+                    d[2] * px + l[2] * py + cz))
     return out
 
 

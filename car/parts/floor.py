@@ -204,11 +204,21 @@ def _strakes():
             # turns gently outboard as it goes back, its top follows the
             # tunnel roof rather than running level, and it is thickest a
             # third of the way along like any other loaded section.
-            cam = [(x0 + (x1 - x0) * i / 8.0,
-                    y + sgn * 26.0 * (i / 8.0) ** 1.7) for i in range(9)]
+            turn = 20.0 + 16.0 * k / max(F["n_strakes"] - 1, 1)
+            cam = [(x0 + (x1 - x0) * i / 12.0,
+                    y + sgn * turn * (i / 12.0) ** 1.7) for i in range(13)]
+            # turning_vane's `t` is a fraction of chord, and the chord here
+            # is the strake's whole 2.2 m length: at t=0.075 these came out
+            # 218 mm thick. A diffuser strake is a 9 mm carbon fence.
+            chord = math.dist(cam[0], cam[-1]) or 1.0
             parts.append(shapes.turning_vane(
-                cam, 10.0, _floor_z(x1) - 24.0, t=0.075,
-                twist=sgn * -6.0, n_z=8, n_chord=24,
+                cam, 10.0, _floor_z(x1) - 24.0, t=F["strake_t"] / chord,
+                # twist is degrees of plan rotation about the leading edge,
+                # and on a 2.2 m chord six degrees throws the trailing edge
+                # 227 mm sideways between the floor and the roof. What a
+                # strake actually does is lean out a little as it rises, so
+                # it follows the flow spreading into the diffuser.
+                twist=0.0, lean=sgn * 14.0, n_z=16, n_chord=44,
                 top_cut=lambda u, x0=x0, x1=x1: (
                     _floor_z(x0 + (x1 - x0) * u) - 24.0)))
     half = len(parts) // 2

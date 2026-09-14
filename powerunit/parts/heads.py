@@ -116,8 +116,13 @@ def _head_features(bank):
                  (16.0, hr * 1.05)], SM, cap_start=True, cap_end=True)
             d = common.bank_dir(bank)
             lat = common.bank_lat(bank)
-            off = lat_sgn * 44.0
-            base = spec.DECK_HEIGHT + 30.0
+            # from the declared ports, so the boss is round the hole
+            import gaspath
+            _p = (gaspath.intake_port(bank, 0.0) if is_in
+                  else gaspath.exhaust_port(bank, 0.0))
+            off = lat_sgn * (50.0 if is_in else 58.0)
+            base = spec.DECK_HEIGHT + spec.HEAD["height"] * (
+                0.40 if is_in else 0.38)
             parts.append(([(px + x,
                             py * lat[1] + (pz + base) * d[1] + off * lat[1],
                             py * lat[2] + (pz + base) * d[2] + off * lat[2])
@@ -176,9 +181,23 @@ def valve_seats():
             hr = V["intake_head_r"] if is_in else V["exhaust_head_r"]
             out.append({
                 "n": n, "k": k, "bank": bank, "is_in": is_in, "hr": hr,
-                "x": x + sgn_y * hr * 0.95,
-                "lat": 0.0,
-                "tilt": inc * (1 if is_in else -1),
+                "x": x + sgn_y * hr * 1.02,
+                # Across the bore: intakes one side of the bore axis,
+                # exhausts the other. `sgn_x` was computed here and then
+                # thrown away in favour of a hard 0.0, which stacked all four
+                # valves of every cylinder on the bore centreline -- so the
+                # two intakes were the same valve twice, the two exhausts
+                # likewise, and the four tappets sat inside one another.
+                # 1.04 so the intake pair clears the exhaust pair: at 0.95
+                # the two circles were 0.6 mm inside one another
+                "lat": sgn_x * hr * 1.04,
+                # Splayed OUTWARD: a pent-roof valve leans further from the
+                # bore axis as it rises, which is what opens the chamber up
+                # and lets the ports run straight. The sign here was opposite
+                # to the sign of `lat`, so every valve crossed the bore axis
+                # on the way up and its tip came out over the other bank's
+                # cam.
+                "tilt": sgn_x * inc,
             })
     return out
 
@@ -226,7 +245,15 @@ def _valve_profile(hr):
         (tip, st - 0.7),                            # chamfered tip
         (tip, 0.0),
     ]
-    return out
+    # `along_bank` sends +x outward, away from the crank. The profile above is
+    # drawn from the combustion face at 0 to the stem tip at -length, so as
+    # written every valve in the engine pointed DOWN the bore: an 86 mm stem
+    # through the deck, through the block and into the crankshaft, with its
+    # collets 47 mm from the crank centreline and its retainer and spring
+    # left 160 mm away at the top of the head where they belong. Mirroring
+    # it puts the face on the chamber and the tip under the tappet.
+    # The list is reversed as well as negated so the winding is unchanged.
+    return [(-px, r) for (px, r) in reversed(out)]
 
 
 def _valves():
@@ -259,7 +286,7 @@ def _valves():
              (1.4, gr), (0.0, V["stem_r"] - 0.2), (-1.4, gr)],
             SEG // 2, sweep=math.pi * 0.86)
         t = s["tilt"]
-        cv = [(px - V["length"] + 6.0, py, pz) for (px, py, pz) in cv]
+        cv = [(-px + V["length"] - 6.0, py, pz) for (px, py, pz) in cv]
         cv = [(px * math.cos(t) - py * math.sin(t),
                px * math.sin(t) + py * math.cos(t), pz) for (px, py, pz) in cv]
         cv = common.along_bank(cv, s["x"], spec.DECK_HEIGHT - 1.0,
@@ -326,6 +353,12 @@ def _cam_lobe(x, lat, bank, phase_deg, duration, lift, width):
     faces.append(tuple(range(n - 1, -1, -1)))
     base = (len(rings) - 1) * n
     faces.append(tuple(range(base, base + n)))
+    # The lobe is lathed about its own +x, which is its WIDTH. `along_bank`
+    # reads the axial run out of z, exactly as the shaft and the journals
+    # already do -- without the swap every lobe on the engine was turned
+    # ninety degrees, lying across the cam with its profile in the plan view
+    # and its 11 mm width pointing down the bore at the bucket.
+    verts = [(z, y, px) for (px, y, z) in verts]
     verts = common.along_bank(verts, x, spec.DECK_HEIGHT + H["cam_height"],
                               bank, lat)
     return verts, faces
@@ -462,21 +495,26 @@ def _ignition():
             SM, cap_start=True, cap_end=True)
         iv = [(z, y, px) for (px, y, z) in iv]
         out[f"injector_{n}"] = (common.along_bank(
-            iv, x, spec.DECK_HEIGHT + 6.0, bank, spec.BORE * 0.40), if_)
+            iv, x, spec.DECK_HEIGHT + 20.0, bank, -40.0), if_)
 
         cv, cf = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 5.5), (10.0, 6.5), (26.0, 7.5),
              (30.0, 11.0), (74.0, 11.0), (74.0, 0.0)],
             SM, cap_start=True, cap_end=True)
-        cv = [(z, y, px) for (px, y, z) in cv]
+        # A coil-on-plug stands UP the bore, in the well between the two
+        # camshafts, with its boot on the plug. The `(z, y, px)` swap the
+        # camshaft needs sends the axis along the crank instead, which laid
+        # all eight coils on their sides across the engine and buried them
+        # in the block.
         out[f"coil_{n}"] = (common.along_bank(
-            cv, x, spec.DECK_HEIGHT + 10.0, bank, 0.0), cf)
+            cv, x, spec.DECK_HEIGHT + 64.0, bank, 0.0), cf)
 
+        # 14 mm across the flats, which is what fits between four valves
         pv, pf = mesh.revolve_open(
-            [(0.0, 0.0), (0.0, 2.4), (5.0, 3.1), (9.0, 7.8), (16.0, 7.8),
-             (18.0, 6.2), (26.0, 6.2), (26.0, 0.0)],
+            [(0.0, 0.0), (0.0, 2.4), (5.0, 3.1), (9.0, 6.4), (16.0, 6.4),
+             (18.0, 5.2), (26.0, 5.2), (26.0, 0.0)],
             SM, cap_start=True, cap_end=True)
-        pv = [(z, y, px) for (px, y, z) in pv]
+        # and the plug screws in on the same axis, tip in the chamber
         out[f"sparkplug_{n}"] = (common.along_bank(
-            pv, x, spec.DECK_HEIGHT - 14.0, bank, 0.0), pf)
+            pv, x, spec.DECK_HEIGHT + 34.0, bank, 0.0), pf)
     return out

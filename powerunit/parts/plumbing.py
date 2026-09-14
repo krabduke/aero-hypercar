@@ -140,11 +140,15 @@ def _fuel():
     for bank in (0, 1):
         d = common.bank_dir(bank)
         lat = common.bank_lat(bank)
-        along = spec.DECK_HEIGHT + 54.0
-        offs = 62.0
-        p0 = (H["x_front"] + 10.0,
+        # On the INTAKE side, which on a hot vee is outboard. At +62 the rail
+        # sat on the head's inner face, in the vee, where the exhaust
+        # primaries leave -- and the primaries went through it.
+        along = spec.DECK_HEIGHT + H["height"] * 0.12
+        offs = -80.0
+        # clear of the accessory drive on the front face
+        p0 = (H["x_front"] + 46.0,
               d[1] * along + lat[1] * offs, d[2] * along + lat[2] * offs)
-        p1 = (H["x_rear"] - 10.0, p0[1], p0[2])
+        p1 = (H["x_rear"] - 34.0, p0[1], p0[2])   # clear of the bellhousing
         # A 350 bar rail is a thick-walled forging with a boss at every
         # injector and a fitting at each end, not a length of tube. It was
         # twenty-four vertices.
@@ -169,16 +173,21 @@ def _fuel():
         for (n, pair, b2, x, a) in spec.cylinders():
             if b2 != bank:
                 continue
-            inj = (x, d[1] * (spec.DECK_HEIGHT + 6.0) + lat[1] * spec.BORE * 0.40,
-                   d[2] * (spec.DECK_HEIGHT + 6.0) + lat[2] * spec.BORE * 0.40)
+            inj = (x, d[1] * (spec.DECK_HEIGHT + 20.0) - lat[1] * 40.0,
+                   d[2] * (spec.DECK_HEIGHT + 20.0) - lat[2] * 40.0)
             feeds.append(mesh.pipe([(x, p0[1], p0[2]),
                                     (x, (p0[1] + inj[1]) / 2,
-                                     (p0[2] + inj[2]) / 2 + 10.0),
+                                     (p0[2] + inj[2]) / 2 - 14.0),
                                     inj], 4.5, SM))
         out[f"fuel_feeds_{'lr'[bank]}"] = mesh.join(*feeds)
 
+    # On the head's OUTBOARD face, driven off the exhaust cam's tail. At
+    # 92 mm from the centreline and below the deck it was inside the block,
+    # the number two bore, its rings and an intake valve.
     out["hp_fuel_pump"] = shapes.finned_case(
-        H["x_front"] + 26.0, 92.0, spec.DECK_HEIGHT - 26.0,
+        # driven off the REAR of the exhaust cam, aft of the plenum and
+        # clear of the accessory drive at the front
+        H["x_rear"] + 6.0, 215.0, 105.0,
         72.0, 62.0, 84.0, n_fins=6, fin_h=5.0, fin_t=3.0, r=12.0)
     return out
 
@@ -274,8 +283,12 @@ def _accessories():
     # The accessory drive sits on the front face of the block and the units
     # hang off its sides, bolted to the crankcase -- not floating in front of
     # the engine, which is where these were.
-    xf = B["x_front"] - 16.0
-    out["alternator"] = shapes.finned_case(xf - 32.0, -96.0, 52.0,
+    # In front of the timing cover, which ends at x -266. Behind it the
+    # belt was inside the cover it is supposed to run on the outside of.
+    xf = B["x_front"] - 70.0
+    # far enough out that its case clears the MGU-K rotor, which is 84 mm
+    # in radius and shares this station on the crank nose
+    out["alternator"] = shapes.finned_case(xf - 32.0, -150.0, 86.0,
                                            76.0, 80.0, 80.0,
                                            n_fins=9, fin_h=5.0, fin_t=3.0,
                                            r=18.0, axis="x")
@@ -287,7 +300,7 @@ def _accessories():
                        for (px, py, pz) in sv], sf)
 
     pulls = []
-    for (y, z, r) in ((0.0, 0.0, 62.0), (-96.0, 52.0, 32.0),
+    for (y, z, r) in ((0.0, 0.0, 62.0), (-150.0, 86.0, 32.0),
                       (92.0, 44.0, 30.0), (0.0, 104.0, 26.0)):
         v, f = mesh.revolve_closed(
             [(-11.0, r * 0.42), (11.0, r * 0.42), (11.0, r), (-11.0, r)], 20)
@@ -386,5 +399,8 @@ def _catch_tank():
         parts.append(shapes.rounded_box(x, 0.0, -R - 9.0, 14.0, 30.0, 9.0,
                                         2.5, seg=5))
     v, f = mesh.join(*parts)
-    return ([(px + B["x_front"] + 36.0, py + 58.0, pz + 236.0)
+    # Low on the left flank, against the head, clear of the vee -- the vee
+    # is full of plenum, turbos and charge coolers, and the tank was inside
+    # all three of them in turn.
+    return ([(px + B["x_front"] + 36.0, py - 162.0, pz - 140.0)
              for (px, py, pz) in v], f)

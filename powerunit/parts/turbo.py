@@ -14,6 +14,7 @@ import spec
 import mesh
 
 SM = spec.RES["small_revolve"]
+import gaspath
 from parts import common
 
 T = spec.TURBO
@@ -24,7 +25,13 @@ SEG = spec.RES["revolve"]
 def build():
     out = {}
     out.update(_turbos())
-    out.update(_manifolds())
+    # `_manifolds` built a second complete set of exhaust primaries --
+    # eight more pipes from the same eight ports to the same two turbines,
+    # on a different route, by a module that had never heard of the first
+    # set. The surviving set is `primary_1..8` in plumbing.py, which is per
+    # cylinder, carries its own flange, and is drawn on the centreline
+    # `gaspath.primary_path` declares, so the viewer's flow animation runs
+    # down the pipe that is actually there.
     out.update(_tailpipes())
     return out
 
@@ -73,21 +80,6 @@ def _housing(x, z, r, w):
         [(x - w / 2, r * 0.30), (x + w / 2, r * 0.30),
          (x + w / 2, r), (x - w / 2, r)], 30)
     return [(px, py, pz + z) for (px, py, pz) in v], f
-
-
-def _manifolds():
-    """One primary per cylinder, running from the inboard exhaust port up into
-    the nearest turbine."""
-    parts = []
-    for (n, pair, bank, x, a) in spec.cylinders():
-        port = common.bank_point(x, spec.DECK_HEIGHT + 22.0,
-                                 spec.HEAD["cam_centres"] * 0.30, bank)
-        turb_x = T["x"][0] if x < 0 else T["x"][1]
-        mid = (x * 0.6 + turb_x * 0.4, port[1] * 0.45, T["z"] - 34.0)
-        end = (turb_x - T["housing_w"] * 0.6, 0.0, T["z"] - T["turb_r"] * 0.5)
-        parts.append(mesh.pipe([port, mid, end], E["primary_r"],
-                               spec.RES["pipe"]))
-    return {"exhaust_manifolds": mesh.join(*parts)}
 
 
 def _tailpipes():

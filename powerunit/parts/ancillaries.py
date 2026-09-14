@@ -66,30 +66,38 @@ def _oil_system():
     """
     out = {}
     y = -(B["half_width"] + 34.0)
+    # below the fuel rail, which runs this flank at z 31..69
+    zc = -70.0
     x = 26.0        # clear of the engine mounts, which are at x = +/-150
     parts = []
     # the pedestal casting on the block, with the two galleries through it
-    parts.append(shapes.rounded_box(x, y + 18.0, -6.0, 108.0, 44.0, 86.0, 8.0))
+    parts.append(shapes.rounded_box(x, y + 18.0, zc, 108.0, 44.0, 86.0, 8.0))
     for dx in (-30.0, 30.0):
         parts.append(_lathe(
             [(0.0, 0.0), (26.0, 0.0), (26.0, 15.0), (0.0, 15.0)],
-            x + dx, y + 8.0, -6.0, axis="y", seg=14))
-    # the canister: rolled seam, fluted body, and the sealing face
+            x + dx, y + 8.0, zc, axis="y", seg=14))
+    # The canister: rolled seam, fluted body, sealing face -- pointing OUT.
+    # `_lathe` runs the profile up +y, so written from 0 to +140 the filter
+    # screwed itself inboard: 140 mm of canister through the block wall,
+    # across the crankcase and into the crankshaft, with the cooling fins
+    # left outside on their own.
     parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 52.0), (8.0, 58.0), (18.0, 58.0),
-         (24.0, 54.0), (132.0, 54.0), (140.0, 46.0), (140.0, 0.0)],
-        x, y - 6.0, -6.0, axis="y", seg=28))
+        [(-140.0, 0.0), (-140.0, 46.0), (-132.0, 54.0), (-24.0, 54.0),
+         (-18.0, 58.0), (-8.0, 58.0), (0.0, 52.0), (0.0, 0.0)],
+        x, y - 6.0, zc, axis="y", seg=28))
     for k in range(16):
         a = 2 * math.pi * k / 16
         fv, ff = mesh.cylinder(0.0, 104.0, 3.4, 6)
         fv = [(56.0 * math.cos(a) + pz, -px, 56.0 * math.sin(a) + py)
               for (px, py, pz) in fv]
-        parts.append(([(px + x, py + y - 26.0, pz - 6.0)
+        parts.append(([(px + x, py + y - 26.0, pz + zc)
                        for (px, py, pz) in fv], ff))
     out["oil_filter"] = mesh.join(*parts)
 
     # the cooler: a real plate pack, not a brick
-    cx, cy, cz = -10.0, -(B["half_width"] + 58.0), -74.0
+    # Outboard of the battery, which fills the floor of the engine bay
+    # under the sump. At 58 mm off the block the cooler was inside it.
+    cx, cy, cz = -10.0, -(B["half_width"] + 140.0), -74.0
     parts = [shapes.core(cx, cy, cz, 190.0, 58.0, 76.0, n_plates=14)]
     for dx in (-84.0, 84.0):
         parts.append(_lathe(
@@ -119,15 +127,15 @@ def _cooling():
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 27.0), (34.0, 27.0), (38.0, 31.0),
          (44.0, 31.0), (48.0, 27.0), (62.0, 27.0), (62.0, 0.0)],
-        x - 50.0, 0.0, 104.0, axis="x", seg=20))
+        x - 50.0, 0.0, 190.0, axis="x", seg=20))
     # the thermostat itself, inside: wax capsule, frame and jiggle pin
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 34.0), (6.0, 36.0), (12.0, 34.0), (12.0, 20.0),
-         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, 104.0, axis="x", seg=18))
+         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, 190.0, axis="x", seg=18))
     for k in range(6):
         a = 2 * math.pi * k / 6
         bv, bf = mesh.cylinder(0.0, 16.0, 5.0, 8)
-        bv = [(px + x, 48.0 * math.cos(a) + py, 48.0 * math.sin(a) + pz + 104.0)
+        bv = [(px + x, 48.0 * math.cos(a) + py, 48.0 * math.sin(a) + pz + 190.0)
               for (px, py, pz) in bv]
         parts.append((bv, bf))
     out["thermostat"] = mesh.join(*parts)
@@ -143,7 +151,9 @@ def _charge():
     runs = []
     for bank, tag in ((0, "l"), (1, "r")):
         s = -1.0 if bank == 0 else 1.0
-        cx, cy, cz = 0.0, s * 150.0, 250.0
+        # above the cam covers, which reach z 252 on a 132 mm head, and
+        # outboard of the exhaust that fills the vee
+        cx, cy, cz = 0.0, s * 150.0, 320.0
         parts = [shapes.core(cx, cy, cz, 230.0, 62.0, 96.0, n_plates=16)]
         # end tanks, one each end, with the coolant unions on top
         for dx in (-122.0, 122.0):
@@ -158,12 +168,18 @@ def _charge():
 
         # turbo compressor outlet -> cooler -> plenum
         tx = T["x"][bank]
-        path_in = [(tx, s * 70.0, T["z"] - 18.0),
-                   (tx + s * 0.0, s * 118.0, 216.0),
+        path_in = [(tx + T["housing_w"] * 1.2, s * 112.0, T["z"] + 16.0),
+                   (tx + s * 0.0, s * 112.0, 258.0),
                    (cx - 122.0 - 30.0, cy, cz)]
+        # cooler -> that bank's plenum, which is outboard of the cam cover
+        py_ = s * (spec.INTAKE["plenum_y"] - 4.0)
+        # over the cam cover, down the front of the engine and into that
+        # bank's throttle body -- the plenum is fed from its front face,
+        # not stabbed in the side where the runners leave it
         path_out = [(cx + 122.0 + 30.0, cy, cz),
-                    (120.0, s * 120.0, 300.0),
-                    (140.0, s * 50.0, 316.0)]
+                    (150.0, s * 230.0, 300.0),
+                    (-140.0, s * 330.0, 330.0),
+                    (-320.0, py_, spec.INTAKE["plenum_z"])]
         pipe_parts = [mesh.pipe(path_in, 34.0, segments=18),
                       mesh.pipe(path_out, 34.0, segments=18)]
         # a coupling bead at each joint, which is where a hose clamp lands
@@ -210,15 +226,17 @@ def _mounts():
             # Between the dry-sump pump below (its top is at z = 3) and the
             # head above (its bottom is at 46). The bracket was at z -18..78
             # and so was in both.
-            parts.append(shapes.rounded_box(x, y + s * 30.0, 24.0,
+            # below the fuel rail, which runs the length of the block's
+            # outboard flank at z 26..64
+            parts.append(shapes.rounded_box(x, y + s * 30.0, -30.0,
                                             72.0, 60.0, 38.0, 6.0))
             fl = s < 0
             parts.append(_lathe(
                 [(0.0, 0.0), (0.0, 44.0), (34.0, 44.0), (34.0, 0.0)],
-                x, y + s * 62.0, 30.0, axis="y", seg=22, flip=fl))
+                x, y + s * 62.0, -30.0, axis="y", seg=22, flip=fl))
             parts.append(_lathe(
                 [(2.0, 0.0), (32.0, 0.0), (32.0, 26.0), (2.0, 26.0)],
-                x, y + s * 62.0, 30.0, axis="y", seg=18, flip=fl))
+                x, y + s * 62.0, -30.0, axis="y", seg=18, flip=fl))
             for dx in (-24.0, 24.0):
                 parts.append(_lathe(
                     [(0.0, 0.0), (18.0, 0.0), (18.0, 9.0), (0.0, 9.0)],
@@ -233,7 +251,10 @@ def _belt():
     A belt with no tensioner is a loop of rubber lying on some pulleys.
     """
     out = {}
-    x = -224.0      # aft of the timing gear train, which ends at x = -255
+    # In the belt's own plane, which is at x -259..-245, and forward of
+    # the cylinder head -- whose front flange is at x -237. At -224 the
+    # tensioner pulley was inside the head casting.
+    x = -272.0
     parts = []
     # tensioner: sprung arm carrying a smooth pulley
     parts.append(_lathe(
@@ -242,20 +263,22 @@ def _belt():
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 34.0), (6.0, 38.0), (30.0, 38.0),
          (36.0, 34.0), (36.0, 0.0)], x - 10.0, -104.0, 74.0, axis="x", seg=24))
-    av, af = shapes.rounded_box(x, -78.0, 52.0, 26.0, 66.0, 30.0, 5.0)
+    # clear of the MGU-K, which is an 84 mm radius rotor on the crank
+    # nose -- the tensioner arm used to reach 58 mm from the centreline
+    av, af = shapes.rounded_box(x, -120.0, 92.0, 26.0, 66.0, 30.0, 5.0)
     parts.append((av, af))
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 22.0), (40.0, 22.0), (40.0, 0.0)],
-        x, -56.0, 34.0, axis="x", seg=16))
+        x - 62.0, -150.0, 130.0, axis="x", seg=16))
     out["belt_tensioner"] = mesh.join(*parts)
 
     parts = []
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 36.0), (6.0, 40.0), (28.0, 40.0),
-         (34.0, 36.0), (34.0, 0.0)], x - 8.0, 96.0, 60.0, axis="x", seg=24))
+         (34.0, 36.0), (34.0, 0.0)], x - 8.0, 168.0, -40.0, axis="x", seg=24))
     parts.append(_lathe(
         [(0.0, 0.0), (34.0, 0.0), (34.0, 14.0), (0.0, 14.0)],
-        x + 26.0, 96.0, 60.0, axis="x", seg=14))
+        x + 26.0, 168.0, -40.0, axis="x", seg=14))
     out["belt_idler"] = mesh.join(*parts)
     return out
 

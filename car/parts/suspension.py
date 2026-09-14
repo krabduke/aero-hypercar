@@ -33,8 +33,9 @@ def build():
         # "roughly the right shape".
         sect = common.section_points(24, spec.BODY_DETAIL["susp_fairing_t"], 0.0)
         chord = spec.BODY_DETAIL["susp_fairing_c"]
+        low_z = S["lower_z"] if front else S["lower_z_rear"]
         for (z_out, z_in) in ((S["upper_z"], S["upper_z"] + 40.0),
-                              (S["lower_z"], S["lower_z"] + 10.0)):
+                              (low_z, low_z + 10.0)):
             outb = (x, y * 0.74, z_out)
             for dx in (-190.0, 190.0):
                 inb = (x + dx, sgn * inb_y, z_in)
@@ -50,14 +51,19 @@ def build():
 
         # push/pull rod into a rocker on the chassis
         if front:
-            rod = [(x, y * 0.74, S["lower_z"]), (x + 120.0, sgn * inb_y, 455.0)]
+            rod = [(x, y * 0.74, low_z), (x + 120.0, sgn * inb_y, 455.0)]
             rockers.append((f"rocker_{tag}",
                             _rocker(x + 130.0, sgn * inb_y, 475.0, 1.0)))
         else:
+            # The rear rocker sits ON the gearbox casing, which is what
+            # carries the load into the structure. At z 180 it hung below
+            # the casing and reached down to 85 -- through the diffuser
+            # roof, into the tunnel, and into the outermost strake.
             rod = [(x, y * 0.74, S["upper_z"] + 60.0),
-                   (x - 150.0, sgn * inb_y, 180.0)]
+                   (x - 150.0, sgn * inb_y, S["rear_rocker_z"])]
             rockers.append((f"rocker_{tag}",
-                            _rocker(x - 160.0, sgn * inb_y, 180.0, -1.0)))
+                            _rocker(x - 160.0, sgn * inb_y,
+                                    S["rear_rocker_z"], -1.0)))
         # A pushrod is the most heavily loaded member on the car and it is
         # also right in the flow, so it is a deep aerofoil section with a
         # rod end at each end -- not a 40-vertex tube.
@@ -69,8 +75,8 @@ def build():
         # track rod / toe link
         trk_x = x + (-230.0 if front else 200.0)
         rods.append((f"trackrod_{tag}", shapes.suspension_link(
-            (x, y * 0.74, S["lower_z"] + 70.0),
-            (trk_x, sgn * inb_y * 0.8, S["lower_z"] + 90.0),
+            (x, y * 0.74, low_z + 70.0),
+            (trk_x, sgn * inb_y * 0.8, low_z + 90.0),
             common.section_points(24, 0.30, 0.0),
             S["rod_r"] * 2.4, S["rod_r"] * 2.2, n_sta=9,
             end_r=S["rod_r"] * 0.78)))

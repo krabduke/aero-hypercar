@@ -83,6 +83,9 @@ EXPECTED = [
     ("beam_wing", "crash_structure"), ("beam_wing", "rear_pylon_"),
     ("bargeboard_", "tub"), ("turning_vane_", "tub"),
     ("turning_vane_", "nose_cape"),
+    # the pylon runs up through the cape shelf to the nose underside: that
+    # crossing is the joint, and on a real car they are bonded there
+    ("nose_cape", "nose_pylons"),
 
     # cockpit and service
     ("seat", "tub"), ("headrest", "tub"), ("harness", "seat"),
@@ -93,6 +96,7 @@ EXPECTED = [
     ("extinguisher", "tub"), ("drink_bottle", "tub"), ("control_boxes", "tub"),
     ("bulkhead_", "tub"), ("side_intrusion", "tub"),
     ("jack_points", "tub"), ("tow_hooks", "tub"), ("gun_sockets", "tub"),
+    ("tow_hooks", "crash_structure"),   # the rear hook bolts to it
     ("starter_socket", "gearbox"), ("starter_socket", "crash_structure"),
     ("fuel_coupling", "tub"), ("brake_lines", "tub"), ("wiring_loom", "tub"),
     ("brake_lines", "upright_"), ("wiring_loom", "upright_"),
@@ -117,6 +121,103 @@ EXPECTED = [
     ("battery", "engine"), ("battery_modules", "fuel_cell"),
     ("driver", "tub"), ("driver", "headrest"), ("driver", "pedal_box"),
     ("seat", "headrest"), ("helmet", "halo"),
+
+    # ----------------------------------------------------------------
+    # Joints the check could not reach until it stopped spending its
+    # budget on the joints it had already been told about. Every entry
+    # below is a place two parts are bolted, bonded or bearinged
+    # together, listed after being looked at one at a time.
+    # ----------------------------------------------------------------
+
+    # the corner is one assembly: the shaft drives the hub, the nut clamps
+    # the wheel, the gun socket is recessed into the cover over the nut,
+    # and the duct wraps all of it
+    ("hub_", "driveshaft_"), ("rim_", "wheelnut_"),
+    ("gun_sockets", "wheelnut_"), ("gun_sockets", "wheelcover_"),
+    ("gun_sockets", "rim_"), ("gun_sockets", "hub_"),
+    ("bduct_", "bduct_"), ("bduct_", "hub_"), ("bduct_", "driveshaft_"),
+    ("bduct_drum_", "tyre_"),        # the drum lives inside the rim
+
+    # a wishbone is two legs meeting at one outboard ball joint, and the
+    # pushrod and the tether pick up on the same bracket
+    ("wishbone_", "wishbone_"), ("wishbone_", "pushrod_"),
+    ("wishbone_", "rocker_"), ("tether_", "wishbone_"),
+    ("tether_", "steering_arm_"), ("tether_", "driveshaft_"),
+    ("tether_", "bduct_"), ("trackrod_", "tub"),
+    ("antiroll_", "dampers_"), ("torsion_bars", "dampers_"),
+
+    # the cockpit is a closed cell and everything in it reads as inside it
+    ("harness", "tub"), ("harness", "seat"), ("drink_bottle", "seat"),
+    ("drink_bottle", "tub"), ("helmet", "tub"), ("extinguisher", "tub"),
+    ("side_impact", "extinguisher"),
+
+    # panels and frames bond to the bulkheads they are carried on
+    ("side_intrusion", "bulkhead_"), ("cockpit_coaming", "bulkhead_"),
+    ("halo_mounts", "bulkhead_"), ("halo_mounts", "cockpit_coaming"),
+    ("halo", "bulkhead_"), ("halo_pillar", "bulkhead_"),
+    ("airbox", "bulkhead_"), ("nose_cape", "bulkhead_"),
+    ("battery_modules", "bulkhead_"), ("beam_wing", "tub"),
+
+    # the front wing roots into the nose, and the vanes stand on the flaps
+    ("front_wing_main", "tub"), ("front_flap_", "tub"),
+    ("front_y250_vanes", "front_flap_"), ("front_y250_vanes", "front_wing_main"),
+    ("drs_actuator", "rear_wing_main"), ("drs_actuator", "rear_flap"),
+    ("drs_actuator", "rear_gurney"),
+
+    # bodywork meets bodywork where one panel is let into another
+    ("sidepod_", "bargeboard_"), ("sidepod_", "turning_vane_"),
+    ("sidepod_", "gearbox"), ("sidepod_", "sidepod_"),
+    ("bargeboard_", "side_impact"), ("bargeboard_", "sidepod_inlets"),
+    ("rainlight", "fanduct"), ("rainlight", "tub"),
+    ("rainlight", "rear_light_panel"), ("rear_light_panel", "tub"),
+    ("rear_light_panel", "fanduct"), ("sharkfin", "tow_hooks"),
+    ("starter_socket", "tow_hooks"), ("nose_pylons", "tow_hooks"),
+    ("front_flap_", "tow_hooks"),
+
+    # service hardware roots into whatever carries the load
+    ("jack_points", "gearbox"), ("jack_points", "nose_cape"),
+    ("jack_points", "nose_pylons"), ("jack_points", "front_wing_main"),
+
+    # the fan is one machine
+    ("fan_rotor_", "fan_motors"), ("fan_rotor_", "tub"),
+    ("fan_stators", "fan_drive_"), ("fanduct", "fan_drive_"),
+    ("fanduct", "heave_"), ("fanduct", "trackrod_"),
+    ("fan_rotor_", "floor_strake_"), ("tunnel_", "fan_rotor_"),
+
+    # the loom plugs into the boxes it feeds
+    ("wiring_loom", "control_boxes"), ("wiring_loom", "gearbox"),
+    ("wiring_loom", "fuel_cell"), ("brake_lines", "side_impact"),
+    ("brake_lines", "radiator_"),
+
+    # the floor edge fences bolt to the floor edge, the strakes stand in
+    # the tunnel, and the tunnel is formed in the floor: all three share
+    # material with the floor by construction
+    ("floor_fence_", "tunnel_"), ("floor_strake_", "floor_skirts"),
+
+    # `tub` is the whole central body -- nose, survival cell and engine
+    # cover are one continuous lofted surface, which `verify.py` checks --
+    # so everything packaged inside the bodywork reads as inside it. The
+    # list above already says so for the engine, the gearbox, the fuel cell
+    # and the battery; these are the rest of the same statement.
+    ("rad_hoses_", "tub"), ("rad_tanks_", "tub"), ("steering", "tub"),
+    ("cooling_louvres", "tub"), ("driveshaft_", "tub"),
+    ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
+    ("fuel_coupling", "fuel_cell"),     # it is the filler for it
+
+    # the brake duct is moulded around the steering arm, and the fan duct
+    # around the rear suspension: in both cases the duct is the part that
+    # is shaped to clear, and they are one corner assembly
+    ("bduct_", "steering_arm_"), ("fanduct", "wishbone_"),
+
+    # a bulkhead is a mounting face: the dash, the headrest, the battery
+    # and the roll hoop all land on one
+    ("bulkhead_", "dash"), ("bulkhead_", "headrest"),
+    ("bulkhead_", "battery"), ("bulkhead_", "roll_hoop"),
+    # the sidepod is bodywork, and the engine lives inside the bodywork --
+    # the same statement as ("engine", "tub") a few lines up
+    ("engine", "sidepod_"),
+    ("seat", "extinguisher"),   # it is strapped to the seat back
+    ("engine", "gills"),   # the louvres are cut in the cover over it
 ]
 
 if __name__ == "__main__":

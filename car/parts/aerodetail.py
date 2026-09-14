@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import spec
 import mesh
 import shapes
-from parts import common, wheels
+from parts import common, wheels, chassis
 
 BB = spec.BARGEBOARD
 TV = spec.TURNING_VANE
@@ -48,9 +48,15 @@ def _curved_vane(x0, x1, y0, y1, z0, z1, t, bow=0.0, n=10,
         cam.append((x0 + (x1 - x0) * f,
                     y0 + (y1 - y0) * f + bow * math.sin(math.pi * f)))
     chord = math.dist(cam[0], cam[-1]) or 1.0
+    # `t` arrives in millimetres and turning_vane wants a fraction of chord.
+    # There used to be a max(0.055, ...) floor under that conversion, which
+    # is 5.5 percent of a chord that can be half a metre -- so every vane on
+    # the car came out between four and six times the thickness the spec
+    # declares for it, and the declared number was doing nothing. A vane is
+    # a moulded carbon fence: it is as thick as it is, whatever its chord.
     return shapes.turning_vane(
-        cam, z0, z1, t=max(0.055, t / chord), twist=twist, lean=lean,
-        n_z=max(6, n), n_chord=24, top_cut=top_cut,
+        cam, z0, z1, t=t / chord, twist=twist, lean=lean,
+        n_z=max(10, n), n_chord=40, top_cut=top_cut,
         serrate=serrate, serr_depth=serr_depth)
 
 
@@ -113,25 +119,39 @@ def _floor_edge():
             f = k / max(FE["fences"] - 1, 1)
             x0 = FE["x0"] + (FE["x1"] - FE["x0"]) * f * 0.82
             parts_x1 = x0 + 300.0
-            # sit on the floor's own edge, which waists in around the rear
-            # tyre. At a fixed half_w the aft fences ran into both wheels.
-            y = sgn * (min(half_width(x0), half_width(parts_x1))
-                       - 34.0 - k * 20.0)
-            fences.append(_curved_vane(x0, parts_x1, y, y - sgn * 40.0,
-                                       10.0, 10.0 + FE["fence_h"],
-                                       FE["t"], bow=-sgn * 16.0))
+            # Outboard of the floor edge, hanging under the edge wing.
+            #
+            # These used to step INBOARD from the edge, 20 mm a fence, and
+            # turn another 40 mm inboard along their length -- which put all
+            # five of them inside the venturi tunnel, in the flow they were
+            # meant to be conditioning, and the innermost one through a
+            # diffuser strake. The floor's edge is at half_width; the tunnel
+            # wall is 34 mm inboard of it; so the only place a fence can
+            # stand is outboard of the edge, where the shear layer it works
+            # on actually is.
+            z1 = FE["edge_root_z"] - 4.0
+            # follow the edge station by station: the floor waists in by
+            # 130 mm over a fence's own length, and a straight fence set
+            # from the narrow end starts inboard of the skirt
+            # Each fence is rooted ON the edge and flares outboard along
+            # its own length. Stepping the whole fence outboard by 12 mm a
+            # time instead left the middle ones hanging in free air, bolted
+            # to nothing.
+            cam = []
+            for i in range(9):
+                f = i / 8.0
+                cx = x0 + (parts_x1 - x0) * f
+                cam.append((cx, sgn * (half_width(cx) + 4.0
+                                       + (10.0 + k * 3.0) * f ** 1.5)))
+            chord = math.dist(cam[0], cam[-1]) or 1.0
+            fences.append(shapes.turning_vane(
+                cam, z1 - FE["fence_h"], z1, t=FE["t"] / chord,
+                twist=0.0, lean=sgn * 6.0, n_z=10, n_chord=40))
     # each fence is set individually on a real car, so each is its own object
     for i, m in enumerate(fences):
         out[f"floor_fence_{'lr'[i // (len(fences) // 2)]}{i % (len(fences) // 2) + 1}"] = m
 
-    wings = []
-    for sgn in (-1.0, 1.0):
-        x_w = FE["x1"] - FE["wing_chord"]
-        wings.append(common.wing_element(
-            x_w, 96.0, FE["wing_span"], FE["wing_chord"], 8.0,
-            thickness=0.07, camber=0.05, n_span=6, taper=0.7,
-            y0=sgn * (half_width(x_w) - FE["wing_span"] / 2 - 40.0)))
-    out["floor_edge_wings"] = mesh.join(*wings)
+    out["floor_edge_wings"] = _edge_wings(half_width)
     return out
 
 
@@ -185,12 +205,83 @@ def _details():
         ex.append((wv, wf))
     out["exhaust"] = mesh.join(*ex)
 
-    # engine cover cooling louvres
+    # Engine cover cooling louvres, ON the cover.
+    #
+    # These were placed by hand at a fixed y and a falling z, which walked
+    # them straight into the gearbox casing: the last two banks were 170 mm
+    # inside it. A louvre is a slot cut in a surface, so it is set from the
+    # surface -- like every other skin detail on the car.
     lv2 = []
     for k in range(6):
         x = 3180.0 + k * 96.0
-        for sgn in (-1.0, 1.0):
-            b, bf = shapes.rounded_box(x, sgn * 128.0, 520.0 - k * 22.0, 70.0, 8.0, 36.0)
-            lv2.append((b, bf))
+        for ang in (62.0, 118.0):
+            p = chassis.surface_point(x, ang, 3.0)
+            lv2.append(shapes.rounded_box(p[0], p[1], p[2],
+                                          70.0, 10.0, 34.0, 3.0))
     out["cooling_louvres"] = mesh.join(*lv2)
     return out
+
+
+def _thicken(cam, t, n=26):
+    """A closed aerofoil section built out from a camber line.
+
+    Round at the nose, closing at the tail, thickness following the camber's
+    own normal -- so a curled section stays the same thickness round the
+    curl instead of pinching where it turns hardest.
+    """
+    dense = shapes._resample(cam, n)
+    up, dn = [], []
+    for i, (u, v) in enumerate(dense):
+        p0 = dense[max(i - 1, 0)]
+        p1 = dense[min(i + 1, n - 1)]
+        tx, ty = p1[0] - p0[0], p1[1] - p0[1]
+        m = math.hypot(tx, ty) or 1.0
+        nx, ny = -ty / m, tx / m
+        f = i / (n - 1)
+        h = t * 0.5 * math.sqrt(max(4.0 * f * (1.0 - f), 0.0)) ** 0.7
+        h = max(h, t * 0.10)
+        up.append((u + nx * h, v + ny * h))
+        dn.append((u - nx * h, v - ny * h))
+    return up + list(reversed(dn[1:-1]))
+
+
+def _edge_wings(half_width, n_x=34):
+    """The wing along the floor edge.
+
+    This was a 900 mm span aerofoil laid ACROSS the car at x 3450 -- which
+    put it straight through both venturi tunnels and over the centreline,
+    where it would have blocked the floor it was meant to help. A floor edge
+    wing runs along the edge, not across the car: it hangs off the outer lip
+    for most of the floor's length and curls up outboard, so the shear layer
+    coming off the edge rolls into one strong vortex that seals the floor
+    instead of a sheet that wanders under it.
+    """
+    c, t = FE["edge_chord"], FE["edge_t"]
+    cam = [(0.00, 0.00), (0.18, 0.07), (0.40, 0.20),
+           (0.62, 0.40), (0.82, 0.62), (1.00, FE["edge_rise"])]
+    sect = _thicken([(u * c, v * c) for (u, v) in cam], t)
+    parts = []
+    for sgn in (-1.0, 1.0):
+        rings = []
+        for i in range(n_x):
+            f = i / (n_x - 1)
+            x = FE["x0"] + (FE["x1"] - FE["x0"]) * f
+            # fade the section in at both ends rather than stopping dead
+            s = min(1.0, (min(f, 1.0 - f) / 0.12)) ** 0.6
+            y0 = sgn * (half_width(x) + FE["edge_root_dy"])
+            rings.append([(x, y0 + sgn * du * s,
+                           FE["edge_root_z"] + dv * s)
+                          for (du, dv) in sect])
+        m = len(rings[0])
+        verts = [v for r in rings for v in r]
+        faces = []
+        for i in range(n_x - 1):
+            a, b = i * m, (i + 1) * m
+            for k in range(m):
+                k2 = (k + 1) % m
+                faces.append((a + k, a + k2, b + k2, b + k))
+        faces.append(tuple(range(m - 1, -1, -1)))
+        base = (n_x - 1) * m
+        faces.append(tuple(range(base, base + m)))
+        parts.append((verts, faces))
+    return mesh.join(*parts)

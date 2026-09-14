@@ -161,6 +161,34 @@ def _cross(a, b):
             a[0] * b[1] - a[1] * b[0])
 
 
+def smooth_path(path, per_seg=6):
+    """Catmull-Rom through every point of `path`, `per_seg` samples a span.
+
+    `pipe`'s own `subdiv` only inserts points along the straight line between
+    two waypoints, so a hose routed through five corners comes out as five
+    straight runs with kinks at the joints. A real hose cannot do that: it has
+    a minimum bend radius and it curves through its clips. This passes through
+    the given points and curves between them.
+    """
+    if len(path) < 3:
+        return list(path)
+    p = [path[0]] + list(path) + [path[-1]]
+    out = []
+    for i in range(len(p) - 3):
+        p0, p1, p2, p3 = p[i], p[i + 1], p[i + 2], p[i + 3]
+        for k in range(per_seg):
+            t = k / per_seg
+            t2, t3 = t * t, t * t * t
+            out.append(tuple(
+                0.5 * ((2 * p1[j])
+                       + (-p0[j] + p2[j]) * t
+                       + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2
+                       + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3)
+                for j in range(3)))
+    out.append(tuple(path[-1]))
+    return out
+
+
 def pipe(path, radius, segments=16, caps=True, subdiv=1):
     segments = _T(segments)
     """Sweep a circular section along a 3D polyline using parallel transport,

@@ -111,7 +111,9 @@ def _block_detail():
     A block with nothing on its outside is a billet, not a casting."""
     out = {}
     x0, x1 = B["x_front"], B["x_rear"]
-    hw = B["half_width"] * 0.86
+    # on the block's own flank, outboard of the bores: at 0.86 of the
+    # half width the outlet bosses were inside the cylinders
+    hw = B["half_width"] + 4.0
 
     ports = []
     for i in range(4):
