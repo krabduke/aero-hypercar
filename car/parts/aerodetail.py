@@ -32,28 +32,26 @@ def build():
     return out
 
 
-def _curved_vane(x0, x1, y0, y1, z0, z1, t, bow=0.0, n=10):
+def _curved_vane(x0, x1, y0, y1, z0, z1, t, bow=0.0, n=10,
+                 twist=0.0, serrate=0, serr_depth=0.0, top_cut=None,
+                 lean=0.0):
     """A vane that curves in plan -- the whole point of a turning vane is that
-    it is not flat, so it can turn the flow instead of just splitting it."""
-    verts, faces = [], []
-    for i in range(n):
-        f = i / (n - 1)
-        x = x0 + (x1 - x0) * f
-        y = y0 + (y1 - y0) * f + bow * math.sin(math.pi * f)
-        zb = z0 + (z1 - z0) * 0.0
-        zt = z1
-        for (yy, zz) in ((y - t / 2, zb), (y + t / 2, zb),
-                         (y + t / 2, zt), (y - t / 2, zt)):
-            verts.append((x, yy, zz))
-    for i in range(n - 1):
-        a, b = i * 4, (i + 1) * 4
-        for s in range(4):
-            s2 = (s + 1) % 4
-            faces.append((a + s, a + s2, b + s2, b + s))
-    faces.append((3, 2, 1, 0))
-    base = (n - 1) * 4
-    faces.append((base, base + 1, base + 2, base + 3))
-    return verts, faces
+    it is not flat, so it can turn the flow instead of just splitting it.
+
+    This was a rectangular section swept along that curve: four points, sharp
+    on both edges, the same height everywhere. It is a lifting surface, so it
+    now has an aerofoil section, twist up its height, and a cut profile.
+    """
+    cam = []
+    for i in range(9):
+        f = i / 8
+        cam.append((x0 + (x1 - x0) * f,
+                    y0 + (y1 - y0) * f + bow * math.sin(math.pi * f)))
+    chord = math.dist(cam[0], cam[-1]) or 1.0
+    return shapes.turning_vane(
+        cam, z0, z1, t=max(0.055, t / chord), twist=twist, lean=lean,
+        n_z=max(6, n), n_chord=24, top_cut=top_cut,
+        serrate=serrate, serr_depth=serr_depth)
 
 
 def _bargeboards():
@@ -68,8 +66,17 @@ def _bargeboards():
             x1 = BB["x1"] - k * 24.0
             z0 = BB["z0"] + k * 26.0
             z1 = BB["z1"] - k * 46.0
-            parts.append(_curved_vane(x0, x1, y, y + sgn * 62.0, z0, z1,
-                                      BB["t"], bow=sgn * 34.0))
+            # Each board leans and twists more than the one inboard of it:
+            # they are a cascade, and a cascade that does not turn
+            # progressively just stalls the last element. The feet are
+            # serrated so the shear layer rolls up into a row of small
+            # vortices instead of one big one that bursts over the floor.
+            parts.append(_curved_vane(
+                x0, x1, y, y + sgn * 62.0, z0, z1, BB["t"],
+                bow=sgn * 34.0, twist=sgn * -(9.0 + 5.0 * k),
+                lean=sgn * (10.0 + 7.0 * k), serrate=3 + k,
+                serr_depth=14.0 - 2.0 * k,
+                top_cut=lambda u, z1=z1: z1 - (z1 - z0) * 0.30 * u ** 1.6))
     # Each board is a separate element, trimmed on its own. Half the list is
     # the left side and half the right, in build order.
     half = len(parts) // 2
@@ -83,10 +90,12 @@ def _turning_vanes():
     for sgn in (-1.0, 1.0):
         for k in range(TV["elements"]):
             y = sgn * (TV["y"] - k * 60.0)
-            parts.append(_curved_vane(TV["x0"] + k * 60.0, TV["x1"],
-                                      y, y + sgn * 40.0,
-                                      TV["z0"], TV["z1"] - k * 48.0,
-                                      TV["t"], bow=sgn * 22.0))
+            z1 = TV["z1"] - k * 48.0
+            parts.append(_curved_vane(
+                TV["x0"] + k * 60.0, TV["x1"], y, y + sgn * 40.0,
+                TV["z0"], z1, TV["t"], bow=sgn * 22.0,
+                twist=sgn * -(7.0 + 4.0 * k), lean=sgn * 8.0,
+                top_cut=lambda u, z1=z1: z1 - (z1 - TV["z0"]) * 0.22 * u))
     half = len(parts) // 2
     return {f"turning_vane_{'lr'[i // half]}{i % half + 1}": m
             for i, m in enumerate(parts)}
@@ -143,7 +152,8 @@ def _details():
     out = {}
     mirrors = []
     for sgn in (-1.0, 1.0):
-        stalk = mesh.pipe([(D["mirror_x"] - 40.0, sgn * 150.0, D["mirror_z"] - 40.0),
+        stalk = mesh.pipe([(D["mirror_x"] - 60.0, sgn * 282.0, D["mirror_z"] - 138.0),
+                           (D["mirror_x"] - 10.0, sgn * 300.0, D["mirror_z"] - 30.0),
                            (D["mirror_x"], sgn * D["mirror_y"], D["mirror_z"])],
                           13.0, 10)
         mirrors.append(stalk)
@@ -154,7 +164,7 @@ def _details():
 
     cams = []
     for sgn in (-1.0, 1.0):
-        cv, cf = shapes.rounded_box(D["camera_x"], sgn * 130.0, D["camera_z"], 130.0, 46.0, 46.0)
+        cv, cf = shapes.rounded_box(D["camera_x"], sgn * 122.0, D["camera_z"], 130.0, 46.0, 46.0)
         cams.append((cv, cf))
     cv, cf = shapes.rounded_box(spec.TUB["cockpit_x1"] + 90.0, 0.0, 820.0, 150.0, 60.0, 52.0)
     cams.append((cv, cf))

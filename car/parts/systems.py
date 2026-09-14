@@ -59,28 +59,62 @@ def _brake_ducts():
             x - r * 0.92, inb, z - r * 0.26, 90.0, BD["width"],
             BD["inlet_h"], 16.0, draft=3.0)
         # the duct carrying it back to the drum
+        # the duct narrows as it goes back, because the drum needs velocity
+        # at the disc, not volume in the pipe
         out[f"bduct_pipe_{tag}"] = mesh.pipe(
             [(x - r * 0.86, inb, z - r * 0.22),
+             (x - r * 0.58, inb, z - r * 0.16),
              (x - r * 0.30, inb, z - r * 0.05),
-             (x + r * 0.10, inb, z)], BD["width"] * 0.40, 12)
+             (x - r * 0.08, inb, z - r * 0.01),
+             (x + r * 0.10, inb, z)],
+            [BD["width"] * 0.42, BD["width"] * 0.39, BD["width"] * 0.35,
+             BD["width"] * 0.31, BD["width"] * 0.28], 22, subdiv=3)
         # the drum around the disc, which is what actually directs the air
-        dv, df = mesh.revolve_closed(
-            [(-BD["width"] * 0.30, r * 0.52), (BD["width"] * 0.30, r * 0.52),
-             (BD["width"] * 0.30, r * 0.82), (-BD["width"] * 0.30, r * 0.82)],
-            26)
+        # The drum is a scroll: air enters at one point and has to be
+        # distributed round the whole disc, so it is deeper where the feed
+        # comes in and it is finned inside to spread the flow. As a plain
+        # annulus it directed nothing anywhere.
+        w = BD["width"]
+        drum = [shapes.volute(0.0, r * 0.60, r * 0.80, w * 0.16, w * 0.30,
+                              seg=44, sect=14)]
+        drum.append(mesh.revolve_closed(
+            [(-w * 0.32, r * 0.50), (-w * 0.24, r * 0.50),
+             (-w * 0.24, r * 0.88), (-w * 0.32, r * 0.88)], 40))
+        for k in range(9):
+            a = 2 * math.pi * k / 9
+            fv, ff = mesh.box(0.0, 0.0, 0.0, w * 0.34, 4.0, r * 0.16)
+            drum.append(([(px, py + math.cos(a) * r * 0.70,
+                           pz + math.sin(a) * r * 0.70)
+                          for (px, py, pz) in fv], ff))
+        dv, df = mesh.join(*drum)
+        # The drum is not symmetric about its own centre -- the back plate is
+        # on one face of it -- so its axis has to flip with the side, or the
+        # plate ends up outboard on the left and inboard on the right. That
+        # was the 2.8 mm the two drums were from being mirror images.
         out[f"bduct_drum_{tag}"] = (
-            [(pz + x, px + inb, py + z) for (px, py, pz) in dv], df)
+            [(pz + x, sgn * px + inb, py + z) for (px, py, pz) in dv], df)
         # the fence standing the whole assembly off the tyre
-        out[f"bduct_fence_{tag}"] = shapes.rounded_box(
-            x, inb - sgn * BD["width"] * 0.56, z - r * 0.15,
-            r * 1.5, 7.0, r * 1.1, 12.0)
+        # A fence cut to the shape of the job: it wraps the front of the
+        # drum, is cut away behind the axle line where the wheel rim would
+        # foul it, and rolls inboard at the trailing edge to keep the tyre
+        # squirt out of the floor.
+        fy = inb - sgn * BD["width"] * 0.56
+        prof = shapes.panel_outline(
+            [(x - r * 0.80, z - r * 0.62), (x + r * 0.44, z - r * 0.66),
+             (x + r * 0.74, z - r * 0.18), (x + r * 0.60, z + r * 0.34),
+             (x + r * 0.02, z + r * 0.50), (x - r * 0.66, z + r * 0.26),
+             (x - r * 0.86, z - r * 0.20)], subdiv=4)
+        out[f"bduct_fence_{tag}"] = shapes.shaped_panel(
+            prof, fy, 8.0, rim_seg=5,
+            bow=lambda fx, fz, sgn=sgn: -sgn * 26.0 * max(0.0, fx - 0.45) ** 2
+                / 0.30)
         # cooling exits on the outboard face
         vanes = []
         for k in range(5):
             a = math.pi * (0.2 + 0.6 * k / 4)
             vanes.append(shapes.rounded_box(
-                x + r * 0.55 * math.cos(a), inb + sgn * BD["width"] * 0.30,
-                z + r * 0.55 * math.sin(a), 46.0, 6.0, 16.0, 2.5))
+                x + r * 0.82 * math.cos(a), inb + sgn * BD["width"] * 0.30,
+                z + r * 0.82 * math.sin(a), 46.0, 6.0, 16.0, 2.5))
         out[f"bduct_vanes_{tag}"] = mesh.join(*vanes)
     return out
 
@@ -99,18 +133,38 @@ def _hydraulics():
 
     cyl = []
     for sgn in (-1.0, 1.0):
-        cyl.append(mesh.revolve_open(
-            [(0.0, 0.0), (0.0, 26.0), (150.0, 26.0), (150.0, 0.0)],
-            14, cap_start=True, cap_end=True))
-        v, f = cyl[-1]
-        cyl[-1] = ([(px + spec.FRONT_AXLE_X + 40.0, py + sgn * 86.0, pz + 330.0)
-                    for (px, py, pz) in v], f)
+        # body, reservoir on top, pushrod clevis out the back and the union
+        # the line screws into
+        v, f = mesh.revolve_closed(
+            [(0.0, 0.0), (150.0, 0.0), (150.0, 20.0), (142.0, 26.0),
+             (120.0, 26.0), (120.0, 30.0), (104.0, 30.0), (104.0, 26.0),
+             (26.0, 26.0), (18.0, 24.0), (18.0, 14.0), (0.0, 14.0)], 30)
+        parts = [(v, f)]
+        rv, rf = mesh.revolve_closed(
+            [(0.0, 0.0), (62.0, 0.0), (62.0, 21.0), (56.0, 24.0),
+             (6.0, 24.0), (0.0, 21.0)], 24)
+        parts.append(([(pz + 60.0, py, px + 30.0)
+                       for (px, py, pz) in rv], rf))
+        uv, uf = mesh.revolve_closed(
+            [(0.0, 0.0), (26.0, 0.0), (26.0, 8.0), (20.0, 9.5),
+             (14.0, 9.5), (14.0, 12.0), (0.0, 12.0)], 16)
+        parts.append(([(pz + 14.0, py, -px - 22.0)
+                       for (px, py, pz) in uv], uf))
+        parts.append(shapes.rod_end((160.0, 0.0, 0.0), (1.0, 0.0, 0.0), 10.0))
+        v, f = mesh.join(*parts)
+        cyl.append(([(px + spec.FRONT_AXLE_X + 40.0, py + sgn * 86.0,
+                      pz + 330.0) for (px, py, pz) in v], f))
     out["master_cylinders"] = mesh.join(*cyl)
 
+    # The pedals go under the driver's feet, which are behind the front axle
+    # line -- that is a survival-cell rule, not a styling choice. They used to
+    # sit at x 495, which is 405 mm AHEAD of the front axle and 484 mm from
+    # the nearest part of the driver.
+    fx = spec.BODY_DETAIL["driver"]["foot_x"]
     out["pedal_box"] = mesh.join(
-        shapes.rounded_box(T["x_front"] - 60.0, 0.0, 250.0, 130.0, 260.0, 40.0, 10.0),
-        shapes.rounded_box(T["x_front"] - 30.0, -78.0, 330.0, 34.0, 60.0, 170.0, 8.0),
-        shapes.rounded_box(T["x_front"] - 30.0, 78.0, 330.0, 34.0, 60.0, 170.0, 8.0))
+        shapes.rounded_box(fx + 10.0, 0.0, 250.0, 210.0, 260.0, 40.0, 10.0),
+        shapes.rounded_box(fx - 10.0, -78.0, 330.0, 34.0, 60.0, 170.0, 8.0),
+        shapes.rounded_box(fx - 10.0, 78.0, 330.0, 34.0, 60.0, 170.0, 8.0))
     return out
 
 
@@ -152,33 +206,34 @@ def _cockpit():
                                         62.0, 220.0, 9.0, 3.0))     # lap
     belts.append(shapes.rounded_box(cx + 20.0, 0.0, 300.0, 200.0, 60.0, 9.0, 3.0))
     out["harness"] = mesh.join(*belts)
-    out["harness_buckle"] = shapes.rounded_box(cx - 10.0, 0.0, 380.0,
+    out["harness_buckle"] = shapes.rounded_box(cx + 22.0, 0.0, 352.0,
                                                90.0, 110.0, 34.0, 8.0)
 
-    # steering wheel: a rim, a hub, paddles and a display
-    rim = []
-    for sgn in (-1.0, 1.0):
-        rim.append(shapes.rounded_box(T["cockpit_x0"] + 130.0, sgn * 92.0, 600.0,
-                                      34.0, 90.0, 130.0, 14.0))
-    rim.append(shapes.rounded_box(T["cockpit_x0"] + 130.0, 0.0, 655.0,
-                                  34.0, 190.0, 40.0, 12.0))
-    out["steering_wheel"] = mesh.join(*rim)
-    out["wheel_display"] = shapes.rounded_box(T["cockpit_x0"] + 146.0, 0.0, 600.0,
-                                              14.0, 130.0, 60.0, 5.0)
-    paddles = []
-    for sgn in (-1.0, 1.0):
-        paddles.append(shapes.rounded_box(T["cockpit_x0"] + 108.0, sgn * 84.0,
-                                          566.0, 12.0, 46.0, 84.0, 4.0))
-    out["shift_paddles"] = mesh.join(*paddles)
+    # The steering wheel used to be built here as well as in chassis.py: two
+    # wheels 30 mm apart in the same cockpit, plus a second display and a
+    # second set of shift paddles, filed under three different collections.
+    # The surviving wheel is `chassis._wheel`, which carries its own display,
+    # rotaries and paddles because they are all part of the wheel.
 
-    out["dash"] = shapes.rounded_box(T["cockpit_x0"] + 40.0, 0.0, 610.0,
+    out["dash"] = shapes.rounded_box(T["cockpit_x0"] + 30.0, 0.0, 600.0,
                                      70.0, 300.0, 120.0, 18.0, draft=4.0)
-    out["extinguisher"] = mesh.revolve_open(
-        [(0.0, 0.0), (0.0, 52.0), (240.0, 52.0), (250.0, 24.0), (250.0, 0.0)],
-        16, cap_start=True, cap_end=True)
+    # A bottle with domed ends, a valve head, the discharge union and the
+    # two straps holding it into the tub.
+    ext = [mesh.revolve_closed(
+        [(0.0, 0.0), (8.0, 0.0), (16.0, 30.0), (24.0, 44.0), (32.0, 52.0),
+         (218.0, 52.0), (228.0, 46.0), (236.0, 32.0), (242.0, 20.0),
+         (250.0, 0.0), (256.0, 0.0), (248.0, 24.0), (240.0, 40.0),
+         (228.0, 50.0), (26.0, 50.0), (14.0, 40.0), (6.0, 24.0)], 34)]
+    hv, hf = mesh.revolve_closed(
+        [(0.0, 0.0), (46.0, 0.0), (46.0, 13.0), (40.0, 16.0),
+         (30.0, 16.0), (30.0, 22.0), (16.0, 22.0), (16.0, 17.0),
+         (0.0, 17.0)], 24)
+    ext.append(([(px + 250.0, py, pz) for (px, py, pz) in hv], hf))
+    for px in (60.0, 190.0):
+        ext.append(mesh.ring_torus(px, 55.0, 4.5, 30, 8))
+    v, f = mesh.join(*ext)
     out["extinguisher"] = ([(px + cx + 180.0, py + 150.0, pz + 260.0)
-                            for (px, py, pz) in out["extinguisher"][0]],
-                           out["extinguisher"][1])
+                            for (px, py, pz) in v], f)
     out["drink_bottle"] = shapes.rounded_box(cx + 260.0, -150.0, 280.0,
                                              150.0, 90.0, 90.0, 24.0)
     return out
@@ -193,8 +248,16 @@ def _survival_cell():
     out = {}
     for name, x in (("front", T["x_front"]), ("dash", T["cockpit_x0"]),
                     ("rear", T["cockpit_x1"]), ("engine", T["x_rear"])):
-        ring = chassis.body_section(x, inset=8.0, segments=24)
-        inner = chassis.body_section(x, inset=48.0, segments=24)
+        # A bulkhead is a moulded ring frame with a rolled flange each side,
+        # not a flat washer: the flange is what gives it out-of-plane
+        # stiffness, and without it a 9 mm-thick ring would fold the first
+        # time the suspension loaded it.
+        # The frame needs real width. At inset 8 and 10 the band between the
+        # outer edge and the aperture was 2 mm, so the 17 mm lightening-hole
+        # eyelets centred on it stood 8 mm outside a body surface only 9 mm
+        # away -- all four bulkheads were poking through the car.
+        ring = chassis.body_section(x, inset=8.0, segments=72)
+        inner = chassis.body_section(x, inset=56.0, segments=72)
         n = len(ring)
         verts = ([(p[0] - 9.0, p[1], p[2]) for p in ring]
                  + [(p[0] + 9.0, p[1], p[2]) for p in ring]
@@ -207,12 +270,47 @@ def _survival_cell():
             faces.append((o_f + j, o_f + j2, i_f + j2, i_f + j))
             faces.append((o_b + j, i_b + j, i_b + j2, o_b + j2))
             faces.append((o_f + j, i_f + j, i_b + j, o_b + j))
-        out[f"bulkhead_{name}"] = (verts, faces)
+        # the return flange round the inner aperture, and the lightening
+        # holes between it and the outer edge
+        parts = [(verts, faces)]
+        for j in range(0, n, max(1, n // 14)):
+            p0 = inner[j]
+            p1 = ring[j]
+            cx = (p0[0] + p1[0]) / 2
+            cy = (p0[1] + p1[1]) / 2
+            cz = (p0[2] + p1[2]) / 2
+            hv, hf = mesh.revolve_closed(
+                [(-11.0, 13.0), (11.0, 13.0), (11.0, 17.0), (-11.0, 17.0)], 18)
+            parts.append(([(px + cx, py + cy, pz + cz)
+                           for (px, py, pz) in hv], hf))
+        fl = []
+        for j in range(n):
+            p0 = inner[j]
+            d = math.hypot(p0[1], p0[2]) or 1.0
+            ny, nz = p0[1] / d, p0[2] / d
+            fl.append([(p0[0] - 9.0, p0[1], p0[2]),
+                       (p0[0] - 24.0, p0[1] - ny * 9.0, p0[2] - nz * 9.0),
+                       (p0[0] - 24.0, p0[1] - ny * 18.0, p0[2] - nz * 18.0),
+                       (p0[0] - 9.0, p0[1] - ny * 14.0, p0[2] - nz * 14.0)])
+        fv, ff = [], []
+        for j in range(n):
+            j2 = (j + 1) % n
+            base = len(fv)
+            fv.extend(fl[j]); fv.extend(fl[j2])
+            for k in range(4):
+                k2 = (k + 1) % 4
+                ff.append((base + k, base + k2, base + 4 + k2, base + 4 + k))
+        parts.append((fv, ff))
+        out[f"bulkhead_{name}"] = mesh.join(*parts)
 
+    # Set from the tub's own section at this station, so the panels are
+    # inside the flank rather than 11 mm through it.
+    cx = (T["cockpit_x0"] + T["cockpit_x1"]) / 2
+    hw = max(abs(p[1]) for p in chassis.body_section(cx, segments=48))
     panels = []
     for sgn in (-1.0, 1.0):
         panels.append(shapes.rounded_box(
-            (T["cockpit_x0"] + T["cockpit_x1"]) / 2, sgn * 250.0, 420.0,
+            cx, sgn * (hw - 24.0), 420.0,
             T["cockpit_x1"] - T["cockpit_x0"], 18.0, 260.0, 20.0))
     out["side_intrusion"] = mesh.join(*panels)
     return out
@@ -228,17 +326,58 @@ def _pit_hardware():
         v, f = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 44.0), (22.0, 44.0), (22.0, 0.0)], 8,
             cap_start=True, cap_end=True)
-        socks.append(([(pz + x, sgn * (abs(y) + w * 0.5) + px * sgn, py + od / 2)
+        # Recessed into the wheel cover, where a gun socket lives. It used
+        # to start 2 mm proud of the tyre and stick out 22 mm further, which
+        # made the pit crew's sockets the widest objects on the car and put
+        # it over the legal width.
+        y_out = abs(y) + w * 0.5 - 42.0
+        socks.append(([(pz + x, sgn * (y_out + px), py + od / 2)
                        for (px, py, pz) in v], f))
     out["gun_sockets"] = mesh.join(*socks)
 
-    out["starter_socket"] = mesh.revolve_open(
-        [(0.0, 0.0), (0.0, 34.0), (90.0, 30.0), (90.0, 0.0)], 12,
-        cap_start=True, cap_end=True)
+    # The starter socket.
+    #
+    # It was a 12-segment open revolve on a four-point profile -- 50 vertices,
+    # the crudest object on the car -- standing in for the thing a mechanic
+    # pushes a starter into. It is a bezel recessed into the crash structure,
+    # a square drive down the middle of it, and the backing plate that takes
+    # the torque into the gearbox casing.
+    S = spec.SERVICE
     xg = spec.POWERTRAIN["gearbox_x"] + spec.POWERTRAIN["gearbox_len"]
-    out["starter_socket"] = ([(px + xg + 60.0, py, pz + spec.POWERTRAIN["gearbox_z"])
-                              for (px, py, pz) in out["starter_socket"][0]],
-                             out["starter_socket"][1])
+    zg = spec.POWERTRAIN["gearbox_z"]
+    sx = xg + 130.0
+    parts = []
+
+    def lathe_x(profile, cx, seg=26):
+        v, f = mesh.revolve_closed(list(profile), seg)
+        return ([(px + cx, py, pz + zg) for (px, py, pz) in v], f)
+
+    # the funnel bezel, rolled over at the mouth so a socket self-centres
+    parts.append(lathe_x([
+        (0.0, S["starter_drive"] * 0.7), (6.0, S["starter_bezel_r"] - 4.0),
+        (10.0, S["starter_bezel_r"]), (16.0, S["starter_bezel_r"] - 2.0),
+        (16.0, S["starter_bezel_r"] - 8.0), (10.0, S["starter_bezel_r"] - 7.0),
+        (6.0, S["starter_bezel_r"] - 11.0),
+        (0.0, S["starter_drive"] * 0.7 + 4.0)], sx))
+    # the square drive itself, four flats
+    parts.append(lathe_x([
+        (-4.0, 0.0), (-4.0, S["starter_drive"]), (54.0, S["starter_drive"]),
+        (54.0, 0.0)], sx, seg=4))
+    # the shaft back to the gearbox, and the backing plate
+    parts.append(lathe_x([
+        (54.0, 0.0), (54.0, S["starter_drive"] * 0.62),
+        (128.0, S["starter_drive"] * 0.62), (128.0, 0.0)], sx - 128.0, seg=16))
+    parts.append(shapes.rounded_box(sx - 122.0, 0.0, zg,
+                                    12.0, 96.0, 96.0, r=8.0))
+    for k in range(4):
+        ang = math.pi / 2 * k + math.pi / 4
+        parts.append(lathe_x([
+            (0.0, 0.0), (14.0, 0.0), (14.0, 7.0), (0.0, 7.0)],
+            sx - 128.0, seg=10))
+        v, f = parts[-1]
+        parts[-1] = ([(px, py + 36.0 * math.cos(ang), pz + 36.0 * math.sin(ang))
+                      for (px, py, pz) in v], f)
+    out["starter_socket"] = mesh.join(*parts)
 
     out["fuel_coupling"] = mesh.join(
         shapes.rounded_box(2000.0, 300.0, 500.0, 120.0, 90.0, 90.0, 22.0),
@@ -248,8 +387,8 @@ def _pit_hardware():
     sens = []
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
-        sens.append(shapes.rounded_box(x - od * 0.42, y - sgn * w * 0.1,
-                                       od / 2 + od * 0.40, 44.0, 26.0, 22.0, 6.0))
+        sens.append(shapes.rounded_box(x - od * 0.10, y - sgn * w * 0.46,
+                                       od * 0.34, 44.0, 30.0, 22.0, 6.0))
     out["tyre_sensors"] = mesh.join(*sens)
     return out
 

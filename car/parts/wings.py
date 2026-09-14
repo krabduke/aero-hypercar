@@ -61,12 +61,21 @@ def _front():
     vanes = []
     c = FW["chord"]
     for sgn in (-1.0, 1.0):
-        # stand on the mainplane's upper surface, not through it
-        z0 = FW["z"] + FW["arch"] + 26.0
-        vanes.append(common.plate(FW["x"] + c * FW["y250_x0"],
-                                  FW["x"] + c * FW["y250_x1"],
-                                  sgn * neutral, z0, z0 + FW["y250_h"],
-                                  7.0, sweep_top=38.0))
+        # stand ON the mainplane's upper surface at the neutral-section edge,
+        # not 80 mm above it where the arch has already fallen away
+        z0 = FW["z"] + 10.0
+        vx0 = FW["x"] + c * FW["y250_x0"]
+        vx1 = FW["x"] + c * FW["y250_x1"]
+        # This vane is the thing that makes the Y250 vortex: it is a cambered,
+        # twisted aerofoil standing where the neutral section ends, and the
+        # strength of what it sheds sets up the whole floor behind it. As a
+        # flat card it shed nothing in particular.
+        cam = [(vx0 + (vx1 - vx0) * i / 8.0,
+                sgn * (neutral + 30.0 * (i / 8.0) ** 1.8)) for i in range(9)]
+        vanes.append(shapes.turning_vane(
+            cam, z0, z0 + FW["y250_h"], t=0.085, twist=sgn * -16.0,
+            n_z=8, n_chord=24,
+            top_cut=lambda u, z0=z0: z0 + FW["y250_h"] * (1.0 - 0.42 * u)))
     out["front_y250_vanes"] = mesh.join(*vanes)
     return out
 
@@ -91,22 +100,48 @@ def _front_endplates():
     # the top edge follows the flap stack, which rises aft
     tops = [(0.00, z0 + 86.0), (0.22, z0 + 140.0), (0.48, z0 + 218.0),
             (0.74, z0 + FW["endplate_h"]), (1.00, z0 + FW["endplate_h"] - 34.0)]
+    # Sampled finely rather than at the four levels and five stations that
+    # made this a 40-vertex object: the footplate roll is a curve, and a
+    # curve drawn through four points is a chamfer.
+    n_lvl, n_f = 15, 21
+
+    def top_at(f):
+        for i in range(len(tops) - 1):
+            if tops[i][0] <= f <= tops[i + 1][0]:
+                (f0, z0_), (f1, z1_) = tops[i], tops[i + 1]
+                u = (f - f0) / ((f1 - f0) or 1.0)
+                u = u * u * (3 - 2 * u)                 # smooth, not kinked
+                return z0_ + (z1_ - z0_) * u
+        return tops[-1][1]
+
     plates, planes = [], []
     for sgn in (-1.0, 1.0):
         y = sgn * half
         rows = []
         # lower rows roll outboard into the footplate; the upper edge follows
         # `tops`, interpolated at the same chordwise stations
-        for (lvl, dy) in ((0.0, sgn * 46.0), (0.30, sgn * 12.0),
-                          (0.66, 0.0), (1.0, 0.0)):
+        for i in range(n_lvl):
+            lvl = i / (n_lvl - 1)
+            # the roll: outboard displacement dies away as the plate rises,
+            # on a quarter-circle so the footplate meets the plate tangentially
+            r = max(0.0, 1.0 - lvl / 0.42)
+            dy = sgn * 46.0 * math.sqrt(max(0.0, 1.0 - (1.0 - r) ** 2))
             row = []
-            for (f, z_top) in tops:
+            for j in range(n_f):
+                f = j / (n_f - 1)
                 x = x0 + (x1 - x0) * f
-                z_lo = z0 + (fh if lvl > 0.0 else 0.0) * min(lvl / 0.30, 1.0)
+                z_top = top_at(f)
+                z_lo = z0 + fh * min(lvl / 0.30, 1.0)
                 z = z_lo + (z_top - z_lo) * max(0.0, (lvl - 0.30) / 0.70)
                 row.append((x, y + dy * (1.0 - 0.3 * f), z))
             rows.append(row)
-        plates.append(_skin(rows, t, sgn))
+        plate = _skin(rows, t, sgn, rim=2)
+        # gills in the upper rear panel, bleeding the tyre wake outboard
+        plate = mesh.join(plate, shapes.louvre_bank(
+            x0 + (x1 - x0) * 0.52, x0 + (x1 - x0) * 0.94,
+            y + sgn * (t / 2 + 5.0), z0 + fh + 96.0, z0 + FW["endplate_h"] - 30.0,
+            4, 44.0, 13.0, t=3.0, cant=20.0))
+        plates.append(plate)
 
         for k in range(FW["diveplanes"]):
             zz = z0 + fh + 40.0 + k * 62.0
@@ -125,11 +160,27 @@ def _front_endplates():
     return out
 
 
-def _skin(rows, t, sgn):
-    """Give a grid of stations thickness in y, and close it into a solid."""
+def _skin(rows, t, sgn, rim=0):
+    """Give a grid of stations thickness in y, and close it into a solid.
+
+    With `rim` the thickness falls to nothing over that many cells from the
+    boundary, on a circular profile, so the two skins meet in a roll instead
+    of a knife edge. Carbon is laid up over a radius; it cannot be brought to
+    a point, and an edge that sharp chips the first time it touches a kerb.
+    """
     nr, nc = len(rows), len(rows[0])
-    inner = [(x, y - sgn * t / 2, z) for row in rows for (x, y, z) in row]
-    outer = [(x, y + sgn * t / 2, z) for row in rows for (x, y, z) in row]
+
+    def half_t(i, j):
+        if not rim:
+            return t / 2
+        d = min(i, nr - 1 - i, j, nc - 1 - j) / float(rim)
+        d = min(d, 1.0)
+        return (t / 2) * math.sqrt(max(0.0, 1.0 - (1.0 - d) ** 2))
+
+    inner = [(x, y - sgn * half_t(i, j), z)
+             for i, row in enumerate(rows) for j, (x, y, z) in enumerate(row)]
+    outer = [(x, y + sgn * half_t(i, j), z)
+             for i, row in enumerate(rows) for j, (x, y, z) in enumerate(row)]
     verts = inner + outer
     off = len(inner)
     faces = []
@@ -194,14 +245,8 @@ def _rear():
                                  thickness=0.10, camber=0.085, taper=0.95)
         out["rear_wing_main" if k == 0 else "rear_flap"] = el
 
-    plates = []
-    for sgn in (-1.0, 1.0):
-        y = sgn * RW["span"] / 2
-        plates.append(common.plate(RW["x"] - 120.0, RW["x"] + RW["chord"] + 90.0,
-                                   y, RW["z"] - 230.0, RW["z"] + 150.0,
-                                   RW["endplate_t"], sweep_top=40.0))
-    for i, m in enumerate(plates):
-        out[f"rear_endplate_{'lr'[i]}"] = m
+    for i, sgn in enumerate((-1.0, 1.0)):
+        out[f"rear_endplate_{'lr'[i]}"] = _rear_endplate(sgn)
 
     # swan-neck pylons: they meet the mainplane on its UPPER surface, so the
     # working (lower) surface is left completely undisturbed
@@ -211,7 +256,14 @@ def _rear():
                 (RW["x"] + 30.0, sgn * 148.0, RW["z"] + 10.0),
                 (RW["x"] - 70.0, sgn * 140.0, RW["z"] - 300.0),
                 (RW["x"] - 200.0, sgn * 118.0, RW["z"] - 440.0)]
-        pylons.append(mesh.pipe(path, RW["pylon_t"], spec.RES["pipe"]))
+        # A swan neck is a wing section on edge: it is carrying the whole
+        # rear wing load in bending and standing in the flow that feeds the
+        # beam wing, so its own wake matters.
+        t = RW["pylon_t"]
+        pylons.append(shapes.swept_profile(
+            path, shapes.teardrop_section(t * 1.7, t * 5.4, 26),
+            scale=[(1.0, 1.0), (1.02, 1.05), (1.10, 1.16), (1.16, 1.24)],
+            subdiv=6))
     for i, m in enumerate(pylons):
         out[f"rear_pylon_{'lr'[i]}"] = m
 
@@ -230,8 +282,66 @@ def _rear():
 
     # gurney on the flap trailing edge
     g = []
-    g.append(shapes.rounded_box(RW["x"] + RW["chord"] * 0.46 + RW["chord"] * 0.58 * 0.5,
-                      0.0, RW["z"] + RW["gap"] + 26.0 + 34.0,
-                      12.0, RW["span"] * 0.96, 26.0))
+    g.append(shapes.rounded_box(RW["x"] + RW["chord"] * 0.46 + RW["chord"] * 0.58 - 6.0,
+                      0.0, RW["z"] + RW["gap"] + 26.0 + 30.0,
+                      12.0, RW["span"] * 0.96, 30.0))
     out["rear_gurney"] = mesh.join(*g)
     return out
+
+
+def _rear_endplate(sgn):
+    """A rear endplate, cut to a profile rather than left as a rectangle.
+
+    Its job is to stop the low pressure under the wing from being fed by air
+    rolling round the tip. So: it runs well forward of the mainplane leading
+    edge, it is cut away at the top rear where the tip vortex has already
+    escaped and the plate is only drag, it rolls outboard along its trailing
+    edge to push that vortex away from the diffuser, and the upper rear panel
+    is louvred to bleed the pressure difference off gradually instead of
+    letting it dump off the trailing edge in one go.
+    """
+    x0 = RW["x"] - 130.0
+    x1 = RW["x"] + RW["chord"] + 96.0
+    zt = RW["z"] + 156.0
+    zb = RW["z"] - 244.0
+    # control points round the perimeter, then a spline through them
+    ctrl = [(x0 + 44.0, zb + 18.0),          # lower leading corner
+            (x0 + 2.0, zb + 150.0),          # swept leading edge
+            (x0 + 18.0, zt - 96.0),
+            (x0 + 96.0, zt - 8.0),           # top leading corner
+            (x1 - 150.0, zt),
+            (x1 - 96.0, zt - 74.0),          # the cut-away at the top rear
+            (x1 - 8.0, zt - 132.0),
+            (x1 + 4.0, zb + 176.0),          # trailing edge
+            (x1 - 30.0, zb + 40.0),
+            (x1 - 118.0, zb - 4.0),          # lower trailing corner
+            (x0 + 168.0, zb - 10.0)]
+    outline = shapes.panel_outline(ctrl, subdiv=4)
+
+    span = max(1.0, x1 - x0)
+
+    def bow(fx, fz):
+        # flat at the leading edge, rolling outboard towards the trailing one
+        return sgn * 46.0 * max(0.0, fx - 0.35) ** 2 / 0.42
+
+    y = sgn * (RW["span"] / 2 - 6.0)
+    parts = [shapes.shaped_panel(outline, y, RW["endplate_t"], bow=bow,
+                                 rim_seg=6, rim=1.15)]
+    # louvres in the upper rear panel, canted to follow the flow off the flap
+    parts.append(shapes.louvre_bank(
+        RW["x"] + 150.0, RW["x"] + RW["chord"] + 40.0, y + sgn * 24.0,
+        RW["z"] + 6.0, RW["z"] + 118.0, 5, 56.0, 15.0,
+        t=3.0, cant=26.0))
+    # the footplate that turns the plate into a diffuser fence
+    foot = shapes.panel_outline(
+        [(x0 + 180.0, y - sgn * 6.0), (x1 - 40.0, y - sgn * 10.0),
+         (x1 - 60.0, y - sgn * 96.0), (x0 + 250.0, y - sgn * 72.0)], subdiv=3)
+    fv, ff = shapes.shaped_panel(foot, zb - 6.0, 8.0, rim_seg=4, axis="z")
+    parts.append((fv, ff))
+    # mounting bosses where the mainplane and flap pick up
+    for xz in ((RW["x"] + 40.0, RW["z"] - 10.0),
+               (RW["x"] + 250.0, RW["z"] + 58.0)):
+        bv, bf = shapes.bolt_boss(0.0, 0.0, 0.0, 17.0, 16.0, 12)
+        parts.append(([(pz + xz[0], y - sgn * px, py + xz[1])
+                       for (px, py, pz) in bv], bf))
+    return mesh.join(*parts)

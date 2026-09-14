@@ -91,34 +91,61 @@ def _nose():
     for sgn in (-1.0, 1.0):
         y = sgn * BD["nose_pylon_y"]
         top = chassis.surface_point(px_x + 190.0, -90.0)
-        pylons.append(mesh.pipe(
+        # The pylon holds the whole front wing up and sits in the cleanest
+        # air on the car. Round, it would be the largest single drag item
+        # forward of the front axle for no benefit at all.
+        t = BD["nose_pylon_t"]
+        pylons.append(shapes.swept_profile(
             [(FW["x"] + 140.0, y, FW["z"] + 30.0),
+             (px_x + 40.0, y, FW["z"] + (top[2] - FW["z"]) * 0.34),
              (px_x + 120.0, y, (FW["z"] + top[2]) / 2),
              (px_x + 190.0, y * 0.7, top[2] + 20.0)],
-            BD["nose_pylon_t"], 10))
+            shapes.teardrop_section(t * 2.0, t * 6.2, 26),
+            scale=[(1.0, 1.0), (1.0, 0.94), (0.96, 0.88), (0.90, 0.74)],
+            subdiv=5))
     out["nose_pylons"] = mesh.join(*pylons)
 
     capes = []
     for sgn in (-1.0, 1.0):
         rows = []
-        for f in (0.0, 0.4, 0.75, 1.0):
+        n_f, n_g = 13, 11
+        for i in range(n_f):
+            f = i / (n_f - 1)
             x = BD["cape_x0"] + (BD["cape_x1"] - BD["cape_x0"]) * f
             under = chassis.surface_point(x, -90.0)
             row = []
-            for g in (0.0, 0.45, 1.0):
+            for j in range(n_g):
+                g = j / (n_g - 1)
                 y = sgn * BD["cape_y"] * g * (0.5 + 0.5 * f)
-                row.append((x, y, under[2] + 8.0 - 34.0 * g * (0.4 + 0.6 * f)))
+                # the cape is a curved shelf, not a wedge: it turns the flow
+                # coming off the nose down and outboard, so it droops on a
+                # curve and rolls over at its outer edge
+                drop = 34.0 * (0.4 + 0.6 * f) * g ** 1.35
+                row.append((x, y, under[2] + 8.0 - drop))
             rows.append(row)
-        capes.append(_grid_skin(rows, 9.0))
+        capes.append(_grid_skin(rows, 9.0, rim=2))
     out["nose_cape"] = mesh.join(*capes)
     return out
 
 
-def _grid_skin(rows, t):
-    """Give a grid of stations thickness in z and close it into a solid."""
+def _grid_skin(rows, t, rim=0):
+    """Give a grid of stations thickness in z and close it into a solid.
+
+    With `rim` the thickness rolls to nothing over that many cells from the
+    boundary, so the panel has an edge radius instead of a knife edge.
+    """
     nr, nc = len(rows), len(rows[0])
-    lo = [(x, y, z - t / 2) for row in rows for (x, y, z) in row]
-    hi = [(x, y, z + t / 2) for row in rows for (x, y, z) in row]
+
+    def half_t(i, j):
+        if not rim:
+            return t / 2
+        d = min(min(i, nr - 1 - i, j, nc - 1 - j) / float(rim), 1.0)
+        return (t / 2) * math.sqrt(max(0.0, 1.0 - (1.0 - d) ** 2))
+
+    lo = [(x, y, z - half_t(i, j))
+          for i, row in enumerate(rows) for j, (x, y, z) in enumerate(row)]
+    hi = [(x, y, z + half_t(i, j))
+          for i, row in enumerate(rows) for j, (x, y, z) in enumerate(row)]
     verts = lo + hi
     off = len(lo)
     faces = []
@@ -173,20 +200,43 @@ def _crash_structures():
                                       -BD["crash_r"])
             b = chassis.sidepod_point(1980.0, sgn * 0.94, 0.0,
                                       -BD["crash_r"])
-            sides.append(mesh.pipe(
-                [(a[0], a[1] * 0.55, zz), (b[0], b[1], zz)],
-                BD["crash_r"], 12))
+            # A side impact tube is an oval so it crushes along its length
+            # instead of buckling sideways, and it is wound thicker at the
+            # outboard end where the load comes in.
+            r = BD["crash_r"]
+            sides.append(shapes.swept_profile(
+                [(a[0], a[1] * 0.55, zz),
+                 (a[0] + (b[0] - a[0]) * 0.5,
+                  a[1] * 0.55 + (b[1] - a[1] * 0.55) * 0.5, zz),
+                 (b[0], b[1], zz)],
+                shapes.rounded_polygon(
+                    [(-r * 1.5, -r * 0.78), (r * 1.5, -r * 0.78),
+                     (r * 1.5, r * 0.78), (-r * 1.5, r * 0.78)],
+                    r * 0.70, seg=6),
+                scale=[(0.82, 0.82), (0.93, 0.93), (1.0, 1.0)], subdiv=5))
     out["side_impact"] = mesh.join(*sides)
 
     x = spec.POWERTRAIN["gearbox_x"] + spec.POWERTRAIN["gearbox_len"]
     z = spec.POWERTRAIN["gearbox_z"]
     # tapered to stay inside the engine cover, which narrows faster than it
-    out["crash_structure"] = mesh.revolve_open(
-        [(x, 118.0), (x + 200.0, 92.0), (x + 340.0, 58.0)],
-        18, cap_start=True, cap_end=True)
-    out["crash_structure"] = (
-        [(px, py, pz + z) for (px, py, pz) in out["crash_structure"][0]],
-        out["crash_structure"][1])
+    # The rear impact structure: a tapered cone with crush initiators rolled
+    # into it, so it starts folding at a known load instead of choosing its
+    # own failure mode, and a mounting flange onto the gearbox.
+    parts = []
+    prof = []
+    for i in range(13):
+        f = i / 12.0
+        prof.append((x + 340.0 * f,
+                     118.0 - 60.0 * f + (5.0 if i % 3 == 1 else 0.0)))
+    loop = [(px, r - 5.0) for (px, r) in prof] + list(reversed(prof))
+    cv, cf = mesh.revolve_closed(loop, 34)
+    parts.append((cv, cf))
+    parts.append(mesh.flange(x, 100.0, 146.0, 14.0, 8, bolt_r=7.0))
+    # the rain light and the jacking point live on the back of it
+    parts.append(shapes.rounded_box(x + 352.0, 0.0, 20.0, 26.0, 90.0, 60.0,
+                                    9.0, seg=6))
+    v, f = mesh.join(*parts)
+    out["crash_structure"] = ([(px, py, pz + z) for (px, py, pz) in v], f)
     return out
 
 
@@ -199,14 +249,18 @@ def _airbox():
     top = chassis.surface_point(x, 90.0)
     # The scoop stands proud at the roll hoop and is swallowed by the engine
     # cover within its own length -- it is an intake, not a second fuselage.
+    ctrl = ((-40.0, w, h, 24.0), (-24.0, w * 1.04, h * 1.02, 22.0),
+            (L * 0.10, w * 0.97, h * 0.92, 16.0),
+            (L * 0.22, w * 0.90, h * 0.82, 8.0),
+            (L * 0.40, w * 0.77, h * 0.64, -14.0),
+            (L * 0.62, w * 0.62, h * 0.46, -40.0),
+            (L * 0.82, w * 0.47, h * 0.31, -70.0),
+            (L, w * 0.34, h * 0.20, -96.0))
     rows = []
-    for (dx, sw, sh, dz) in ((-40.0, w, h, 24.0),
-                             (L * 0.22, w * 0.90, h * 0.82, 8.0),
-                             (L * 0.62, w * 0.62, h * 0.46, -40.0),
-                             (L, w * 0.34, h * 0.20, -96.0)):
+    for (dx, sw, sh, dz) in ctrl:
         ring = []
-        for i in range(16):
-            a = 2 * math.pi * i / 16
+        for i in range(34):
+            a = 2 * math.pi * i / 34
             p = 2.0 / 2.8
             ca, sa = math.cos(a), math.sin(a)
             ring.append((x + dx,
@@ -220,38 +274,148 @@ def _airbox():
 
 def _driver():
     """A driver in the seat. Everything above the coaming is what sets the
-    scale of a single-seater; without it the cockpit reads as a slot."""
+    scale of a single-seater; without it the cockpit reads as a slot.
+
+    This used to be one rounded box and four eight-sided pipes -- 292
+    vertices for a human being, in a cockpit where the steering wheel he is
+    holding has 2,812. His arms ended 90 mm short of the wheel, he had no
+    hands, and he was not wearing the head-and-neck restraint that is the
+    reason the halo above him has anything to hold on to.
+    """
     out = {}
     D = BD["driver"]
+    R = D["helmet_r"]
+    hx, hz = D["helmet_x"], D["helmet_z"]
+
+    # ---- helmet: shell, visor aperture, chin bar, aero tail, top vents ----
     parts = []
-    # helmet
     hv, hf = mesh.revolve_closed(
-        [(-D["helmet_r"] * 0.86, 0.0), (-D["helmet_r"] * 0.80, D["helmet_r"] * 0.62),
-         (-D["helmet_r"] * 0.30, D["helmet_r"] * 0.96),
-         (D["helmet_r"] * 0.30, D["helmet_r"] * 0.96),
-         (D["helmet_r"] * 0.74, D["helmet_r"] * 0.70),
-         (D["helmet_r"] * 0.90, 0.0)], 22)
-    parts.append(([(pz + D["helmet_x"], px, py + D["helmet_z"])
-                   for (px, py, pz) in hv], hf))
+        [(-R * 0.90, 0.0), (-R * 0.88, R * 0.44), (-R * 0.80, R * 0.66),
+         (-R * 0.58, R * 0.86), (-R * 0.30, R * 0.97), (0.0, R),
+         (R * 0.32, R * 0.96), (R * 0.60, R * 0.86), (R * 0.80, R * 0.62),
+         (R * 0.90, R * 0.30), (R * 0.94, 0.0)], 40)
+    parts.append(([(pz + hx, px, py + hz) for (px, py, pz) in hv], hf))
+    # the visor aperture: a band let into the front of the shell
+    band = []
+    for i in range(19):
+        f = i / 18.0
+        a_ = math.radians(-62.0 + 124.0 * f)
+        band.append((hx - R * 0.72 - math.cos(a_) * R * 0.22,
+                     math.sin(a_) * R * 0.94, hz + R * 0.12))
+    vv, vf = mesh.pipe(band, [R * 0.16] * 19, 12, subdiv=2)
+    parts.append((vv, vf))
+    # chin bar
+    chin = []
+    for i in range(13):
+        f = i / 12.0
+        a_ = math.radians(-58.0 + 116.0 * f)
+        chin.append((hx - R * 0.60, math.sin(a_) * R * 0.80,
+                     hz - R * 0.52 - math.cos(a_) * R * 0.10))
+    parts.append(mesh.pipe(chin, [R * 0.15] * 13, 12, subdiv=2))
+    # aero tail at the back, and the two intake vents on the crown
+    parts.append(shapes.rounded_box(hx + R * 0.86, 0.0, hz + R * 0.26,
+                                    R * 0.34, R * 1.10, R * 0.34,
+                                    R * 0.12, seg=6))
+    for sgn in (-1.0, 1.0):
+        parts.append(shapes.rounded_box(hx - R * 0.20, sgn * R * 0.34,
+                                        hz + R * 0.90, R * 0.44, R * 0.24,
+                                        R * 0.16, R * 0.06, seg=5))
     out["helmet"] = mesh.join(*parts)
 
+    # ---- body ----
     body = []
-    body.append(shapes.rounded_box(D["shoulder_x"], 0.0, D["helmet_z"] - 190.0,
-                         230.0, 2 * D["shoulder_w"], 200.0))
+    # torso: shoulders wide, waist narrow, chest deep -- lofted, not a box
+    # He is reclined: head forward and low, shoulders behind it, hips further
+    # back again, legs running forward to the pedals. The torso therefore runs
+    # aft from the shoulders to the hips, and stops at the back of the seat --
+    # it used to run 250 mm past it.
+    rings = []
+    for (dx, hw, hh, dz) in ((-90.0, 0.44, 0.54, 22.0),
+                             (-30.0, 0.82, 0.82, 10.0),
+                             (20.0, 1.00, 0.94, 0.0),
+                             (70.0, 0.98, 0.92, -12.0),
+                             (120.0, 0.86, 0.82, -28.0),
+                             (160.0, 0.72, 0.70, -44.0)):
+        ring = []
+        for i in range(26):
+            a_ = 2 * math.pi * i / 26
+            ca, sa = math.cos(a_), math.sin(a_)
+            e = 2.0 / 2.6
+            ring.append((D["shoulder_x"] + dx,
+                         D["shoulder_w"] * hw
+                         * math.copysign(abs(ca) ** e, ca),
+                         hz - 190.0 + dz
+                         + 130.0 * hh * math.copysign(abs(sa) ** e, sa)))
+        rings.append(ring)
+    body.append(shapes._loft_closed(rings))
+    # neck
+    body.append(mesh.pipe([(hx + 40.0, 0.0, hz - R * 0.82),
+                           (D["shoulder_x"] - 70.0, 0.0, hz - 172.0)],
+                          [R * 0.40, R * 0.54], 20, subdiv=3))
+    # HANS: the collar the belts trap against the shoulders, with the two
+    # tethers to the helmet. The halo exists to protect a head that this
+    # holds on to a neck.
     for sgn in (-1.0, 1.0):
+        body.append(shapes.rounded_box(
+            D["shoulder_x"] - 66.0, sgn * D["shoulder_w"] * 0.60, hz - 150.0,
+            120.0, D["shoulder_w"] * 0.52, 40.0, 14.0, seg=6))
         body.append(mesh.pipe(
-            [(D["shoulder_x"] - 40.0, sgn * D["shoulder_w"] * 0.8,
-              D["helmet_z"] - 170.0),
-             (1560.0, sgn * 150.0, D["helmet_z"] - 230.0),
-             (1420.0, sgn * 110.0, D["helmet_z"] - 240.0)],
-            D["arm_r"], 8))
-        body.append(mesh.pipe(
-            [(1780.0, sgn * 120.0, 330.0),
-             (D["knee_x"], sgn * 140.0, 430.0),
-             (D["foot_x"], sgn * 110.0, 380.0)],
-            D["leg_r"], 8))
+            [(hx + R * 0.55, sgn * R * 0.52, hz - R * 0.30),
+             (D["shoulder_x"] - 80.0, sgn * D["shoulder_w"] * 0.52,
+              hz - 138.0)], 7.0, 12, subdiv=2))
+    body.append(shapes.rounded_box(D["shoulder_x"] - 20.0, 0.0, hz - 148.0,
+                                   90.0, D["shoulder_w"] * 1.10, 34.0,
+                                   12.0, seg=6))
+
+    # arms: shoulder, elbow, wrist, and a hand on the wheel rim
+    wheel_x = 1333.0
+    for sgn in (-1.0, 1.0):
+        shoulder = (D["shoulder_x"] - 30.0, sgn * D["shoulder_w"] * 0.86,
+                    hz - 175.0)
+        elbow = (1590.0, sgn * 198.0, hz - 232.0)
+        wrist = (wheel_x + 46.0, sgn * 126.0, 594.0)
+        body.append(_limb(shoulder, elbow, wrist,
+                          D["arm_r"], D["arm_r"] * 0.78, D["arm_r"] * 0.58))
+        # the hand, closed round the rim
+        hand = []
+        hand.append(shapes.rounded_box(wheel_x + 22.0, sgn * 118.0, 592.0,
+                                       56.0, 46.0, 88.0, 18.0, seg=6))
+        for k in range(4):
+            hand.append(mesh.pipe(
+                [(wheel_x + 6.0, sgn * 112.0, 566.0 + k * 20.0),
+                 (wheel_x - 14.0, sgn * 104.0, 562.0 + k * 20.0)],
+                9.0, 10, subdiv=2))
+        body.append(mesh.join(*hand))
+
+    # legs: hip, knee, ankle, and a boot on the pedal
+    for sgn in (-1.0, 1.0):
+        hip = (D["shoulder_x"] + 150.0, sgn * 116.0, hz - 318.0)
+        knee = (D["knee_x"], sgn * 142.0, 452.0)
+        ankle = (D["foot_x"] + 40.0, sgn * 112.0, 372.0)
+        body.append(_limb(hip, knee, ankle,
+                          D["leg_r"], D["leg_r"] * 0.66, D["leg_r"] * 0.46))
+        body.append(shapes.rounded_box(D["foot_x"] + 4.0, sgn * 108.0, 350.0,
+                                       110.0, 72.0, 56.0, 18.0, seg=6))
     out["driver"] = mesh.join(*body)
     return out
+
+
+def _limb(a, b, c, r0, r1, r2):
+    """An arm or a leg: two tapered segments with a joint between them.
+
+    A limb drawn as one pipe from shoulder to wrist passes straight through
+    the bodywork, has no elbow, and ends in nothing. This bends at the joint,
+    tapers along its length, and puts a ball at the joint so the two segments
+    meet in a shape rather than a crease.
+    """
+    parts = [mesh.pipe([a, b], [r0, r1], 20, subdiv=4),
+             mesh.pipe([b, c], [r1, r2], 20, subdiv=4)]
+    jv, jf = mesh.revolve_closed(
+        [(-r1, 0.0), (-r1 * 0.7, r1 * 0.72), (0.0, r1 * 1.02),
+         (r1 * 0.7, r1 * 0.72), (r1, 0.0)], 20)
+    parts.append(([(px + b[0], py + b[1], pz + b[2])
+                   for (px, py, pz) in jv], jf))
+    return mesh.join(*parts)
 
 
 def _service():

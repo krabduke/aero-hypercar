@@ -12,7 +12,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import spec
 import mesh
 import shapes
-import shapes
 from parts import wheels, common, detail
 
 S = spec.SUSP
@@ -41,32 +40,43 @@ def build():
                 inb = (x + dx, sgn * inb_y, z_in)
                 leg = "fwd" if dx < 0 else "aft"
                 lvl = "upper" if z_out == S["upper_z"] else "lower"
+                # The outboard end is the loaded one, so it carries the
+                # bigger section and the bigger joint.
                 arms.append((f"wishbone_{tag}_{lvl}_{leg}",
-                             detail.faired_leg(outb, inb, sect, chord)))
+                             shapes.suspension_link(
+                                 outb, inb, sect, chord,
+                                 chord * 0.86, n_sta=11,
+                                 end_r=14.0 if lvl == "lower" else 12.0)))
 
         # push/pull rod into a rocker on the chassis
         if front:
             rod = [(x, y * 0.74, S["lower_z"]), (x + 120.0, sgn * inb_y, 560.0)]
-            rockers.append((f"rocker_{tag}", shapes.rounded_box(
-                x + 130.0, sgn * inb_y, 580.0, 150.0, 40.0, 120.0, 14.0)))
+            rockers.append((f"rocker_{tag}",
+                            _rocker(x + 130.0, sgn * inb_y, 580.0, 1.0)))
         else:
             rod = [(x, y * 0.74, S["upper_z"] + 60.0),
                    (x - 150.0, sgn * inb_y, 180.0)]
-            rockers.append((f"rocker_{tag}", shapes.rounded_box(
-                x - 160.0, sgn * inb_y, 180.0, 150.0, 40.0, 120.0, 14.0)))
-        rods.append((f"pushrod_{tag}", mesh.pipe(rod, S["rod_r"], P)))
+            rockers.append((f"rocker_{tag}",
+                            _rocker(x - 160.0, sgn * inb_y, 180.0, -1.0)))
+        # A pushrod is the most heavily loaded member on the car and it is
+        # also right in the flow, so it is a deep aerofoil section with a
+        # rod end at each end -- not a 40-vertex tube.
+        rod_sect = common.section_points(26, 0.26, 0.0)
+        rods.append((f"pushrod_{tag}", shapes.suspension_link(
+            rod[0], rod[1], rod_sect, S["rod_r"] * 3.1, S["rod_r"] * 2.7,
+            n_sta=11, end_r=S["rod_r"] * 0.95)))
 
         # track rod / toe link
         trk_x = x + (-230.0 if front else 200.0)
-        rods.append((f"trackrod_{tag}",
-                     mesh.pipe([(x, y * 0.74, S["lower_z"] + 70.0),
-                                (trk_x, sgn * inb_y * 0.8, S["lower_z"] + 90.0)],
-                               S["rod_r"] * 0.8, P)))
+        rods.append((f"trackrod_{tag}", shapes.suspension_link(
+            (x, y * 0.74, S["lower_z"] + 70.0),
+            (trk_x, sgn * inb_y * 0.8, S["lower_z"] + 90.0),
+            common.section_points(24, 0.30, 0.0),
+            S["rod_r"] * 2.4, S["rod_r"] * 2.2, n_sta=9,
+            end_r=S["rod_r"] * 0.78)))
 
         if not front:
-            shafts.append((f"driveshaft_{tag}",
-                           mesh.pipe([(x, sgn * 180.0, od / 2),
-                                      (x, y * 0.78, od / 2)], 26.0, P)))
+            shafts.append((f"driveshaft_{tag}", _driveshaft(x, sgn, y, od)))
 
     # One object per member. A wishbone leg, a pushrod and a track rod are
     # three different parts with three different loads and three different
@@ -101,40 +111,251 @@ def _inboard():
 
         dampers = []
         for sgn in (-1.0, 1.0):
-            y = sgn * inb_y * 0.55
-            body = mesh.pipe([(ax + dx - 150.0, y, z),
-                              (ax + dx + 40.0, y, z + 14.0)], 34.0, 12)
-            rodv = mesh.pipe([(ax + dx + 40.0, y, z + 14.0),
-                              (ax + dx + 130.0, y, z + 22.0)], 13.0, 8)
-            dampers.append(body)
-            dampers.append(rodv)
+            dampers.append(_damper(ax + dx - 150.0, sgn * inb_y * 0.55, z))
         out[f"dampers_{tag}"] = mesh.join(*dampers)
 
         # torsion bars across the car, and the heave damper on the centreline
-        out[f"torsion_bars_{tag}"] = mesh.join(
-            mesh.pipe([(ax + dx - 10.0, -inb_y * 0.9, z - 36.0),
-                       (ax + dx - 10.0, inb_y * 0.9, z - 36.0)], 21.0, 10))
-        out[f"heave_{tag}"] = mesh.join(
-            mesh.pipe([(ax + dx - 120.0, 0.0, z + 60.0),
-                       (ax + dx + 60.0, 0.0, z + 60.0)], 30.0, 12),
-            shapes.rounded_box(ax + dx + 90.0, 0.0, z + 60.0,
-                               70.0, 80.0, 60.0, 12.0))
+        out[f"torsion_bars_{tag}"] = _torsion_bars(
+            ax + dx - 10.0, inb_y * 0.9, z - 36.0)
+        # the heave element is a third damper, working only when both
+        # wheels move together -- which is what holds the ride height under
+        # aerodynamic load
+        out[f"heave_{tag}"] = _damper(ax + dx - 165.0, 0.0, z + 150.0)
 
         # anti-roll bar: a blade each side on a cross tube
-        arb = [mesh.pipe([(ax + dx - 60.0, -inb_y, z + 96.0),
-                          (ax + dx - 60.0, inb_y, z + 96.0)], 15.0, 10)]
-        for sgn in (-1.0, 1.0):
-            arb.append(shapes.rounded_box(ax + dx - 20.0, sgn * inb_y,
-                                          z + 96.0, 110.0, 9.0, 34.0, 4.0))
-        out[f"antiroll_{tag}"] = mesh.join(*arb)
+        out[f"antiroll_{tag}"] = _antiroll(ax + dx - 60.0, inb_y, z + 96.0)
 
     # steering: rack, column and track rods
     ax = spec.FRONT_AXLE_X
-    out["steering_rack"] = mesh.join(
-        mesh.pipe([(ax - 40.0, -S["inboard_front_y"] * 0.85, 240.0),
-                   (ax - 40.0, S["inboard_front_y"] * 0.85, 240.0)], 28.0, 12),
-        shapes.rounded_box(ax - 40.0, 0.0, 240.0, 150.0, 220.0, 90.0, 20.0))
-    out["steering_column"] = mesh.pipe(
-        [(ax - 40.0, 0.0, 270.0), (ax + 420.0, 0.0, 430.0),
-         (ax + 620.0, 0.0, 520.0)], 17.0, 10)
+    out["steering_rack"] = _rack(ax - 40.0, S["inboard_front_y"] * 0.85)
+    out["steering_column"] = _steering_column(ax)
     return out
+
+
+def _damper(x, y, z):
+    """A damper, with the adjusters that are the point of it.
+
+    Two concentric cylinders is a gas strut. A racing damper has a separate
+    gas reservoir alongside the body because the fluid has to have somewhere
+    to go as the rod displaces it, a bump and a rebound adjuster on that
+    reservoir, a clevis at each end, and a bump rubber on the rod.
+    """
+    parts = []
+    # body, with the seal head and eye at the closed end
+    parts.append(mesh.revolve_closed(
+        [(0.0, 0.0), (14.0, 0.0), (14.0, 30.0), (20.0, 34.0),
+         (172.0, 34.0), (178.0, 30.0), (186.0, 29.0), (186.0, 21.0),
+         (176.0, 20.0), (176.0, 15.0), (14.0, 15.0), (8.0, 22.0),
+         (0.0, 26.0)], 34))
+    # rod and its bump rubber
+    parts.append(mesh.revolve_closed(
+        [(176.0, 0.0), (268.0, 0.0), (268.0, 12.5), (176.0, 12.5)], 24))
+    parts.append(mesh.revolve_closed(
+        [(196.0, 13.0), (232.0, 13.0), (232.0, 24.0), (226.0, 27.0),
+         (202.0, 27.0), (196.0, 24.0)], 24))
+    # reservoir alongside, on its transfer union
+    rv, rf = mesh.revolve_closed(
+        [(0.0, 0.0), (96.0, 0.0), (96.0, 23.0), (90.0, 26.0),
+         (8.0, 26.0), (0.0, 23.0)], 28)
+    parts.append(([(px + 44.0, py, pz + 52.0) for (px, py, pz) in rv], rf))
+    parts.append(mesh.pipe([(38.0, 0.0, 18.0), (40.0, 0.0, 36.0),
+                            (48.0, 0.0, 50.0)], 8.0, 14, subdiv=3))
+    # bump and rebound adjusters, one on each end of the reservoir
+    for (ax_, hex_r) in ((140.0, 11.0), (44.0, 9.0)):
+        kv, kf = mesh.revolve_closed(
+            [(0.0, 0.0), (16.0, 0.0), (16.0, hex_r), (10.0, hex_r + 2.0),
+             (0.0, hex_r + 2.0)], 12)
+        parts.append(([(px + ax_, py, pz + 78.0)
+                       for (px, py, pz) in kv], kf))
+    # clevis eyes, top and bottom
+    for (ax_, dirn) in ((0.0, -1.0), (268.0, 1.0)):
+        ev, ef = shapes.rod_end((0.0, 0.0, 0.0), (dirn, 0.0, 0.0), 13.0)
+        parts.append(([(px + ax_, py, pz) for (px, py, pz) in ev], ef))
+    v, f = mesh.join(*parts)
+    return ([(px + x, py + y, pz + z) for (px, py, pz) in v], f)
+
+
+def _torsion_bars(x, half_y, z):
+    """A torsion bar is a spring. It has splines at each end -- that is how
+    the load gets into it -- and a lever arm the pushrod works through."""
+    parts = []
+    for sgn in (-1.0, 1.0):
+        y0, y1 = sgn * half_y, sgn * half_y * 0.12
+        parts.append(mesh.pipe(
+            [(x, y0 + (y1 - y0) * f, z) for f in (0.0, 0.25, 0.5, 0.75, 1.0)],
+            [19.0, 15.0, 14.0, 15.0, 19.0], 22, subdiv=2))
+        # splines at the outer end
+        for i in range(18):
+            a = 2 * math.pi * i / 18
+            sv, sf = mesh.box(0.0, 0.0, 0.0, 3.0, 26.0, 3.0)
+            parts.append(([(x + px + 18.0 * math.cos(a),
+                            y0 - sgn * 13.0 + py,
+                            z + pz + 18.0 * math.sin(a))
+                           for (px, py, pz) in sv], sf))
+        # the lever arm the rocker pulls on
+        parts.append(shapes.rounded_box(x + 36.0, y0 - sgn * 6.0, z + 4.0,
+                                        96.0, 20.0, 40.0, 8.0, seg=6))
+    return mesh.join(*parts)
+
+
+def _steering_column(ax):
+    """A column with a universal joint at each break in it, and the quick
+    release the driver pulls the wheel off."""
+    path = [(ax - 40.0, 0.0, 270.0), (ax + 180.0, 0.0, 348.0),
+            (ax + 420.0, 0.0, 430.0), (ax + 620.0, 0.0, 520.0)]
+    parts = [mesh.pipe(path, [15.0, 15.0, 17.0, 17.0], 22, subdiv=4)]
+    for (i, p) in enumerate(path[1:3]):
+        d = (path[i + 2][0] - path[i][0], 0.0, path[i + 2][2] - path[i][2])
+        jv, jf = mesh.revolve_closed(
+            [(-30.0, 0.0), (30.0, 0.0), (30.0, 16.0), (18.0, 26.0),
+             (-18.0, 26.0), (-30.0, 16.0)], 22)
+        parts.append((shapes.orient(jv, p, d), jf))
+        yv, yf = mesh.revolve_closed(
+            [(-8.0, 0.0), (8.0, 0.0), (8.0, 30.0), (-8.0, 30.0)], 20)
+        parts.append((shapes.orient(
+            [(py, pz, px) for (px, py, pz) in yv], p, d), yf))
+    qv, qf = mesh.revolve_closed(
+        [(0.0, 0.0), (34.0, 0.0), (34.0, 30.0), (28.0, 36.0),
+         (8.0, 36.0), (0.0, 30.0)], 24)
+    parts.append((shapes.orient(qv, path[-1],
+                                (path[-1][0] - path[-2][0], 0.0,
+                                 path[-1][2] - path[-2][2])), qf))
+    return mesh.join(*parts)
+
+
+def _driveshaft(x, sgn, y, od):
+    """A driveshaft is a tube with a constant-velocity joint at each end.
+
+    The joint is the whole reason the part exists: the wheel moves 60 mm up
+    and down and steers, and the gearbox output does not, so the shaft has to
+    change length and angle while transmitting the torque. A plain cylinder
+    from the diff to the hub says none of that happens. Each end gets a
+    tripod housing and the convoluted boot that keeps grease in it.
+    """
+    # the outboard joint sits in the upright, at the hub -- not 80 mm
+    # inboard of it, which is where it used to stop
+    y0, y1 = sgn * 180.0, y * 0.875
+    z = od / 2
+    parts = []
+    # the bar itself, waisted between the two joints
+    parts.append(mesh.pipe(
+        [(x, y0 + (y1 - y0) * f, z) for f in (0.16, 0.32, 0.50, 0.68, 0.84)],
+        [25.0, 21.0, 19.5, 21.0, 25.0], 24, subdiv=3))
+
+    def place(verts, yy, dirn):
+        return [(x + pz, yy + dirn * px, z + py) for (px, py, pz) in verts]
+
+    # Each joint housing opens towards the middle of the shaft, so `dirn` is
+    # the direction from that end towards the other one -- not a hard-coded
+    # +1 and -1, which is what it was. On the left-hand corner, where the
+    # shaft runs the other way in y, that put one bell inboard of the shaft
+    # end and hung the other past the hub; the two shafts came out 98 mm from
+    # being mirror images and neither reached its wheel.
+    towards = 1.0 if y1 > y0 else -1.0
+    for (yy, dirn) in ((y0, towards), (y1, -towards)):
+        bv, bf = mesh.revolve_closed(
+            [(0.0, 0.0), (56.0, 0.0), (56.0, 26.0), (50.0, 30.0),
+             (44.0, 44.0), (16.0, 48.0), (8.0, 40.0), (0.0, 30.0)], 34)
+        parts.append((place(bv, yy, dirn), bf))
+
+        outer = []
+        for i in range(13):
+            f = i / 12.0
+            r = 46.0 - 18.0 * f + (6.0 if i % 2 else -1.0)
+            outer.append((44.0 + 54.0 * f, r))
+        prof = [(px, r - 3.0) for (px, r) in outer] + list(reversed(outer))
+        cv, cf = mesh.revolve_closed(prof, 30)
+        parts.append((place(cv, yy, dirn), cf))
+    return mesh.join(*parts)
+
+
+def _rocker(x, y, z, dirn):
+    """A bellcrank, which is a machined triangle and not a box.
+
+    Three pickups -- pushrod in, damper out, torsion bar on the pivot -- so
+    it is a triangle with a boss at each corner, machined out between them
+    because every gram there is unsprung-adjacent mass that has to be
+    accelerated twice per bump. Two plates with a spacer between them, which
+    is how it takes the side load without twisting.
+    """
+    corners = [(x + dirn * 86.0, z + 48.0),      # pushrod
+               (x - dirn * 74.0, z + 62.0),      # damper
+               (x + dirn * 10.0, z - 70.0)]      # pivot
+    parts = []
+    for sgn in (-1.0, 1.0):
+        yy = y + sgn * 21.0
+        ctrl = []
+        for i, c in enumerate(corners):
+            nxt = corners[(i + 1) % 3]
+            ctrl.append(c)
+            # waist the edge in between: the machined-out flank
+            mx = (c[0] + nxt[0]) / 2
+            mz = (c[1] + nxt[1]) / 2
+            cx = sum(p[0] for p in corners) / 3
+            cz = sum(p[1] for p in corners) / 3
+            ctrl.append((mx + (cx - mx) * 0.34, mz + (cz - mz) * 0.34))
+        parts.append(shapes.shaped_panel(
+            shapes.panel_outline(ctrl, subdiv=5), yy, 13.0, rim_seg=4))
+    for (cx, cz) in corners:
+        bv, bf = mesh.revolve_closed(
+            [(-30.0, 11.0), (30.0, 11.0), (30.0, 21.0), (26.0, 25.0),
+             (-26.0, 25.0), (-30.0, 21.0)], 24)
+        parts.append(([(pz + cx, px + y, py + cz)
+                       for (px, py, pz) in bv], bf))
+    return mesh.join(*parts)
+
+
+def _antiroll(x, half_y, z):
+    """A blade anti-roll bar: a cross tube on bearings, a lever arm each side,
+    and a flat blade the driver can rotate to change the rate."""
+    parts = [mesh.pipe([(x, -half_y * 0.86, z), (x, half_y * 0.86, z)],
+                       15.0, 22, subdiv=4)]
+    for sgn in (-1.0, 1.0):
+        yy = sgn * half_y * 0.86
+        # bearing block
+        parts.append(shapes.rounded_box(x, sgn * half_y * 0.60, z,
+                                        54.0, 30.0, 54.0, 9.0, seg=6))
+        # lever arm, and the blade sticking out of it on edge
+        parts.append(shapes.rounded_box(x + 40.0, yy, z, 96.0, 22.0, 40.0,
+                                        8.0, seg=6))
+        parts.append(shapes.rounded_box(x + 104.0, yy, z + 4.0,
+                                        86.0, 7.0, 42.0, 2.5, seg=5))
+        # drop link down to the rocker
+        parts.append(shapes.suspension_link(
+            (x + 140.0, yy, z - 6.0), (x + 150.0, yy * 0.86, z - 108.0),
+            common.section_points(20, 0.34, 0.0), 26.0, 24.0,
+            n_sta=7, end_r=9.0))
+    return mesh.join(*parts)
+
+
+def _rack(x, half_y):
+    """A rack housing: the pinion comes in at an angle on its own boss, the
+    ends are gaitered, and it bolts to the tub on two feet."""
+    z = 240.0
+    parts = [mesh.revolve_closed(
+        [(-half_y * 0.82, 0.0), (half_y * 0.82, 0.0),
+         (half_y * 0.82, 22.0), (half_y * 0.74, 30.0),
+         (half_y * 0.30, 34.0), (-half_y * 0.30, 34.0),
+         (-half_y * 0.74, 30.0), (-half_y * 0.82, 22.0)], 30)]
+    parts = [([(x + pz, px, z + py) for (px, py, pz) in parts[0][0]],
+              parts[0][1])]
+    # gaiters on the rack ends
+    for sgn in (-1.0, 1.0):
+        prof = []
+        for i in range(11):
+            f = i / 10.0
+            prof.append((half_y * 0.82 + 62.0 * f,
+                         30.0 - 12.0 * f + (5.0 if i % 2 else -1.0)))
+        loop = [(px, r - 2.5) for (px, r) in prof] + list(reversed(prof))
+        gv, gf = mesh.revolve_closed(loop, 24)
+        parts.append(([(x + pz, sgn * px, z + py)
+                       for (px, py, pz) in gv], gf))
+    # pinion boss and the two mounting feet
+    parts.append(mesh.pipe([(x + 10.0, -40.0, z + 20.0),
+                            (x + 40.0, -70.0, z + 96.0)], [26.0, 21.0],
+                           20, subdiv=3))
+    for sgn in (-1.0, 1.0):
+        parts.append(shapes.rounded_box(x - 30.0, sgn * half_y * 0.44,
+                                        z - 30.0, 70.0, 36.0, 40.0, 8.0,
+                                        seg=6))
+    return mesh.join(*parts)

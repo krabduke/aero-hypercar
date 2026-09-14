@@ -44,7 +44,8 @@ def pivots():
     out = {}
     for (tag, x, y, w, od) in corners():
         hub = (x, y, od / 2)
-        for stem in ("tyre", "rim", "wheelcover", "disc", "wheelnut"):
+        for stem in ("tyre", "rim", "wheelcover", "disc", "wheelnut",
+                     "hub", "wheel_stud"):
             out[f"{stem}_{tag}"] = (hub, (0.0, 1.0, 0.0), 1.0, "spin")
     return out
 
@@ -58,8 +59,12 @@ def build():
         out[f"wheelcover_{tag}"] = _cover(x, y, z, w)
         out[f"disc_{tag}"] = _disc(x, y, z, w)
         out[f"caliper_{tag}"] = _caliper(x, y, z, w)
+        out[f"brake_pad_{tag}"] = _pads(x, y, z, w)
         out[f"upright_{tag}"] = _upright(x, y, z, w)
+        out[f"hub_{tag}"] = _hub(x, y, z, w)
+        out[f"wheel_stud_{tag}"] = _studs(x, y, z, w)
         out[f"wheelnut_{tag}"] = _nut(x, y, z, w)
+        out[f"tether_{tag}"] = _tether(x, y, z, w, tag)
     return out
 
 
@@ -195,7 +200,7 @@ def _cover(x, y, z, w):
         (y0 - s * dish, W["nut_r"] + 12.0),
         (y0 - s * (dish - 8.0), W["nut_r"] + 12.0),
         (y0 - s * (dish - 8.0) + s * dish * 0.5, W["cover_r"] * 0.62),
-        (y0 - s * 8.0, W["cover_r"] - 12.0), (y0 - s * 8.0, W["cover_r"]),
+        (y0 - s * 30.0, W["cover_r"] - 12.0), (y0 - s * 30.0, W["cover_r"]),
     ])]
     # radial vanes across the dish, so it reads as a wheel cover and not a lid
     for k in range(W["cover_vanes"]):
@@ -277,18 +282,143 @@ def _caliper(x, y, z, w):
             pv = [(rr * ca + pz, y0 + side * (W["disc_t"] / 2 + 2.0)
                    + side * px, rr * sa + py) for (px, py, pz) in pv]
             parts.append((_place(pv, x, y, z), pf))
-    # pads
+    # The pads themselves are their own part -- brake_pad_{tag} -- because
+    # they are a serviceable friction lining that bolts into the caliper,
+    # not a feature moulded into it.
+    return mesh.join(*parts)
+
+
+def _pads(x, y, z, w):
+    """The friction pads, one each side of the disc.
+
+    A pad is a serviceable part that slides into the caliper on its own
+    backing plate -- it is not a feature moulded into the caliper body, which
+    is why it is its own object. Each is a curved shoe spanning the caliper
+    arc, with the backing plate, the lining, and the ears that locate it on
+    the retaining pins.
+    """
+    s = _sgn(y)
+    arc = math.radians(W["caliper_arc"])
+    ri, ro = W["pad_r_in"], W["pad_r_out"]
+    t = W["pad_t"]
+    y0 = -s * w * 0.02
+    parts = []
     for side in (-1.0, 1.0):
-        for k in range(5):
-            f = k / 4
-            a = math.pi / 2 - arc / 2 + arc * f
-            v, fc = shapes.rounded_box(0.0, 0.0, 0.0, 42.0, W["pad_t"], 54.0)
+        yb = y0 + side * (W["disc_t"] / 2 + 1.5)
+        # lining, then the steel backing plate behind it
+        for (t0, t1, r0, r1) in ((0.0, t * 0.62, ri, ro),
+                                 (t * 0.62, t, ri + 5.0, ro - 3.0)):
+            ring = []
+            for k in range(W["pad_seg"] * 4 + 1):
+                a = math.pi / 2 - arc / 2 + arc * k / (W["pad_seg"] * 4)
+                ring.append(a)
+            verts, faces = [], []
+            n = len(ring)
+            for a in ring:
+                ca, sa = math.cos(a), math.sin(a)
+                for (rr, tt) in ((r0, t0), (r1, t0), (r1, t1), (r0, t1)):
+                    verts.append((rr * ca, yb + side * tt, rr * sa))
+            for i in range(n - 1):
+                b0, b1 = i * 4, (i + 1) * 4
+                for j in range(4):
+                    j2 = (j + 1) % 4
+                    faces.append((b0 + j, b0 + j2, b1 + j2, b1 + j))
+            faces.append((3, 2, 1, 0))
+            b = (n - 1) * 4
+            faces.append((b, b + 1, b + 2, b + 3))
+            parts.append((_place(verts, x, y, z), faces))
+        # the two ears the retaining pin passes through
+        for end in (-1.0, 1.0):
+            a = math.pi / 2 + end * arc / 2
             ca, sa = math.cos(a), math.sin(a)
-            rr = r - 30.0
-            v = [(rr * ca + px * sa + pz * ca,
-                  y0 + side * (W["disc_t"] / 2 + W["pad_t"] / 2) + py,
-                  rr * sa - px * ca + pz * sa) for (px, py, pz) in v]
-            parts.append((_place(v, x, y, z), fc))
+            ev, ef = mesh.cylinder(0.0, t * 0.9, 9.0, 10)
+            ev = [(ro * ca + pz, yb + side * px, ro * sa + py)
+                  for (px, py, pz) in ev]
+            parts.append((_place(ev, x, y, z), ef))
+    return mesh.join(*parts)
+
+
+def _hub(x, y, z, w):
+    """Wheel hub and bearing pack, inside the upright.
+
+    The disc bell and the wheel both bolt to this; without it the wheel was
+    carried by nothing and the upright was a shell with a hole in it.
+    """
+    s = _sgn(y)
+    R = W["hub_r"]
+    y0 = -s * w * 0.04
+    parts = []
+    # the barrel, with the flange the studs screw into at the outboard end
+    parts.append(_lathe(x, y, z, [
+        (y0 - s * 96.0, 26.0), (y0 - s * 96.0, R * 0.62),
+        (y0 - s * 62.0, R * 0.62), (y0 - s * 62.0, R * 0.80),
+        (y0 + s * 30.0, R * 0.80), (y0 + s * 30.0, R * 0.55),
+        (y0 + s * 44.0, R * 0.55), (y0 + s * 44.0, R),
+        (y0 + s * 58.0, R), (y0 + s * 58.0, 26.0),
+    ]))
+    # the two bearing races it runs on
+    for off in (-64.0, 18.0):
+        parts.append(_lathe(x, y, z, [
+            (y0 + s * off, R * 0.80), (y0 + s * off, R * 0.98),
+            (y0 + s * (off + 30.0), R * 0.98),
+            (y0 + s * (off + 30.0), R * 0.80),
+        ]))
+    # the drive pegs that take torque from the driveshaft
+    for k in range(6):
+        a = 2 * math.pi * k / 6
+        pv, pf = mesh.cylinder(0.0, 26.0, 11.0, 10)
+        ca, sa = math.cos(a), math.sin(a)
+        rr = R * 0.44
+        pv = [(rr * ca + pz, y0 - s * 96.0 - s * px, rr * sa + py)
+              for (px, py, pz) in pv]
+        parts.append((_place(pv, x, y, z), pf))
+    return mesh.join(*parts)
+
+
+def _studs(x, y, z, w):
+    """The stud pattern the wheel is torqued onto."""
+    s = _sgn(y)
+    R = W["hub_r"]
+    y0 = -s * w * 0.04
+    parts = []
+    for k in range(W.get("stud_n", 6)):
+        a = 2 * math.pi * k / W.get("stud_n", 6) + math.pi / 12
+        ca, sa = math.cos(a), math.sin(a)
+        rr = R * 0.78
+        sv, sf = mesh.revolve_closed(
+            [(0.0, 0.0), (46.0, 0.0), (46.0, W["stud_r"]),
+             (10.0, W["stud_r"]), (10.0, W["stud_r"] * 1.9),
+             (0.0, W["stud_r"] * 1.9)], 10)
+        sv = [(rr * ca + pz, y0 + s * 44.0 + s * px, rr * sa + py)
+              for (px, py, pz) in sv]
+        parts.append((_place(sv, x, y, z), sf))
+    return mesh.join(*parts)
+
+
+def _tether(x, y, z, w, tag):
+    """The wheel tether: a braided strap from the upright into the tub.
+
+    Mandated so a wheel cannot leave the car in an accident, and absent from
+    every corner. Two per corner in the regulations; two here, anchored apart
+    so they do not share a load path.
+    """
+    s = _sgn(y)
+    inboard = y - s * (w / 2 + 120.0)
+    parts = []
+    for k, (dx, dz) in enumerate(((-150.0, 40.0), (150.0, -30.0))):
+        p0 = (x + dx * 0.25, y - s * (w / 2 - 10.0), z + dz * 0.4)
+        p1 = (x + dx, inboard * 0.55 + y * 0.45, z + dz)
+        # the strap itself, flat in section rather than round
+        path = [p0, ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2,
+                     (p0[2] + p1[2]) / 2 + 14.0), p1]
+        parts.append(mesh.pipe(path, 13.0, segments=10))
+        # the swaged end fittings at each anchor
+        for pt in (p0, p1):
+            ev, ef = mesh.revolve_closed(
+                [(-14.0, 7.0), (14.0, 7.0), (14.0, 22.0), (6.0, 26.0),
+                 (-6.0, 26.0), (-14.0, 22.0)], 14)
+            ev = [(pz + pt[0], px + pt[1], py + pt[2]) for (px, py, pz) in ev]
+            parts.append((ev, ef))
     return mesh.join(*parts)
 
 
@@ -316,8 +446,35 @@ def _upright(x, y, z, w):
 def _nut(x, y, z, w):
     """Centre-lock nut, in the middle of the wheel cover."""
     s = _sgn(y)
-    y0 = s * (w / 2 * 0.93 - W["cover_dish"] + 4.0)
-    v, f = mesh.revolve_closed([(y0, 0.0), (y0, W["nut_r"]),
-                                (y0 - s * W["nut_h"], W["nut_r"] * 0.88),
-                                (y0 - s * W["nut_h"], 0.0)], 6)
+    # It sits down in the dish of the wheel cover. It used to be mounted back
+    # to front -- threaded spigot outboard, castellated drive face inboard --
+    # which stood it 17 mm proud of the tyre and made it the widest object on
+    # the car.
+    y0 = s * (w / 2 * 0.93 - W["cover_dish"] - 20.0)
+    R = W["nut_r"]
+    H_ = W["nut_h"]
+    parts = []
+    # The drive face the gun engages: a castellated ring, not a hex. A gun
+    # socket has to find it in a tenth of a second at any clock angle.
+    parts.append(mesh.revolve_closed(
+        [(0.0, 0.0), (H_ * 0.30, 0.0), (H_ * 0.30, R * 0.42),
+         (H_ * 0.22, R * 0.52), (H_ * 0.22, R * 0.86),
+         (H_ * 0.34, R * 0.94), (H_ * 0.34, R),
+         (H_ * 0.05, R), (0.0, R * 0.90)], 40))
+    for i in range(9):
+        a = 2 * math.pi * i / 9
+        cv, cf = mesh.revolve_closed(
+            [(H_ * 0.34, 0.0), (H_, 0.0), (H_, R * 0.19),
+             (H_ * 0.80, R * 0.23), (H_ * 0.34, R * 0.23)], 12)
+        parts.append(([(px, py + math.cos(a) * R * 0.68,
+                        pz + math.sin(a) * R * 0.68)
+                       for (px, py, pz) in cv], cf))
+    # the captive retainer spring that stops it leaving with the gun
+    parts.append(mesh.ring_torus(H_ * 0.10, R * 1.06, R * 0.07, 40, 10))
+    # the threaded spigot behind it
+    parts.append(mesh.revolve_closed(
+        [(-H_ * 1.5, 0.0), (0.0, 0.0), (0.0, R * 0.52),
+         (-H_ * 1.5, R * 0.52)], 30))
+    v, f = mesh.join(*parts)
+    v = [(y0 + s * px, py, pz) for (px, py, pz) in v]
     return _place([(pz, px, py) for (px, py, pz) in v], x, y, z), f

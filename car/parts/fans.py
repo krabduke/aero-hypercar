@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import shapes
 import airfoil
 
 F = spec.FAN
@@ -65,10 +66,43 @@ def build():
         out[f"fan_rotor_{tag}"] = _rotor(cx, cy, cz, spin)
         stators.append(_stators(cx, cy, cz, spin))
 
-        mv, mf = mesh.tube(-54.0, 54.0, 0.0, 62.0, 22)
-        motors.append([(pz + cx, py + cy, px + cz + 150.0)
-                       for (px, py, pz) in mv])
-        motors[-1] = (motors[-1], mf)
+        # The motor.
+        #
+        # It was a solid cylinder -- one mesh.tube with a zero inner radius,
+        # two stations, no features at all -- which is the single crudest
+        # object on a car built entirely around what these two drive. A motor
+        # of this size is a finned case between two end bells, with a terminal
+        # block and feet it actually bolts down through.
+        M = spec.FAN_MOTOR
+        mz = cz + 128.0
+        motors.append(_lathe_z(cx, cy, mz, [
+            (-62.0, 0.0), (-62.0, M["bell_r"]), (-52.0, M["bell_r"]),
+            (-46.0, M["bore_r"] * 2.1), (46.0, M["bore_r"] * 2.1),
+            (52.0, M["bell_r"]), (62.0, M["bell_r"]), (62.0, 0.0),
+        ], 30))
+        # cooling fins round the case
+        for k in range(M["fins"]):
+            fz = -40.0 + 80.0 * (k + 0.5) / M["fins"]
+            motors.append(_lathe_z(cx, cy, mz, [
+                (fz - 2.2, M["bore_r"] * 2.1),
+                (fz - 2.2, M["bore_r"] * 2.1 + M["fin_h"]),
+                (fz + 2.2, M["bore_r"] * 2.1 + M["fin_h"]),
+                (fz + 2.2, M["bore_r"] * 2.1),
+            ], 30))
+        # output shaft down to the rotor hub
+        motors.append(_lathe_z(cx, cy, mz, [
+            (-96.0, 0.0), (-96.0, M["bore_r"] * 0.62),
+            (-56.0, M["bore_r"] * 0.62), (-56.0, 0.0)], 18))
+        # terminal block on the side, and the feet
+        tw, th, tt = M["term"]
+        tv, tf = shapes.rounded_box(cx, cy + M["bell_r"] + th / 2, mz,
+                                    tw, th, tt, r=3.0)
+        motors.append((tv, tf))
+        for sx in (-1.0, 1.0):
+            fv, ff = shapes.rounded_box(
+                cx + sx * (M["bell_r"] - 6.0), cy, mz - 58.0,
+                M["foot_w"], M["foot_w"] * 2.4, 16.0, r=3.0)
+            motors.append((fv, ff))
 
     out["fanduct"] = mesh.join(*ducts)
     out["fan_stators"] = mesh.join(*stators)

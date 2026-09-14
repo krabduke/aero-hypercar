@@ -49,8 +49,11 @@ WHEELBASE = 3150.0
 # hanging off the back. The nose is the x datum; the axles are placed on it.
 FRONT_AXLE_X = 900.0
 REAR_AXLE_X = FRONT_AXLE_X + WHEELBASE
+# Both tracks are set so the outside of the tyre lands on the 2000 mm width
+# limit exactly, which is where a racing car is built to. The rear was 1 mm
+# wide, and verify.py had a 2100 mm band that let it through.
 TRACK_FRONT = 1660.0
-TRACK_REAR = 1600.0
+TRACK_REAR = 1598.0
 
 MASS_KG = 700.0                # with driver and fuel
 MASS_DIST_REAR = 0.565         # fraction on the rear axle
@@ -124,7 +127,7 @@ WHEEL = {
     "rear_w": 405.0,  "rear_od": 690.0,
     "spokes": 7,
     "disc_r": 180.0, "disc_t": 32.0,
-    "caliper_r": 205.0,
+    "caliper_r": 196.0,
     # rim: flange, drop centre, spoke and centre-lock geometry
     "flange_r": 240.0,         # outer lip, just proud of the bead seat
     "bead_r": 228.6,
@@ -149,6 +152,21 @@ WHEEL = {
     "caliper_pistons": 6,
     "caliper_arc": 62.0,       # deg of disc the caliper wraps
     "pad_t": 14.0,
+    # hub and bearing pack: it lives inside the upright barrel, carries the
+    # disc bell on its inboard register and the wheel on its outboard flange
+    "hub_journal_r": 28.0,
+    "hub_flange_r": 112.0,
+    "hub_bell_bore": 64.0,
+    "bearing_r": 52.0,         # pitch radius of the bearing pack
+    "bearing_wr": 9.0,
+    # the stud pattern the wheel bolts to
+    "studs": 5,
+    "stud_r": 5.5,
+    "stud_bc_r": 78.0,         # bolt circle
+    "stud_len": 62.0,
+    "pad_r_in": 140.0,
+    "pad_r_out": 184.0,
+    "pad_seg": 5,
 }
 
 # --------------------------------------------------------------------------
@@ -175,9 +193,12 @@ BODY = [
     (2260.0, 268.0,  66.0, 742.0, 3.0, -0.06),
     (2560.0, 300.0,  74.0, 706.0, 2.9, -0.08),
     (2880.0, 292.0,  86.0, 722.0, 2.8, -0.10),
-    (3240.0, 268.0, 104.0, 692.0, 2.7, -0.10),
-    (3560.0, 240.0, 122.0, 622.0, 2.6, -0.08),
-    (3860.0, 206.0, 140.0, 544.0, 2.5, -0.06),
+    # The cover has to clear the plenum and the turbos in the vee, which is
+    # why a real one bulges over the engine instead of running straight from
+    # the airbox to the rear wing. It used to cut 32 mm into the plenum.
+    (3240.0, 268.0, 104.0, 738.0, 2.9, -0.10),
+    (3560.0, 240.0, 122.0, 668.0, 2.8, -0.08),
+    (3860.0, 206.0, 140.0, 566.0, 2.6, -0.06),
     (4140.0, 168.0, 158.0, 434.0, 2.4, -0.04),
     (4380.0, 140.0, 176.0, 392.0, 2.3, -0.02),
     (4560.0, 118.0, 194.0, 358.0, 2.2,  0.00),
@@ -408,10 +429,148 @@ POWERTRAIN = {
 }
 
 # --------------------------------------------------------------------------
+# Component hardware
+# --------------------------------------------------------------------------
+
+# The mandated wheel tether: a braided strap from the upright into a strong
+# point on the survival cell, long enough to let the wheel walk but not to
+# let it leave the car.
+TETHER = {
+    "width": 26.0, "thick": 5.0, "braid": 7,   # stations across the braid
+}
+
+# The main roll structure. It stands behind the driver's head, is braced
+# forward into the headrest structure, and its legs are cast into the cover
+# over the gearbox bellhousing line.
+ROLL_HOOP = {
+    "x": 2450.0,             # hoop plane, at the rear of the airbox
+    "top_z": 952.0,
+    "half_w": 206.0,         # legs stand either side of the airbox intake
+    "leg_r": 26.0,
+    "plate_len": 190.0, "plate_w": 260.0, "plate_t": 16.0,
+    "brace_z": 640.0,        # where the forward braces meet the headrest
+}
+
+# Shaft and bevel gears taking fan drive off the gearbox case. The fans can
+# be driven mechanically as well as electrically; this is the mechanical path.
+FAN_DRIVE = {
+    "shaft_r": 16.0,
+    "pinion_r": 26.0, "pinion_t": 18.0,
+    "crown_r": 52.0, "crown_t": 16.0,
+    "teeth": 13,
+    "input_z": 552.0,        # layshaft height above the floor line
+    "gearbox_y": 150.0,      # where the flange leaves the case
+}
+
+# DRS: the actuator is a body, a rod and a clevis on the flap underside just
+# ahead of its trailing edge. It stands under the mainplane's lower surface,
+# which it touches, and reaches up-aft to the flap, which it moves.
+DRS = {
+    "body_r": 17.0, "body_x0": 4650.0, "body_len": 100.0, "body_z": 806.0,
+    "rod_r": 8.0,
+    "clevis_x": 4762.0, "clevis_z": 868.0,
+}
+
+# Front steering arm: a forged lever from the upright's steering pickup to
+# the trackrod end. It sits inboard of the wheel band so it never fouls the
+# tyre.
+STEER_ARM = {
+    "t": 20.0, "y_out": 668.0,
+    "pivot_x": 856.0, "pivot_z": 302.0,
+    "end_x": 662.0, "end_z": 230.0,
+}
+
+# Coil springs over the dampers. The rear rides lower and takes more load,
+# so it has a tighter pitch and a deeper coil.
+SPRING = {
+    "wire_r": 9.0, "turns_f": 9.0, "turns_r": 8.0,
+    "pitch_f": 21.0, "pitch_r": 24.0,
+    "r_f": 52.0, "r_r": 58.0,
+    "per_turn": 13,
+}
+
+# Adjustable anti-roll blades: a clamp collar on the lever arm and a stepped
+# indicator plate the crew rotates to pick the rate.
+ANTIROLL_BLADE = {
+    "collar_r": 26.0, "plate_t": 9.0, "plate_h": 64.0, "steps": 6,
+}
+
+# Pitot rake behind the front wheels, feeding the aero map.
+AERO_RAKE = {
+    "x": 1285.0, "half_y": 296.0,
+    "mast_z0": 468.0, "mast_z1": 700.0,
+    "boom_len": 250.0, "probe_r": 4.0, "booms": 3,
+}
+
+# ERS accumulator in the tub, beside the fuel cell, with its cooling duct.
+ACCUMULATOR = {
+    "x0": 2000.0, "x1": 2098.0,
+    "half_w": 176.0, "z0": 232.0, "z1": 438.0,
+    "fins": 9,
+}
+
+# FIA rain-light backing plate on the rear bodywork.
+LIGHT_PANEL = {
+    "x0": 4440.0, "x1": 4466.0,
+    "half_w": 104.0, "z0": 258.0, "z1": 392.0, "t": 8.0, "bolts": 6,
+}
+
+# Swan-neck fittings from the rear pylons onto the wing mainplane.
+WING_MOUNT = {
+    "collar_r0": 30.0, "collar_r1": 44.0,
+    "foot_x0": 4432.0, "foot_x1": 4528.0, "foot_z": 902.0, "foot_t": 10.0,
+    "y": 148.0, "bolts": 4,
+}
+
+# Rear gurney: an L-section tape with rivets on the flap trailing edge.
+GURNEY = {
+    "tape_len": 56.0, "tab_h": 34.0, "t": 4.0, "rivets": 24,
+    "aoa": 29.0,             # matches the flap setting, rear_element(1)
+}
+
+# Sidepod inlet: a rolled lip, an internal diffuser and a splitter vane.
+INLET = {
+    "x_lip": 1702.0, "x_throat": 1812.0,
+    "y0": 336.0, "y1": 508.0, "z0": 206.0, "z1": 398.0,
+    "lip_r": 9.0, "wall": 12.0, "throat_f": 0.62, "vane_t": 7.0,
+}
+
+# Fan motors: finned case, end bells, terminal block, mounting feet.
+FAN_MOTOR = {
+    "bore_r": 25.0,          # the drive shaft passes through the case
+    "fin_h": 8.0, "fins": 14, "bell_r": 46.0,
+    "foot_w": 18.0, "term": (34.0, 24.0, 20.0),
+}
+
+# Pit-lane and service hardware
+SERVICE = {
+    "gun_bore_r": 46.0, "gun_lug_r": 10.0, "gun_lugs": 9, "gun_len": 30.0,
+    "starter_bezel_r": 40.0, "starter_drive": 19.0,
+    "jack_puck_r": 48.0, "jack_strap_w": 34.0,
+    "tow_throat_r": 62.0, "tow_shank_r": 17.0, "hook_seg": 22,
+    "line_r": 7.5, "line_clip_every": 2,
+    "loom_r": 16.0, "loom_ties": 8,
+}
+
+# --------------------------------------------------------------------------
 # Materials
 # --------------------------------------------------------------------------
 
 MATERIAL_MAP = {
+    "hub_": "alu_dark",
+    "wheel_stud": "titanium",
+    "brake_pad": "cf_disc",
+    "tether": "strap",
+    "roll_hoop": "titanium",
+    "fan_drive": "steel",
+    "drs_": "alu_bright",
+    "steering_arm": "alu_bright",
+    "spring": "strap",
+    "antiroll_blade": "alu_bright",
+    "aero_rake": "titanium",
+    "accumulator": "anodised",
+    "rear_light": "alu_bright",
+    "wing_mount": "alu_bright",
     "halo_mounts": "titanium",
     "halo_pillar": "titanium",
     "exit_louvres": "carbon_matte",
@@ -424,9 +583,6 @@ MATERIAL_MAP = {
     "drink_bottle": "suit",
     "extinguisher": "alu_bright",
     "dash": "carbon_matte",
-    "shift_paddles": "carbon_gloss",
-    "wheel_display": "alu_dark",
-    "steering_wheel": "carbon_matte",
     "harness": "suit",
     "control_boxes": "alu_dark",
     "wiring_loom": "hose",
@@ -480,11 +636,11 @@ DEFAULT_MATERIAL = "carbon_matte"
 PALETTE = {
     "carbon_gloss": ((0.048, 0.050, 0.056), 0.22, 0.30),
     "carbon_matte": ((0.056, 0.058, 0.064), 0.14, 0.56),
-    "titanium":     ((0.372, 0.386, 0.408), 1.00, 0.34),
+    "titanium":     ((0.360, 0.372, 0.398), 1.00, 0.20),
     "rubber_tyre":  ((0.030, 0.030, 0.032), 0.00, 0.82),
     "rubber_seal":  ((0.050, 0.048, 0.046), 0.00, 0.88),
     "alu_dark":     ((0.120, 0.124, 0.132), 1.00, 0.38),
-    "alu_bright":   ((0.412, 0.424, 0.440), 1.00, 0.30),
+    "alu_bright":   ((0.470, 0.482, 0.500), 1.00, 0.16),
     "alu_cast":     ((0.318, 0.326, 0.338), 1.00, 0.62),
     "magnesium":    ((0.276, 0.272, 0.258), 1.00, 0.58),
     "rad_core":     ((0.140, 0.120, 0.095), 0.60, 0.62),
@@ -496,10 +652,16 @@ PALETTE = {
     "rad_core":     ((0.180, 0.130, 0.080), 0.90, 0.52),
     "anodised":     ((0.108, 0.136, 0.170), 1.00, 0.40),
     "steel":        ((0.480, 0.492, 0.510), 1.00, 0.28),
+    "strap":        ((0.520, 0.075, 0.050), 0.10, 0.55),
 }
 
-RES = {"revolve": 40, "small_revolve": 18, "pipe": 12,
-       "airfoil_pts": 30, "wing_stations": 8}
+# Resolution. Eight spanwise stations and thirty section points made the rear
+# wing -- the most looked-at surface on the car -- a 240-vertex object, which
+# is fewer points than the engine spends on a single valve spring. These are
+# the same numbers the sibling turbofan project uses, and they are what makes
+# a tip look turned rather than chamfered.
+RES = {"revolve": 88, "small_revolve": 28, "pipe": 20,
+       "airfoil_pts": 72, "wing_stations": 26}
 
 RHO = 1.225      # kg/m^3
 

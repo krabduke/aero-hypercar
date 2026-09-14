@@ -17,7 +17,7 @@ import mesh as meshlib   # noqa: E402
 import materials         # noqa: E402
 from parts import (chassis, floor, wings, wheels,        # noqa: E402
                    suspension, fans, powertrain, aerodetail,
-                   detail, systems)
+                   detail, systems, hardware)
 
 MM = 0.001
 
@@ -26,6 +26,7 @@ MODULES = [
     ("wheels", wheels), ("suspension", suspension), ("fans", fans),
     ("powertrain", powertrain), ("aero detail", aerodetail),
     ("body detail", detail), ("systems", systems),
+    ("hardware", hardware),
 ]
 
 COLLECTIONS = ["01 Bodywork", "02 Floor and Diffuser", "03 Wings",
@@ -38,33 +39,35 @@ def collection_for(name):
     n = name.lower()
     if n.startswith(("engine", "gearbox")):
         return "07 Power Unit"
-    if n.startswith(("radiator", "rad_", "battery", "fuel")):
+    if n.startswith(("radiator", "rad_", "battery", "fuel", "accumulator")):
         return "08 Cooling and Energy"
     if n.startswith("fan"):
         return "06 Fan System"
     if n.startswith(("wishbone", "pushrod", "trackrod", "rocker",
                      "driveshaft", "damper", "torsion", "heave", "antiroll",
-                     "steering_")):
+                     "steering_", "spring")):
         return "05 Suspension"
     if n.startswith(("tyre", "wheel", "rim", "disc", "caliper",
-                     "upright")):
+                     "upright", "hub_", "brake_pad", "tether")):
         return "04 Wheels and Brakes"
     if n.startswith(("bargeboard", "turning_vane", "floor_fence",
                      "brake_duct", "mirror", "camera", "rainlight",
                      "exhaust", "cooling_louvre", "gills", "sidepod_gills",
                      "nose_cape", "nose_pylon", "bargeboard", "turning_vane",
-                     "bduct_", "exit_louvres")):
+                     "bduct_", "exit_louvres", "aero_rake", "rear_light")):
         return "09 Aero Detail"
     if n.startswith(("helmet", "driver", "seat", "steering", "headrest",
                      "harness", "dash", "extinguisher", "drink_bottle",
-                     "wheel_display", "shift_paddles", "pedal_box")):
+                     "pedal_box")):
         return "10 Cockpit"
     if n.startswith(("crash_", "side_impact", "jack_", "tow_", "airbox",
                      "bulkhead_", "side_intrusion", "gun_socket",
                      "starter_socket", "fuel_coupling", "tyre_sensors",
                      "brake_lines", "master_cylinders", "wiring_loom",
-                     "control_boxes")):
+                     "control_boxes", "roll_hoop")):
         return "11 Structure and Service"
+    if n.startswith("drs_"):
+        return "03 Wings"
     if "wing" in n or "endplate" in n or "pylon" in n or "louvre" in n \
        or "gurney" in n or "cascade" in n or "y250" in n:
         return "03 Wings"

@@ -126,15 +126,61 @@ def _sidepods():
             rings.append([(px, sgn * py, pz) for (px, py, pz) in r])
         out[f"sidepod_{side}"] = common.loft(rings)
 
-    # inlet mouth: a short duct standing proud of the leading edge
+    # The inlet mouth.
+    #
+    # It was a length of plain pipe -- mesh.tube, two stations, constant
+    # radius -- standing on the leading edge of the sidepod. An inlet is the
+    # opposite of that: the whole of its job happens in its section. The lip
+    # is rolled over so the flow stays attached at yaw, the duct contracts
+    # from mouth to throat, and a splitter vane divides the radiator feed
+    # from the flow going over the top of it.
+    I = spec.INLET
     mouths = []
     for sgn in (-1.0, 1.0):
-        y_in, y_out, z_bot, z_top, n = _sample(spec.SIDEPOD_TABLE, 1810.0)
-        yc = sgn * (y_in + y_out) / 2
-        zc = (z_bot + z_top) / 2
-        v, f = mesh.tube(1700.0, 1810.0, 76.0, 104.0, 28)
-        v = [(px, py + yc, pz + zc) for (px, py, pz) in v]
-        mouths.append((v, f))
+        parts = []
+        hw0 = (I["y1"] - I["y0"]) / 2
+        hz0 = (I["z1"] - I["z0"]) / 2
+        yc = sgn * (I["y0"] + I["y1"]) / 2
+        zc = (I["z0"] + I["z1"]) / 2
+        lip, wall, tf = I["lip_r"], I["wall"], I["throat_f"]
+        nseg = 30
+        rings = []
+        for (x, sw, sh, rr) in ((I["x_lip"] - lip, 0.90, 0.90, 0.0),
+                                (I["x_lip"], 1.00, 1.00, 0.0),
+                                (I["x_lip"] + lip * 1.6, 1.00, 1.00, 1.0),
+                                (I["x_throat"], tf, tf * 1.06, 1.0)):
+            outer, inner = [], []
+            for k in range(nseg):
+                ang = 2 * math.pi * k / nseg
+                ca, sa = math.cos(ang), math.sin(ang)
+                ow = hw0 * sw + (wall if rr else 0.0)
+                oh = hz0 * sh + (wall if rr else 0.0)
+                outer.append((x, yc + ow * ca, zc + oh * sa))
+                inner.append((x, yc + (hw0 * sw - wall * rr) * ca,
+                              zc + (hz0 * sh - wall * rr) * sa))
+            rings.append((outer, inner))
+        verts, faces = [], []
+        for (o, i) in rings:
+            verts.extend(o); verts.extend(i)
+        per = 2 * nseg
+        for r in range(len(rings) - 1):
+            b0, b1 = r * per, (r + 1) * per
+            for k in range(nseg):
+                k2 = (k + 1) % nseg
+                faces.append((b0 + k, b0 + k2, b1 + k2, b1 + k))
+                faces.append((b0 + nseg + k2, b0 + nseg + k,
+                              b1 + nseg + k, b1 + nseg + k2))
+        for k in range(nseg):
+            k2 = (k + 1) % nseg
+            faces.append((k2, k, nseg + k, nseg + k2))
+            bb = (len(rings) - 1) * per
+            faces.append((bb + k, bb + k2, bb + nseg + k2, bb + nseg + k))
+        parts.append((verts, faces))
+        parts.append(shapes.rounded_box(
+            (I["x_lip"] + I["x_throat"]) / 2, yc, zc,
+            I["x_throat"] - I["x_lip"], hw0 * 1.7, I["vane_t"],
+            r=I["vane_t"] * 0.4))
+        mouths.append(mesh.join(*parts))
     out["sidepod_inlets"] = mesh.join(*mouths)
     return out
 
@@ -170,20 +216,55 @@ def _sharkfin():
         hw, z_bot, z_top, ex, bias = _sample(spec.BODY, x)
         z_base = z_top - 8.0
         z_tip = D["sharkfin_z"] - 130.0 * f ** 1.6
-        t = D["sharkfin_t"] * (1.0 - 0.45 * f)
-        verts.append((x, -t / 2, z_base))
-        verts.append((x, t / 2, z_base))
-        verts.append((x, t / 2, max(z_tip, z_base + 4.0)))
-        verts.append((x, -t / 2, max(z_tip, z_base + 4.0)))
+        # thickest around a third of the way back, closing towards the
+        # trailing edge, which is where a section's thickness actually goes
+        t = D["sharkfin_t"] * (0.30 + 0.94 * math.sin(math.pi * f ** 0.62))
+        zt = max(z_tip, z_base + 4.0)
+        # A fin is a vertical wing: it only does anything in yaw, and it can
+        # only do it with a section. As a flat card of constant thickness it
+        # stalled at the first degree of slip.
+        h = zt - z_base
+        for (dy, dz) in _fin_section(t, h):
+            verts.append((x, dy, z_base + dz))
+    m = len(_fin_section(1.0, 1.0))
     for i in range(n - 1):
-        a, b = i * 4, (i + 1) * 4
-        for s in range(4):
-            s2 = (s + 1) % 4
+        a, b = i * m, (i + 1) * m
+        for s in range(m):
+            s2 = (s + 1) % m
             faces.append((a + s, a + s2, b + s2, b + s))
-    faces.append((3, 2, 1, 0))
-    base = (n - 1) * 4
-    faces.append((base, base + 1, base + 2, base + 3))
+    faces.append(tuple(range(m - 1, -1, -1)))
+    base = (n - 1) * m
+    faces.append(tuple(range(base, base + m)))
     return {"sharkfin": (verts, faces)}
+
+
+def _fin_section(t, h, n=11):
+    """One vertical slice of the fin: full thickness where it meets the
+    engine cover, thinning as it rises, rolled over at the top edge.
+
+    A fin of constant thickness with a cut top is a card. The taper is what
+    keeps the tip from being a slab of dead weight a metre above the roll
+    hoop, and the roll is what stops the top edge shedding its own vortex.
+    """
+    def w(f):
+        return t * (1.0 - 0.58 * f ** 1.3)
+    pts = []
+    top = 0.86
+    for i in range(n):                      # up the right-hand face
+        f = top * i / (n - 1)
+        pts.append((w(f) / 2, h * f))
+    rt = w(top) / 2
+    for k in range(1, 6):                   # roll over the top
+        a = (math.pi / 2) * k / 6
+        pts.append((rt * math.cos(a), h * top + rt * 1.9 * math.sin(a)))
+    pts.append((0.0, h * top + rt * 1.9))
+    for k in range(5, 0, -1):
+        a = (math.pi / 2) * k / 6
+        pts.append((-rt * math.cos(a), h * top + rt * 1.9 * math.sin(a)))
+    for i in range(n - 1, -1, -1):          # down the left-hand face
+        f = top * i / (n - 1)
+        pts.append((-w(f) / 2, h * f))
+    return pts
 
 
 def _halo():
@@ -209,21 +290,31 @@ def _halo():
                 (xf + 120.0, sgn * hw * 0.58, z - 16.0),
                 (xf + 52.0, sgn * hw * 0.22, z - 27.0)]
         path.extend(side if sgn < 0 else [apex] + list(reversed(side)))
-    out["halo"] = mesh.pipe(path, r, spec.RES["pipe"])
+    # The hoop is a teardrop in section too, deeper than it is wide, for the
+    # same reason as the pillar: it has to pass a 125 kN load and be as small
+    # as possible in the driver's sightline.
+    out["halo"] = shapes.swept_profile(
+        path, shapes.teardrop_section(r * 1.9, r * 2.6, 24), subdiv=3)
 
     # the pillar: it carries the load straight down into the tub's front
     # bulkhead, and it is the only thing in a driver's forward view, which is
     # why it is as slender as it is allowed to be
-    out["halo_pillar"] = mesh.pipe(
-        [apex, (apex[0] - 6.0, 0.0, z - 140.0), (apex[0] - 18.0, 0.0, z - 258.0)],
-        r * 0.86, spec.RES["pipe"])
+    # It is the only thing in the driver's forward view, so it is as narrow
+    # in plan as it is allowed to be and deep fore-and-aft to make up the
+    # section -- a teardrop, not a round tube, which would both block more of
+    # the view and shed a wake straight into the airbox.
+    out["halo_pillar"] = shapes.swept_profile(
+        [apex, (apex[0] - 6.0, 0.0, z - 140.0),
+         (apex[0] - 18.0, 0.0, z - 338.0)],
+        shapes.teardrop_section(r * 1.35, r * 3.4, 28),
+        scale=[(1.0, 1.0), (1.05, 1.10), (1.18, 1.30)], subdiv=6)
 
     mounts = []
-    for sgn in (-1.0, 1.0):
-        mounts.append(shapes.rounded_box(xr, sgn * hw * 0.62, z - 272.0,
-                                         70.0, 58.0, 34.0, 10.0))
-    mounts.append(shapes.rounded_box(apex[0] - 18.0, 0.0, z - 266.0,
-                                     58.0, 70.0, 30.0, 10.0))
+    for sgn in (-1, 1):
+        mounts.append(shapes.rounded_box(xr, sgn * hw * 0.62, z - 310.0,
+                                         70.0, 58.0, 60.0, 10.0))
+    mounts.append(shapes.rounded_box(apex[0] - 18.0, 0.0, z - 320.0,
+                                     58.0, 70.0, 56.0, 10.0))
     out["halo_mounts"] = mesh.join(*mounts)
     return out
 
@@ -231,10 +322,8 @@ def _halo():
 def _cockpit():
     out = {}
     sx = (T["cockpit_x0"] + T["cockpit_x1"]) / 2
-    out["seat"] = shapes.rounded_box(sx + 110.0, 0.0, 300.0, 640.0, 360.0, 290.0)
-    wv, wf = mesh.tube(-24.0, 24.0, 58.0, 112.0, 26)
-    wv = [(pz + T["cockpit_x0"] + 140.0, py, px + 570.0) for (px, py, pz) in wv]
-    out["steering"] = (wv, wf)
+    out["seat"] = _seat(sx + 110.0)
+    out["steering"] = _wheel(T["cockpit_x0"] + 140.0, 570.0)
     # headrest / roll structure padding
     out["headrest"] = shapes.rounded_box(T["cockpit_x1"] - 40.0, 0.0, 620.0, 220.0, 300.0, 130.0)
     return out
@@ -266,3 +355,106 @@ def sidepod_point(x, f_y, f_z, standoff=0.0):
     y = y_in + (y_out - y_in) * abs(f_y)
     z = z_bot + (z_top - z_bot) * f_z
     return (x, sgn * (y + standoff * abs(f_y)), z)
+
+
+def _seat(cx):
+    """The seat is moulded to the driver, which is the whole point of it.
+
+    It was a 640 x 360 x 290 rounded box. A real seat is a carbon shell with
+    a deep bucket, bolsters up each side that stop the driver moving under
+    4 g of cornering, a raised lip at the back, slots the harness passes
+    through, and lifting handles -- it comes out of the car with the driver
+    in it.
+    """
+    parts = []
+    rings = []
+    n = 13
+    for i in range(n):
+        f = i / (n - 1)
+        x = cx - 320.0 + 640.0 * f
+        # the bucket deepens towards the back of the seat and the bolsters
+        # rise with it
+        hw = 150.0 + 60.0 * math.sin(math.pi * min(1.0, f * 1.15))
+        floor_z = 300.0 - 96.0 + 40.0 * (1.0 - math.cos(math.pi * f)) / 2
+        bol = 60.0 + 130.0 * f ** 1.4
+        sect = [(-hw, floor_z), (hw, floor_z),
+                (hw + 22.0, floor_z + bol * 0.55),
+                (hw + 14.0, floor_z + bol),
+                (hw - 10.0, floor_z + bol - 6.0),
+                (hw - 10.0, floor_z + 26.0),
+                (-hw + 10.0, floor_z + 26.0),
+                (-hw + 10.0, floor_z + bol - 6.0),
+                (-hw - 14.0, floor_z + bol),
+                (-hw - 22.0, floor_z + bol * 0.55)]
+        loop = shapes.rounded_polygon(sect, 16.0, seg=4)
+        rings.append([(x, py, pz) for (py, pz) in loop])
+    parts.append(shapes._loft_closed(rings))
+    # harness slots: the shoulder belts come through the back of the shell
+    for sgn in (-1.0, 1.0):
+        parts.append(shapes.rounded_box(cx + 296.0, sgn * 92.0, 470.0,
+                                        30.0, 76.0, 26.0, 8.0, seg=5))
+    # lifting handles, because the seat leaves the car with the driver in it
+    for sgn in (-1.0, 1.0):
+        parts.append(mesh.pipe(
+            [(cx + 120.0, sgn * 210.0, 400.0),
+             (cx + 160.0, sgn * 245.0, 430.0),
+             (cx + 200.0, sgn * 210.0, 400.0)], 11.0, 16, subdiv=3))
+    return mesh.join(*parts)
+
+
+def _wheel(x, z):
+    """A steering wheel, which on this car is a control surface.
+
+    It was a plain annulus. The rim is flattened top and bottom so it clears
+    the driver's legs and the halo pillar, the spine carries the display, and
+    everything the driver changes mid-corner -- clutch bite, differential,
+    brake bias, shift -- is on it.
+    """
+    parts = []
+    rim = []
+    n = 64
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        # a superellipse, squashed vertically: the "wheel" is not a circle
+        e = 2.0 / 3.2
+        ry = 112.0 * math.copysign(abs(math.cos(a)) ** e, math.cos(a))
+        rz = 84.0 * math.copysign(abs(math.sin(a)) ** e, math.sin(a))
+        rim.append((ry, rz))
+    rings = []
+    for k in range(14):
+        b = 2 * math.pi * k / 14
+        cb, sb = math.cos(b), math.sin(b)
+        ring = []
+        for (ry, rz) in rim:
+            d = math.hypot(ry, rz) or 1.0
+            ring.append((x + 17.0 * sb,
+                         ry + ry / d * 17.0 * cb,
+                         z + rz + rz / d * 17.0 * cb))
+        rings.append(ring)
+    # sweep the section round the rim: rings are indexed the other way here
+    tube = [[rings[k][i] for k in range(14)] for i in range(n)]
+    parts.append(shapes._loft_ring_pairs(tube, closed=True))
+    # spine and display
+    parts.append(shapes.rounded_box(x, 0.0, z + 6.0, 26.0, 190.0, 120.0,
+                                    14.0, seg=6))
+    parts.append(shapes.rounded_box(x - 15.0, 0.0, z + 18.0, 8.0, 132.0,
+                                    74.0, 5.0, seg=5))
+    # rotaries and buttons
+    for (dy, dz, rr) in ((-72.0, -34.0, 17.0), (72.0, -34.0, 17.0),
+                         (-58.0, 46.0, 13.0), (58.0, 46.0, 13.0)):
+        kv, kf = mesh.revolve_closed(
+            [(0.0, 0.0), (16.0, 0.0), (16.0, rr * 0.78), (12.0, rr),
+             (0.0, rr)], 16)
+        parts.append(([(x - px - 13.0, py + dy, pz + z + dz)
+                       for (px, py, pz) in kv], kf))
+    for i in range(8):
+        dy = -84.0 + 24.0 * i
+        parts.append(shapes.rounded_box(x - 16.0, dy, z - 8.0, 5.0, 15.0,
+                                        15.0, 3.0, seg=4))
+    # shift and clutch paddles, behind
+    for sgn in (-1.0, 1.0):
+        parts.append(shapes.rounded_box(x + 34.0, sgn * 86.0, z - 4.0,
+                                        9.0, 44.0, 120.0, 8.0, seg=5))
+        parts.append(shapes.rounded_box(x + 52.0, sgn * 60.0, z - 40.0,
+                                        9.0, 38.0, 76.0, 8.0, seg=5))
+    return mesh.join(*parts)
