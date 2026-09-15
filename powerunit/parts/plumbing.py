@@ -65,9 +65,8 @@ def _primaries():
         # the collector so the pulse arrives with some velocity behind it.
         radii = [16.5, 15.5, 14.0, 12.5]
         tube = mesh.pipe(path, radii, spec.RES["pipe"], subdiv=7)
-        flange = mesh.revolve_open(
-            [(-4.0, 16.5), (-4.0, 26.0), (5.0, 26.0), (5.0, 16.5)],
-            SM, cap_start=True, cap_end=True)
+        flange = mesh.revolve_ring(
+            [(-4.0, 16.5), (-4.0, 26.0), (5.0, 26.0), (5.0, 16.5)], SM)
         # stand the flange on the port face, normal to the bank
         d = common.bank_dir(bank)
         lat = common.bank_lat(bank)
@@ -98,9 +97,8 @@ def _collectors():
                            spec.RES["pipe"], subdiv=6)]
         # the mouth the four primaries land in, and the flange at the turbine
         mouth, r0 = path[0], gaspath.COLLECTOR_RADII[0]
-        mv, mf = mesh.revolve_open(
-            [(-6.0, r0), (-6.0, r0 + 3.0), (3.0, r0 + 3.0), (3.0, r0)],
-            SM, cap_start=True, cap_end=True)
+        mv, mf = mesh.revolve_ring(
+            [(-6.0, r0), (-6.0, r0 + 3.0), (3.0, r0 + 3.0), (3.0, r0)], SM)
         parts.append(([(px + mouth[0], py + mouth[1], pz + mouth[2])
                        for (px, py, pz) in mv], mf))
         parts.append(_inlet_flange(path[-1], path[-2],
@@ -114,9 +112,8 @@ def _inlet_flange(at, towards, r, thick=7.0, pad=11.0):
     d = [at[k] - towards[k] for k in range(3)]
     m = math.dist(at, towards) or 1.0
     d = [c / m for c in d]
-    v, f = mesh.revolve_open(
-        [(-thick, r), (-thick, r + pad), (0.0, r + pad), (0.0, r)],
-        SM, cap_start=True, cap_end=True)
+    v, f = mesh.revolve_ring(
+        [(-thick, r), (-thick, r + pad), (0.0, r + pad), (0.0, r)], SM)
     # the lathe runs along +x; swing it onto the duct's own direction
     up = (0.0, 0.0, 1.0) if abs(d[2]) < 0.9 else (0.0, 1.0, 0.0)
     n1 = mesh._normalise(mesh._cross(d, up))
@@ -148,9 +145,8 @@ def _runners():
         path = list(reversed(flow))
         radii = [15.0, 16.5, 18.0, 25.0]
         tube = mesh.pipe(path, radii, spec.RES["pipe"], subdiv=7)
-        flange = mesh.revolve_open(
-            [(-4.0, 15.0), (-4.0, 24.0), (5.0, 24.0), (5.0, 15.0)],
-            SM, cap_start=True, cap_end=True)
+        flange = mesh.revolve_ring(
+            [(-4.0, 15.0), (-4.0, 24.0), (5.0, 24.0), (5.0, 15.0)], SM)
         d = common.bank_dir(bank)
         lat = common.bank_lat(bank)
         fv = [(port[0] + px, port[1] + py * lat[1] + pz * d[1],

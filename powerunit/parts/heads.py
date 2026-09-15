@@ -103,17 +103,16 @@ def _head_features(bank):
         parts.append((common.along_bank(cv, x, spec.DECK_HEIGHT + 4.0, bank), cf))
 
         # plug well
-        wv, wf = mesh.revolve_open(
-            [(0.0, 9.0), (0.0, 15.0), (30.0, 15.0), (30.0, 9.0)], SM,
-            cap_start=True, cap_end=True)
+        wv, wf = mesh.revolve_ring(
+            [(0.0, 9.0), (0.0, 15.0), (30.0, 15.0), (30.0, 9.0)], SM)
         parts.append((common.along_bank(wv, x, spec.DECK_HEIGHT + 10.0, bank), wf))
 
         # port bosses, one each side, around the valve pairs
         for is_in, lat_sgn in ((True, -1.0), (False, 1.0)):
             hr = V_["intake_head_r"] if is_in else V_["exhaust_head_r"]
-            pv, pf = mesh.revolve_open(
+            pv, pf = mesh.revolve_ring(
                 [(0.0, hr * 1.10), (0.0, hr * 1.45), (16.0, hr * 1.40),
-                 (16.0, hr * 1.05)], SM, cap_start=True, cap_end=True)
+                 (16.0, hr * 1.05)], SM)
             d = common.bank_dir(bank)
             lat = common.bank_lat(bank)
             # from the declared ports, so the boss is round the hole

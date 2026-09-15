@@ -119,9 +119,9 @@ def connector(cx, cy, cz, sx=26.0, sy=18.0, sz=14.0, pins=6):
 
 def bolt_boss(cx, cy, cz, r=9.0, h=10.0, seg=10):
     """A raised pad with a bolt hole, where something fastens to a casting."""
-    return mesh.revolve_open(
+    return mesh.revolve_ring(
         [(0.0, r * 0.42), (0.0, r), (h * 0.6, r * 0.92), (h, r * 0.78),
-         (h, r * 0.42)], seg, cap_start=True, cap_end=True)
+         (h, r * 0.42)], seg)
 
 
 def ribbed_cover(x0, x1, half_w, z_base, height, n_ribs=7, rib_h=5.0,

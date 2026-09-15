@@ -168,21 +168,30 @@ def _snout(x, dirn, r_in, r_out, r_lip):
     return [(px, py, pz + T["z"]) for (px, py, pz) in v], f
 
 
-def _flange_at(at, towards, r, thick, pad):
-    """A bolted flange standing normal to the duct it terminates."""
+def _duct_frame(at, towards):
+    """(origin, axis, and two perpendiculars) for something on a duct end."""
     d = [towards[k] - at[k] for k in range(3)]
     m = math.dist(at, towards) or 1.0
     d = [c / m for c in d]
-    v, f = mesh.revolve_open(
-        [(0.0, r), (0.0, r + pad), (thick, r + pad), (thick, r)],
-        SM, cap_start=True, cap_end=True)
     up = (0.0, 0.0, 1.0) if abs(d[2]) < 0.9 else (0.0, 1.0, 0.0)
     n1 = mesh._normalise(mesh._cross(d, up))
     n2 = mesh._cross(d, n1)
-    return ([(at[0] + d[0] * px + n1[0] * py + n2[0] * pz,
-              at[1] + d[1] * px + n1[1] * py + n2[1] * pz,
-              at[2] + d[2] * px + n1[2] * py + n2[2] * pz)
-             for (px, py, pz) in v], f)
+
+    def place(verts):
+        return [(at[0] + d[0] * px + n1[0] * py + n2[0] * pz,
+                 at[1] + d[1] * px + n1[1] * py + n2[1] * pz,
+                 at[2] + d[2] * px + n1[2] * py + n2[2] * pz)
+                for (px, py, pz) in verts]
+
+    return place
+
+
+def _flange_at(at, towards, r, thick, pad):
+    """A bolted flange standing normal to the duct it terminates."""
+    place = _duct_frame(at, towards)
+    v, f = mesh.revolve_ring(
+        [(0.0, r), (0.0, r + pad), (thick, r + pad), (thick, r)], SM)
+    return (place(v), f)
 
 
 # --------------------------------------------------------------------------
@@ -211,16 +220,16 @@ def _centres():
                 (tx + hw - 4.0, r * 3.6), (tx + hw - 4.0, r * 1.25)]
         # 28 segments, not 48: this is a 55 mm casting between two
         # housings, and it was carrying 14,000 vertices of its own
-        v, f = mesh.revolve_open(prof, SM, cap_start=True, cap_end=True)
+        v, f = mesh.revolve_ring(prof, SM)
         parts.append(([(px, py, pz + T["z"]) for (px, py, pz) in v], f))
         # oil in at the top, out at the bottom, water across the middle
         # Oil in at the side, out of the bottom. The feed boss is normally on
         # top; here the exhaust collector passes directly over the bearing
         # housing on its way to the turbine, so a line coming down onto a top
         # boss would come down through it.
-        fv, ff = mesh.revolve_open(
+        fv, ff = mesh.revolve_ring(
             [(0.0, 4.0), (0.0, 9.0), (26.0, 9.0), (26.0, 12.0),
-             (32.0, 12.0), (32.0, 4.0)], SM, cap_start=True, cap_end=True)
+             (32.0, 12.0), (32.0, 4.0)], SM)
         # straight down, beside the drain. There is nowhere else: above the
         # bearing housing is the collector, on the bank side the compressor's
         # own outlet and the charge pipe leaving it, on top the wastegate
@@ -228,16 +237,15 @@ def _centres():
         # the length of the vee from y = 16 to y = 77.
         parts.append(([(pz + tx - 13.0, py, -px + T["z"] - r * 2.4)
                        for (px, py, pz) in fv], ff))
-        dv, df = mesh.revolve_open(
+        dv, df = mesh.revolve_ring(
             [(0.0, 8.0), (0.0, 13.0), (20.0, 13.0), (20.0, 17.5),
-             (26.0, 17.5), (26.0, 8.0)], SM, cap_start=True, cap_end=True)
+             (26.0, 17.5), (26.0, 8.0)], SM)
         parts.append(([(pz + tx + 13.0, py, -px + T["z"] - r * 2.4)
                        for (px, py, pz) in dv], df))
         # and the water jacket unions, one each side
         for s2 in (-1.0, 1.0):
-            wv, wf = mesh.revolve_open(
-                [(0.0, 4.0), (0.0, 7.5), (13.0, 7.5), (13.0, 4.0)],
-                SM, cap_start=True, cap_end=True)
+            wv, wf = mesh.revolve_ring(
+                [(0.0, 4.0), (0.0, 7.5), (13.0, 7.5), (13.0, 4.0)], SM)
             parts.append(([(pz + tx + s2 * 18.0, s2 * px * 0.0 + py,
                             s2 * 0.0 + px + T["z"] + r * 2.2)
                            for (px, py, pz) in wv], wf))
@@ -344,6 +352,38 @@ def _oil():
     return out
 
 
+def _bored_duct(path, r_out, wall, seg, subdiv):
+    """A duct with a hole down it, as one watertight surface.
+
+    Two swept tubes, the inner one turned inside out, stitched to each other
+    at both ends. They share a path and a segment count, so their rings
+    correspond one for one and the two end rings close into an annulus -- the
+    part is a single closed surface with a bore, not two shells that happen to
+    touch.
+
+    Joining two capped pipes would have been easier and is what was here: the
+    cap on the open end was a flat disc 60 mm across sitting in the middle of
+    the flange, and it read in every render as a blank white circle stuck on
+    the front of the engine rather than as the mouth of an intake.
+    """
+    ov, of = mesh.pipe(path, r_out, seg, caps=False, subdiv=subdiv)
+    iv, if_ = mesh.pipe(path, [r - wall for r in r_out], seg,
+                        caps=False, subdiv=subdiv)
+    n = len(ov)
+    ns = mesh._T(seg)
+    rings = n // ns
+    verts = list(ov) + list(iv)
+    # the inner wall faces into the bore, so its winding is reversed
+    faces = [tuple(f) for f in of]
+    faces += [tuple(i + n for i in reversed(f)) for f in if_]
+    for base, first in (((rings - 1) * ns, False), (0, True)):
+        for k in range(ns):
+            a0, a1 = base + k, base + (k + 1) % ns
+            b0, b1 = a0 + n, a1 + n
+            faces.append((a0, b0, b1, a1) if first else (a0, a1, b1, b0))
+    return verts, faces
+
+
 def _inlets():
     """What each compressor breathes through.
 
@@ -365,13 +405,39 @@ def _inlets():
                 (eye[0] + ib * 2.0, sgn * 8.0, T["z"] + 30.0),
                 (eye[0] - ib * 2.0, sgn * 22.0, T["z"] + 72.0),
                 (eye[0] - ib * 8.0, sgn * 30.0, T["z"] + 106.0)]
-        parts = [mesh.pipe(path, [26.0, 27.0, 29.0, 30.0],
-                           spec.RES["pipe"], subdiv=5)]
-        parts.append(_flange_at(path[-1],
-                                (path[-1][0] + (path[-1][0] - path[-2][0]),
-                                 path[-1][1] + (path[-1][1] - path[-2][1]),
-                                 path[-1][2] + (path[-1][2] - path[-2][2])),
-                                30.0, 8.0, 11.0))
+        # A duct with a bore, not a capped rod.
+        #
+        # mesh.pipe caps both ends, so this finished in a flat disc 60 mm
+        # across sitting in the middle of the flange -- a blank white circle
+        # in every render, reading as a sticker rather than the mouth of an
+        # intake. Two walls with a bore between them, closed by a ring at the
+        # compressor end and by the flange at the other, so the part is still
+        # watertight and you can see down it.
+        wall = 4.0
+        r_out = [26.0, 27.0, 29.0, 30.0]
+        parts = [_bored_duct(path, r_out, wall, spec.RES["pipe"], 5)]
+        r_in = [r - wall for r in r_out]
+        end = (path[-1][0] + (path[-1][0] - path[-2][0]),
+               path[-1][1] + (path[-1][1] - path[-2][1]),
+               path[-1][2] + (path[-1][2] - path[-2][2]))
+        parts.append(_flange_at(path[-1], end, r_in[-1], 8.0,
+                                r_out[-1] - r_in[-1] + 11.0))
+        # the radius round the mouth, and the bolts the car's ducting picks up
+        place = _duct_frame(path[-1], end)
+        tv, tf = mesh.ring_torus(0.0, r_in[-1] + 2.2, 2.2, SM, 10)
+        # _duct_frame maps (axial, y, z) onto the duct, and everything the
+        # lathe makes already has its axis along x -- so the offset goes on
+        # px. Putting it on pz stood the ring on edge, as a blade across the
+        # mouth of the pipe.
+        parts.append((place([(px + 8.0, py, pz) for (px, py, pz) in tv]), tf))
+        n_bolt = 8
+        for k in range(n_bolt):
+            a = 2.0 * math.pi * k / n_bolt
+            rb = r_out[-1] + 5.5
+            bv, bf = mesh.cylinder(0.0, 5.0, 4.2, 12)
+            parts.append((place([(px + 8.0, py + rb * math.cos(a),
+                                  pz + rb * math.sin(a))
+                                 for (px, py, pz) in bv]), bf))
         out[f"compressor_inlet_{tag}"] = mesh.join(*parts)
     return out
 
@@ -404,11 +470,17 @@ def _tailpipes():
                 (out_pt[0] + d * 26.0, sgn * 26.0, T["z"] + 8.0),
                 (out_pt[0] + d * 46.0, sgn * 62.0, T["z"] + 18.0),
                 (out_pt[0] + d * 58.0, sgn * 88.0, T["z"] + 26.0)]
-        parts.append(mesh.pipe(path, E["collector_r"],
-                               spec.RES["pipe"], subdiv=5))
-        parts.append(_flange_at(path[-1],
-                                (path[-1][0] + (path[-1][0] - path[-2][0]),
-                                 path[-1][1] + (path[-1][1] - path[-2][1]),
-                                 path[-1][2] + (path[-1][2] - path[-2][2])),
-                                E["collector_r"], 9.0, 13.0))
+        # bored, not capped: this is the end of the exhaust and you have to be
+        # able to see down it
+        wall = 3.0
+        r_out = E["collector_r"]
+        parts.append(_bored_duct(path, [r_out] * len(path), wall,
+                                 spec.RES["pipe"], 5))
+        end = (path[-1][0] + (path[-1][0] - path[-2][0]),
+               path[-1][1] + (path[-1][1] - path[-2][1]),
+               path[-1][2] + (path[-1][2] - path[-2][2]))
+        # No V-band clamp round the outside of this one. There is 45 mm to the
+        # cam sensor under the back of the bank and a band big enough to go
+        # over the flange lands on it; the flange is the feature anyway.
+        parts.append(_flange_at(path[-1], end, r_out - wall, 9.0, 13.0 + wall))
     return {"tailpipes": mesh.join(*parts)}
