@@ -159,11 +159,12 @@ def _beam_wing():
     """Beam wing below the rear wing. It works the diffuser exit and the rear
     wing together -- each makes the other more effective."""
     elems = []
-    for k in range(BW["elements"]):
+    # spec.beam_elements() is the one placement: the mesh, aero/analyse.py and
+    # the browser lattice each used to step the second element by a different
+    # amount, and only one of them can have been drawing the car.
+    for (x, z, chord, aoa) in spec.beam_elements():
         elems.append(common.wing_element(
-            BW["x"] + k * BW["chord"] * 0.42, BW["z"] + k * 46.0,
-            BW["span"], BW["chord"] * (1.0 - 0.3 * k),
-            BW["aoa"] + k * 8.0, thickness=0.09, camber=0.07,
+            x, z, BW["span"], chord, aoa, thickness=0.09, camber=0.07,
             n_span=7, taper=0.92))
     return {"beam_wing": mesh.join(*elems)}
 

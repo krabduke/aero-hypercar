@@ -57,9 +57,8 @@ def surfaces(ride_height_mm=0.0):
     for k, (dx, dzf, c_r, c_t, span_f, aoa_r, aoa_t, rise) in enumerate(
             FW["stack"]):
         tip = half * span_f
-        z_root = (FW["z"] + dzf) * MM + dz
-        if k == 0:
-            z_root += FW["arch"] * MM
+        # the whole stack follows the nose -- see the note in car/parts/wings
+        z_root = (FW["z"] + dzf + FW["arch"]) * MM + dz
         z_tip = (FW["z"] + dzf + rise) * MM + dz
         # the element is split at the neutral station, because inboard of it
         # the chord, incidence and height are all constant and outboard they
@@ -74,11 +73,10 @@ def surfaces(ride_height_mm=0.0):
             n_span=6, n_chord=3, twist_root=-aoa_r, twist_tip=-aoa_t))
 
     RW = spec.REAR_WING
-    for k in range(RW["elements"]):
-        chord = RW["chord"] * (1.0 - 0.42 * k) * MM
-        x = (RW["x"] + k * RW["chord"] * 0.46) * MM
-        z = (RW["z"] + k * (RW["gap"] + 26.0)) * MM + dz
-        aoa = RW["aoa"] + k * 12.0
+    for k, (ex, ez, ec, aoa) in enumerate(spec.rear_elements()):
+        chord = ec * MM
+        x = ex * MM
+        z = ez * MM + dz
         b = RW["span"] / 2 * MM
         out.append(vlm.Surface(f"rear_{k}", (x, 0.0, z), chord,
                                (x, b, z), chord * 0.95,
@@ -86,15 +84,15 @@ def surfaces(ride_height_mm=0.0):
                                twist_root=-aoa, twist_tip=-aoa))
 
     BW = spec.BEAM_WING
-    for k in range(BW["elements"]):
-        chord = BW["chord"] * (1.0 - 0.30 * k) * MM
-        x = (BW["x"] + k * BW["chord"] * 0.5) * MM
-        z = (BW["z"] + k * 40.0) * MM + dz
+    for k, (ex, ez, ec, aoa) in enumerate(spec.beam_elements()):
+        chord = ec * MM
+        x = ex * MM
+        z = ez * MM + dz
         b = BW["span"] / 2 * MM
         out.append(vlm.Surface(f"beam_{k}", (x, 0.0, z), chord,
                                (x, b, z), chord * 0.92,
                                n_span=5, n_chord=3,
-                               twist_root=-BW["aoa"], twist_tip=-BW["aoa"]))
+                               twist_root=-aoa, twist_tip=-aoa))
     return out
 
 

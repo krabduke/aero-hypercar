@@ -47,9 +47,12 @@ def _front():
             chord = c_r + (c_t - c_r) * o
             aoa = aoa_r + (aoa_t - aoa_r) * o
             z = FW["z"] + dz + rise * o
-            if k == 0:
-                # the mainplane arches over the nose: highest on centreline
-                z += FW["arch"] * max(0.0, 1.0 - (t / neutral) ** 2)
+            # The whole stack arches over the nose, not just the mainplane.
+            # Arching element 0 alone closed the slot behind it: at the
+            # centreline the mainplane rose 44 mm into a flap that had not
+            # moved, leaving 12 mm between two surfaces that are 43 mm apart
+            # everywhere else. The flaps follow the nose on a real car.
+            z += FW["arch"] * max(0.0, 1.0 - (t / neutral) ** 2)
             stations.append((y, FW["x"] + dx, z, chord, aoa))
         name = "front_wing_main" if k == 0 else f"front_flap_{k}"
         out[name] = common.lofted_element(stations, thickness=0.085,
@@ -206,13 +209,13 @@ def _skin(rows, t, sgn, rim=0):
 
 
 def rear_element(k):
-    """(x, z, chord, aoa) for rear wing element k -- one definition, used by
-    the geometry, the hinge table and the aero solver alike."""
-    chord = RW["chord"] * (1.0 - 0.42 * k)
-    x = RW["x"] + k * RW["chord"] * 0.46
-    z = RW["z"] + k * (RW["gap"] + 26.0)
-    aoa = RW["aoa"] + k * 12.0
-    return x, z, chord, aoa
+    """(x, z, chord, aoa) for rear wing element k.
+
+    spec.rear_elements() is the one definition, shared with aero/analyse.py
+    and tools/tunnel_config.py so the mesh, the hinge table and both solvers
+    are looking at the same wing.
+    """
+    return spec.rear_elements()[k]
 
 
 def pivots():
@@ -227,9 +230,13 @@ def pivots():
             FW["stack"]):
         if k == 0:
             continue                      # the mainplane is fixed
-        out[f"front_flap_{k}"] = ((FW["x"] + dx, 0.0, FW["z"] + dz),
+        # on the centreline, where the whole stack is lifted by the arch
+        out[f"front_flap_{k}"] = ((FW["x"] + dx, 0.0,
+                                   FW["z"] + dz + FW["arch"]),
                                   (0.0, 1.0, 0.0), 1.0, "hinge")
-    x, z, chord, aoa = rear_element(1)
+    # the leading edge, not the quarter chord the element is placed by --
+    # a DRS flap swings about its front spar
+    x, z = spec.chord_point(*rear_element(1), 0.0)
     out["rear_flap"] = ((x, 0.0, z), (0.0, 1.0, 0.0), 1.0, "hinge")
     return out
 
@@ -252,8 +259,15 @@ def _rear():
     # working (lower) surface is left completely undisturbed
     pylons = []
     for sgn in (-1.0, 1.0):
-        path = [(RW["x"] + 90.0, sgn * 150.0, RW["z"] + 62.0),
-                (RW["x"] + 30.0, sgn * 148.0, RW["z"] + 10.0),
+        # the top of the neck is put ON the mainplane's chord line, at the
+        # quarter chord where the spar is, so the section closes round it --
+        # a fixed offset from RW["z"] left it floating once the element was
+        # rotated the right way up
+        mx, mz = spec.chord_point(*spec.rear_elements()[0], 0.25)
+        # only the top end follows the wing; the foot stays on the crash
+        # structure where it always was
+        path = [(mx, sgn * 150.0, mz),
+                (mx - 60.0, sgn * 148.0, mz - 52.0),
                 (RW["x"] - 70.0, sgn * 140.0, RW["z"] - 300.0),
                 (RW["x"] - 200.0, sgn * 118.0, RW["z"] - 440.0)]
         # A swan neck is a wing section on edge: it is carrying the whole
@@ -267,14 +281,18 @@ def _rear():
     for i, m in enumerate(pylons):
         out[f"rear_pylon_{'lr'[i]}"] = m
 
-    # endplate louvres, bleeding the pressure difference at the tip to cut the
-    # tip vortex and the drag that comes with it
+    # Endplate louvres, bleeding the pressure difference at the tip to cut the
+    # tip vortex and the drag that comes with it. On the OUTER face of the
+    # plate, stepping up and aft along the flap's trailing edge -- which is
+    # where the pressure difference across the plate is largest, and which is
+    # outboard of the wing rather than inside its tip.
     lv = []
+    te_x, te_z = spec.chord_point(*spec.rear_elements()[-1], 1.0)
     for sgn in (-1.0, 1.0):
-        y = sgn * RW["span"] / 2
+        y = sgn * (RW["span"] / 2 + 22.0)
         for k in range(5):
-            lv.append(shapes.rounded_box(RW["x"] - 60.0 + k * 52.0, y,
-                               RW["z"] + 96.0 - k * 14.0, 40.0, 14.0, 56.0))
+            lv.append(shapes.rounded_box(te_x - 250.0 + k * 52.0, y,
+                               te_z - 60.0 + k * 22.0, 40.0, 14.0, 56.0))
     # louvres are individually cut slots, not one lump
     half = len(lv) // 2
     for i, m in enumerate(lv):
@@ -349,7 +367,9 @@ def _gurney(k, height, t, foot_from, n_span=36, gap_end=14.0):
             loop.append(at(xc, t * (0.12 + 0.88 * f ** 0.6)))
         return loop
 
-    a = math.radians(-aoa)
+    # same datum and the same direction of rotation as the element it stands
+    # on -- see common.wing_element
+    a = math.radians(aoa)
     ca, sa = math.cos(a), math.sin(a)
     verts, n_sec = [], None
     for j in range(n_span):
@@ -359,7 +379,8 @@ def _gurney(k, height, t, foot_from, n_span=36, gap_end=14.0):
         sec = section(c)
         n_sec = len(sec)
         for (du, dv) in sec:
-            verts.append((x0 + du * ca - dv * sa, y, z0 + du * sa + dv * ca))
+            verts.append((x0 + 0.25 * c + du * ca - dv * sa, y,
+                          z0 + du * sa + dv * ca))
     faces = []
     for j in range(n_span - 1):
         a0, b0 = j * n_sec, (j + 1) * n_sec
@@ -383,10 +404,18 @@ def _rear_endplate(sgn):
     is louvred to bleed the pressure difference off gradually instead of
     letting it dump off the trailing edge in one go.
     """
-    x0 = RW["x"] - 130.0
-    x1 = RW["x"] + RW["chord"] + 96.0
-    zt = RW["z"] + 156.0
-    zb = RW["z"] - 244.0
+    # Sized off the elements it encloses, not off RW["x"] + RW["chord"].
+    # The flap is placed behind a slot now, so the stack ends 517 mm aft of
+    # the mainplane leading edge and 227 mm above it -- a plate cut to the
+    # mainplane's chord left the flap trailing edge hanging 61 mm out of the
+    # back of it and 43 mm over the top.
+    els = spec.rear_elements()
+    le_x, le_z = spec.chord_point(*els[0], 0.0)
+    te_x, te_z = spec.chord_point(*els[-1], 1.0)
+    x0 = le_x - 130.0
+    x1 = te_x + 96.0
+    zt = te_z + 62.0
+    zb = le_z - 215.0
     # control points round the perimeter, then a spline through them
     ctrl = [(x0 + 44.0, zb + 18.0),          # lower leading corner
             (x0 + 2.0, zb + 150.0),          # swept leading edge
@@ -410,11 +439,10 @@ def _rear_endplate(sgn):
     y = sgn * (RW["span"] / 2 - 6.0)
     parts = [shapes.shaped_panel(outline, y, RW["endplate_t"], bow=bow,
                                  rim_seg=6, rim=1.15)]
-    # louvres in the upper rear panel, canted to follow the flow off the flap
-    parts.append(shapes.louvre_bank(
-        RW["x"] + 150.0, RW["x"] + RW["chord"] + 40.0, y + sgn * 24.0,
-        RW["z"] + 6.0, RW["z"] + 118.0, 5, 56.0, 15.0,
-        t=3.0, cant=26.0))
+    # No louvre bank here. The plate carries louvres in exactly this place
+    # already, as rear_louvre_l1..5 and r1..5 -- built separately so each slot
+    # is its own object in the viewer. Two sets in the same 240 mm of plate is
+    # one set of louvres drawn twice.
     # the footplate that turns the plate into a diffuser fence
     foot = shapes.panel_outline(
         [(x0 + 180.0, y - sgn * 6.0), (x1 - 40.0, y - sgn * 10.0),
@@ -422,8 +450,10 @@ def _rear_endplate(sgn):
     fv, ff = shapes.shaped_panel(foot, zb - 6.0, 8.0, rim_seg=4, axis="z")
     parts.append((fv, ff))
     # mounting bosses where the mainplane and flap pick up
-    for xz in ((RW["x"] + 40.0, RW["z"] - 10.0),
-               (RW["x"] + 250.0, RW["z"] + 58.0)):
+    # one on the mainplane spar, one on the flap's hinge line -- the two
+    # places the plate actually picks the wing up
+    for xz in (spec.chord_point(*els[0], 0.25),
+               spec.chord_point(*els[-1], 0.0)):
         bv, bf = shapes.bolt_boss(0.0, 0.0, 0.0, 17.0, 16.0, 12)
         parts.append(([(pz + xz[0], y - sgn * px, py + xz[1])
                        for (px, py, pz) in bv], bf))

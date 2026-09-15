@@ -9,6 +9,7 @@ The car is solved in ground effect -- the track is made an exact streamline by
 mirroring the vortex system in it -- which is most of the point.
 """
 
+import math
 import os
 import sys
 
@@ -24,13 +25,64 @@ REAR_NS, REAR_NC = 8, 3
 BEAM_NS, BEAM_NC = 6, 2
 
 
-def rear_element(k):
-    RW = spec.REAR_WING
-    chord = RW["chord"] * (1.0 - 0.42 * k)
-    x = RW["x"] + k * RW["chord"] * 0.46
-    z = RW["z"] + k * (RW["gap"] + 26.0)
-    aoa = RW["aoa"] + k * 12.0
-    return x, z, chord, aoa
+
+def _chord_line(s, f, frac):
+    """A point on surface `s`'s chord line, at spanwise fraction f."""
+    le = [s["le_root"][i] + (s["le_tip"][i] - s["le_root"][i]) * f
+          for i in range(3)]
+    c = s["c_root"] + (s["c_tip"] - s["c_root"]) * f
+    tw = math.radians(s["twist_root"]
+                      + (s["twist_tip"] - s["twist_root"]) * f)
+    d = (frac - 0.25) * c
+    return le[0] + 0.25 * c + d * math.cos(tw), le[2] - d * math.sin(tw)
+
+
+def check_slots(surfaces, min_frac=0.02):
+    """Refuse to emit a lattice whose surfaces are on top of each other.
+
+    A vortex lattice is a set of infinitely thin sheets. Two of them a
+    millimetre apart -- or crossing -- give an influence matrix that is
+    near-singular in a way nothing downstream announces: the solve still
+    returns, the lift is roughly right because the enormous equal-and-opposite
+    circulations cancel to first order, and the induced drag, which is
+    quadratic, comes out at forty times the real figure.
+
+    That is exactly what the rear wing did. So measure the closest approach
+    between every pair of chord lines and refuse anything under 2 % of chord,
+    which is about the tightest slot gap a real multi-element wing runs.
+    """
+    def seg_dist(p, a, b):
+        dx, dz = b[0] - a[0], b[1] - a[1]
+        L2 = dx * dx + dz * dz
+        t = 0.0 if L2 < 1e-18 else max(0.0, min(
+            1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2))
+        return math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dz))
+
+    bad = []
+    for i in range(len(surfaces)):
+        for j in range(i + 1, len(surfaces)):
+            A, B = surfaces[i], surfaces[j]
+            worst, at = 1e9, 0.0
+            for k in range(9):
+                f = k / 8.0
+                a0, a1 = _chord_line(A, f, 0.0), _chord_line(A, f, 1.0)
+                b0, b1 = _chord_line(B, f, 0.0), _chord_line(B, f, 1.0)
+                d = min([seg_dist(_chord_line(A, f, m / 20.0), b0, b1)
+                         for m in range(21)]
+                        + [seg_dist(_chord_line(B, f, m / 20.0), a0, a1)
+                           for m in range(21)])
+                if d < worst:
+                    worst, at = d, f
+            ref = 0.5 * (A["c_root"] + B["c_root"])
+            if worst < min_frac * ref:
+                bad.append((A["name"], B["name"], worst, worst / ref, at))
+    if bad:
+        lines = [f"    {a}/{b}: {d*1000:.1f} mm ({r*100:.1f} % of chord) "
+                 f"at span fraction {f:.2f}" for a, b, d, r, f in bad]
+        raise SystemExit(
+            "lifting surfaces closer than "
+            f"{min_frac*100:.0f} % of chord -- the lattice cannot resolve "
+            "this and will not say so:\n" + "\n".join(lines))
 
 
 def config():
@@ -44,7 +96,8 @@ def config():
     for k, (dx, dz, c_r, c_t, span_f, aoa_r, aoa_t, rise) in enumerate(
             FW["stack"]):
         tip = half * span_f
-        z_root = FW["z"] + dz + (FW["arch"] if k == 0 else 0.0)
+        # the whole stack follows the nose -- see the note in car/parts/wings
+        z_root = FW["z"] + dz + FW["arch"]
         s = {
             "name": f"front_{k}",
             "le_root": [(FW["x"] + dx) * MM, 0.0, z_root * MM],
@@ -56,16 +109,17 @@ def config():
             "twist_root": -aoa_r, "twist_tip": -aoa_t,
         }
         if k > 0:
-            # The flaps trim together; the mainplane does not move. Sign is
-            # set so that a positive slider adds downforce, checked against
-            # the solve rather than reasoned about -- see the range note.
+            # The flaps trim together; the mainplane does not move. Negative,
+            # because the surface carries twist = -aoa: a positive slider has
+            # to make the twist more negative to add incidence, and so
+            # downforce. It read +1 while the mesh had its incidence the wrong
+            # way round, and adding front flap took downforce off the front.
             s["control"] = "front_flap"
             s["control_tau"] = 1.0          # the whole element rotates
-            s["control_sign"] = 1.0
+            s["control_sign"] = -1.0
         surfaces.append(s)
 
-    for k in range(RW["elements"]):
-        x, z, chord, aoa = rear_element(k)
+    for k, (x, z, chord, aoa) in enumerate(spec.rear_elements()):
         s = {
             "name": f"rear_{k}",
             "le_root": [x * MM, 0.0, z * MM], "c_root": chord * MM,
@@ -81,18 +135,17 @@ def config():
             s["control_sign"] = 1.0
         surfaces.append(s)
 
-    for k in range(BW["elements"]):
-        chord = BW["chord"] * (1.0 - 0.30 * k)
-        x = BW["x"] + k * BW["chord"] * 0.5
-        z = BW["z"] + k * 40.0
+    for k, (x, z, chord, aoa) in enumerate(spec.beam_elements()):
         surfaces.append({
             "name": f"beam_{k}",
             "le_root": [x * MM, 0.0, z * MM], "c_root": chord * MM,
             "le_tip": [x * MM, BW["span"] / 2 * MM, z * MM],
             "c_tip": chord * 0.92 * MM,
             "n_span": BEAM_NS, "n_chord": BEAM_NC,
-            "twist_root": -BW["aoa"], "twist_tip": -BW["aoa"],
+            "twist_root": -aoa, "twist_tip": -aoa,
         })
+
+    check_slots(surfaces)
 
     s_ref = 0.0
     for s in surfaces:
@@ -124,10 +177,14 @@ def config():
             # lattice stops being linear well before that: swept wider, the
             # response turns over and adding flap starts taking downforce off.
             # Plus or minus a few degrees is the real adjustment anyway.
+            # Negative for the same reason as control_sign above: the viewer
+            # turns a spanwise hinge by -ang*sign about three's z, which takes
+            # the trailing edge DOWN for a positive sign. Adding front flap
+            # has to take it up.
             {"id": "front_flap", "label": "Front flap trim", "unit": "deg",
              "min": -4.0, "max": 5.0, "value": 0.0, "baked": 0.0,
              "objects": ["front_flap_1", "front_flap_2", "front_flap_3"],
-             "sign": [1.0, 1.0, 1.0]},
+             "sign": [-1.0, -1.0, -1.0]},
             {"id": "drs", "label": "DRS / rear flap", "unit": "deg",
              "min": 0.0, "max": 28.0, "value": 0.0, "baked": 0.0,
              "objects": ["rear_flap"], "sign": [1.0]},

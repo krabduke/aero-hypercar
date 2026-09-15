@@ -124,20 +124,25 @@ make validate    # check the solver against lifting-line theory first
 make aero        # solve the car's wings in ground effect
 ```
 
-The solver is validated before it is used. Against lifting-line theory it gets
-the lift slope within 7.5 % across AR 4–12, returns a span efficiency of 0.99
+The solver is validated before it is used. Against finite-span theory it gets
+the lift slope within 5.6 % across AR 4–12, returns a span efficiency of 0.99
 for a rectangular AR 8 wing, and reproduces ground effect correctly: +59 % lift
-at h/c = 0.25.
+at h/c = 0.25. The car's own lattice is then refined from 2 to 12 panels per
+chord and has to hold still — within 5 % on downforce and 8 % on drag — and the
+spanwise loading is checked for the alternating sign that a near-singular
+influence matrix produces. Agreement between the two solvers is not enough on
+its own: both read `spec.py`, so a lattice that cannot resolve the car agrees
+with itself.
 
 Results for the car's wings, at 250 km/h:
 
 | | |
 |---|---|
-| Downforce, free air | 552 kg |
-| Downforce, in ground effect | **577 kg** (+4.5 %) |
-| Induced drag | 172 kg-force, CDi 0.232 |
-| Lift / induced drag | 3.4 |
-| At 300 km/h | 831 kg — 119 % of the car's mass |
+| Downforce, free air | 656 kg |
+| Downforce, in ground effect | **789 kg** (+20.3 %) |
+| Induced drag | 115 kg-force, CDi 0.155 |
+| Lift / induced drag | 6.9 |
+| At 300 km/h | 1,135 kg — 162 % of the car's mass |
 
 **What the solve does not cover, and why the numbers should not be over-read:**
 

@@ -48,9 +48,23 @@ def wing_element(x, z, span, chord, aoa, thickness=0.09, camber=0.055,
                  aoa_tip=None, y0=0.0):
     """One wing element, spanning +/- span/2 about the car centreline.
 
-    Built as a cambered aerofoil at negative incidence -- a wing on a racing
-    car is an upside-down aeroplane wing, so the camber is inverted here rather
-    than anywhere else in the code.
+    Built as a cambered aerofoil at incidence -- a wing on a racing car is an
+    upside-down aeroplane wing, so the camber is inverted here rather than
+    anywhere else in the code, and `aoa` rotates the section trailing-edge UP.
+
+    That is the whole of what incidence means on a downforce wing, and it used
+    to be the other way round: the section was rotated by -aoa, which put the
+    rear wing's trailing edge 100 mm BELOW its leading edge. Inverted camber
+    pulling down and geometric incidence pushing up, on every wing on the car.
+    The solvers never saw it, because they are built from spec.py rather than
+    from the mesh, and they use the opposite sign.
+
+    `x` is the leading edge at zero incidence; the section rotates about its
+    quarter chord. That is the convention lofted_element, aero/analyse.py and
+    the browser lattice all use, and spec.REAR_WING["x"] is written for it --
+    the endplate is cut to run 130 mm ahead of x and 96 mm behind x + chord.
+    Taking x as the quarter chord instead, as this did, moved the mainplane
+    90 mm forward of its own endplate.
     """
     n_chord = n_chord or spec.RES["airfoil_pts"]
     n_span = n_span or spec.RES["wing_stations"]
@@ -62,9 +76,9 @@ def wing_element(x, z, span, chord, aoa, thickness=0.09, camber=0.055,
         y = -span / 2 + span * f
         t = abs(y) / (span / 2)
         c = chord * (1.0 - (1.0 - taper) * t)
-        a = math.radians(-(aoa if aoa_tip is None else aoa + (aoa_tip - aoa) * t))
+        a = math.radians(aoa if aoa_tip is None else aoa + (aoa_tip - aoa) * t)
         ca, sa = math.cos(a), math.sin(a)
-        xs = x + sweep * t
+        xs = x + sweep * t + 0.25 * c
         for (u, v) in sect:
             du = (u - 0.25) * c
             dv = -v * c                      # inverted aerofoil
@@ -113,7 +127,9 @@ def lofted_element(stations, thickness=0.085, camber=0.075, n_chord=None):
     n_sec = len(sect)
     verts = []
     for (y, x_le, z, chord, aoa) in stations:
-        a = math.radians(-aoa)
+        # trailing edge up: see wing_element on which way a downforce wing
+        # is rotated
+        a = math.radians(aoa)
         ca, sa = math.cos(a), math.sin(a)
         for (u, v) in sect:
             du = (u - 0.25) * chord

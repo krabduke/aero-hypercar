@@ -318,7 +318,7 @@ FRONT_WING = {
 REAR_WING = {
     "x": 4480.0, "z": 880.0,
     "span": 1420.0, "chord": 360.0,
-    "elements": 2, "gap": 22.0,
+    "elements": 2, "gap": 22.0, "overlap": 8.0,
     "endplate_h": 360.0, "endplate_t": 10.0,
     "aoa": 17.0, "drs_aoa": 2.0,
     "pylon_t": 26.0,
@@ -359,8 +359,93 @@ FLOOR_EDGE = {
 
 BEAM_WING = {
     "x": 4280.0, "z": 430.0, "span": 1100.0, "chord": 210.0,
-    "elements": 2, "aoa": 12.0,
+    "elements": 2, "aoa": 12.0, "gap": 18.0, "overlap": 6.0,
 }
+
+
+# ------------------------------------------------------------ slotted wings
+
+"""Where the elements of a multi-element wing actually go.
+
+Every element is a flat chord line rotated about its quarter chord -- the same
+convention the mesh, aero/analyse.py and the browser lattice all use, so these
+two functions are the one place the stack-up is decided.
+
+The rear wing used to be placed by stepping the flap 46 % of chord aft and a
+flat 48 mm up. That takes no account of the mainplane's own incidence: at 17
+degrees its chord line climbs 50.6 mm over that step, so the flap's leading
+edge finished 2.4 mm BELOW the element it was supposed to sit behind. The two
+elements interpenetrated. A vortex lattice has no way to represent two sheets
+that cross, and it did not fail quietly -- strip circulation came out
+alternating +219 and -239 across the span and the induced drag read 2,247 kg
+against a physical figure near 60. Measuring the slot where a slot is actually
+measured fixes the geometry and the solve together.
+"""
+
+
+def chord_point(x, z, chord, aoa, frac):
+    """A point at `frac` of the chord, in the x-z plane.
+
+    x, z name the quarter-chord reference the section rotates about, not the
+    leading edge: that is where the lattice puts its bound vortex and where
+    the mesh builder puts the DRS hinge.
+    """
+    a = math.radians(aoa)
+    d = (frac - 0.25) * chord
+    return x + 0.25 * chord + d * math.cos(a), z + d * math.sin(a)
+
+
+def slot_place(x, z, chord, aoa, chord2, aoa2, gap, overlap):
+    """Place the element behind a slot, and return its own (x, z) reference.
+
+    `gap` is measured perpendicular to the upstream element's chord line and
+    `overlap` along it, both from that element's trailing edge -- which is how
+    a slot gap and an overlap are defined on a real multi-element wing, and
+    what keeps the passage open as either element is trimmed.
+    """
+    te_x, te_z = chord_point(x, z, chord, aoa, 1.0)
+    a = math.radians(aoa)
+    # along the chord, pointing aft; and normal to it, towards the flap
+    ax, az = math.cos(a), math.sin(a)
+    nx, nz = -math.sin(a), math.cos(a)
+    le_x = te_x - overlap * ax + gap * nx
+    le_z = te_z - overlap * az + gap * nz
+    # invert chord_point at frac 0 to recover the quarter-chord reference
+    a2 = math.radians(aoa2)
+    return (le_x - 0.25 * chord2 * (1.0 - math.cos(a2)),
+            le_z + 0.25 * chord2 * math.sin(a2))
+
+
+def rear_elements():
+    """(x, z, chord, aoa) for each rear wing element, root section."""
+    RW = REAR_WING
+    out = []
+    x, z = RW["x"], RW["z"]
+    for k in range(RW["elements"]):
+        chord = RW["chord"] * (1.0 - 0.42 * k)
+        aoa = RW["aoa"] + k * 12.0
+        if k:
+            px, pz, pc, pa = out[-1]
+            x, z = slot_place(px, pz, pc, pa, chord, aoa,
+                              RW["gap"], RW["overlap"])
+        out.append((x, z, chord, aoa))
+    return out
+
+
+def beam_elements():
+    """(x, z, chord, aoa) for each beam wing element, root section."""
+    BW = BEAM_WING
+    out = []
+    x, z = BW["x"], BW["z"]
+    for k in range(BW["elements"]):
+        chord = BW["chord"] * (1.0 - 0.30 * k)
+        aoa = BW["aoa"] + k * 8.0
+        if k:
+            px, pz, pc, pa = out[-1]
+            x, z = slot_place(px, pz, pc, pa, chord, aoa,
+                              BW["gap"], BW["overlap"])
+        out.append((x, z, chord, aoa))
+    return out
 
 BRAKE_DUCT = {
     "front_r": 210.0, "rear_r": 232.0,

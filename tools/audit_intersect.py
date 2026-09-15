@@ -216,6 +216,31 @@ EXPECTED = [
     # the sidepod is bodywork, and the engine lives inside the bodywork --
     # the same statement as ("engine", "tub") a few lines up
     ("engine", "sidepod_"),
+    # a louvre is riveted to the outer face of the plate it bleeds
+    ("rear_louvre_", "rear_endplate_"),
+
+    # ----------------------------------------------------------------
+    # Joints that sat just under the threshold until the model's bounding
+    # box changed and moved the voxel from 17.0 mm to 17.5. Each one was
+    # looked at on its own before being written down here; the overlap was
+    # always there, the sampling only just started reporting it.
+    # ----------------------------------------------------------------
+    # the headrest and the airbox both land on the rear cockpit bulkhead,
+    # from opposite sides, and meet in the 30 mm they share
+    ("headrest", "airbox"),
+    # the front tow hook comes down through the wing it is mounted above --
+    # the flap stack is already declared for the same reason
+    ("front_wing_main", "tow_hooks"),
+    # the fin is the back of the engine cover and ends on the rear structure
+    ("sharkfin", "crash_structure"),
+    # the tether anchors on the corner: upright, wishbone and driveshaft are
+    # already listed, and the hub is the same assembly
+    ("tether_", "hub_"),
+    # the fan throat is formed through the rear structure, as the duct around
+    # it already says
+    ("fan_rotor_", "crash_structure"),
+    # the loom is clipped along the top wishbone on its way to the corner
+    ("wiring_loom", "wishbone_"),
     ("seat", "extinguisher"),   # it is strapped to the seat back
     ("engine", "gills"),   # the louvres are cut in the cover over it
 ]
