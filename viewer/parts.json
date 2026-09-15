@@ -284,7 +284,7 @@
    "label": "Wings",
    "color": "#6E7A86",
    "parts": 25,
-   "faces": 19201
+   "faces": 17501
   },
   {
    "key": "04 Wheels and Brakes",
@@ -522,29 +522,29 @@
   "front_diveplane_l1": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
-   "x0": 56.0,
-   "x1": 191.5,
+   "x0": 91.7,
+   "x1": 227.5,
    "f": 218
   },
   "front_diveplane_l2": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
-   "x0": 103.1,
-   "x1": 210.2,
+   "x0": 132.0,
+   "x1": 239.4,
    "f": 218
   },
   "front_diveplane_r1": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
-   "x0": 56.0,
-   "x1": 191.5,
+   "x0": 91.7,
+   "x1": 227.5,
    "f": 218
   },
   "front_diveplane_r2": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
-   "x0": 103.1,
-   "x1": 210.2,
+   "x0": 132.0,
+   "x1": 239.4,
    "f": 218
   },
   "front_endplate_l": {
@@ -564,14 +564,14 @@
   "front_flap_1": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
-   "x0": 156.5,
+   "x0": 156.6,
    "x1": 344.2,
    "f": 1010,
    "pivot": {
     "p": [
      156.0,
      0.0,
-     176.0
+     220.0
     ],
     "axis": [
      0.0,
@@ -585,14 +585,14 @@
   "front_flap_2": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
-   "x0": 247.3,
+   "x0": 247.5,
    "x1": 393.6,
    "f": 1010,
    "pivot": {
     "p": [
      246.0,
      0.0,
-     218.0
+     262.0
     ],
     "axis": [
      0.0,
@@ -606,14 +606,14 @@
   "front_flap_3": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
-   "x0": 324.1,
+   "x0": 324.3,
    "x1": 433.0,
    "f": 1010,
    "pivot": {
     "p": [
      322.0,
      0.0,
-     280.0
+     324.0
     ],
     "axis": [
      0.0,
@@ -641,28 +641,28 @@
   "rear_endplate_l": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4350.5,
-   "x1": 4942.0,
-   "f": 1538
+   "x0": 4354.4,
+   "x1": 5101.1,
+   "f": 688
   },
   "rear_endplate_r": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4350.5,
-   "x1": 4942.0,
-   "f": 1538
+   "x0": 4354.4,
+   "x1": 5101.1,
+   "f": 688
   },
   "rear_flap": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
-   "x0": 4599.2,
-   "x1": 4782.3,
+   "x0": 4813.8,
+   "x1": 4996.4,
    "f": 1802,
    "pivot": {
     "p": [
-     4645.6,
+     4814.1,
      0.0,
-     928.0
+     977.6
     ],
     "axis": [
      0.0,
@@ -676,78 +676,78 @@
   "rear_gurney": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4722.6,
-   "x1": 4791.3,
+   "x0": 4941.8,
+   "x1": 4996.5,
    "f": 1017
   },
   "rear_louvre_l1": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4400.0,
-   "x1": 4440.0,
+   "x0": 4726.7,
+   "x1": 4766.7,
    "f": 170
   },
   "rear_louvre_l2": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4452.0,
-   "x1": 4492.0,
+   "x0": 4778.7,
+   "x1": 4818.7,
    "f": 170
   },
   "rear_louvre_l3": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4504.0,
-   "x1": 4544.0,
+   "x0": 4830.7,
+   "x1": 4870.7,
    "f": 170
   },
   "rear_louvre_l4": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4556.0,
-   "x1": 4596.0,
+   "x0": 4882.7,
+   "x1": 4922.7,
    "f": 170
   },
   "rear_louvre_l5": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4608.0,
-   "x1": 4648.0,
+   "x0": 4934.7,
+   "x1": 4974.7,
    "f": 170
   },
   "rear_louvre_r1": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4400.0,
-   "x1": 4440.0,
+   "x0": 4726.7,
+   "x1": 4766.7,
    "f": 170
   },
   "rear_louvre_r2": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4452.0,
-   "x1": 4492.0,
+   "x0": 4778.7,
+   "x1": 4818.7,
    "f": 170
   },
   "rear_louvre_r3": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4504.0,
-   "x1": 4544.0,
+   "x0": 4830.7,
+   "x1": 4870.7,
    "f": 170
   },
   "rear_louvre_r4": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4556.0,
-   "x1": 4596.0,
+   "x0": 4882.7,
+   "x1": 4922.7,
    "f": 170
   },
   "rear_louvre_r5": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4608.0,
-   "x1": 4648.0,
+   "x0": 4934.7,
+   "x1": 4974.7,
    "f": 170
   },
   "rear_pylon_l": {
@@ -767,8 +767,8 @@
   "rear_wing_main": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4393.4,
-   "x1": 4737.7,
+   "x0": 4483.7,
+   "x1": 4827.5,
    "f": 1802
   },
   "brake_pad_fl": {
@@ -1957,8 +1957,8 @@
   "beam_wing": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4228.5,
-   "x1": 4471.8,
+   "x0": 4281.1,
+   "x1": 4615.1,
    "f": 868
   },
   "cameras": {
@@ -2586,9 +2586,9 @@
      "front_flap_3"
     ],
     "sign": [
-     1.0,
-     1.0,
-     1.0
+     -1.0,
+     -1.0,
+     -1.0
     ]
    },
    {
@@ -2632,7 +2632,7 @@
     "le_root": [
      0.156,
      0.0,
-     0.176
+     0.22
     ],
     "c_root": 0.19,
     "le_tip": [
@@ -2647,14 +2647,14 @@
     "twist_tip": -17.0,
     "control": "front_flap",
     "control_tau": 1.0,
-    "control_sign": 1.0
+    "control_sign": -1.0
    },
    {
     "name": "front_2",
     "le_root": [
      0.246,
      0.0,
-     0.218
+     0.262
     ],
     "c_root": 0.152,
     "le_tip": [
@@ -2669,14 +2669,14 @@
     "twist_tip": -26.0,
     "control": "front_flap",
     "control_tau": 1.0,
-    "control_sign": 1.0
+    "control_sign": -1.0
    },
    {
     "name": "front_3",
     "le_root": [
      0.322,
      0.0,
-     0.28
+     0.324
     ],
     "c_root": 0.11800000000000001,
     "le_tip": [
@@ -2691,7 +2691,7 @@
     "twist_tip": -34.0,
     "control": "front_flap",
     "control_tau": 1.0,
-    "control_sign": 1.0
+    "control_sign": -1.0
    },
    {
     "name": "rear_0",
@@ -2715,15 +2715,15 @@
    {
     "name": "rear_1",
     "le_root": [
-     4.645600000000001,
+     4.807574817271092,
      0.0,
-     0.928
+     1.0029471534454026
     ],
     "c_root": 0.2088,
     "le_tip": [
-     4.645600000000001,
+     4.807574817271092,
      0.71,
-     0.928
+     1.0029471534454026
     ],
     "c_tip": 0.19836,
     "n_span": 8,
@@ -2756,21 +2756,21 @@
    {
     "name": "beam_1",
     "le_root": [
-     4.385,
+     4.474730654890333,
      0.0,
-     0.47000000000000003
+     0.4916745182393173
     ],
     "c_root": 0.147,
     "le_tip": [
-     4.385,
+     4.474730654890333,
      0.55,
-     0.47000000000000003
+     0.4916745182393173
     ],
     "c_tip": 0.13524,
     "n_span": 6,
     "n_chord": 2,
-    "twist_root": -12.0,
-    "twist_tip": -12.0
+    "twist_root": -20.0,
+    "twist_tip": -20.0
    }
   ]
  },
