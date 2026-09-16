@@ -412,7 +412,11 @@ def _survival_cell():
             j2 = (j + 1) % n
             faces.append((o_f + j, o_f + j2, i_f + j2, i_f + j))
             faces.append((o_b + j, i_b + j, i_b + j2, o_b + j2))
-            faces.append((o_f + j, i_f + j, i_b + j, o_b + j))
+            # The two RIMS, not a radial wall at every station. A wall at each
+            # j is a face inside the frame and leaves the outer and inner
+            # edges with one face on them: 576 of the ring's 4,992 edges.
+            faces.append((o_f + j, o_b + j, o_b + j2, o_f + j2))
+            faces.append((i_f + j, i_f + j2, i_b + j2, i_b + j))
         # the return flange round the inner aperture, and the lightening
         # holes between it and the outer edge
         parts = [(verts, faces)]
@@ -435,14 +439,17 @@ def _survival_cell():
                        (p0[0] - 24.0, p0[1] - ny * 9.0, p0[2] - nz * 9.0),
                        (p0[0] - 24.0, p0[1] - ny * 18.0, p0[2] - nz * 18.0),
                        (p0[0] - 9.0, p0[1] - ny * 14.0, p0[2] - nz * 14.0)])
-        fv, ff = [], []
+        # One ring of stations swept round, not a fresh set of eight vertices
+        # per segment. Built segment by segment, every edge along the sweep
+        # belongs to one quad only and the flange is a sheet rather than a
+        # solid -- 1,152 of its 5,280 edges, on all four bulkheads.
+        fv = [p for station in fl for p in station]
+        ff = []
         for j in range(n):
-            j2 = (j + 1) % n
-            base = len(fv)
-            fv.extend(fl[j]); fv.extend(fl[j2])
+            b0, b1 = j * 4, ((j + 1) % n) * 4
             for k in range(4):
                 k2 = (k + 1) % 4
-                ff.append((base + k, base + k2, base + 4 + k2, base + 4 + k))
+                ff.append((b0 + k, b0 + k2, b1 + k2, b1 + k))
         parts.append((fv, ff))
         out[f"bulkhead_{name}"] = mesh.join(*parts)
 

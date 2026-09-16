@@ -352,7 +352,10 @@ def _accessories():
         reach = max(py * cy + pz * cz + r for (r, py, pz) in ring)
         path.append((xf - 4.0, reach * cy, reach * cz))
     path.append(path[0])
-    out["accessory_belt"] = mesh.pipe(path, 7.0, 6, caps=False)
+    # capped: the path is a closed loop, so with caps off the two ends of the
+    # sweep sat on top of each other with nothing joining them and the belt
+    # was an open tube
+    out["accessory_belt"] = mesh.pipe(path, 7.0, 6, caps=True)
     return out
 
 

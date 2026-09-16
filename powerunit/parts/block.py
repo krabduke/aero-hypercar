@@ -240,6 +240,15 @@ def _windage():
         faces.append((a, c, c + 1, a + 1))
         a, c = (i * 5 + 4) * 2, ((i + 1) * 5 + 4) * 2
         faces.append((a + 1, c + 1, c, a))
+    # and the two ends. The long edges were closed and the ends were not, so
+    # the tray was a sheet with a rim down each side and nothing across the
+    # front or the back of it.
+    for i, flip in ((0, False), (n, True)):
+        for j in range(4):
+            a = (i * 5 + j) * 2
+            b = (i * 5 + j + 1) * 2
+            quad = (a, a + 1, b + 1, b)
+            faces.append(quad if flip else tuple(reversed(quad)))
     parts.append((verts, faces))
     # the louvres punched into it, which are what let the oil through one way
     for i in range(9):

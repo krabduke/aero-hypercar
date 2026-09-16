@@ -312,7 +312,7 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 2,
-   "faces": 1281707
+   "faces": 1281717
   },
   {
    "key": "08 Cooling and Energy",
@@ -340,7 +340,7 @@
    "label": "Structure",
    "color": "#6A6E72",
    "parts": 17,
-   "faces": 67416
+   "faces": 67704
   }
  ],
  "parts": {
@@ -1833,7 +1833,7 @@
    "mat": "alu_cast",
    "x0": 2868.5,
    "x1": 3558.4,
-   "f": 1275280
+   "f": 1275290
   },
   "fuel_cell": {
    "g": "08 Cooling and Energy",
@@ -2330,28 +2330,28 @@
    "mat": "carbon_matte",
    "x0": 1156.0,
    "x1": 1191.0,
-   "f": 2424
+   "f": 2496
   },
   "bulkhead_engine": {
    "g": "11 Structure and Service",
    "mat": "carbon_matte",
    "x0": 2336.0,
    "x1": 2371.0,
-   "f": 2424
+   "f": 2496
   },
   "bulkhead_front": {
    "g": "11 Structure and Service",
    "mat": "carbon_matte",
    "x0": 596.0,
    "x1": 631.0,
-   "f": 2424
+   "f": 2496
   },
   "bulkhead_rear": {
    "g": "11 Structure and Service",
    "mat": "carbon_matte",
    "x0": 1956.0,
    "x1": 1991.0,
-   "f": 2424
+   "f": 2496
   },
   "control_boxes": {
    "g": "11 Structure and Service",
