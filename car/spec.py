@@ -921,3 +921,39 @@ def top_speed_kph(power_kw=935.0):
         else:
             hi = mid
     return (lo + hi) / 2
+
+
+# --------------------------------------------------------------------------
+# Where the fan's air goes
+# --------------------------------------------------------------------------
+# The fans were exhausting straight up. The fan disc spans x 4120 to 4680; the
+# beam wing is at x 4175-4385 and the rear wing's suction surface is at z 880
+# over x 4300-4660. So a 42 m/s jet was being fired vertically into the
+# underside of both of them. At 200 km/h the rear wing carries about 290 kg;
+# the whole fan jet, turned straight up, is worth 101 kg. Trading the first for
+# the second is the single worst thing this car could do with that air.
+#
+# Turned aft and up instead, the same momentum gives 50 kg of downforce AND
+# 857 N of thrust, and the exit sits behind the rear wing's trailing edge so
+# nothing is blown on. Better still, the jet passes just over the diffuser
+# exit, where its shear layer entrains the diffuser's own flow and pulls the
+# exit pressure down -- an ejector on the thing that makes most of the
+# downforce, which is what a fan car is supposed to be.
+FAN_EXHAUST = {
+    "theta":     28.0,      # degrees above horizontal, aimed aft
+    "cant":       6.0,      # degrees outboard, to keep the two jets apart
+    "exit_x":  4700.0,      # aft of the rear wing trailing edge at 4660
+    "exit_z":   430.0,
+    "exit_y":   400.0,
+    # The nozzle area matches the fan annulus, 0.229 m^2 a side. It is
+    # tempting to contract it -- a faster jet entrains harder and carries more
+    # momentum -- but a contraction is back pressure, and back pressure moves
+    # the fan up its own curve and down in flow. The flow is the downforce.
+    # So the nozzle is the same area as what feeds it and the jet stays at
+    # 42 m/s. Its lower lip lands at z 245, which is the diffuser exit's own
+    # height 140 mm ahead: the shear layer runs straight along the diffuser's
+    # outflow, which is exactly where an ejector wants it.
+    "exit_w":   620.0,
+    "exit_h":   370.0,
+    "scroll_r": 260.0,      # radius of the turn out of the fan
+}
