@@ -926,34 +926,93 @@ def top_speed_kph(power_kw=935.0):
 # --------------------------------------------------------------------------
 # Where the fan's air goes
 # --------------------------------------------------------------------------
-# The fans were exhausting straight up. The fan disc spans x 4120 to 4680; the
-# beam wing is at x 4175-4385 and the rear wing's suction surface is at z 880
-# over x 4300-4660. So a 42 m/s jet was being fired vertically into the
-# underside of both of them. At 200 km/h the rear wing carries about 290 kg;
-# the whole fan jet, turned straight up, is worth 101 kg. Trading the first for
-# the second is the single worst thing this car could do with that air.
+# The fans were exhausting straight up, into the underside of the beam wing
+# and the rear wing. At 200 km/h the rear wing carries about 290 kg and the
+# whole fan jet turned vertically is worth 101 kg. It is the worst trade
+# available.
 #
-# Turned aft and up instead, the same momentum gives 50 kg of downforce AND
-# 857 N of thrust, and the exit sits behind the rear wing's trailing edge so
-# nothing is blown on. Better still, the jet passes just over the diffuser
-# exit, where its shear layer entrains the diffuser's own flow and pulls the
-# exit pressure down -- an ejector on the thing that makes most of the
-# downforce, which is what a fan car is supposed to be.
+# Turned aft and up, the same 23.6 kg/s at 42 m/s gives 47 kg of downforce AND
+# 874 N of thrust, and the exit can be placed where the jet's shear layer runs
+# along the diffuser's outflow and entrains it -- an ejector on the thing that
+# makes most of the downforce.
+#
+# A WARNING, because it cost a wrong answer already: the `x` in REAR_WING and
+# BEAM_WING is the **leading edge**, not the centre. Reading it as a centre
+# put the rear wing at x 4300-4660 when the built geometry is:
+#
+#     beam wing       x 4281 - 4615      rear pylons  x 4265 - 4581
+#     rear mainplane  x 4484 - 4828, z 839 - 959
+#     rear flap       x 4814 - 4996, z 974 - 1079
+#     rear endplates  x 4354 - 5101, z 627 - 1147, at y +/- 710
+#
+# so a nozzle at x 4700 is not behind the rear wing at all, it is underneath
+# it, and its outer edge lands on the endplates. Take these numbers from the
+# built parts, not from the dicts.
+#
+# The exit that actually clears everything sits behind the beam wing, below
+# the mainplane, and inboard of the endplates.
 FAN_EXHAUST = {
     "theta":     28.0,      # degrees above horizontal, aimed aft
     "cant":       6.0,      # degrees outboard, to keep the two jets apart
-    "exit_x":  4700.0,      # aft of the rear wing trailing edge at 4660
-    "exit_z":   430.0,
-    "exit_y":   400.0,
+    "exit_x":  4680.0,      # 65 mm behind the beam wing, clear of the pylons
+    "exit_z":   440.0,      # spans z 220-660: lower lip just under the
+                            # diffuser exit at z 250, which is the ejector
+    # The endplates are thin plates at y +/- 710 running back to x 5101. The
+    # jet passes INBOARD of them rather than under them: spreading at the
+    # standard 11.8 degree half-angle from y 530, it does not reach y 710
+    # until x 5255, which is past the endplates' aft end. That is a
+    # three-dimensional argument and this comment is not a proof of it --
+    # tools/check_fan_exhaust.py is, and it tests the envelope in 3-D across
+    # the whole speed range.
+    "exit_y":   300.0,      # spans y 70-530, 180 mm inboard of the endplates
     # The nozzle area matches the fan annulus, 0.229 m^2 a side. It is
     # tempting to contract it -- a faster jet entrains harder and carries more
     # momentum -- but a contraction is back pressure, and back pressure moves
     # the fan up its own curve and down in flow. The flow is the downforce.
-    # So the nozzle is the same area as what feeds it and the jet stays at
-    # 42 m/s. Its lower lip lands at z 245, which is the diffuser exit's own
-    # height 140 mm ahead: the shear layer runs straight along the diffuser's
-    # outflow, which is exactly where an ejector wants it.
-    "exit_w":   620.0,
-    "exit_h":   370.0,
+    "exit_w":   460.0,
+    "exit_h":   498.0,
     "scroll_r": 260.0,      # radius of the turn out of the fan
 }
+
+# --------------------------------------------------------------------------
+# The box this car lives in
+# --------------------------------------------------------------------------
+# Stated by the owner, in full:
+#
+#   "no rules -- just needs 4 wheels, a combustion engine / hybrid engine,
+#    and needs to do the lap fairly. the car in itself has no other rules
+#    except following the track."
+#
+# That is a much larger design space than it first sounds, and most of what
+# makes a modern racing car the shape it is turns out to be regulation rather
+# than physics. Everything in the second column below is *allowed here* and is
+# banned in Formula 1, and each one is a lever this car is entitled to pull.
+RULESET = {
+    "wheels":            4,
+    "propulsion":        "internal combustion, hybrid permitted",
+    "must":              "complete the lap on the track, unaided",
+    # what is NOT constrained, and what each unlocks
+    "no_minimum_mass":   "F1 sets 798 kg. Nothing sets ours.",
+    "no_tyre_spec":      "bespoke compound and construction, and any width.",
+    "movable_aero":      "active wings and active ride height, both banned "
+                         "in F1 since 1969 and 1994 respectively.",
+    "ground_effect":     "sliding skirts and a fully sealed floor, banned "
+                         "in 1983.",
+    "fan":               "a fan whose primary effect is aerodynamic, banned "
+                         "the week after the Brabham BT46B won with one.",
+    "no_fuel_flow_limit": "F1 caps fuel flow at 100 kg/h above 10,500 rpm.",
+    "no_power_limit":    "no MGU deployment cap, no energy-store cap.",
+    "no_dimensional_box": "F1 fixes length, width, wheelbase and floor plan.",
+    # and the things that are still real, because physics does not care
+    # about rulebooks
+    "binding":           ("tyre contact patch and load sensitivity, the "
+                          "driver's tolerance to sustained g, the power it "
+                          "takes to drive a fan, cooling, and whether the "
+                          "structure survives the downforce it makes"),
+}
+
+# The lap is a single flying lap. Tyre wear, fuel load and heat soak over a
+# race distance are a different and much harder question, and claiming a race
+# pace this car has not been shown to hold would be dishonest. One lap, stated
+# as one lap.
+LAP_FORMAT = "single flying lap, car already at speed and at temperature"
