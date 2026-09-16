@@ -171,6 +171,14 @@ def config():
         "cg_frac": 0.0,
         "front_surfaces": ["front_0", "front_1", "front_2", "front_3"],
         "fan_kg": spec.FAN["downforce_kg"],
+        # The sealed floor's plan area, and the two numbers the underbody's
+        # downforce is worked out from. The fan's pressure rise is its stated
+        # downforce spread over that area -- 650 kg over 5.54 m2 is 1151 Pa --
+        # and that is what lets the fan be compared with what the tunnels do
+        # on their own, which is the comparison that was never made.
+        "floor_plan_m2": round(((spec.FLOOR["x1"] - spec.FLOOR["x0"])
+                                * 2 * spec.FLOOR["half_w"]) * MM * MM, 4),
+        "cla_floor": spec.AERO["cla_floor"],
         "controls": [
             # Trim range only, and deliberately narrow. The stack already
             # runs to 34 degrees at the tip of the top flap, and a flat-panel

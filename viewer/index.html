@@ -223,7 +223,7 @@
   <div id="controls">
     <button class="btn" id="skin" type="button" aria-pressed="false">Show engine</button>
     <button class="btn" id="tunnel-btn" type="button" aria-pressed="false">Wind tunnel</button>
-    <button class="btn" id="fans" type="button" aria-pressed="false">Spin fans</button>
+    <button class="btn" id="fans" type="button" aria-pressed="true">Fan off</button>
     <button class="btn" id="spin" type="button" aria-pressed="false">Turntable</button>
     <button class="btn" id="reset" type="button">Reset view</button>
   </div>
@@ -279,7 +279,17 @@ let keyLight = null;   // cast shadows, and sized to the model in ready()
 let scene, camera, renderer, controls, root, raycaster, clock;
 let data, byGroup = new Map(), info = new Map(), pickable = [];
 let hidden = new Set(), hovered = null, corners = [], viewDir;
-let spinning = false, fansOn = false;
+/* The fan runs. It is not a party trick.
+ *
+ * `fansOn` started false, which made the fan an animation you switch on --
+ * and once the fan was a boundary condition and then a term in the
+ * downforce, starting it off meant the car opened showing a ground-effect
+ * fan car with its fan stopped, reporting 0 kg from it. On the real thing it
+ * spins whenever the engine is running. The button is still there, because
+ * turning it off and watching 465 kg leave is the clearest demonstration of
+ * what the car is for.
+ */
+let spinning = false, fansOn = true;
 let spinners = [], byName = new Map(), tunnel = null, panel = null;
 
 init();
@@ -529,6 +539,97 @@ function onResize(){
   renderer.setSize(s.clientWidth, s.clientHeight);
 }
 
+/* What the underbody makes, at this speed, with the fan running.
+ *
+ * The venturi tunnels and the fan are not two downforce generators to be
+ * added up: they are one duct and one flow. Air is drawn under the car by
+ * whatever head is available -- the car's own dynamic pressure from moving,
+ * plus the pressure rise the fan puts into the circuit -- and the suction
+ * under the floor follows that total. Adding a flat 650 kg of "fan" to a
+ * speed-squared "floor" says the fan is still worth 650 kg at 360 km/h, where
+ * the tunnels are already pulling 1786 Pa and the fan can only make 1151.
+ *
+ * So: one constant, calibrated so that at the reference speed with the fan on
+ * the answer is the car's design figure, and everything else follows from the
+ * head. At rest that leaves the fan holding the car down on its own, which is
+ * what a fan car is for and what no wing can do.
+ */
+function underbody(v){
+  const T = data.tunnel;
+  const plan = T.floor_plan_m2 || 5.54;
+  const dpFan = (T.fan_kg * 9.81) / plan;
+  const q = 0.5 * 1.225 * v * v;
+  const qRef = 0.5 * 1.225 * T.v_default * T.v_default;
+  const on = fansOn ? 1 : 0;
+  const k = ((T.cla_floor || 0) * qRef + T.fan_kg * 9.81)
+          / ((qRef + dpFan) * plan);
+  const total = k * (q + dpFan * on) * plan / 9.81;
+  const without = k * q * plan / 9.81;
+  /* The fan's share comes out CONSTANT, and that is the answer rather than
+   * an approximation of one: flow through a duct goes as the square root of
+   * the head, and the suction at the throat goes as the flow squared, so the
+   * suction is LINEAR in head and a fixed pressure rise buys a fixed
+   * increment. It is 465 kg, not the 650 the car is quoted at -- the 650 is
+   * what the fan could hold under a sealed plenum, and this floor is not
+   * sealed, it is a pair of tunnels with the fan helping them along. What
+   * changes with speed is not the fan's contribution but its SHARE. */
+  return {total, dpFan, q,
+          fanShare: total - without,
+          fanFrac: total > 0 ? (total - without)/total : 0};
+}
+
+/* The drag a potential flow cannot produce.
+ *
+ * d'Alembert's paradox is not a curiosity here, it is the whole problem: a
+ * closed body in potential flow has EXACTLY no pressure drag, and a racing
+ * car is a collection of bluff bodies. The four wheels -- rotating, touching
+ * the ground, and typically about forty per cent of the drag of a car with
+ * them in the airstream -- come out of the solve with none at all, and the
+ * air closes neatly behind each one.
+ *
+ * So the bluff terms are built up from the measured geometry: the areas come
+ * from tools/panel_geom.py, which panels this car exactly even though the
+ * panel solve cannot be run on it, and the coefficients are the ordinary
+ * published ones for the shapes involved.
+ *
+ * What is NOT in here is the underbody's own drag. A floor making 1,650 kg of
+ * downforce pays for it, and nothing available here computes how much: the
+ * usual induced-drag relation is for a wing in free air and a floor 10 mm off
+ * the ground is the case where it fails worst, because the image plane
+ * cancels most of the trailing vorticity the relation assumes. It is stated
+ * as missing rather than guessed.
+ */
+function bluffDrag(v){
+  const areas = data.drag_areas || [];
+  const q = 0.5 * 1.225 * v * v;
+  const parts = [];
+  let wheels = 0, base = 0, wings = 0, skin = 0;
+  for(const c of areas){
+    if(/^wheel/.test(c.name)){
+      // a wheel in a wheel arch, not an exposed one: an isolated rotating
+      // wheel on the ground runs about 0.58, and bodywork over it is worth
+      // roughly a third of that
+      wheels += 0.38 * c.front;
+    }else if(/^(front|rear|beam)_/.test(c.name)){
+      // a multi-element wing at this loading: profile drag on planform,
+      // which is about half the wetted area
+      wings += 0.040 * c.wet * 0.5;
+      skin  += 0.004 * c.wet;
+    }else{
+      base += 0.15 * c.base;
+      skin += 0.004 * c.wet;
+    }
+  }
+  // cooling: what the ducts swallow, slowed from freestream to radiator face
+  const cool = 1.225 * (2*0.25*0.19*v*0.33 + 4*0.06*0.10*v*0.30)
+             * (v - v*0.33) / Math.max(q, 1e-6);
+  const misc = 0.09;          // suspension arms, mirrors, aerials
+  const total = wheels + base + wings + skin + cool + misc;
+  parts.push(['wheels', wheels], ['wings', wings], ['cooling', cool],
+             ['base', base], ['skin', skin], ['suspension and detail', misc]);
+  return {total, parts};
+}
+
 function buildTunnel(box){
   if(!data.tunnel) return;
   panel = buildPanel($('#tunnel-host'), data.tunnel,
@@ -554,6 +655,20 @@ function buildTunnel(box){
      * gas leaves around 800 K against 288 K ambient, so in an incompressible
      * solve the same mass needs roughly 2.6x the volume going out. */
     const aq = 2.4*v;
+    /* Air goes THROUGH a racing car, not only round it.
+     *
+     * The sidepods take 250 x 190 mm of air each into a radiator and put it
+     * out at the back; the brake ducts take their own and dump it round the
+     * wheel. Panelled as solid, all of that went round the outside, which is
+     * both the wrong picture and the wrong drag -- cooling is a real part of
+     * a race car's drag and the whole of it was missing. Each inlet is
+     * matched to its own exit, so no duct leaves a net source in the far
+     * field. The flux is the inlet area times the speed the duct actually
+     * runs at, which for a radiator is roughly a third of freestream.
+     */
+    const vv = (state && state.v) ? state.v : 69.44;
+    const pod = 0.25*0.19 * vv * 0.33;      // each sidepod inlet
+    const duct = 0.06*0.10 * vv * 0.30;     // each brake duct
     const ports = [
       {p: [2.20, 0.00, 0.78], Q: -aq,      r: 0.10},  // airbox -> engine
       {p: [4.53, 0.00, 0.47], Q:  aq*2.6,  r: 0.11},  // tailpipe, above the diffuser
@@ -561,6 +676,14 @@ function buildTunnel(box){
       {p: [4.40,  0.30, 0.30], Q: -fq,  r: 0.14},  // fan R
       {p: [4.72, -0.30, 0.24], Q:  fq,  r: 0.12},  // fan L exhaust, aft
       {p: [4.72,  0.30, 0.24], Q:  fq,  r: 0.12}, // fan R exhaust
+      {p: [1.78, -0.74, 0.45], Q: -pod, r: 0.11},  // sidepod inlet L
+      {p: [1.78,  0.74, 0.45], Q: -pod, r: 0.11},  // sidepod inlet R
+      {p: [3.52, -0.60, 0.62], Q:  pod, r: 0.12},  // radiator exit L
+      {p: [3.52,  0.60, 0.62], Q:  pod, r: 0.12},  // radiator exit R
+      {p: [1.30, -0.66, 0.20], Q: -duct, r: 0.06}, // brake duct, front L
+      {p: [1.30,  0.66, 0.20], Q: -duct, r: 0.06}, // front R
+      {p: [1.52, -0.72, 0.34], Q:  duct, r: 0.07}, // and out round the wheel
+      {p: [1.52,  0.72, 0.34], Q:  duct, r: 0.07},
     ];
     return fq === 0 ? ports.filter(q => q.Q !== 0) : ports;
   }
@@ -572,9 +695,9 @@ function buildTunnel(box){
     nLines: 560,
     ports: (state) => flowPorts(state),
     onSolve: r => {
-      // the fans add a near speed-independent term the lattice knows nothing
-      // about, so it is reported separately rather than folded in
       const wings = Math.abs(r.lift_N/9.81);
+      const und = underbody(r.v);
+      const bluff = bluffDrag(r.v);
       const fan = data.tunnel.fan_kg;
       let front = 0, tot = 0;
       // read it off the report, not off `tunnel` -- the first solve happens
@@ -583,17 +706,38 @@ function buildTunnel(box){
         tot += v;
         if(data.tunnel.front_surfaces.includes(k)) front += v;
       }
-      renderReadout($('#t-readout'), {...r, frontFrac: tot ? front/tot : 0},
-                    data.tunnel, 'car');
+      renderReadout($('#t-readout'), {
+        ...r, frontFrac: tot ? front/tot : 0,
+        wings_kg: wings, under_kg: und.total, fan_kg: und.fanShare,
+        total_kg: wings + und.total,
+        cda_induced: Math.abs(r.drag_N)/(0.5*1.225*r.v*r.v),
+        cda_bluff: bluff.total,
+      }, data.tunnel, 'car');
       drawSpanLoad($('#t-span'), r.strips);
       $('#t-panels').textContent =
         `${r.panels} panels · ${(r.v*3.6).toFixed(0)} km/h`;
       $('#t-note').className = 'tnote';
       $('#t-note').textContent =
-        `Forces are the wings only, in ground effect. The floor, the tunnels `
-        + `and the fans (a further ${fan} kg, near constant with speed) are `
-        + `not in the force solve. The streamlines do include the body: tub, `
-        + `sidepods, wheels and floor, as ${data.body_panels.n} source panels.`;
+        `Wings solved; underbody modelled. The tunnels and the fan drive one `
+        + `duct, so they do not add up — the fan puts `
+        + `${und.dpFan.toFixed(0)} Pa into the circuit and at `
+        + `${(r.v*3.6).toFixed(0)} km/h the car's own motion is already worth `
+        + `${und.q.toFixed(0)} Pa of it. The fan is worth a flat `
+        + `${und.fanShare.toFixed(0)} kg, which is `
+        + `${(und.fanFrac*100).toFixed(0)}% of the underbody here and `
+        + `essentially all of it at a standstill. That is the argument for a `
+        + `fan: a wing gives you nothing until you are moving. Drag: the `
+        + `wings' induced drag is solved, the rest is built up from measured `
+        + `areas — `
+        + bluff.parts.map(([k, x]) => `${k} ${x.toFixed(2)}`).join(', ')
+        + `. A potential flow gives a closed body no pressure drag at all, so `
+        + `the wheels came out of the solve at zero; they are the biggest `
+        + `single term. The underbody's own drag is not in it — a floor 10 mm `
+        + `off the ground is where the usual induced-drag relation fails `
+        + `worst, and it is left stated rather than guessed. Streamlines `
+        + `include the `
+        + `tub, sidepods, wheels and floor as ${data.body_panels.n} source `
+        + `panels, and the ducts the car breathes through.`;
       $('#t-about').textContent = ABOUT;
     },
   });
@@ -818,6 +962,7 @@ function buildRail(){
   $('#fans').addEventListener('click', () => {
     fansOn = !fansOn;
     $('#fans').setAttribute('aria-pressed', String(fansOn));
+    $('#fans').textContent = fansOn ? 'Fan off' : 'Fan on';
     // the fans are part of the flow now -- switch them and the tunnel has to
     // see it, not just the rotor animation. Forces are unchanged (the ports
     // are not in the lattice); only the picture re-solves.
@@ -830,9 +975,9 @@ function buildRail(){
   $('#reset').addEventListener('click', () => {
     resetView();
     if(root) root.rotation.y = 0;
-    spinning = false; fansOn = false;
+    spinning = false; fansOn = true;
     $('#spin').setAttribute('aria-pressed','false');
-    $('#fans').setAttribute('aria-pressed','false');
+    $('#fans').setAttribute('aria-pressed','true');
     hidden.clear();
     for(const list of byGroup.values()) list.forEach(o => o.visible = true);
     for(const el of document.querySelectorAll('.grp')) el.setAttribute('aria-pressed','true');

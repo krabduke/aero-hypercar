@@ -52,7 +52,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import spec                                        # noqa: E402
 from parts import chassis, floor as floor_part     # noqa: E402
 from panelgeom import (MM, Geom, orient, solid_angle, surface, trim,
-                       control, _centroid, _size)  # noqa: E402
+                       control, _centroid, _size, _normal)  # noqa: E402
 
 
 def lofted(g, name, rings, cap_front=True, cap_back=True, axis=None):
@@ -324,3 +324,58 @@ def feasibility():
 
 if __name__ == "__main__":
     feasibility()
+
+
+# --------------------------------------------------------------- drag areas
+
+def drag_areas():
+    """Wetted, frontal and base area per component, in metres.
+
+    The panel SOLVE cannot answer about this car -- see the header -- but the
+    panelling is still an exact description of its surfaces, and a drag
+    build-up is mostly a question about areas. A car's drag is not the
+    aeroplane's: it is dominated by separated wakes behind bluff bodies, so
+    the terms are pressure-drag coefficients on frontal areas rather than
+    friction on wetted ones. The wheels alone are about 40 % of an open-wheel
+    car's drag and a potential flow gives them exactly none.
+    """
+    g = build()
+    out = {}
+    for (name, start, count) in g.parts:
+        base = name.replace("_front", "").replace("_back", "")
+        base = base.replace("_in", "").replace("_out", "")
+        base = base.replace("_root", "").replace("_tip", "")
+        c = out.setdefault(base, {"wet": 0.0, "front": 0.0, "base": 0.0,
+                                  "lo": [1e9]*3, "hi": [-1e9]*3})
+        for i in range(start, start + count):
+            q = g.quads[i]
+            n = _normal(q)
+            a = _size(q) ** 2
+            c["wet"] += a
+            # Projected frontal area is the sum over EVERY forward-facing
+            # panel of its area times how much of it faces forward, with no
+            # threshold: on a closed body that sum is exactly the silhouette.
+            # With a 0.6 cut it missed a smoothly tapered nose entirely and
+            # said this car's body had 30 square centimetres of frontal area.
+            if n[0] < 0:
+                c["front"] += a * -n[0]
+            # A base is different: it is where the body STOPS rather than
+            # closes, so it wants the steep cut. A tail that fairs out is not
+            # a base and does not carry base pressure.
+            if n[0] > 0.85:
+                c["base"] += a * n[0]
+            for p in q:
+                for k in range(3):
+                    c["lo"][k] = min(c["lo"][k], p[k])
+                    c["hi"][k] = max(c["hi"][k], p[k])
+    res = []
+    for name, c in out.items():
+        ext = [max(c["hi"][k] - c["lo"][k], 1e-6) for k in range(3)]
+        res.append({"name": name,
+                    "wet": round(c["wet"] * MM * MM, 6),
+                    "front": round(c["front"] * MM * MM, 6),
+                    "base": round(c["base"] * MM * MM, 6),
+                    "len": round(ext[0] * MM, 4),
+                    "thin": round(min(ext) / max(ext), 4)})
+    res.sort(key=lambda r: -r["front"])
+    return res

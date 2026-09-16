@@ -79,20 +79,35 @@ export class WindTunnel {
   }
 
   /* The incidence at which lift equals weight, at the current speed and
-   * control positions. Two solves and a straight line: CL is linear in alpha
-   * in a lattice, so there is nothing to iterate. */
+   * control positions.
+   *
+   * It used to be two solves and a straight line, on the grounds that CL is
+   * linear in alpha -- which it is, in a lattice, and is not once vortex lift
+   * is in it: past about eleven degrees the leading edge separates and the
+   * lift curve bends UP. Trimmed on the straight line it opened at lift over
+   * weight of 1.07. A few secant steps cost a couple of milliseconds each,
+   * because the influence matrix was factored at build and every solve after
+   * it is a back-substitution.
+   */
   trimAlpha(){
     const W = this.cfg.mass_kg * 9.81;
     const q = 0.5 * 1.225 * this.state.v * this.state.v;
     const need = W / (q * this.cfg.s_ref);
     const o = {v: this.state.v, controls: this.state.controls,
                ground: !!this.cfg.ground};
-    const c0 = this.solver.solve({...o, alpha: 0}).CL;
-    const c4 = this.solver.solve({...o, alpha: 4}).CL;
-    const slope = (c4 - c0) / 4;
-    if(Math.abs(slope) < 1e-6) return this.cfg.alpha_default;
-    const a = (need - c0) / slope;
-    return Math.max(this.cfg.alpha_min, Math.min(this.cfg.alpha_max, a));
+    const at = (a) => this.solver.solve({...o, alpha: a}).CL - need;
+    let a0 = 0, a1 = 4, f0 = at(a0), f1 = at(a1);
+    for(let k = 0; k < 8; k++){
+      const df = f1 - f0;
+      if(Math.abs(df) < 1e-9) break;
+      const a2 = a1 - f1 * (a1 - a0) / df;
+      const lim = Math.max(this.cfg.alpha_min,
+                           Math.min(this.cfg.alpha_max, a2));
+      a0 = a1; f0 = f1; a1 = lim; f1 = at(a1);
+      if(Math.abs(f1) < 1e-4) break;
+    }
+    if(!isFinite(a1)) return this.cfg.alpha_default;
+    return Math.max(this.cfg.alpha_min, Math.min(this.cfg.alpha_max, a1));
   }
 
   /* ------------------------------------------------------------ geometry */
@@ -144,7 +159,10 @@ export class WindTunnel {
     const s = this.sol, st = this.state;
     const W = this.cfg.mass_kg * 9.81;
     return {
-      CL: s.CL, CDi: s.CDi, LD: s.LD,
+      CL: s.CL, CDi: s.CDi, LD: s.LD, LDi: s.LDi,
+      CD: s.CD, CD0: s.CD0, CDbase: s.CDbase, CDlift: s.CDlift,
+      suctionKept: s.suctionKept, clVortex: s.clVortex,
+      thrust_N: s.thrust_N, comps: s.comps,
       lift_N: s.lift_N, drag_N: s.drag_N,
       liftFrac: s.lift_N / W,
       np: this.np, cg: this.cfg.cg_frac,
@@ -413,21 +431,44 @@ export function buildPanel(host, cfg, onChange, onCommit){
 }
 
 export function renderReadout(el, r, cfg, kind){
+  /* The car's rows show the WHOLE car.
+   *
+   * "Downforce" used to be the wings alone -- the only part the lattice
+   * solves -- while the header beside it advertised a CL.A of 5.90 and the
+   * note underneath explained that the floor and the fan were missing. Three
+   * numbers for one quantity, two of them wrong by a factor of three. The
+   * parts are worth showing; which of them is which is worth labelling. */
+  const totalKg = r.total_kg != null ? r.total_kg : Math.abs(r.lift_N/9.81);
   const rows = kind === 'car' ? [
-    ['Downforce', `${Math.abs(r.lift_N/9.81).toFixed(0)} kg`],
-    ['As % of car mass', `${(Math.abs(r.liftFrac)*100).toFixed(0)} %`],
-    ['C<sub>L</sub>A', `${Math.abs(r.CL*cfg.s_ref).toFixed(2)}`],
-    ['Induced drag', `${(r.drag_N/9.81).toFixed(0)} kg-force`],
-    ['Downforce / drag', `${r.LD.toFixed(1)}`],
+    ['Downforce', `${totalKg.toFixed(0)} kg`],
+    ['&nbsp;&nbsp;wings', `${(r.wings_kg != null ? r.wings_kg : 0).toFixed(0)} kg`],
+    ['&nbsp;&nbsp;underbody', `${(r.under_kg != null ? r.under_kg : 0).toFixed(0)} kg`],
+    ['&nbsp;&nbsp;of which the fan', `${(r.fan_kg != null ? r.fan_kg : 0).toFixed(0)} kg`],
+    ['As % of car mass', `${(100*totalKg/(cfg.mass_kg || 1)).toFixed(0)} %`],
+    ['Wing C<sub>L</sub>A', `${Math.abs(r.CL*cfg.s_ref).toFixed(2)}`],
+    ['C<sub>D</sub>A accounted', `${((r.cda_induced||0)+(r.cda_bluff||0)).toFixed(2)}`],
+    ['&nbsp;&nbsp;wing induced', `${(r.cda_induced||0).toFixed(2)}`],
+    ['&nbsp;&nbsp;bluff and friction', `${(r.cda_bluff||0).toFixed(2)}`],
     ['Aero balance', `${(r.frontFrac*100).toFixed(0)} % front`],
   ] : [
+    /* Drag, not induced drag.
+     *
+     * This row said "Induced drag" and the one under it said "L / Di", which
+     * were both true and together read as an efficiency of 14 on an aeroplane
+     * whose real one is about 5. Induced drag is what an inviscid solve can
+     * compute; it is also about a third of what this aeroplane actually
+     * drags. The total is the number worth a row, and the parts of it are
+     * worth the rows under it. */
     ['Lift', `${r.lift_N.toFixed(2)} N`],
     ['Weight', `${(cfg.mass_kg*9.81).toFixed(2)} N`],
     ['Lift / weight', `${r.liftFrac.toFixed(2)}`],
     ['C<sub>L</sub>', `${r.CL.toFixed(3)}`],
-    ['Induced drag', `${r.drag_N.toFixed(3)} N`],
-    ['L / D<sub>i</sub>', `${r.LD.toFixed(1)}`],
-    ['Side force', `${r.side_N.toFixed(2)} N`],
+    ['Drag', `${r.drag_N.toFixed(3)} N`],
+    ['L / D', `${r.LD.toFixed(1)}`],
+    ['&nbsp;&nbsp;skin and form', `${(r.CD0 != null ? r.CD0 : 0).toFixed(4)}`],
+    ['&nbsp;&nbsp;base', `${(r.CDbase != null ? r.CDbase : 0).toFixed(4)}`],
+    ['&nbsp;&nbsp;due to lift', `${(r.CDlift != null ? r.CDlift : 0).toFixed(4)}`],
+    ['Thrust', `${(r.thrust_N || 0).toFixed(2)} N`],
     ['Neutral point', `${(r.np*100).toFixed(1)} % MAC`],
     ['Static margin', `${(r.margin*100).toFixed(1)} % MAC`],
   ];
