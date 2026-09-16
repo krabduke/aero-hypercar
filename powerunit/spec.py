@@ -194,6 +194,9 @@ TURBO = {
     # than it was, so the floor of the vee rose 41 mm with it.
     "z": 255.0,
     "comp_r": 58.0,            # compressor housing
+    "comp_wheel_frac": 0.66,   # wheel tip radius, as a fraction of comp_r
+    "wheel_tip_clear": 1.6,    # running clearance from the wheel to the volute
+    "comp_wheel_len": 37.0,    # inducer face to exducer face
     "turb_r": 64.0,            # turbine housing
     "housing_w": 46.0,
     "shaft_r": 9.0,
@@ -220,7 +223,11 @@ HYBRID = {
     # The rotor rides on the turbo shaft, so it lives inside the bearing
     # housing's waist -- 72 mm long at 40 mm radius put it through both
     # wheels and out of both ends of the housing it is supposed to be in.
-    "mguh_r": 32.0,
+    # 48 mm across, not 64. The charge pipe leaves the compressor volute 56 mm
+    # from the shaft axis and is 60 mm across itself, so a 64 mm rotor in
+    # between left 24 mm for a pipe that needs 30 -- the motor was inside the
+    # charge pipe. An MGU-H rotor on an 18 mm shaft is about this size.
+    "mguh_r": 24.0,
     "mguh_len": 44.0,
     # 120 mm along the crank, not 196: the exhaust primaries converge on
     # the turbochargers at x = +/-118 and climb over them, and a box that

@@ -204,7 +204,10 @@ def _charge():
         # them -- they are 70 mm higher by the time they get there.
         out_x = mouth[0] - (30.0 if bank == 0 else -30.0)
         path = [mouth,
-                (out_x, s_ * 64.0, T["z"] - 14.0),
+                # y 82, not 64: this is a 60 mm pipe, so at 64 its inboard
+                # wall is at y 34 and the MGU-H is a 64 mm rotor on the shaft
+                # reaching to y 32. The pipe was brushing the motor.
+                (out_x, s_ * 82.0, T["z"] - 14.0),
                 (out_x, s_ * 132.0, T["z"] + 8.0),
                 (out_x, s_ * 250.0, T["z"] + 12.0),
                 (out_x, s_ * 322.0, 176.0),

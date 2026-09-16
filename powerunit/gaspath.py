@@ -222,9 +222,15 @@ def compressor_scroll(bank_pair):
         # 46. Downward-and-out is where the room is, and it is a perfectly
         # ordinary way for a compressor housing to be clocked.
         a = math.radians(-120.0 + 342.0 * f)
-        rr = r * (0.78 + 0.18 * f)
+        pas = 9.0 + 7.5 * f
+        # The spiral has to clear the wheel it wraps. At 0.78 of comp_r the
+        # passage's inner edge was at 36.2 and the wheel tip is at 38.3, so
+        # the volute wall ran through the blades for the first third of the
+        # wrap. A turbo has a running clearance there, not an interference.
+        r_tip = r * T["comp_wheel_frac"]
+        rr = max(r * (0.78 + 0.18 * f), r_tip + T["wheel_tip_clear"] + pas)
         out.append(((x, sgn * -rr * math.cos(a), T["z"] + rr * math.sin(a)),
-                    9.0 + 7.5 * f))
+                    pas))
     return out
 
 
@@ -275,7 +281,12 @@ def boost_path(side):
     the plenum. `side` is -1 for the left bank's cooler, +1 for the right."""
     tx = T["x"][0 if side < 0 else 1]
     hw = T["housing_w"] * 0.6
-    return [(tx + hw, T["comp_r"] * 0.92, T["z"]),
+    # From the volute's actual mouth. The first point used to be at
+    # +comp_r*0.92 whichever side the scroll discharged to, so on one bank the
+    # pipe left the housing on the wrong side and crossed the vee centreline
+    # to get back -- through the MGU-H, which is a 64 mm rotor sitting on the
+    # shaft exactly there.
+    return [compressor_outlet(0 if side < 0 else 2),
             (tx + hw * 0.4, side * 70.0, T["z"] - 18.0),
             (tx, side * 118.0, 216.0),
             (-152.0, side * 150.0, 250.0),

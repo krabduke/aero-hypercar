@@ -118,6 +118,19 @@ def _voxels(verts, faces, h):
 
 
 def _inside(p, tri_list, eps=1e-9):
+    """Is p inside the solid this triangle list bounds?
+
+    Signed crossings, not parity. Almost every part here is a union of
+    overlapping closed pieces -- a bladed wheel is a hub with its blades
+    driven into it, a housing is a volute with a snout and a backplate -- and
+    where two of those pieces overlap there are faces INSIDE the solid. A ray
+    that happens to pass through such a region crosses an even number of extra
+    faces on one side and an odd number on the other, and parity reports a
+    point outside the wheel as inside it. Counting each crossing by whether
+    the face turns towards the ray or away from it gives the winding number,
+    which is zero outside and non-zero inside whatever the pieces do to each
+    other in between.
+    """
     px, py, pz = p
     hits = 0
     for (a, b, c) in tri_list:
@@ -143,8 +156,8 @@ def _inside(p, tri_list, eps=1e-9):
         if v < 0.0 or u + v > 1.0:
             continue
         if (e2[0] * qx + e2[1] * qy + e2[2] * qz) * inv > eps:
-            hits += 1
-    return hits % 2 == 1
+            hits += 1 if det > 0 else -1
+    return hits != 0
 
 
 def _expected(a, b, rules):
@@ -174,7 +187,8 @@ def closed(verts, faces):
     return all(c == 2 for c in edge.values())
 
 
-def run(root, pkg, expected=(), limit=400, report=90, threshold=0.20):
+def run(root, pkg, expected=(), limit=2000, report=200, threshold=0.10,
+        min_hits=3):
     cuts = {}
     parts = load_parts(root, pkg, cuts)
     open_shells = {k for k, (v, f) in parts.items() if not closed(v, f)}
@@ -265,7 +279,14 @@ def run(root, pkg, expected=(), limit=400, report=90, threshold=0.20):
                     and not (cuts_b and machined_away(q, cuts_b)):
                 n_in += 1
         frac = n_in / len(samp)
-        if frac >= threshold:
+        # A fraction AND a count.
+        #
+        # The fraction on its own reports a single sampled vertex out of six,
+        # which on two parts that share a face is as likely to be the plane
+        # they share as it is to be one part inside the other. Three sampled
+        # points inside is a volume. Dropping the threshold from 20 % to 10 %
+        # without this turned up thirty pairs that were all 1-of-9 or 2-of-12.
+        if frac >= threshold and n_in >= min_hits:
             found.append((frac, n_in, len(samp), A, B))
 
     found.sort(reverse=True)

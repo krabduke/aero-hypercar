@@ -266,10 +266,12 @@ def _rear():
         mx, mz = spec.chord_point(*spec.rear_elements()[0], 0.25)
         # only the top end follows the wing; the foot stays on the crash
         # structure where it always was
-        path = [(mx, sgn * 150.0, mz),
-                (mx - 60.0, sgn * 148.0, mz - 52.0),
-                (RW["x"] - 70.0, sgn * 140.0, RW["z"] - 300.0),
-                (RW["x"] - 200.0, sgn * 118.0, RW["z"] - 440.0)]
+        # Outboard of the exhaust, which is 332 mm across at z 494-622 and
+        # exactly where a neck at y 150 passes it.
+        path = [(mx, sgn * 196.0, mz),
+                (mx - 60.0, sgn * 194.0, mz - 52.0),
+                (RW["x"] - 70.0, sgn * 176.0, RW["z"] - 300.0),
+                (RW["x"] - 200.0, sgn * 130.0, RW["z"] - 440.0)]
         # A swan neck is a wing section on edge: it is carrying the whole
         # rear wing load in bending and standing in the flow that feeds the
         # beam wing, so its own wake matters.

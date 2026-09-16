@@ -275,9 +275,17 @@ def _electrical():
     out = {}
     SV = spec.SERVICE
     runs = []
+    # Along the cockpit floor, under the seat.
+    #
+    # At y 70-96 and z 420-470 it ran through the driver's hip. Out at the
+    # tub's side rail it ran through the seat, the rockers and the rear
+    # bulkhead instead. The one lane through a cockpit this tight is low and
+    # inboard: under the seat pan, which bottoms at z 214, and inboard of it,
+    # which begins at y 132.
     spine = [(spec.POWERTRAIN["battery_x"], 60.0, 210.0),
-             (2600.0, 90.0, 300.0), (2100.0, 96.0, 420.0),
-             (T["cockpit_x0"], 70.0, 470.0), (T["x_front"] + 40.0, 40.0, 380.0)]
+             (2600.0, 90.0, 260.0), (2200.0, 120.0, 200.0),
+             (T["cockpit_x0"], 120.0, 190.0),
+             (T["x_front"] + 40.0, 60.0, 300.0)]
     # A loom is a taped bundle, so it is fattest where the most circuits are
     # still in it -- at the battery -- and thins as branches leave. Drawing it
     # at one diameter end to end says every circuit runs the whole length.

@@ -14,6 +14,14 @@ import _intersect
 # hose clamps onto the engine it feeds. Each entry says the overlap IS the
 # joint. Anything not listed is a part in another part's way.
 EXPECTED = [
+    # the lines come out of the cylinders, and the loom runs past everything
+    # the tub carries on its way from the battery to the dash
+    ("master_cylinders", "brake_lines"), ("wiring_loom", "steering"),
+    ("wiring_loom", "battery"),   # the loom starts at it
+    ("wiring_loom", "driveshaft_"), ("wiring_loom", "trackrod_"),
+    # a jack point is part of the structure it lifts the car by
+    ("jack_points", "crash_structure"), ("jack_points", "heave_"),
+
     # running gear: the hub turns inside the upright, the disc bolts to the
     # hub, the caliper wraps the disc, the pads sit in the caliper
     ("hub_", "upright_"), ("hub_", "disc_"), ("hub_", "rim_"),

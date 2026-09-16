@@ -241,7 +241,7 @@ def _turbo_internals():
         # inducer is steeply raked and the exducer nearly radial
         xc = tx + ib * hw
         out[f"compressor_wheel_{tag}"] = _wheel(
-            xc, ib, T["comp_r"] * 0.66, 7, 7,
+            xc, ib, T["comp_r"] * T["comp_wheel_frac"], 7, 7,
             hub=[(0.00, 0.22), (0.25, 0.30), (0.55, 0.42), (0.80, 0.52),
                  (1.00, 0.58)],
             twist=(-62.0, -8.0), chord=(0.58, 0.46))

@@ -137,8 +137,17 @@ def _housings():
         parts = [_loft_open(_scroll(pts, rad, 18))]
         parts.append(_backplate(pts[0][0] - ib * 2.0, T["comp_r"] * 0.98,
                                 T["shaft_r"] * 3.2, -ib * 8.0))
-        # the eye: a bellmouth on the axis, which is the only way in
-        parts.append(_snout(pts[0][0] + ib * 6.0, ib, 30.0, 34.0, 30.0))
+        # The eye: a bellmouth on the axis, which is the only way in.
+        #
+        # At the eye PLANE, pointing away from the wheel. The volute wraps the
+        # exducer, and the eye is a wheel's length inboard of it -- the snout
+        # was starting 10 mm inboard of the volute and running 37 mm further,
+        # which is straight down the middle of the wheel. And its bore has to
+        # be the inducer's shroud line: at r 30 against a wheel whose tip is
+        # at 38.3 the inlet duct's own wall was inside the blades.
+        r_eye = T["comp_r"] * T["comp_wheel_frac"] + T["wheel_tip_clear"]
+        eye = pts[0][0] + ib * (T["comp_wheel_len"] + 2.0)
+        parts.append(_snout(eye, ib, r_eye, r_eye + 4.0, r_eye))
         # and the outlet the charge pipe bolts to
         last = pts[-1]
         parts.append(_flange_at(last,
@@ -280,24 +289,40 @@ def _wastegates():
         _, tx, sgn, ib = gaspath.turbo_side(pair)
         # the canister sits on the compressor housing, out of the exhaust's way
         cx = tx + ib * T["housing_w"] * 0.6
-        cy, cz = -sgn * 38.0, T["z"] + 26.0
+        # Above the MGU-H, which is a 64 mm rotor on the shaft reaching to
+        # z + 32. At z + 26 the canister's lower cap and its bracket were
+        # inside it.
+        # Above the MGU-H, which is a 64 mm rotor on the shaft reaching to
+        # z + 32, and below the primary that climbs past at z 333.
+        # In the 35 mm of clear air between the compressor wheel, whose tip
+        # reaches z 293, and the primary that climbs past at z 333.
+        cy, cz = -sgn * 44.0, T["z"] + 42.0
         parts = []
-        for (z0, z1, rr) in ((0.0, 5.0, 26.0), (5.0, 26.0, 30.0),
-                             (26.0, 31.0, 26.0)):
+        # 27 mm tall, not 31. There are 40 mm between the compressor wheel's
+        # tip at z 293 and the primary that climbs past at 328, and a can that
+        # fills all but nine of them has nowhere to sit.
+        for (z0, z1, rr) in ((0.0, 4.0, 26.0), (4.0, 22.0, 30.0),
+                             (22.0, 27.0, 26.0)):
             v, f = mesh.revolve_open(
                 [(z0, 0.0), (z0, rr), (z1, rr), (z1, 0.0)],
                 SM, cap_start=True, cap_end=True)
             parts.append(([(pz + cx, py + cy, px + cz)
                            for (px, py, pz) in v], f))
-        # the reference nipple on the cap
+        # The reference nipple, out of the SIDE of the cap.
+        #
+        # There is 40 mm between the compressor wheel's tip at z 293 and the
+        # primary climbing past at 333, and the canister is 31 of it. A nipple
+        # standing 13 mm off the top of it does not fit in the 9 that are
+        # left; out of the side it does, and that is where the boost line
+        # would come off anyway.
         nv, nf = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 3.2), (13.0, 3.2), (13.0, 0.0)],
             14, cap_start=True, cap_end=True)
-        parts.append(([(pz + cx, py + cy + 12.0, px + cz + 31.0)
+        parts.append(([(pz + cx, -sgn * px + cy - sgn * 26.0, py + cz + 20.0)
                        for (px, py, pz) in nv], nf))
         # the bracket that holds it off the housing
-        parts.append(shapes.rounded_box(cx, cy * 0.62, cz + 2.0,
-                                        10.0, abs(cy) * 0.76, 22.0, r=2.0))
+        parts.append(shapes.rounded_box(cx, cy * 0.72, cz + 4.0,
+                                        10.0, abs(cy) * 0.56, 18.0, r=2.0))
         # the rod down to the crank arm on the turbine housing, and the arm
         arm = (tx - ib * (T["housing_w"] * 0.6 + 4.0), -sgn * 30.0,
                T["z"] + 38.0)

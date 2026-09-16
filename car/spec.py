@@ -333,7 +333,11 @@ SIDEPOD = {
 
 BARGEBOARD = {
     "x0": 1180.0, "x1": 1760.0,
-    "y": 430.0, "z0": 90.0, "z1": 400.0,
+    # y 452, not 430. The cascade sweeps inboard, and its innermost element
+    # reached y 298 -- through the turning vane at 350, which cannot move:
+    # the tub is 256 mm half width here and there is not 48 mm of lane
+    # between the two.
+    "y": 452.0, "z0": 90.0, "z1": 400.0,
     "elements": 4, "gap": 42.0, "t": 8.0, "sweep": 26.0,
 }
 
@@ -622,7 +626,9 @@ ACCUMULATOR = {
 # FIA rain-light backing plate on the rear bodywork.
 LIGHT_PANEL = {
     "x0": 4440.0, "x1": 4466.0,
-    "half_w": 104.0, "z0": 258.0, "z1": 392.0, "t": 8.0, "bolts": 6,
+    # 45, not 104. The fans' rotors start at y 51 and the rain light is on
+    # the centreline between them; at 104 the panel was inside both of them.
+    "half_w": 45.0, "z0": 258.0, "z1": 392.0, "t": 8.0, "bolts": 6,
 }
 
 # Swan-neck fittings from the rear pylons onto the wing mainplane.

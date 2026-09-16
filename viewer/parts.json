@@ -753,14 +753,14 @@
   "rear_pylon_l": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4266.1,
+   "x0": 4265.1,
    "x1": 4581.3,
    "f": 470
   },
   "rear_pylon_r": {
    "g": "03 Wings",
    "mat": "carbon_gloss",
-   "x0": 4266.1,
+   "x0": 4265.1,
    "x1": 4581.3,
    "f": 470
   },
@@ -2461,7 +2461,7 @@
   "wiring_loom": {
    "g": "11 Structure and Service",
    "mat": "hose",
-   "x0": 658.2,
+   "x0": 657.7,
    "x1": 4087.6,
    "f": 7004
   },

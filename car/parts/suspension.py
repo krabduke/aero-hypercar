@@ -74,9 +74,13 @@ def build():
 
         # track rod / toe link
         trk_x = x + (-230.0 if front else 200.0)
+        # Below the driveshaft, not across it. At low_z + 70 the rear toe link
+        # ran at z 294-346 and the shaft is 294-396: the link went through it.
+        # A rear toe link sits under the shaft on a real car for exactly this
+        # reason.
         rods.append((f"trackrod_{tag}", shapes.suspension_link(
-            (x, y * 0.74, low_z + 70.0),
-            (trk_x, sgn * inb_y * 0.8, low_z + 90.0),
+            (x, y * 0.74, low_z + (70.0 if front else 42.0)),
+            (trk_x, sgn * inb_y * 0.8, low_z + (90.0 if front else 58.0)),
             common.section_points(24, 0.30, 0.0),
             S["rod_r"] * 2.4, S["rod_r"] * 2.2, n_sta=9,
             end_r=S["rod_r"] * 0.78)))
