@@ -20,7 +20,7 @@ const bp = man.body_panels;
 const cfg = man.tunnel;
 const V = cfg.v_default;
 
-const body = new BodyField(bp, {ground: !!cfg.ground});
+const body = new BodyField(bp, !!cfg.ground);
 body.solve([V, 0, 0], null);
 
 const s = body.sigma, a = body.area;
