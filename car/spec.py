@@ -259,6 +259,33 @@ FLOOR = {
     "tunnel_half_w": 330.0,
     "tunnel_inner_y": 210.0,
     "throat_x": 2600.0, "throat_z": 96.0,
+    # The height the tunnel roof STARTS at, before the throat.
+    #
+    # This used to be a bare 78.0 inside _floor_z, and it has to be at least
+    # throat_z or the expression that reads
+    #
+    #     entry - (entry - throat_z) * f**1.3 + 18
+    #
+    # rises instead of falling. At 78 against a throat of 96 it did exactly
+    # that: the roof went 96 -> 114 mm, so the floor's minimum AREA sat at its
+    # own leading edge -- 1210 cm2 at x = 1300 against 1347 at the diffuser --
+    # and the duct was inlet-limited. Everything downstream was expansion and
+    # the suction peak sat at the entry, which is the least useful and most
+    # ride-height-sensitive place to put it. The docstring said "pinched at
+    # the throat" and the arithmetic did the opposite.
+    #
+    # At 96 the roof is flat at 114 mm and the plan shape does the
+    # converging: 1436 cm2 at the inlet, 1347 at x = 3866 where the floor has
+    # narrowed to 1144 mm, then 3323 at the exit. A converging-diverging duct
+    # with its throat at the diffuser, and a 2.47 expansion over a 6.3 degree
+    # half-angle, which stays attached.
+    #
+    # It cannot go higher than this. The turning vanes sit at z = 110 and the
+    # bargeboards at 116, so a taller inlet swallows them -- raising it to 168
+    # put six parts inside the tunnels. A stronger contraction needs those
+    # moved, which is a design change rather than a bug fix, and is left as
+    # one.
+    "entry_z": 96.0,
     # A 96 mm throat opening to 392 mm is a four-to-one expansion: no
     # diffuser holds flow through that, and the roof climbed straight into
     # the rear suspension on the way. 250 mm is a real exit height.
@@ -337,7 +364,12 @@ BARGEBOARD = {
     # reached y 298 -- through the turning vane at 350, which cannot move:
     # the tub is 256 mm half width here and there is not 48 mm of lane
     # between the two.
-    "y": 452.0, "z0": 90.0, "z1": 400.0,
+    # z0 120, not 90. The tunnel roof at the floor's leading edge is 114 mm
+    # now that the inlet is no longer the duct's narrowest section, and a
+    # bargeboard at 90 had its bottom 24 mm inside the tunnel. It belongs
+    # above the roof in any case: a bargeboard works the flow OUTSIDE the
+    # tunnel and conditions what goes in, it does not sit in the stream.
+    "y": 452.0, "z0": 120.0, "z1": 400.0,
     "elements": 4, "gap": 42.0, "t": 8.0, "sweep": 26.0,
 }
 

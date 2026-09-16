@@ -31,7 +31,8 @@ def _floor_z(x):
     expanding hard through the diffuser."""
     if x <= F["throat_x"]:
         f = (x - F["x0"]) / (F["throat_x"] - F["x0"])
-        return 78.0 - (78.0 - F["throat_z"]) * f ** 1.3 + 18.0
+        e = F["entry_z"]
+        return e - (e - F["throat_z"]) * f ** 1.3 + 18.0
     if x <= F["diffuser_x"]:
         return F["throat_z"] + 18.0
     f = (x - F["diffuser_x"]) / (F["x1"] - F["diffuser_x"])
