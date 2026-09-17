@@ -21,7 +21,14 @@ def flow(fan, exhaust, rho=RHO):
         raise ValueError("Flow inputs must be finite and positive")
     if fan["n"] != int(fan["n"]) or fan["hub_r"] >= fan["diameter"] / 2:
         raise ValueError("Invalid fan count or hub radius")
-    annulus = math.pi * ((fan["diameter"] * MM / 2) ** 2
+    # duct_r, not diameter/2. FAN carries both: "diameter" 520 is the ROTOR,
+    # "duct_r" 280 is the shroud, and the 20 mm between them is tip clearance.
+    # Continuity is set by the passage the air flows through, which is the
+    # duct -- the rotor sweeps slightly less than the duct passes, and the
+    # difference leaks over the tips rather than vanishing. Sizing the annulus
+    # off the rotor made it 0.195 m2 against a 0.229 m2 nozzle and reported a
+    # 17.4 % mismatch that was two definitions of "annulus", not a real one.
+    annulus = math.pi * ((fan["duct_r"] * MM) ** 2
                          - (fan["hub_r"] * MM) ** 2)
     area = exhaust["exit_w"] * exhaust["exit_h"] * MM ** 2
     volume = annulus * fan["axial_velocity"]
