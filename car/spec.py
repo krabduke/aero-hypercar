@@ -72,10 +72,22 @@ F1 = {
 # Aerodynamics
 # --------------------------------------------------------------------------
 
+# The wings came down from 2.55 to 1.20 and the reason is in
+# docs/research/R2-limits.md. Total ClA of 5.90 was past the optimum: sweeping
+# it against lap time puts the fastest configuration at 4.13 and the curve is
+# flat out to 4.55, so 1.20 + 3.35 sits inside the flat region and leaves
+# enough wing to trim the aero balance with. It is worth 1.05 s a lap.
+#
+# The reason is NOT the driver limit, which is what the first study concluded.
+# Removing the driver's 7 g cap altogether is worth 0.04 s, because the tyre
+# saturates at almost the same place -- driver and rubber run out together.
+# What actually sets the optimum is load sensitivity: past about ClA 4.5 the
+# extra vertical load buys so little extra grip that the drag to make it is a
+# straight loss. The optimum holds at 4.13 for every driver limit from 6 g up.
 AERO = {
-    "cla_wings": 2.55,         # both wings, trimmed for a medium-downforce track
+    "cla_wings": 1.20,         # both wings, trimmed for a medium-downforce track
     "cla_floor": 3.35,         # venturi tunnels and diffuser
-    "cda": 1.62,
+    "cda": 1.28,   # follows the wing coming off
     "frontal_area": 1.52,      # m^2, already folded into the coefficients
     "aero_balance": 0.445,     # fraction of downforce on the front axle
     "drs_cla_drop": 1.25,      # active aero shed on a straight

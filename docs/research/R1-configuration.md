@@ -1,5 +1,12 @@
 # Is this the right car?
 
+> **Superseded in part by [R2](R2-limits.md).** R1's recommendation — take
+> wing off — is correct and has been acted on. Its *reason* was not: R1
+> attributed the optimum to the driver's 7 g limit, and R2 shows that removing
+> that limit entirely is worth 0.04 s because the tyre saturates in the same
+> place. The optimum is set by tyre load sensitivity, not by the driver, and it
+> holds for every driver limit from 6 g up.
+
 Every number here comes out of `aero/config_study.py`, which drives the same
 solver as `aero/laptime.py`. Nothing in this document can disagree with the
 headline lap time by construction. Load sensitivity is held at k = 0.20, the
