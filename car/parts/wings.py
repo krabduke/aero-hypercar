@@ -165,7 +165,7 @@ def _front_endplates():
     # Sampled finely rather than at the four levels and five stations that
     # made this a 40-vertex object: the footplate roll is a curve, and a
     # curve drawn through four points is a chamfer.
-    n_lvl, n_f = 15, 21
+    n_lvl, n_f = 33, 41
 
     def top_at(f):
         for i in range(len(tops) - 1):
@@ -195,7 +195,8 @@ def _front_endplates():
                 z_top = top_at(f)
                 z_lo = z0 + fh * min(lvl / 0.30, 1.0)
                 z = z_lo + (z_top - z_lo) * max(0.0, (lvl - 0.30) / 0.70)
-                row.append((x, y + dy * (1.0 - 0.3 * f), z))
+                sweep = sgn * (8.0 * f + 54.0 * f * f)
+                row.append((x, y + sweep + dy * (0.65 + 0.35 * f), z))
             rows.append(row)
         plate = _skin(rows, t, sgn, rim=2)
         # gills in the upper rear panel, bleeding the tyre wake outboard

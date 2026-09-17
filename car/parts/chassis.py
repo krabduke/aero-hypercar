@@ -281,8 +281,8 @@ def _halo():
     xf, xr, z, hw, r = H["x_front"], H["x_rear"], H["z"], H["half_w"], H["tube_r"]
     apex = (xf, 0.0, z)
     span = xr - xf
-    oval = [(r * 0.68 * math.cos(2 * math.pi * i / 32),
-             r * 1.12 * math.sin(2 * math.pi * i / 32)) for i in range(32)]
+    oval = [(r * 0.62 * math.cos(2 * math.pi * i / 32),
+             r * 1.18 * math.sin(2 * math.pi * i / 32)) for i in range(32)]
 
     path = []
     for sgn in (-1.0, 1.0):
