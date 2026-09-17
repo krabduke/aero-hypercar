@@ -1,4 +1,9 @@
-"""Front and rear wings, endplates, pylons."""
+"""Front and rear wings, endplates, pylons.
+
+Wing and beam sections are built from a cambered high-lift aerofoil
+(NACA 4-digit, inverted) with a rounded leading edge and a thin trailing
+edge; the multi-element slots are spec.slot_place gaps, not overlaps.
+"""
 
 import math
 import sys, os
@@ -11,6 +16,7 @@ from parts import common
 
 FW = spec.FRONT_WING
 RW = spec.REAR_WING
+BW = spec.BEAM_WING
 
 
 def build():
@@ -20,43 +26,96 @@ def build():
     return out
 
 
-def _front():
-    """Four-element front wing, each element a separate lofted surface.
+def _smooth(t):
+    t = max(0.0, min(1.0, t))
+    return t * t * (3.0 - 2.0 * t)
 
-    The shape that matters is the spanwise one. Across the regulated neutral
-    centre section the mainplane runs flat and almost unloaded; outboard of
-    that it washes in to its tip incidence and rises towards the endplate, so
-    the tip vortex is thrown outside the front tyre rather than into it.
+
+def _front_station(k, y):
+    dx, dz, c_root, c_tip, span_f, aoa_root, aoa_tip, rise = FW["stack"][k]
+    neutral = FW["neutral_half_w"]
+    half = FW["span"] * span_f / 2
+    u = max(0.0, min(1.0, (abs(y) - neutral) / (half - neutral)))
+    blend = _smooth(u)
+    load = _smooth(u / 0.20)
+    washout = _smooth((abs(y) / half - 0.70) / 0.30)
+    incidence = max(aoa_root, aoa_tip)
+    reduction = min(incidence, RW["aoa"] - BW["aoa"] + FW["aoa_root"])
+    return (FW["x"] + dx,
+            FW["z"] + dz + FW["arch"] * (1.0 - blend) + rise * blend,
+            c_root + (c_tip - c_root) * blend,
+            (incidence - reduction * washout) * load)
+
+
+def _section_ring(y, x, z, chord, aoa, thickness, camber):
+    verts, _ = common.lofted_element(
+        [(y, x, z, chord, aoa)], thickness=thickness, camber=camber)
+    return verts
+
+
+def _nose_pylons():
+    from parts import chassis
+
+    bd = spec.BODY_DETAIL
+    px_x = bd["nose_pylon_x"]
+    top = chassis.surface_point(px_x + 190.0, -90.0)
+    z = FW["z"] + FW["arch"]
+    t = bd["nose_pylon_t"]
+    pylons = []
+    for sgn in (-1.0, 1.0):
+        y = sgn * bd["nose_pylon_y"]
+        pylons.append(shapes.swept_profile(
+            [(FW["x"] + 140.0, y, z),
+             (px_x + 40.0, y, z + (top[2] - z) * 0.34),
+             (px_x + 120.0, y, (z + top[2]) / 2),
+             (px_x + 190.0, y * 0.7, top[2] + 20.0)],
+            shapes.teardrop_section(t * 2.0, t * 6.2, 26),
+            scale=[(1.0, 1.0), (1.0, 0.94), (0.96, 0.88), (0.90, 0.74)],
+            subdiv=5))
+    return {"nose_pylons": mesh.join(*pylons)}
+
+
+def _front():
+    """Keep the floor feed neutral and unload the outer flap cascade.
+
+    Only the mainplane crosses the central floor-feed corridor. The flaps
+    grow out of its shoulders, then lose incidence near the tyres rather
+    than loading the wake with the previous outward-increasing twist.
     """
     out = {}
     half = FW["span"] / 2
     neutral = FW["neutral_half_w"]
-    n_span = 15
+    n_span = max(31, spec.RES["wing_stations"])
 
-    for k, (dx, dz, c_r, c_t, span_f, aoa_r, aoa_t, rise) in enumerate(
-            FW["stack"]):
-        stations = []
-        tip = half * span_f
-        for j in range(n_span):
-            f = -1.0 + 2.0 * j / (n_span - 1)
-            y = tip * f
-            t = abs(y)
-            # outboard fraction: 0 across the neutral section, 1 at the tip
-            o = 0.0 if t <= neutral else (t - neutral) / max(tip - neutral, 1.0)
-            o = o * o * (3 - 2 * o)          # smoothstep, so there is no crease
-            chord = c_r + (c_t - c_r) * o
-            aoa = aoa_r + (aoa_t - aoa_r) * o
-            z = FW["z"] + dz + rise * o
-            # The whole stack arches over the nose, not just the mainplane.
-            # Arching element 0 alone closed the slot behind it: at the
-            # centreline the mainplane rose 44 mm into a flap that had not
-            # moved, leaving 12 mm between two surfaces that are 43 mm apart
-            # everywhere else. The flaps follow the nose on a real car.
-            z += FW["arch"] * max(0.0, 1.0 - (t / neutral) ** 2)
-            stations.append((y, FW["x"] + dx, z, chord, aoa))
+    for k in range(FW["elements"]):
+        tip = half * FW["stack"][k][4]
+        pieces = []
+        if k == 0:
+            centre = [(-neutral + 2 * neutral * j / (n_span - 1),
+                       FW["x"], FW["z"] + FW["arch"],
+                       _front_station(0, neutral)[2], 0.0)
+                      for j in range(n_span)]
+            pieces.append(common.lofted_element(centre, thickness=0.065,
+                                                 camber=0.005))
+        for sgn in (-1.0, 1.0):
+            rings = []
+            for j in range(n_span):
+                u = j / (n_span - 1)
+                y = neutral + (tip - neutral) * u
+                x, z, chord, aoa = _front_station(k, y)
+                load = _smooth(min(1.0, u / 0.20))
+                if k:
+                    chord *= 0.12 + 0.88 * load
+                ring = _section_ring(sgn * y, x, z, chord, aoa,
+                                     0.065, 0.005 + 0.075 * load)
+                rings.append(ring)
+            if sgn < 0:
+                rings.reverse()
+            pieces.append(common.loft(rings))
         name = "front_wing_main" if k == 0 else f"front_flap_{k}"
-        out[name] = common.lofted_element(stations, thickness=0.085,
-                                          camber=0.075)
+        out[name] = mesh.join(*pieces)
+
+    out.update(_nose_pylons())
 
     out.update(_front_endplates())
 

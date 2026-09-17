@@ -251,7 +251,7 @@ def main():
         ro = simulate(ours, segs, k)
         rf = simulate(f1, segs, k)
         results[k] = (ro, rf)
-        print("  k = %-22.2f %9.2fs %9.2fs %9.2fs" %
+        print("  k = %-22.2f %9.1fs %9.1fs %9.1fs" %
               (k, ro["time"], rf["time"], ro["time"] - rf["time"]))
     print()
 

@@ -3,6 +3,15 @@
 Front is pushrod and rear is pullrod, which is the usual arrangement: it puts
 the front springs high where there is room above the driver's feet, and the
 rear springs low where the gearbox casing can carry them.
+
+Every span between two spherical bearings is an aerofoil member. The front
+upper wishbone is raked nose-DOWN by 6 degrees (outboard pickup raised above
+the inboard): that is the anti-dive geometry -- braking throws the car
+forward onto the front axle and the arm would fold the nose down, so the arm
+is built so brake torque reacts against a rising wheel rate instead. The
+same rake is the correct attitude for a member working in front-wing upwash,
+which arrives already turning upward. The front lower legs and everything
+behind the axle line sit flat.
 """
 
 import math
@@ -17,6 +26,32 @@ from parts import wheels, common, detail
 S = spec.SUSP
 P = spec.RES["pipe"]
 
+# These aerofoil dimensions and pickup settings belong in spec.py.
+AERO_LINK = {
+    "wishbone_c": 130.0, "wishbone_t": 18.0,
+    "pushrod_c": 110.0, "pushrod_t": 18.0,
+    "trackrod_c": 100.0, "trackrod_t": 14.0,
+    "incidence_deg": -3.0, "anti_dive_deg": 6.0,
+    "pickup_dx": 190.0,
+}
+
+
+def _section(chord, thickness):
+    """Thin teardrops: the flow sees a 14-18 mm member, not a fairing.
+
+    `suspension_link` places a section point (u, v) as `(u - 0.35)` along the
+    link and `v` normal to it, so the aerofoil's quarter-chord has to sit at
+    u = 0.35 for the leading edge to land on the rod ends. The incidence here
+    is part of the shape, not the attitude: the pickups stay where the
+    geometry needs them, the fairing turns the flow.
+    """
+    a = math.radians(AERO_LINK["incidence_deg"])
+    ca, sa = math.cos(a), math.sin(a)
+    return [(0.35 + (u - 0.35) * ca - v * sa,
+             (u - 0.35) * sa + v * ca)
+            for u, v in common.section_points(
+                spec.RES["airfoil_pts"], thickness / chord, 0.0)]
+
 
 def build():
     out = {}
@@ -27,22 +62,30 @@ def build():
         sgn = -1.0 if y < 0 else 1.0
         hub = (x, y * 0.80, od / 2)
 
-        # Upper and lower wishbones. Each leg is an aerofoil fairing, not a
-        # tube: at 300 km/h a round member is pure drag and produces nothing,
-        # and bare pipes are the clearest tell that a model stopped at
-        # "roughly the right shape".
-        sect = common.section_points(24, spec.BODY_DETAIL["susp_fairing_t"], 0.0)
-        chord = spec.BODY_DETAIL["susp_fairing_c"]
+        # Upper and lower wishbones. Each leg is an aerofoil member, not a
+        # tube: at 300 km/h a round member is pure drag and produces nothing.
+        # It is an 18 mm teardrop on a 130 mm chord, which is the aspect a
+        # front suspension member really has -- the old "fairings" were
+        # 57 mm thick on a 190 mm chord, wider than the members they
+        # replaced and fatter than the whole front wing.
+        chord = AERO_LINK["wishbone_c"]
+        sect = _section(chord, AERO_LINK["wishbone_t"])
+        # Anti-dive: rake the FRONT UPPER legs, outboard end up, by 6 deg.
+        # Braking puts a forward load into the front upper arm, which would
+        # pitch the nose down; raking the arm so the wheel end is the higher
+        # pickup geometrically couples brake torque into ride height the
+        # other way. It is also the right attitude for a member sitting in
+        # the front-wing upwash: the flow there is already turned upward.
+        rake = math.radians(AERO_LINK["anti_dive_deg"]) if front else 0.0
         low_z = S["lower_z"] if front else S["lower_z_rear"]
         for (z_out, z_in) in ((S["upper_z"], S["upper_z"] + 40.0),
                               (low_z, low_z + 10.0)):
             outb = (x, y * 0.74, z_out)
-            for dx in (-190.0, 190.0):
-                inb = (x + dx, sgn * inb_y, z_in)
+            for dx in (-AERO_LINK["pickup_dx"], AERO_LINK["pickup_dx"]):
+                inb = (x + dx, sgn * inb_y,
+                       z_in + math.tan(rake) * abs(inb_y - y * 0.74))
                 leg = "fwd" if dx < 0 else "aft"
                 lvl = "upper" if z_out == S["upper_z"] else "lower"
-                # The outboard end is the loaded one, so it carries the
-                # bigger section and the bigger joint.
                 arms.append((f"wishbone_{tag}_{lvl}_{leg}",
                              shapes.suspension_link(
                                  outb, inb, sect, chord,
@@ -65,11 +108,14 @@ def build():
                             _rocker(x - 160.0, sgn * inb_y,
                                     S["rear_rocker_z"], -1.0)))
         # A pushrod is the most heavily loaded member on the car and it is
-        # also right in the flow, so it is a deep aerofoil section with a
-        # rod end at each end -- not a 40-vertex tube.
-        rod_sect = common.section_points(26, 0.26, 0.0)
+        # also right in the flow, so it is an aerofoil member with a rod end
+        # at each end -- not a 40-vertex tube. It works in the wheel wake,
+        # which is turbulent and decoupled, so it runs fat and thick; that
+        # also gives it the depth it needs for the compressive load.
+        rod_sect = _section(AERO_LINK["pushrod_c"], AERO_LINK["pushrod_t"])
         rods.append((f"pushrod_{tag}", shapes.suspension_link(
-            rod[0], rod[1], rod_sect, S["rod_r"] * 3.1, S["rod_r"] * 2.7,
+            rod[0], rod[1], rod_sect,
+            AERO_LINK["pushrod_c"], AERO_LINK["pushrod_c"] * 0.88,
             n_sta=11, end_r=S["rod_r"] * 0.95)))
 
         # track rod / toe link
@@ -81,8 +127,8 @@ def build():
         rods.append((f"trackrod_{tag}", shapes.suspension_link(
             (x, y * 0.74, low_z + (70.0 if front else 42.0)),
             (trk_x, sgn * inb_y * 0.8, low_z + (90.0 if front else 58.0)),
-            common.section_points(24, 0.30, 0.0),
-            S["rod_r"] * 2.4, S["rod_r"] * 2.2, n_sta=9,
+            _section(AERO_LINK["trackrod_c"], AERO_LINK["trackrod_t"]),
+            AERO_LINK["trackrod_c"], AERO_LINK["trackrod_c"] * 0.9, n_sta=9,
             end_r=S["rod_r"] * 0.78)))
 
         if not front:

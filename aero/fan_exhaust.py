@@ -1,19 +1,55 @@
-"""fan_exhaust — not written yet.
+"""Momentum and geometric-envelope screening, not CFD or a pressure correlation."""
 
-A stub, committed deliberately. The agent that fills this in edits a file that
-already exists rather than creating one, because creating files through the
-provider has been failing with "Tool execution aborted" while edits succeed.
-
-Replace everything below. Do not leave the raise in place.
-"""
-
+import math
+import os
 import sys
+
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(HERE, "car"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import spec                                            # noqa: E402
+
+MM = 0.001
+RHO = spec.RHO
+
+
+def flow(fan, exhaust, rho=RHO):
+    values = (rho, fan["diameter"], fan["hub_r"], fan["axial_velocity"],
+              fan["n"], exhaust["exit_w"], exhaust["exit_h"])
+    if not all(math.isfinite(v) and v > 0 for v in values):
+        raise ValueError("Flow inputs must be finite and positive")
+    if fan["n"] != int(fan["n"]) or fan["hub_r"] >= fan["diameter"] / 2:
+        raise ValueError("Invalid fan count or hub radius")
+    annulus = math.pi * ((fan["diameter"] * MM / 2) ** 2
+                         - (fan["hub_r"] * MM) ** 2)
+    area = exhaust["exit_w"] * exhaust["exit_h"] * MM ** 2
+    volume = annulus * fan["axial_velocity"]
+    return {"annulus_m2": annulus, "exit_m2": area,
+            "area_mismatch": abs(area / annulus - 1),
+            "volume_m3_s": volume, "mass_kg_s": rho * volume,
+            "total_mass_kg_s": fan["n"] * rho * volume,
+            "exit_m_s": volume / area}
+
+
+def exit_frame(theta, cant, side=1):
+    if not all(math.isfinite(v) for v in (theta, cant)):
+        raise ValueError("Exit angles must be finite")
+    if not 0 <= theta <= 90 or not 0 <= cant < 90 or side not in (-1, 1):
+        raise ValueError("Invalid exit angles or side")
+    pitch, yaw = math.radians(theta), side * math.radians(cant)
+    axis = (math.cos(pitch) * math.cos(yaw),
+            math.cos(pitch) * math.sin(yaw), math.sin(pitch))
+    width = (-math.sin(yaw), math.cos(yaw), 0.0)
+    height = (-math.sin(pitch) * math.cos(yaw),
+              -math.sin(pitch) * math.sin(yaw), math.cos(pitch))
+    return axis, width, height
 
 
 def main():
-    raise NotImplementedError(
-        "fan_exhaust is a stub -- see the brief for what belongs here")
-
+    result = flow(spec.FAN, spec.FAN_EXHAUST)
+    for name, value in result.items():
+        print(f"{name:24s} {value:12.6f}")
 
 if __name__ == "__main__":
     main()

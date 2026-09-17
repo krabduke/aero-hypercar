@@ -29,6 +29,7 @@ def build():
     out.update(_floor_edge())
     out.update(_beam_wing())
     out.update(_details())
+    out.update(_fan_fairings())
     return out
 
 
@@ -220,6 +221,27 @@ def _details():
             lv2.append(shapes.rounded_box(p[0], p[1], p[2],
                                           70.0, 10.0, 34.0, 3.0))
     out["cooling_louvres"] = mesh.join(*lv2)
+    return out
+
+
+def _fan_fairings():
+    fan = spec.FAN
+    radius = fan["duct_r"]
+    profile = [(-90.0, radius + 2.0),
+               (-82.0, radius + 6.0),
+               (-60.0, radius + 12.0),
+               (-24.0, radius + 14.0),
+               (20.0, radius + 12.0),
+               (56.0, radius + 6.0),
+               (70.0, radius + 2.0),
+               (70.0, radius),
+               (-90.0, radius)]
+    verts, faces = mesh.revolve_closed(profile, 64)
+    out = {}
+    for tag, sgn in (("l", -1.0), ("r", 1.0)):
+        out[f"fan_fairing_{tag}"] = (
+            [(fan["x"] + py, sgn * fan["y"] + pz, fan["z"] + px)
+             for px, py, pz in verts], list(faces))
     return out
 
 

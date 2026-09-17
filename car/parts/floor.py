@@ -23,6 +23,82 @@ def build():
     out.update(_tunnels())
     out.update(_strakes())
     out.update(_skirts())
+    out.update(_inlet_lip())
+    out.update(_plenum())
+    return out
+
+
+def _loft(rings, capped=True):
+    m = len(rings[0])
+    verts = [v for ring in rings for v in ring]
+    faces = []
+    for i in range(len(rings) - 1):
+        for j in range(m):
+            a = i * m + j
+            b = i * m + (j + 1) % m
+            faces.append((a, b, b + m, a + m))
+    if capped:
+        faces.append(tuple(range(m - 1, -1, -1)))
+        base = (len(rings) - 1) * m
+        faces.append(tuple(range(base, base + m)))
+    return verts, faces
+
+
+def _inlet_lip():
+    """The floor's leading edge: a rolled lip that meters the inlet.
+
+    Everything downstream of it is set by how much air this lets in. A cut
+    edge spills, stalls the tunnel inlet at low ride height and throws the
+    ride-height sensitivity up; a rolled lip turns the flow smoothly down
+    into the contraction and keeps the inlet attached across the range.
+    """
+    rings = []
+    for i in range(6):
+        y = (half_width(F["x0"]) - 22.0) * (2.0 * i / 5.0 - 1.0)
+        # a rounded roll: entry face curves down and under to meet the floor
+        sect = []
+        for j in range(21):
+            a = math.pi / 2.0 * j / 20.0
+            r = 16.0
+            sect.append((F["x0"] + 16.0 - r * math.cos(a),
+                         _floor_z(F["x0"]) + 16.0 - r + r * math.sin(a),
+                         y))
+        sect.append((F["x0"] + 16.0 + 6.0,
+                     _floor_z(F["x0"]) + 1.0, y))
+        rings.append([(px, pz, py) for (px, pz, py) in sect])
+    return {"floor_inlet_lip": _loft(rings)}
+
+
+def _plenum():
+    out = {}
+    for side, sgn in (("l", -1.0), ("r", 1.0)):
+        rings = []
+        for i in range(65):
+            x = F["x0"] + (F["x1"] - F["x0"]) * i / 64.0
+            y = sgn * (half_width(x) - 28.0)
+            z = _floor_z(x)
+            rings.append([(x, y - 4.0, 10.0), (x, y + 4.0, 10.0),
+                          (x, y + 4.0, z + 6.0), (x, y - 4.0, z + 6.0)])
+        out[f"floor_plenum_edge_{side}"] = _loft(rings)
+        rings = []
+        fan = spec.FAN
+        for i in range(25):
+            t = i / 24.0
+            e = t * t * (3.0 - 2.0 * t)
+            x = fan["x"] - 240.0 + 240.0 * t
+            z = fan["plenum_z0"] + (fan["z"] - fan["plenum_z0"]) * e
+            r = fan["plenum_r"] * (1.0 + 0.12 * (1.0 - t) ** 2)
+            rings.append([(x, sgn * fan["y"] + r * math.cos(a),
+                           z + r * math.sin(a))
+                          for a in [2.0 * math.pi * j / 48.0 for j in range(48)]])
+        inner = [[(x, sgn * fan["y"] + (y - sgn * fan["y"]) * 0.97,
+                   zc + (z - zc) * 0.97)
+                  for x, y, z in ring]
+                 for ring, zc in zip(rings, [
+                     fan["plenum_z0"] + (fan["z"] - fan["plenum_z0"])
+                     * (i / 24.0) ** 2 * (3.0 - 2.0 * i / 24.0)
+                     for i in range(25)])]
+        out[f"floor_fan_throat_{side}"] = _loft(rings + list(reversed(inner)) + [rings[0]], False)
     return out
 
 
