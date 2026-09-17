@@ -362,8 +362,13 @@ def _oil():
         # Both straight down the vee's own centreline: the exhaust flange
         # strips run the length of the vee from y = 16 to y = 77 on each
         # side, so the 32 mm between them is the only gap there is.
-        feed = [(tx - 13.0, 0.0, 150.0), top]
-        drain = [bot, (tx + 13.0, 0.0, 150.0)]
+        # ... and down to z 122, which is in the block's vee face. They
+        # stopped at 150, which is 122 mm of clear air above the union they
+        # are described as screwing into: both lines, on both turbos, ended
+        # in space with a boss on the end of them.
+        vee = spec.BLOCK["vee_face_z"]
+        feed = [(tx - 13.0, 0.0, vee), top]
+        drain = [bot, (tx + 13.0, 0.0, vee)]
         parts = [mesh.pipe(feed, 5.0, spec.RES["pipe"], subdiv=4),
                  mesh.pipe(drain, 9.0, spec.RES["pipe"], subdiv=4)]
         # the union at each end that screws into the block

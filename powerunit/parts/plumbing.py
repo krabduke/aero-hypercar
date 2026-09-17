@@ -157,13 +157,15 @@ def _runners():
 
 
 def _fuel():
-    """Two fuel rails, the feed to each injector, and the high-pressure pump.
+    """The high-pressure side: two rails, a feed to each direct injector, and
+    the pump that supplies them.
 
     Direct injection at 350 bar needs a rail stiff enough not to breathe with
     every injection event, which is why a real one is a thick-walled forging
     and not a tube.
     """
     out = {}
+    rail_ends = {}
     for bank in (0, 1):
         d = common.bank_dir(bank)
         lat = common.bank_lat(bank)
@@ -194,7 +196,8 @@ def _fuel():
             sgn = -1.0 if xx < p0[0] else 1.0
             rail.append(([(sgn * px + xx, py + p0[1], pz + p0[2])
                           for (px, py, pz) in ev], ef))
-        out[f"fuel_rail_{'lr'[bank]}"] = mesh.join(*rail)
+        out[f"fuel_rail_di_{'lr'[bank]}"] = mesh.join(*rail)
+        rail_ends[bank] = (p0, p1)
 
         feeds = []
         for (n, pair, b2, x, a) in spec.cylinders():
@@ -206,7 +209,7 @@ def _fuel():
                                     (x, (p0[1] + inj[1]) / 2,
                                      (p0[2] + inj[2]) / 2 - 14.0),
                                     inj], 4.5, SM))
-        out[f"fuel_feeds_{'lr'[bank]}"] = mesh.join(*feeds)
+        out[f"fuel_feeds_di_{'lr'[bank]}"] = mesh.join(*feeds)
 
     # On the head's OUTBOARD face, driven off the exhaust cam's tail. At
     # 92 mm from the centreline and below the deck it was inside the block,
@@ -219,6 +222,37 @@ def _fuel():
         # so this is the 60 mm of flank there is.
         0.0, 218.0, 165.0,
         72.0, 54.0, 84.0, n_fins=6, fin_h=5.0, fin_t=3.0, r=12.0)
+
+    # The pipe that makes it a fuel system rather than three fuel parts.
+    #
+    # The pump was 345 mm from the nearest rail and the two rails were joined
+    # to nothing, so a chain that should read pump-rail-feed-injector stopped
+    # at the first link. Nothing complained: every audit here asks whether
+    # parts overlap, and three parts that do not touch each other cannot.
+    #
+    # There is one route down. The plenum stands on the head's outboard face
+    # from z 30 to 110 and closes right onto it, so the line cannot drop
+    # straight off the pump; it runs aft along the top of the cam cover to
+    # x 224, which is past the head's rear face at 218 and forward of the
+    # bellhousing flange at 235, and comes down the back of the engine to the
+    # rail's rear fitting.
+    x_back = spec.BLOCK["x_rear"] - 8.0
+    p0r, p1r = rail_ends[1]
+    p0l, _p1l = rail_ends[0]
+    out["fuel_hp_line"] = mesh.pipe(
+        [(24.0, 206.0, 168.0), (140.0, 226.0, 150.0),
+         (x_back, 226.0, 120.0), (x_back, 190.0, 72.0),
+         (p1r[0] + 12.0, p1r[1], p1r[2])], 5.0, SM, subdiv=3)
+
+    # and the same station, 22 mm higher, carries the pressure across to the
+    # other bank. Above the crankcase, which stops at z 28, and below the
+    # inverter, which starts at 153.
+    out["fuel_rail_di_crossover"] = mesh.pipe(
+        [(p1r[0] + 12.0, p1r[1], p1r[2]), (x_back, p1r[1], p1r[2]),
+         (x_back, p1r[1], 132.0), (x_back, p0l[1], 132.0),
+         (x_back, p0l[1], rail_ends[0][1][2]),
+         (rail_ends[0][1][0] + 12.0, rail_ends[0][1][1],
+          rail_ends[0][1][2])], 4.0, SM, subdiv=3)
     return out
 
 
@@ -343,8 +377,16 @@ def _accessories():
     # A belt wraps the outside of every pulley, so its path is the convex hull
     # of the pulley circles: at each angle round the drive, take the furthest
     # any pulley reaches in that direction.
-    ring = [(62.0, 0.0, 0.0), (32.0, -96.0, 52.0),
-            (26.0, 0.0, 104.0), (30.0, 92.0, 44.0)]
+    # (radius, y, z) of every pulley the belt has to wrap. These have to be
+    # the same circles `pulls` above puts metal on, and the alternator's was
+    # not: the hull was computed round (-96, 52) while the pulley is at
+    # (-150, 86), so the belt ran 65 mm inboard of the pulley it drives. The
+    # water pump's nose pulley is the fourth -- it is at y 200 on the other
+    # side of the engine and the belt did not reach within 69 mm of it, so
+    # the one thing that makes the pump turn was not connected to it.
+    ring = [(62.0, 0.0, 0.0), (32.0, -150.0, 86.0),
+            (26.0, 0.0, 104.0), (30.0, 92.0, 44.0),
+            (46.0, spec.COOLANT["pump_y"], spec.COOLANT["pump_z"])]
     path = []
     for i in range(49):
         t = 2 * math.pi * i / 48
@@ -372,7 +414,18 @@ def _breathers():
         along = spec.DECK_HEIGHT + H["height"] + 40.0
         start = (H["x_front"] + 70.0, d[1] * along, d[2] * along)
         pipes.append(mesh.pipe([start, (start[0] - 60.0, start[1] * 0.5, 232.0),
-                                (B["x_front"] + 40.0, 58.0, 236.0)], 11.0, SM))
+                                (B["x_front"] + 40.0, -58.0, 236.0)], 11.0, SM))
+    # and down the front-left corner into the tank's lid.
+    #
+    # The two bank pipes met over the vee and stopped there, 300 mm from the
+    # tank they are supposed to vent into. The route down is outboard of the
+    # plenum, which stands on the head from z 30 to 110, and forward of the
+    # block so it misses the engine mount and the oil pump.
+    vent = spec.oil_tank_union("breather")
+    pipes.append(mesh.pipe(
+        [(B["x_front"] + 40.0, -58.0, 236.0), (B["x_front"] - 14.0, -230.0, 190.0),
+         (B["x_front"] - 18.0, -250.0, 20.0), (B["x_front"] - 18.0, -250.0, -60.0),
+         (vent[0] - 30.0, -180.0, vent[2]), vent], 10.0, SM, subdiv=3))
     out["breathers"] = mesh.join(*pipes)
     out["catch_tank"] = _catch_tank()
     out["dipstick"] = mesh.pipe(
@@ -390,8 +443,9 @@ def _catch_tank():
     leaves from the bottom. The ends are domed because the tank is pressurised
     by blow-by and a flat end would oil-can.
     """
-    R = 40.0
-    L = 132.0
+    O = spec.OIL
+    R = O["tank_r"]
+    L = O["tank_len"]
     parts = [mesh.revolve_closed(
         [(0.0, 0.0), (3.0, 0.0),
          (5.0, R * 0.55), (9.0, R * 0.86), (16.0, R - 1.0),
@@ -415,11 +469,25 @@ def _catch_tank():
         [(L - 2.0, 0.0), (L + 22.0, 0.0), (L + 22.0, 15.0),
          (L + 26.0, 15.5), (L + 26.0, 19.0), (L + 21.0, 19.5),
          (L + 18.0, 17.0), (L + 4.0, 17.0), (L - 2.0, 21.0)], SEG))
+    # the breather in the lid, standing proud of it and at the FRONT end.
+    # It was 26 mm long from the tank's own axis, which on a 40 mm tank puts
+    # the whole union inside the oil -- nothing to connect a hose to, and the
+    # crankcase breathers 300 mm away venting to atmosphere.
     bv, bf = mesh.revolve_closed(
-        [(0.0, 0.0), (26.0, 0.0), (26.0, 7.0), (22.0, 8.5),
-         (18.0, 8.5), (18.0, 10.5), (13.0, 10.5), (13.0, 8.0),
+        [(0.0, 0.0), (32.0, 0.0), (32.0, 7.0), (27.0, 8.5),
+         (22.0, 8.5), (22.0, 10.5), (16.0, 10.5), (16.0, 8.0),
          (0.0, 8.0)], SM)
-    parts.append(([(pz + L - 4.0, py + 26.0, px) for (px, py, pz) in bv], bf))
+    parts.append(([(pz + 18.0, py + 26.0, px + 30.0)
+                   for (px, py, pz) in bv], bf))
+    # and the tangential scavenge inlet at the top of the wall, which is what
+    # makes this a swirl pot: oil comes back full of air and has to be spun
+    # against the wall for the air to come out of it
+    iv, if_ = mesh.revolve_closed(
+        [(0.0, 0.0), (32.0, 0.0), (32.0, 9.0), (27.0, 11.0),
+         (22.0, 11.0), (22.0, 13.0), (16.0, 13.0), (16.0, 10.0),
+         (0.0, 10.0)], SM)
+    parts.append(([(pz + L - 30.0, -px - 30.0, py + 12.0)
+                   for (px, py, pz) in iv], if_))
     # feed union out of the bottom, where the pressure stage picks up
     fv, ff = mesh.revolve_closed(
         [(0.0, 0.0), (30.0, 0.0), (30.0, 9.0), (25.0, 11.0),
@@ -435,5 +503,5 @@ def _catch_tank():
     # Low on the left flank, against the head, clear of the vee -- the vee
     # is full of plenum, turbos and charge coolers, and the tank was inside
     # all three of them in turn.
-    return ([(px + B["x_front"] + 36.0, py - 162.0, pz - 140.0)
+    return ([(px + O["tank_x"], py + O["tank_y"], pz + O["tank_z"])
              for (px, py, pz) in v], f)

@@ -113,30 +113,39 @@ def _oil_system():
 
 
 def _cooling():
-    """Thermostat and its housing, on the front water outlet.
+    """Thermostat and its housing, on the engine's front face.
 
     Up at z = 104, not 31: the crank nose runs down the centreline at the
     front of the engine and the housing was sitting on top of it.
+
+    Then back down to 110 from 190, because 190 is in the vee. At that height
+    the housing was resting on the left bank's exhaust flange and touching
+    the tailpipes, and 148 mm from the water outlets it is supposed to be
+    fed by -- a coolant part living in the exhaust, connected to no part of
+    the cooling system. The station comes from spec.COOLANT now, which is
+    also what detail.py routes the hoses to.
     """
     out = {}
-    x = B["x_front"] - 16.0
+    C = spec.COOLANT
+    x = C["stat_x"]
+    zc = C["stat_z"]
     parts = []
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 46.0), (12.0, 52.0), (44.0, 52.0),
-         (52.0, 44.0), (52.0, 0.0)], x, 0.0, 104.0, axis="x", seg=24))
+         (52.0, 44.0), (52.0, 0.0)], x, 0.0, zc, axis="x", seg=24))
     # the outlet stub the top hose clamps onto, with its bead
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 27.0), (34.0, 27.0), (38.0, 31.0),
          (44.0, 31.0), (48.0, 27.0), (62.0, 27.0), (62.0, 0.0)],
-        x - 50.0, 0.0, 190.0, axis="x", seg=20))
+        x - 50.0, 0.0, zc, axis="x", seg=20))
     # the thermostat itself, inside: wax capsule, frame and jiggle pin
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 34.0), (6.0, 36.0), (12.0, 34.0), (12.0, 20.0),
-         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, 190.0, axis="x", seg=18))
+         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, zc, axis="x", seg=18))
     for k in range(6):
         a = 2 * math.pi * k / 6
         bv, bf = mesh.cylinder(0.0, 16.0, 5.0, 8)
-        bv = [(px + x, 42.0 * math.cos(a) + py, 42.0 * math.sin(a) + pz + 190.0)
+        bv = [(px + x, 42.0 * math.cos(a) + py, 42.0 * math.sin(a) + pz + zc)
               for (px, py, pz) in bv]
         parts.append((bv, bf))
     out["thermostat"] = mesh.join(*parts)

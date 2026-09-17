@@ -38,7 +38,14 @@ def _flywheel():
     of it, because every gram at 96 mm radius is inertia the engine has to
     accelerate twice per gearchange.
     """
-    x = spec.BLOCK["x_rear"] + 20.0
+    # On the crank's flywheel flange, whose rear face is at x1 + flange_t.
+    # It was 26 mm behind it, bolted to nothing: `audit_intersect` has
+    # ("crankshaft", "flywheel") on its list of parts that share material on
+    # purpose, but that entry is a permission and not a requirement, so when
+    # the flywheel drifted off the flange the entry simply stopped applying
+    # and no test had anything to say. The flywheel and the clutch were a
+    # two-part assembly floating inside the bellhousing.
+    x = spec.BLOCK["x_rear"] - 20.0 + spec.CRANK["flange_t"]
     t = A["flywheel_t"]
     R = A["flywheel_r"]
     # meridian, counter-clockwise in (x, r): hub, relieved back, rim
@@ -68,7 +75,10 @@ def _flywheel():
 def _clutch():
     """A carbon multiplate clutch: a cover, a diaphragm with fingers cut into
     it, the pressure plate and the pack of plates it squeezes."""
-    x = spec.BLOCK["x_rear"] + 44.0
+    # 24 mm behind the flywheel's front face, which is where it was before
+    # the flywheel was moved back onto the crank flange -- the cover bolts to
+    # the flywheel rim, so the two move together.
+    x = spec.BLOCK["x_rear"] - 20.0 + spec.CRANK["flange_t"] + 24.0
     R = A["flywheel_r"] * 0.86
     parts = []
     # cover: a pressing with a bolt flange at the rim
@@ -113,10 +123,28 @@ def _bellhousing():
     x = spec.BLOCK["x_rear"] + 8.0
     L = A["bellhousing_len"]
     R = A["bellhousing_r"]
+    # The bell.
+    #
+    # This was a barrel with a flange at each end and a 29 mm gap between its
+    # front flange and the block, because a flange at r 140 has nothing to
+    # land on: the crankcase rear face stops at r 101. A bellhousing is not a
+    # barrel, it is a bell -- it opens out from the block's rear face to the
+    # gearbox's bolt circle, and that cone IS the joint. Without it the
+    # gearbox and clutch hung off the back of the engine touching nothing.
+    #
+    # The cone starts at r 104, which is 1 mm outside the starter ring gear,
+    # and lands 2 mm inside the block's rear face. The crankcase is a box
+    # 202 mm across and 124 deep, so its rear face reaches r 139 at the
+    # bottom corners and r 105 at the top ones -- that corner is what the
+    # bell bolts to, and a circular flange at r 140 sailed past all of it.
+    xb = spec.BLOCK["x_rear"] - 2.0
     parts = [mesh.revolve_closed(
+        [(xb, 104.0), (xb, 116.0),
+         (x + 6.0, R - 2.0), (x + 6.0, R - 13.0)], SEG)]
+    parts.append(mesh.revolve_closed(
         [(x, R - 11.0), (x + L, R - 11.0),
          (x + L, R - 2.0), (x + L - 9.0, R - 4.0),
-         (x + 9.0, R - 6.0), (x, R)], SEG)]
+         (x + 9.0, R - 6.0), (x, R)], SEG))
     parts.append(mesh.flange(x, R - 12.0, R + 14.0, 9.0, 12, bolt_r=6.5))
     parts.append(mesh.flange(x + L - 9.0, R - 12.0, R + 12.0, 9.0, 12,
                              bolt_r=6.5))
@@ -132,7 +160,7 @@ def _bellhousing():
     bv, bf = mesh.revolve_open(
         [(0.0, 0.0), (0.0, 30.0), (16.0, 27.0), (16.0, 0.0)], SM,
         cap_start=True, cap_end=True)
-    parts.append(([(pz + x + 26.0, py + cy * 1.06, px * 0.0 + cz * 1.06)
+    parts.append(([(px + x + 10.0, py + cy, pz + cz)
                    for (px, py, pz) in bv], bf))
     return {"bellhousing": mesh.join(*parts)}
 
@@ -146,16 +174,20 @@ def _oil_pump():
     longer than the pressure section it feeds.
     """
     # driven off the crank nose but lying back alongside the pan, which is
-    # where there is room for a stack this long
-    x0 = spec.BLOCK["x_front"] + 4.0
+    # where there is room for a stack this long. The station and the stage
+    # widths come from spec.OIL, because detail.py has to land four scavenge
+    # pipes and two tank lines on the ports they imply -- it used to guess,
+    # and missed the pump by 25 mm.
+    O = spec.OIL
+    x0 = O["pump_x"]
     # outboard of the MGU-K rotor, which is 84 mm in radius on the crank
     # nose and shares this station
-    cy, cz = -192.0, -14.0
+    cy, cz = O["pump_y"], O["pump_z"]
     R = A["oil_pump_r"]
     parts = []
     x = 0.0
-    for k in range(5):
-        w = 15.0 if k else 21.0            # the pressure stage is wider
+    for k in range(len(O["stage_w"])):
+        w = O["stage_w"][k]                # the pressure stage is wider
         r = R if k else R * 1.08
         parts.append(mesh.revolve_closed(
             [(x, 11.0), (x + w, 11.0),
@@ -163,14 +195,30 @@ def _oil_pump():
              (x + 2.0, r), (x, r - 3.0)], SM))
         parts.append(mesh.tube(x + w, x + w + 2.4, 11.0, r * 0.94, SM))
         # the port out of each stage, clocked round so they do not collide
-        a = math.radians(40.0 + 62.0 * k)
+        a = math.radians(O["port_a"][k])
+        pl = O["port_len"]
         pv, pf = mesh.revolve_open(
-            [(0.0, 0.0), (0.0, 10.5), (17.0, 10.5), (19.0, 13.0),
-             (23.0, 13.0), (23.0, 0.0)], SM // 2, cap_start=True,
+            [(0.0, 0.0), (0.0, 10.5), (pl - 6.0, 10.5), (pl - 4.0, 13.0),
+             (pl, 13.0), (pl, 0.0)], SM // 2, cap_start=True,
             cap_end=True)
         parts.append(([(pz + x + w / 2, py + math.cos(a) * px,
                         math.sin(a) * px) for (px, py, pz) in pv], pf))
-        x += w + 2.4
+        x += w + O["stage_gap"]
+    # the tank connections, on the end faces: the pressure stage is fed from
+    # the tank at the front and the scavenge stages discharge into it at the
+    # back. Without these two the pump had five ports facing the pan and no
+    # way in or out of the tank at all.
+    span = sum(O["stage_w"]) + O["stage_gap"] * (len(O["stage_w"]) - 1)
+    for (sgn, mouth) in ((-1.0, -16.0), (1.0, span + 16.0)):
+        uv, uf = mesh.revolve_open(
+            [(0.0, 0.0), (0.0, 12.0), (16.0, 12.0), (18.0, 15.0),
+             (24.0, 15.0), (24.0, 0.0)], SM, cap_start=True, cap_end=True)
+        # the profile runs 0..24 along its own axis; put the far end on the
+        # union point spec.oil_pump_union names, so the pipes drawn to it in
+        # detail.py land on metal
+        base = mouth - sgn * 24.0            # rooted in the body, not beside it
+        parts.append(([(base + sgn * px, py, pz + 20.0)
+                       for (px, py, pz) in uv], uf))
     # through shaft and the drive gear on the end
     parts.append(mesh.tube(-14.0, x + 12.0, 0.0, 9.0, SM))
     parts.append(shapes.gear_ring(-14.0, -4.0, 24.0, 29.0, 34, 9.0))
@@ -187,11 +235,12 @@ def _water_pump():
     # Aft of the MGU-K rotor, which occupies x -340..-232 on the crank
     # nose. The pump's outlet scroll swings inboard to 62 mm from the
     # centreline, so it cannot share a station with an 84 mm rotor.
-    x0 = spec.BLOCK["x_front"] + 14.0
+    C = spec.COOLANT
+    x0 = C["pump_x"]
     # Outboard of the MGU-K, which is a 84.5 mm radius rotor on the crank
     # axis at this station -- the pump used to reach in to y = 1 and pass
     # straight through it.
-    cy, cz = 200.0, -34.0
+    cy, cz = C["pump_y"], C["pump_z"]
     R = A["water_pump_r"]
     parts = [shapes.volute(0.0, R * 0.62, R * 1.18, 11.0, 20.0, seg=56,
                            sect=16)]
@@ -202,6 +251,13 @@ def _water_pump():
     parts.append(mesh.revolve_closed(
         [(-40.0, 0.0), (-16.0, 0.0), (-16.0, 20.0), (-24.0, 17.0),
          (-24.0, 13.0), (-40.0, 13.0)], SM))
+    # the nose and its belt pulley. The pump is belt driven and stopped 33 mm
+    # short of the accessory drive, so the one thing that makes it turn was
+    # not connected to it.
+    parts.append(mesh.tube(-80.0, -38.0, 0.0, 12.0, SM))
+    parts.append(mesh.revolve_closed(
+        [(-80.0, 13.0), (-80.0, 44.0), (-76.0, 46.0), (-66.0, 46.0),
+         (-62.0, 44.0), (-62.0, 13.0)], SEG))
     # impeller: a hub with six curved vanes
     parts.append(mesh.revolve_closed(
         [(-3.0, 0.0), (10.0, 0.0), (10.0, 9.0), (-1.0, 13.0),

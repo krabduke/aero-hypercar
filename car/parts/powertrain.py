@@ -80,8 +80,16 @@ def build():
     # with it -- so the vendored copies are left out rather than carried
     # twice. They were also the lowest and the widest things on the engine,
     # which is why it would not fit between the floor and the sidepod.
+    #
+    # `hv_store` and `hv_motor` join the list. They are the power unit's own
+    # high-voltage loom, and this car has its own -- but more than that, the
+    # gearbox below is placed at the engine's rearmost vertex, and that
+    # cable runs 51 mm past the bellhousing flange. With it installed the
+    # gearbox was hung off the end of a wire instead of bolted to the bell,
+    # and the two structural halves of the car stopped touching.
     CAR_PROVIDES = ("battery", "battery_modules", "battery_terminals",
-                    "inverter", "inverter_connectors", "mguk", "mguh")
+                    "inverter", "inverter_connectors", "mguk", "mguh",
+                    "hv_store", "hv_motor")
     parts = []
     for name, (verts, faces) in built.items():
         if name.startswith(CAR_PROVIDES):

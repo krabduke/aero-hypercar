@@ -444,7 +444,16 @@ def _covers():
     """
     out = {}
     for bank in (0, 1):
-        a = spec.bank_angle_rad(bank)
+        # Negated. `rot` below turns (y, z) by +a, and a point on the deck
+        # axis then lands at y = -z*sin(a) -- which for bank 0, whose angle
+        # is negative, is +y. Bank 0 is the LEFT bank: `common.bank_dir(0)`
+        # is (0, -0.707, +0.707) and every other part in this module sits on
+        # -y. So every cam cover, every one of its bolts and both oil fillers
+        # were built over the other bank's camshafts. Nothing caught it,
+        # because a cover was still covering *a* head and the clearance
+        # checks that pair `plenum_l` with `camcover_l` were comparing
+        # opposite sides of the engine and passing on the 400 mm between them.
+        a = -spec.bank_angle_rad(bank)
         ca, sa = math.cos(a), math.sin(a)
         z = spec.DECK_HEIGHT + H["height"] + 1.0
         rot = lambda vs: [(x, y * ca - zz * sa, y * sa + zz * ca)
@@ -484,6 +493,14 @@ def _ignition():
     """One direct injector and one coil-on-plug per cylinder, each its own
     object -- they are serviced individually, so they are modelled that way.
 
+    `injector_di_*`, not `injector_*`. This engine has two injection systems:
+    these, screwed into the chamber at 350 bar, and the port injectors
+    induction.py stands in the runners at 6 bar. Both were called `injector_n`
+    and assembly put two objects of the same name in the scene -- one of them
+    renamed out from under every audit that looked for it, and the high
+    pressure feeds in plumbing.py aiming at whichever rail happened to survive
+    the merge. Naming the system is what makes the two fuel circuits separable.
+
     The injector is a stepped body with a nozzle tip; the coil is a body, a
     boot down to the plug and the plug itself, because the plug is the part
     that actually wears out.
@@ -495,7 +512,7 @@ def _ignition():
              (18.0, 7.0), (48.0, 7.0), (52.0, 9.5), (62.0, 9.5), (62.0, 0.0)],
             SM, cap_start=True, cap_end=True)
         iv = [(z, y, px) for (px, y, z) in iv]
-        out[f"injector_{n}"] = (common.along_bank(
+        out[f"injector_di_{n}"] = (common.along_bank(
             iv, x, spec.DECK_HEIGHT + 20.0, bank, -40.0), if_)
 
         cv, cf = mesh.revolve_open(

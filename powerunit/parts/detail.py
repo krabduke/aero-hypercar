@@ -166,18 +166,25 @@ def _timing():
 
 
 def _gear(x, y, z, r, teeth):
-    parts = [mesh.tube(x - 7.0, x + 7.0, r * 0.28, r * 0.88, 26)]
+    """A gear: a bored hub with teeth round it, on the shaft at (y, z).
+
+    Two things were wrong here. The hub was built once at the origin and
+    joined to the teeth, and then built AGAIN at (y, z) -- so every cam gear
+    also left a 40 mm disc sitting on the crank's centreline, four of them
+    stacked at the same station, visible in any cutaway and attached to
+    nothing. And the bore was 0.28r, which is 12.9 mm on a 10 mm camshaft
+    nose: the gear was a ring floating round the shaft it drives.
+
+    The hub also runs 19 mm rather than 14, all of it aft, because the gears
+    are at x -262 and the camshaft noses start at -254.
+    """
+    parts = [mesh.tube(x - 7.0, x + 12.0, r * 0.18, r * 0.88, 26)]
     for k in range(teeth):
         a = 2 * math.pi * k / teeth
         tv, tf = shapes.rounded_box(x, r * 0.94, 0.0, 13.0, r * 0.16, 5.2, 0.7)
-        tv = mesh.rot_x(tv, a)
-        parts.append(([(px, py + y, pz + z) for (px, py, pz) in tv], tf))
+        parts.append((mesh.rot_x(tv, a), tf))
     v, f = mesh.join(*parts)
-    v = [(px, py + (0.0 if abs(y) < 1e-9 else 0.0), pz) for (px, py, pz) in v]
-    # the hub was built about the axis; shift it to the gear centre
-    hub_v, hub_f = mesh.tube(x - 7.0, x + 7.0, r * 0.28, r * 0.88, 26)
-    hub_v = [(px, py + y, pz + z) for (px, py, pz) in hub_v]
-    return mesh.join((hub_v, hub_f), (v, f))
+    return [(px, py + y, pz + z) for (px, py, pz) in v], f
 
 
 def _pumps():
@@ -193,12 +200,53 @@ def _pumps():
     parts.append((pv, pf))
     out["oil_pickup"] = mesh.join(*parts)
 
+    # ---- the coolant circuit, as a circuit ------------------------------
+    #
+    # This was one pipe from the block's front face up to a header tank, and
+    # it met nothing at either end: 31 mm from the water pump, 52 mm from the
+    # thermostat, and never within reach of the outlets. Pump, thermostat,
+    # outlets and pipework were four parts of a cooling system that did not
+    # cool anything, and `audit_intersect` was content because none of them
+    # was in another's way.
+    #
+    # The loop is: pump into the block, up through the liners into the heads,
+    # out of the eight outlets, forward to the thermostat on the front face,
+    # and back down to the pump's eye. Everything forward of x -250 has to
+    # miss the timing gears at -269..-255, and everything on the centreline
+    # has to miss the crank nose.
     wp = []
-    wp.append(mesh.pipe([(xo, 86.0, -34.0), (xo - 40.0, 120.0, 30.0),
-                         (xo - 30.0, 130.0, 120.0)], 17.0, SM))
-    tv, tf = mesh.tube(xo - 50.0, xo - 10.0, 0.0, 44.0, 22)
+    pump_out = spec.coolant_node("pump_out")
+    pump_in = spec.coolant_node("pump_in")
+    stat = spec.coolant_node("stat_top")
+    x_fwd = spec.BLOCK["x_front"] - 18.0
+
+    # pump discharge into the block's front face
+    wp.append(mesh.pipe([pump_out, (xo - 4.0, 120.0, 20.0),
+                         (spec.BLOCK["x_front"] + 8.0, 112.0, 12.0)],
+                        16.0, SM, subdiv=3))
+    # the two head outlet rails, gathered forward onto the thermostat
+    for sgn in (-1.0, 1.0):
+        y_rail = sgn * (spec.BLOCK["half_width"] + 8.0)
+        z_top = spec.COOLANT["outlet_z"] + spec.COOLANT["outlet_len"] - 20.0
+        wp.append(mesh.pipe(
+            [(-190.0, y_rail, z_top), (-208.0, y_rail - sgn * 12.0, z_top + 6.0),
+             (x_fwd, y_rail - sgn * 12.0, z_top + 26.0),
+             (x_fwd, sgn * 56.0, stat[2] - 6.0), (stat[0] + 30.0, sgn * 22.0,
+                                                  stat[2])], 14.0, SM, subdiv=3))
+    # thermostat back to the pump's eye
+    wp.append(mesh.pipe(
+        [(stat[0] + 26.0, 26.0, stat[2] - 10.0), (x_fwd, 90.0, stat[2] - 40.0),
+         (x_fwd, 170.0, 10.0), (pump_in[0] - 40.0, pump_in[1], pump_in[2]),
+         pump_in], 15.0, SM, subdiv=3))
+    # the header tank on the front face, above the thermostat
+    tv, tf = mesh.tube(x_fwd - 32.0, x_fwd + 8.0, 0.0, 44.0, 22)
     tv = [(px, py + 130.0, pz + 150.0) for (px, py, pz) in tv]
     wp.append((tv, tf))
+    wp.append(mesh.pipe([(x_fwd - 12.0, 130.0, 150.0),
+                         (x_fwd - 12.0, 60.0, 140.0),
+                         (stat[0] - 6.0, 18.0, stat[2] + 30.0),
+                         (stat[0] - 6.0, 0.0, stat[2] + 34.0)], 8.0, SM,
+                        subdiv=3))
     out["coolant_plumbing"] = mesh.join(*wp)
     return out
 
@@ -523,13 +571,79 @@ def _sleeve(path, radii, off):
 
 
 def _dry_sump():
-    """Scavenge and pressure lines running to the tank."""
+    """The oil circuit, as a circuit.
+
+    Four scavenge lines out of the pan into the pump's scavenge stages, the
+    stack's discharge into the tank, the tank's feed back to the pressure
+    stage, and the pressure line to the cooler -- which already lands on the
+    filter, and the filter on the block's gallery.
+
+    What was here was two pipes running fore and aft under the engine,
+    beginning and ending in mid-air: 66 mm from the pickup, 25 mm from the
+    pump and 51 mm from the cooler. A dry sump exists to move oil round a
+    loop and there was no loop anywhere in it -- five parts of one system,
+    none of them touching, and every audit green, because all any of them
+    asked was whether two parts were in each other's way.
+
+    Every endpoint below comes from `spec.oil_pump_port`, `oil_pump_union`
+    and `oil_tank_union` rather than from a number typed in here, so a pipe
+    cannot miss a boss that has moved.
+    """
     parts = []
-    z = -spec.BLOCK["skirt_depth"] - 40.0
-    for i, sgn in enumerate((-1.0, 1.0)):
+    # The car this engine goes in closes its floor up under the pan: below
+    # z -170 nothing may be wider than about 196 mm of half width, which is
+    # what the dry-sump tank itself measures. Above -120 there is room out to
+    # 293, which is where the oil cooler sits. So the run stays narrow while
+    # it is low and only goes outboard once it has climbed -- a first pass
+    # took the scavenge lines out to y 280 at z -206 and put 60 mm of
+    # pipework through the hypercar's floor.
+    z_low = -spec.BLOCK["skirt_depth"] - 54.0
+    pan_y = -spec.ANCILLARY["sump_w"] / 2.0 - 4.0
+    y_low = -150.0
+
+    # scavenge 1 comes off the pickup itself, forward of the block where
+    # there is nothing in the way but the timing gears at x -269
+    p1 = spec.oil_pump_port(1)
+    parts.append(mesh.pipe(
+        [(spec.BLOCK["x_front"] - 16.0, -86.0, -46.0),
+         (spec.BLOCK["x_front"] - 18.0, y_low, -90.0),
+         (spec.BLOCK["x_front"] - 18.0, p1[1] - 20.0, p1[2] - 30.0), p1],
+        9.0, SM, subdiv=3))
+
+    # and three more out of the pan, staggered so they do not share a route:
+    # aft along the flank at y 150, then up and outboard onto the ports
+    for k, (sx, drop) in enumerate(((110.0, -18.0), (50.0, -30.0),
+                                    (-10.0, -42.0)), start=2):
+        port = spec.oil_pump_port(k)
         parts.append(mesh.pipe(
-            [(spec.BLOCK["x_rear"] - 40.0, sgn * 110.0, z),
-             (60.0, sgn * 150.0, z - 16.0),
-             (spec.BLOCK["x_front"] + 10.0, sgn * 120.0, -10.0)],
-            11.0, SM))
+            [(sx, pan_y, z_low), (sx, y_low, z_low + drop),
+             (port[0] + 40.0, y_low, z_low + drop),
+             (port[0], port[1] * 0.72, port[2] - 24.0), port],
+            9.0, SM, subdiv=3))
+
+    # the stack discharges into the top of the tank. Forward of the oil
+    # cooler, which fills the left flank from x -111 back and from z -118
+    # up to -30.
+    ret = spec.oil_pump_union("return")
+    tin = spec.oil_tank_union("scavenge")
+    parts.append(mesh.pipe(
+        [ret, (ret[0], -240.0, -30.0), (ret[0], -196.0, -110.0),
+         (tin[0] - 12.0, tin[1] + 6.0, tin[2] + 8.0), tin], 11.0, SM,
+        subdiv=3))
+
+    # the tank feeds the pressure stage from its lowest point, round the
+    # front of the engine
+    feed = spec.oil_tank_union("feed")
+    pin = spec.oil_pump_union("feed")
+    parts.append(mesh.pipe(
+        [feed, (-214.0, -180.0, feed[2] + 10.0),
+         (pin[0] - 8.0, -180.0, -140.0),
+         (pin[0] - 8.0, -200.0, -60.0), pin], 12.0, SM, subdiv=3))
+
+    # and the pressure stage feeds the cooler, which hands on to the filter
+    # and the filter to the block's main gallery
+    p0 = spec.oil_pump_port(0)
+    parts.append(mesh.pipe(
+        [p0, (p0[0] - 12.0, -262.0, 0.0), (-160.0, -270.0, -30.0),
+         (-108.0, -255.0, -45.0)], 10.0, SM, subdiv=3))
     return {"dry_sump_lines": mesh.join(*parts)}

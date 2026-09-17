@@ -120,10 +120,15 @@ def _block_detail():
         f = (i + 0.5) / 4
         x = x0 + (x1 - x0) * f
         for sgn in (-1.0, 1.0):
+            # 34 long from z 40, not 18 from z 22. They stopped 19 mm short
+            # of the head they are supposed to drain: a water outlet on the
+            # block's flank with the joint it crosses nowhere near it.
+            ol = spec.COOLANT["outlet_len"]
             v, fc = mesh.revolve_open(
-                [(0.0, 0.0), (0.0, 15.0), (10.0, 16.5), (18.0, 14.0),
-                 (18.0, 0.0)], SM, cap_start=True, cap_end=True)
-            v = [(pz + x, sgn * (hw + py), px + 22.0) for (px, py, pz) in v]
+                [(0.0, 0.0), (0.0, 15.0), (ol - 8.0, 16.5), (ol, 14.0),
+                 (ol, 0.0)], SM, cap_start=True, cap_end=True)
+            v = [(pz + x, sgn * (hw + py), px + spec.COOLANT["outlet_z"] - 18.0)
+                 for (px, py, pz) in v]
             ports.append((v, fc))
     out["water_outlets"] = mesh.join(*ports)
 
@@ -139,10 +144,17 @@ def _block_detail():
             plugs.append((v, fc))
     out["gallery_plugs"] = mesh.join(*plugs)
 
+    # Four at the mount stations, not two on opposite banks 70 mm from
+    # either of them. ancillaries.py hangs a bracket at x = -150 and +150 on
+    # BOTH banks; the only two bosses down at mount height were at x -80 on
+    # one bank and +80 on the other, so not one of the four brackets that
+    # carry the engine had anything to bolt to. The four at z 60 stay: those
+    # are the upper brackets.
     bosses = []
     for (x, y, z) in ((x0 + 60.0, hw, 60.0), (x0 + 60.0, -hw, 60.0),
                       (x1 - 60.0, hw, 60.0), (x1 - 60.0, -hw, 60.0),
-                      (x0 + 150.0, hw, -30.0), (x1 - 150.0, -hw, -30.0)):
+                      (-150.0, hw, -30.0), (-150.0, -hw, -30.0),
+                      (150.0, hw, -30.0), (150.0, -hw, -30.0)):
         bv, bf = shapes.bolt_boss(0, 0, 0, 13.0, 12.0)
         sgn = 1.0 if y > 0 else -1.0
         bosses.append(([(px * 0 + pz + x, y + sgn * py, px + z)

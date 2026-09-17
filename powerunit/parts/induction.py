@@ -1,4 +1,8 @@
-"""Intake plenum, velocity stacks, throttle."""
+"""Twin airboxes, eight individual throttles and secondary port injection.
+
+The direct injectors belong to heads.py; port injectors use distinct names
+so assembly cannot silently replace the direct-injection meshes.
+"""
 
 import math
 import sys, os
@@ -8,6 +12,8 @@ import spec
 import mesh
 
 SM = spec.RES["small_revolve"]
+import shapes
+import gaspath
 from parts import common
 
 I = spec.INTAKE
@@ -18,6 +24,77 @@ def build():
     out = {}
     out.update(_plenum())
     out.update(_trumpets())
+    out.update(_injection())
+    return out
+
+
+def _injection():
+    """Port injection: one injector into each runner, on its own low-pressure
+    rail.
+
+    `_pfi_`, because heads.py already has a direct injector in every chamber
+    and both were called `injector_n`. Two systems is deliberate -- direct
+    injection alone cannot keep a 350 bar chamber clean of intake-valve
+    deposits, and port injection alone cannot cool the charge in the cylinder,
+    so a high-output engine that has to idle and to pull 16,000 rpm carries
+    both and crosses over between them with load. What was not deliberate was
+    giving them the same names, which left assembly building two objects per
+    injector and the high-pressure feeds pointing at the low-pressure rail.
+    """
+    out = {}
+    rail_points = {0: [], 1: []}
+    for n, pair, bank, x, a in spec.cylinders():
+        port = gaspath.intake_port(bank, x)
+        runner = gaspath.runner_path(bank, x)[-2]
+        d, lat = common.bank_dir(bank), common.bank_lat(bank)
+        tip = tuple((port[k] + runner[k]) / 2 for k in range(3))
+        profile = [(0.0, 0.0), (0.0, 3.0), (12.0, 3.0),
+                   (14.0, 7.0), (38.0, 7.0), (40.0, 9.0),
+                   (46.0, 9.0), (48.0, 4.0), (48.0, 0.0)]
+        verts, faces = mesh.revolve_closed(profile, SM)
+        verts = [(tip[0] + py,
+                  tip[1] - lat[1] * px + d[1] * pz,
+                  tip[2] - lat[2] * px + d[2] * pz)
+                 for px, py, pz in verts]
+        if lat[1] * d[2] - lat[2] * d[1] < 0.0:
+            faces = [tuple(reversed(face)) for face in faces]
+        out[f"pfi_injector_{n}"] = (verts, faces)
+        plug = (tip[0] + 10.0, tip[1] - lat[1] * 28.0,
+                tip[2] - lat[2] * 28.0)
+        out[f"pfi_plug_{n}"] = shapes.connector(*plug, 14.0, 12.0, 10.0, 2)
+        inlet = tuple(tip[k] - lat[k] * 48.0 for k in range(3))
+        rail = tuple(tip[k] - lat[k] * 68.0 for k in range(3))
+        rail_points[bank].append(rail)
+        out[f"pfi_feed_{n}"] = mesh.pipe([inlet, rail], 3.5, SM)
+    ends = []
+    for bank, tag in ((0, "l"), (1, "r")):
+        points = sorted(rail_points[bank])
+        start = (points[0][0] - 18.0, *points[0][1:])
+        end = (points[-1][0] + 18.0, *points[-1][1:])
+        out[f"fuel_rail_pfi_{tag}"] = mesh.pipe([start, *points, end], 7.0, SM)
+        ends.append(end)
+        # 24 segments, not 6. At 6 this was a 32-vertex hexagonal stub, well
+        # under the 120-vertex floor the geometry audit sets -- invisible
+        # until the build was current enough for the audit to see it.
+        out[f"fuel_rail_pfi_union_{tag}"] = mesh.pipe(
+            [(end[0] - 6.0, *end[1:]), (end[0] + 6.0, *end[1:])], 10.0, 24)
+    # Behind the block, not through it.
+    #
+    # This ran straight across the engine at the rails' own height, z 49,
+    # which at y = 0 is inside the crankshaft's counterweight circle: a fuel
+    # line through the crank, with block_bank_l and block_bank_r on the way.
+    # `audit_intersect` allowed it, because ("fuel_rail_", "block_") and the
+    # crank are both on its list of overlaps that are meant to be there.
+    #
+    # x 226 is aft of the block banks (222), the heads (218) and the water
+    # outlets, and forward of the bellhousing flange (235). 110 mm up clears
+    # the crankcase, which stops at z 28, and stays under the inverter at 153.
+    rear = spec.BLOCK["x_rear"] - 6.0
+    over = 110.0
+    out["fuel_rail_pfi_crossover"] = mesh.pipe(
+        [ends[0], (rear, *ends[0][1:]), (rear, ends[0][1], over),
+         (rear, ends[1][1], over), (rear, *ends[1][1:]), ends[1]], 4.0, SM,
+        subdiv=3)
     return out
 
 

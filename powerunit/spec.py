@@ -74,6 +74,8 @@ BLOCK = {
     "half_width": 118.0,      # crankcase
     "bank_half_width": 64.0,  # the slab each bank of bores sits in
     "main_web_t": 16.0,
+    # the valley between the banks, where the turbo oil unions screw in
+    "vee_face_z": 86.0,
 }
 
 CRANK = {
@@ -264,6 +266,124 @@ ANCILLARY = {
 }
 
 # --------------------------------------------------------------------------
+# The oil circuit
+# --------------------------------------------------------------------------
+#
+# Where the pump's ports and the tank's unions are, in one place, because
+# three modules draw parts that have to meet at them: drive.py builds the
+# pump, plumbing.py builds the tank, and detail.py runs the lines between.
+#
+# Each of those had its own idea of where the others were. The pump ended up
+# 66 mm from the pickup, 25 mm from the lines and 51 mm from the cooler, and
+# the tank was 300 mm from the breathers that vent into it -- five parts of
+# one circuit, none of them joined, and every audit green because they were
+# only ever asked whether they collided.
+OIL = {
+    # the pump lies along the pan's left flank, driven off the crank nose:
+    # five stages on a common shaft, the pressure stage first
+    "pump_x": BLOCK["x_front"] + 4.0,
+    "pump_y": -192.0,
+    "pump_z": -14.0,
+    "stage_w": (21.0, 15.0, 15.0, 15.0, 15.0),
+    "stage_gap": 2.4,
+    # 46, not 23. The barrel is 34 mm in radius, so a boss reaching 23 from
+    # the axis is inside the casting -- five ports that nothing could be
+    # connected to because there was nothing sticking out to connect to.
+    "port_len": 46.0,
+    "port_a": (152.0, 188.0, 222.0, 256.0, 292.0),  # clocked apart, outboard
+    # the dry-sump tank, on the left flank under the head
+    "tank_x": BLOCK["x_front"] + 36.0,
+    "tank_y": -162.0,
+    "tank_z": -140.0,
+    "tank_r": 40.0,
+    "tank_len": 132.0,
+}
+
+
+# --------------------------------------------------------------------------
+# The coolant circuit
+# --------------------------------------------------------------------------
+#
+# Same reason as OIL above: the pump is built in drive.py, the thermostat in
+# ancillaries.py, the outlets in block.py and the pipework in detail.py, and
+# all four had their own idea of where the others were. Measured: pump to
+# plumbing 31 mm, head to outlets 19 mm, outlets to thermostat 148 mm,
+# thermostat to plumbing 52 mm. Nothing in the circuit touched anything else
+# in it, and the thermostat was up in the vee resting on an exhaust flange.
+COOLANT = {
+    # the pump hangs off the front of the block on the right, aft of the
+    # MGU-K rotor on the crank nose
+    "pump_x": BLOCK["x_front"] + 14.0,
+    "pump_y": 200.0,
+    "pump_z": -34.0,
+    # the thermostat housing sits on the engine's front face on the
+    # centreline. 110, not 190: at 190 it was in the vee with the exhaust
+    # flanges, and at anything under about 90 it is on the crank nose.
+    "stat_x": BLOCK["x_front"] - 16.0,
+    "stat_y": 0.0,
+    "stat_z": 110.0,
+    # the outlets stand up out of the block's flanks into the heads
+    "outlet_z": 40.0,
+    "outlet_len": 42.0,
+}
+
+
+def coolant_node(which):
+    """World point at one of the circuit's connections."""
+    C = COOLANT
+    if which == "pump_out":
+        return (C["pump_x"], C["pump_y"] - 68.0, C["pump_z"] + 62.0)
+    if which == "pump_in":
+        return (C["pump_x"] + 32.0, C["pump_y"], C["pump_z"])
+    if which == "stat_top":
+        return (C["stat_x"], C["stat_y"], C["stat_z"])
+    if which == "stat_hose":       # the stub the radiator hose clamps to
+        return (C["stat_x"] - 50.0, C["stat_y"], C["stat_z"])
+    raise KeyError(which)
+
+
+def oil_pump_port(k):
+    """World point at the mouth of stage k's port. Stage 0 is pressure."""
+    x = OIL["pump_x"]
+    for w in OIL["stage_w"][:k]:
+        x += w + OIL["stage_gap"]
+    x += OIL["stage_w"][k] / 2.0
+    a = math.radians(OIL["port_a"][k])
+    r = OIL["port_len"]
+    return (x, OIL["pump_y"] + math.cos(a) * r, OIL["pump_z"] + math.sin(a) * r)
+
+
+def oil_pump_union(which):
+    """World point at the pump's tank connections.
+
+    The five stage ports face out of the barrel and take the pipes from the
+    pan. These two are on the end faces: the pressure stage is fed from the
+    tank at the front, and the four scavenge stages discharge into it from
+    the back.
+    """
+    span = sum(OIL["stage_w"]) + OIL["stage_gap"] * (len(OIL["stage_w"]) - 1)
+    if which == "feed":
+        return (OIL["pump_x"] - 16.0, OIL["pump_y"], OIL["pump_z"] + 20.0)
+    return (OIL["pump_x"] + span + 16.0, OIL["pump_y"], OIL["pump_z"] + 20.0)
+
+
+def oil_tank_union(which):
+    """World point at one of the tank's three connections.
+
+    `scavenge` is tangential at the top, which is what makes it a swirl pot
+    rather than a bucket; `feed` is the pressure stage's pickup at the very
+    bottom; `breather` is the vent in the lid the crankcase breathes into.
+    """
+    if which == "feed":
+        return (OIL["tank_x"] + 22.0, OIL["tank_y"],
+                OIL["tank_z"] - OIL["tank_r"] - 26.0)
+    if which == "scavenge":
+        return (OIL["tank_x"] + OIL["tank_len"] - 30.0,
+                OIL["tank_y"] - OIL["tank_r"] - 22.0, OIL["tank_z"] + 12.0)
+    return (OIL["tank_x"] + 18.0, OIL["tank_y"] + 26.0,
+            OIL["tank_z"] + OIL["tank_r"] + 22.0)
+
+# --------------------------------------------------------------------------
 # Materials
 # --------------------------------------------------------------------------
 
@@ -330,6 +450,9 @@ MATERIAL_MAP = {
     "valve_spring": "spring_steel",
     "coil_": "rubber_blk",
     "injector_": "steel_nitrided",
+    "pfi_injector": "steel_nitrided",
+    "pfi_plug": "rubber_blk",
+    "pfi_feed": "steel_nitrided",
     "sparkplug": "anodised",
     "cam_journals": "steel_nitrided",
     "camlobe": "steel_nitrided",
