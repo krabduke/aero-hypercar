@@ -21,6 +21,7 @@ def build():
     out.update(_surface())
     out.update(_plank())
     out.update(_tunnels())
+    out.update(_diffuser())
     out.update(_strakes())
     out.update(_skirts())
     out.update(_inlet_lip())
@@ -112,7 +113,8 @@ def _floor_z(x):
     if x <= F["diffuser_x"]:
         return F["throat_z"] + 18.0
     f = (x - F["diffuser_x"]) / (F["x1"] - F["diffuser_x"])
-    return F["throat_z"] + 18.0 + (F["diffuser_exit_z"] - F["throat_z"]) * f ** 1.25
+    expansion = (f * f / 0.30 if f < 0.15 else f - 0.075) / 0.925
+    return F["throat_z"] + 18.0 + (F["diffuser_exit_z"] - F["throat_z"]) * expansion
 
 
 def half_width(x):
@@ -262,6 +264,107 @@ def _tunnel_section(x, y_in, y_out, z_floor, z_roof):
     r = min(abs(w) * 0.10, h * 0.26)
     loop = shapes.rounded_polygon(pts, [r, r] + [0.0] * (len(pts) - 2), seg=5)
     return [(x, py, pz) for (py, pz) in loop]
+
+
+def _diffuser():
+    """What the diffuser has that the tunnel loft does not.
+
+    `_tunnels` already carries the expansion ramp, because the roof follows
+    `_floor_z` all the way to x1 and that is where the ramp lives. What it
+    does not give is the three things that decide whether the ramp works: a
+    trailing edge that is an edge rather than the place a surface stopped,
+    fences inside the expansion to stop the flow spilling sideways out of it,
+    and the kick that turns the last of the ramp into load instead of letting
+    it dump straight into the base.
+
+    A diffuser that separates makes no downforce at all, and it separates at
+    the corners first, which is what the fences are for.
+    """
+    out = {}
+    x_d, x_e = F["diffuser_x"], F["x1"]
+
+    def plate(pts_lo, pts_hi, t):
+        """A thin vertical plate through two polylines, `t` thick in y."""
+        verts, faces = [], []
+        n = len(pts_lo)
+        for sgn in (-1.0, 1.0):
+            base = len(verts)
+            for (x, y, z) in pts_lo:
+                verts.append((x, y + sgn * t / 2, z))
+            for (x, y, z) in reversed(pts_hi):
+                verts.append((x, y + sgn * t / 2, z))
+            m = 2 * n
+            if sgn < 0:
+                faces.append(tuple(range(base, base + m)))
+            else:
+                faces.append(tuple(range(base + m - 1, base - 1, -1)))
+        m = 2 * n
+        for i in range(m):
+            j = (i + 1) % m
+            faces.append((i, j, m + j, m + i))
+        return verts, faces
+
+    # the fences: two a side inside the expansion, standing off the tunnel
+    # roof, tallest at the exit where the section is deepest
+    fences = []
+    for sgn in (-1.0, 1.0):
+        for frac in (0.34, 0.68):
+            y = sgn * (F["tunnel_inner_y"] +
+                       (F["tunnel_half_w"] - F["tunnel_inner_y"]) * frac)
+            lo, hi = [], []
+            for i in range(9):
+                t = i / 8.0
+                x = x_d + (x_e - x_d) * t
+                z = _floor_z(x)
+                lo.append((x, y, 8.0))
+                hi.append((x, y, z - 6.0 * (1.0 - t) - 2.0))
+            fences.append(plate(lo, hi, F["strake_t"] * 0.7))
+    out["diffuser_fences"] = mesh.join(*fences)
+
+    # the trailing edge: a real lip across both tunnel exits, not the end of
+    # a loft. 18 mm deep, which is what gives the ramp something to work
+    # against instead of bleeding into the base pressure.
+    lips = []
+    for sgn in (-1.0, 1.0):
+        y_in = sgn * F["tunnel_inner_y"]
+        y_out = sgn * max(half_width(x_e) - 34.0, F["tunnel_inner_y"] + 60.0)
+        z = _floor_z(x_e)
+        lo = [(x_e - 6.0, y_in, z), (x_e - 6.0, y_out, z)]
+        hi = [(x_e - 6.0, y_in, z - 18.0), (x_e - 6.0, y_out, z - 18.0)]
+        verts = [(x, y, zz) for (x, y, zz) in lo] + \
+                [(x, y, zz) for (x, y, zz) in hi]
+        verts += [(x + 7.0, y, zz) for (x, y, zz) in lo] + \
+                 [(x + 7.0, y, zz) for (x, y, zz) in hi]
+        f = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 2, 6, 4),
+             (1, 5, 7, 3), (0, 4, 5, 1), (2, 3, 7, 6)]
+        lips.append((verts, f))
+    out["diffuser_lip"] = mesh.join(*lips)
+
+    # and the kick: the last 120 mm of ramp turned up, so the expansion ends
+    # on a defined angle rather than running out of car
+    kicks = []
+    for sgn in (-1.0, 1.0):
+        y_in = sgn * F["tunnel_inner_y"]
+        y_out = sgn * max(half_width(x_e) - 34.0, F["tunnel_inner_y"] + 60.0)
+        rings = []
+        for i in range(5):
+            t = i / 4.0
+            x = x_e - 120.0 + 120.0 * t
+            z = _floor_z(x) - 22.0 * t * t
+            rings.append([(x, y_in, z), (x, y_out, z),
+                          (x, y_out, z + 5.0), (x, y_in, z + 5.0)])
+        verts = [v for r in rings for v in r]
+        faces = []
+        for i in range(4):
+            a, b = i * 4, (i + 1) * 4
+            for k in range(4):
+                k2 = (k + 1) % 4
+                faces.append((a + k, a + k2, b + k2, b + k))
+        faces.append((3, 2, 1, 0))
+        faces.append((16, 17, 18, 19))
+        kicks.append((verts, faces))
+    out["diffuser_kick"] = mesh.join(*kicks)
+    return out
 
 
 def _strakes():
