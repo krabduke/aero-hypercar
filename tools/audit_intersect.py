@@ -251,6 +251,24 @@ EXPECTED = [
     ("wiring_loom", "wishbone_"),
     ("seat", "extinguisher"),   # it is strapped to the seat back
     ("engine", "gills"),   # the louvres are cut in the cover over it
+    # An exhaust runs inside the engine cover and exits through the tail --
+    # the bodywork it passes through is the bodywork it is routed inside.
+    ("exhaust", "tub"), ("exhaust", "sharkfin"),
+    # Joints made while closing the assembly. Each of these overlaps IS the
+    # joint: the airbox plenum into the engine's intake, the floor's leading
+    # edge onto the floor, the wing elements onto the endplate where the dive
+    # planes also land, the caliper's mounting lugs past the hub, the turning
+    # vanes' feet in the tunnel roof, the rear lower wishbone's pickup on the
+    # gearbox and the tethers' anchors on the structure.
+    ("airbox", "engine"),
+    ("floor_inlet_lip", "floor_plenum_edge_"), ("floor_inlet_lip", "tub"),
+    ("front_diveplane_", "front_wing_main"),
+    ("caliper_", "hub_"), ("turning_vane_", "tunnel_"),
+    ("wishbone_rl_lower_fwd", "gearbox"), ("wishbone_rr_lower_fwd", "gearbox"),
+    ("tether_", "gearbox"), ("tether_", "tub"),
+    # the rear tethers anchor on the rear impact structure, through its
+    # fairing, which is the only strong point back there clear of the fan
+    ("tether_", "crash_structure"), ("tether_", "fan_fairing_"),
 ]
 
 if __name__ == "__main__":

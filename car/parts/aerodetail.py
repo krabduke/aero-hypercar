@@ -174,7 +174,10 @@ def _details():
     out = {}
     mirrors = []
     for sgn in (-1.0, 1.0):
-        stalk = mesh.pipe([(D["mirror_x"] - 60.0, sgn * 282.0, D["mirror_z"] - 138.0),
+        # the stalk roots on the cockpit side at y 244, not 282: the tub is
+        # 256 mm of half width here, so the old root was 26 mm outboard of
+        # the car and the mirrors were a detached pair floating beside it
+        stalk = mesh.pipe([(D["mirror_x"] - 60.0, sgn * 244.0, D["mirror_z"] - 138.0),
                            (D["mirror_x"] - 10.0, sgn * 300.0, D["mirror_z"] - 30.0),
                            (D["mirror_x"], sgn * D["mirror_y"], D["mirror_z"])],
                           13.0, 10)
@@ -205,6 +208,14 @@ def _details():
         wv = [(px, py + sgn * 132.0, pz + D["wastegate_z"])
               for (px, py, pz) in wv]
         ex.append((wv, wf))
+    # and the pipe that gets there from the engine. The tailpipe sat 848 mm
+    # behind the engine with nothing between them, so the exhaust left from
+    # nowhere. It runs over the gearbox, which tops out at z 536, and in
+    # between the rear wing pylons, which is where a tailpipe exits.
+    ex.append(mesh.pipe(
+        [(3480.0, 0.0, 616.0), (3820.0, 0.0, 596.0),
+         (4180.0, 0.0, 572.0), (D["exhaust_x"] + 10.0, 0.0, D["exhaust_z"])],
+        52.0, 18, subdiv=3))
     out["exhaust"] = mesh.join(*ex)
 
     # Engine cover cooling louvres, ON the cover.

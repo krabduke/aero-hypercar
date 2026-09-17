@@ -322,7 +322,11 @@ FRONT_WING = {
     # 280 mm, not 500. An endplate only has to enclose the flap stack, which
     # tops out at 367 mm from a datum of 16; taller than that it stops being
     # an endplate and becomes a wall, and it looked like one.
-    "endplate_h": 366.0, "endplate_t": 9.0,
+    #
+    # 418, though, not 366: with the tip rises below, the top flap reaches
+    # z 428, which is 412 above the datum. At 366 the endplate stopped 46 mm
+    # under the element it is supposed to enclose.
+    "endplate_h": 418.0, "endplate_t": 9.0,
     "aoa_root": 6.0, "aoa_tip": 14.0,
     "neutral_half_w": 250.0,   # regulated flat centre section
     "arch": 44.0,              # how much the mainplane arches over the nose
@@ -332,13 +336,18 @@ FRONT_WING = {
         # the one behind. At the old spacing ten per cent of element 1 was
         # inside element 0 -- the slot was closed over part of the span, so
         # there the two were one thick section instead of two thin ones.
+        # span_f is 1.000 for all four. It used to taper 1.000/0.985/0.965/
+        # 0.940, which left the three flaps short of the endplate; the tips
+        # are now run out to the plate's swept inner face by
+        # wings.endplate_sweep. The taper that matters on a front wing is in
+        # chord and incidence, and both are still here.
         #  dx     dz   c_root  c_tip  span_f  aoa_r  aoa_t  tip_rise
         (   0.0,   0.0, 330.0, 250.0, 1.000,   2.0,   5.0,   46.0),
-        (  96.0,  64.0, 190.0, 168.0, 0.985,   9.0,  17.0,   72.0),
-        ( 186.0, 106.0, 152.0, 138.0, 0.965,  16.0,  26.0,   96.0),
-        ( 262.0, 168.0, 118.0, 110.0, 0.940,  23.0,  34.0, 116.0),
+        (  96.0,  64.0, 190.0, 168.0, 1.000,   9.0,  17.0,   72.0),
+        ( 186.0, 106.0, 152.0, 138.0, 1.000,  16.0,  26.0,   96.0),
+        ( 262.0, 168.0, 118.0, 110.0, 1.000,  23.0,  34.0, 116.0),
     ],
-    "endplate_x0": -60.0, "endplate_x1": 420.0,
+    "endplate_x0": -60.0, "endplate_x1": 440.0,
     # No cascades. They were floating 130 mm above the top flap attached to
     # nothing, which read as debris rather than aerodynamics -- and they have
     # been illegal in Formula 1 since 2019 for exactly the reason they looked
@@ -391,7 +400,11 @@ TURNING_VANE = {
     # The tub is 256 mm half width here and the seat fills it. At y 250 the
     # inboard vane was inside the driver's seat; a turning vane hangs under
     # the chassis OUTBOARD of the cell, where the flow it turns actually is.
-    "y": 350.0, "z0": 110.0, "z1": 330.0,
+    # z0 86, not 110. The tunnel roof under the nose falls from z 106 on the
+    # centreline to 92 at y 300, so at 110 the inboard vane's foot hung clear
+    # of the floor it turns the flow onto -- attached to nothing at all,
+    # while the outboard one was held only by the bargeboards it brushes.
+    "y": 350.0, "z0": 86.0, "z1": 330.0,
     "elements": 2, "t": 7.0,
 }
 
@@ -566,7 +579,18 @@ SUSP = {
     # and the rear lower arm has to clear the diffuser roof, which is at
     # 172 mm under the rear axle
     "lower_z_rear": 240.0,
-    "inboard_front_y": 250.0, "inboard_rear_y": 300.0,
+    # 195, not 250. The tub is 215 mm of half width at the front axle but
+    # only at mid-height; down at the lower arm's pickup the section has
+    # closed well inside that, so at 250 both front wishbones picked up
+    # outboard of the chassis and carried wheel load into nothing.
+    "inboard_front_y": 195.0, "inboard_rear_y": 300.0,
+    # and the rear lower arm picks up on the gearbox casing. The case is a
+    # 175 mm cylinder on the crank line, so its usable width runs out fast
+    # below the centre -- at z 155 it is a knife edge -- while the dampers
+    # fill z 166-291 and the anti-roll tube 247-277. The one clear band is
+    # just above the bar, where the case is still 172 wide. At (300, 250) the
+    # arm picked up 116 mm clear of the car entirely.
+    "lower_inboard_rear_y": 150.0, "lower_inboard_rear_z": 340.0,
     "upright_h": 300.0,
     "arm_r": 17.0, "rod_r": 13.0,
     "front_layout": "pushrod", "rear_layout": "pullrod",
@@ -624,18 +648,27 @@ FAN_DRIVE = {
 # ahead of its trailing edge. It stands under the mainplane's lower surface,
 # which it touches, and reaches up-aft to the flap, which it moves.
 DRS = {
-    "body_r": 17.0, "body_x0": 4650.0, "body_len": 100.0, "body_z": 806.0,
+    "body_r": 17.0, "body_x0": 4700.0, "body_len": 100.0, "body_z": 985.0,
     "rod_r": 8.0,
-    "clevis_x": 4762.0, "clevis_z": 868.0,
+    "clevis_x": 4850.0, "clevis_z": 1010.0,
 }
 
 # Front steering arm: a forged lever from the upright's steering pickup to
 # the trackrod end. It sits inboard of the wheel band so it never fouls the
 # tyre.
 STEER_ARM = {
-    "t": 20.0, "y_out": 668.0,
-    "pivot_x": 856.0, "pivot_z": 302.0,
-    "end_x": 662.0, "end_z": 230.0,
+    # y_out 740, not 668. The upright's inner face at this height is at 728,
+    # so an arm at 668 hung 60 mm inboard of the casting it is supposed to be
+    # the lever on -- and the whole steering chain, rack to rod to arm to
+    # upright, was four parts in a row that did not touch.
+    # y_out 740 and end_x 772. The upright's inner face never comes inboard
+    # of 723 at any height, so an arm at 668 could not reach it -- but run
+    # forward to 662 at 740 it goes straight through the tyre, whose carcass
+    # starts 180 mm from the hub. 772 keeps the whole lever inside the wheel's
+    # bore, which is what "inboard of the wheel band" was always meant to say.
+    "t": 20.0, "y_out": 740.0,
+    "pivot_x": 856.0, "pivot_z": 245.0,
+    "end_x": 772.0, "end_z": 232.0,
 }
 
 # Coil springs over the dampers. The rear rides lower and takes more load,
@@ -678,7 +711,7 @@ LIGHT_PANEL = {
 # Swan-neck fittings from the rear pylons onto the wing mainplane.
 WING_MOUNT = {
     "collar_r0": 30.0, "collar_r1": 44.0,
-    "foot_x0": 4432.0, "foot_x1": 4528.0, "foot_z": 902.0, "foot_t": 10.0,
+    "foot_x0": 4432.0, "foot_x1": 4528.0, "foot_z": 866.0, "foot_t": 10.0,
     "y": 148.0, "bolts": 4,
 }
 

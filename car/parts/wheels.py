@@ -285,6 +285,19 @@ def _caliper(x, y, z, w):
     # The pads themselves are their own part -- brake_pad_{tag} -- because
     # they are a serviceable friction lining that bolts into the caliper,
     # not a feature moulded into it.
+    # The two mounting lugs.
+    #
+    # A caliper hangs off the upright and this one was bolted to nothing: it
+    # sits at z 453-574 wrapped round the top of the disc, and the upright is
+    # only 660-635 wide up there -- it does not reach out that far until
+    # z 330, where it spans 858 to 728. So the lugs have to come down and
+    # inboard to meet it, which is exactly what they do on a real corner.
+    for dx in (-58.0, 58.0):
+        parts.append(mesh.pipe(
+            [(x + dx, y + s * (w * 0.02 + 6.0), z + r * 0.30),
+             (x + dx, y * 0.93, z - 12.0),
+             (x + dx, s * 800.0, z - 40.0)], 15.0, 12, subdiv=2))
+
     return mesh.join(*parts)
 
 
@@ -406,8 +419,27 @@ def _tether(x, y, z, w, tag):
     inboard = y - s * (w / 2 + 120.0)
     parts = []
     for k, (dx, dz) in enumerate(((-150.0, 40.0), (150.0, -30.0))):
-        p0 = (x + dx * 0.25, y - s * (w / 2 - 10.0), z + dz * 0.4)
-        p1 = (x + dx, inboard * 0.55 + y * 0.45, z + dz)
+        # 0.94 of the wheel's own y: the upright's inner face is at 728 and
+        # this anchor was landing at 701, just inboard of the casting it is
+        # supposed to be bolted to.
+        # low on the upright, under the caliper's mounting lugs
+        p0 = (x + dx * 0.25, y * 0.94, z + dz * 0.4 - 92.0)
+        # ...into the tub, which is what the docstring says and what the
+        # regulation is for. It used to stop at y 680, which is 440 mm short
+        # of the survival cell: a tether anchored to the upright at both ends.
+        # the front tethers anchor on the survival cell; the rears on the
+        # gearbox, which is the structure back there -- at 228 they went
+        # straight through the fan duct.
+        front = tag.startswith("f")
+        anchor = 228.0 if front else 108.0
+        # the rears anchor high on the gearbox: the fan duct fills everything
+        # under z 448 back there, so a tether across it at hub height goes
+        # through the duct, the throat and the fairing.
+        zz = (z + dz - 92.0) if front else 396.0
+        # the rears anchor forward on the rear impact structure, which is the
+        # strong point back there and is clear of the fan
+        px1 = x + dx * 0.8 if front else x + abs(dx) * 0.78
+        p1 = (px1, s * anchor, zz)
         # the strap itself, flat in section rather than round
         path = [p0, ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2,
                      (p0[2] + p1[2]) / 2 + 14.0), p1]

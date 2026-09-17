@@ -144,16 +144,22 @@ def build():
     mods = []
     for i in range(5):
         f = (i + 0.5) / 5
+        # 0.96 of the case's width, not 0.8: at 0.8 the modules stopped
+        # 16 mm short of the wall and the pack was a box with a second box
+        # rattling inside it.
         mods.append(shapes.rounded_box(bx - sx / 2 + sx * f, by, bz,
-                                       sx / 6.2, sy * 0.8, sz * 0.7, 6.0))
+                                       sx / 6.2, sy * 0.96, sz * 0.7, 6.0))
     out["battery_modules"] = mesh.join(*mods)
 
     fx, fy, fz = PT["fuel_x"], 0.0, 330.0
     sx, sy, sz = PT["fuel"]
     out["fuel_cell"] = _bladder(fx, fy, fz, sx, sy, sz)
+    # ...and the line carries on to the engine. It used to stop at x 2716
+    # with the engine's front face at 2868, so the cell fed nothing.
     out["fuel_fittings"] = mesh.join(
         mesh.pipe([(fx + sx * 0.3, 0.0, fz + sz * 0.5),
-                   (fx + sx * 0.6, 0.0, fz + sz * 0.62)], 24.0, 10),
+                   (fx + sx * 0.6, 0.0, fz + sz * 0.62),
+                   (PT["engine_x"] - 280.0, 0.0, fz + sz * 0.30)], 24.0, 10),
         shapes.rounded_box(fx - sx * 0.3, 0.0, fz + sz * 0.5 + 18.0,
                            110.0, 110.0, 36.0, 12.0))
     return out

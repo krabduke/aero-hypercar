@@ -47,6 +47,24 @@ def _front_station(k, y):
             (incidence - reduction * washout) * load)
 
 
+def endplate_sweep(x):
+    """How far outboard the endplate's inner face is at station x.
+
+    `_front_endplates` sweeps the plate outboard along the chord --
+    8f + 54f^2, so 62 mm at the trailing edge -- which is what turns the flow
+    round the front tyre. The elements did not know about it. They were cut
+    at a constant semi-span, so the further aft an element sat the further
+    inboard of the plate its tip finished: 9 mm short for the first flap,
+    27 for the second and 49 for the third, two of them attached to nothing
+    at all. Running each tip out by the sweep at its own mid-chord puts every
+    element back on the plate that carries it.
+    """
+    x0 = FW["x"] + FW["endplate_x0"]
+    x1 = FW["x"] + FW["endplate_x1"]
+    f = min(1.0, max(0.0, (x - x0) / (x1 - x0)))
+    return 8.0 * f + 54.0 * f * f
+
+
 def _section_ring(y, x, z, chord, aoa, thickness, camber):
     verts, _ = common.lofted_element(
         [(y, x, z, chord, aoa)], thickness=thickness, camber=camber)
@@ -88,7 +106,9 @@ def _front():
     n_span = max(31, spec.RES["wing_stations"])
 
     for k in range(FW["elements"]):
-        tip = half * FW["stack"][k][4]
+        st = FW["stack"][k]
+        mid_x = FW["x"] + st[0] + (st[2] + st[3]) / 4.0
+        tip = half * st[4] + endplate_sweep(mid_x) + 6.0
         pieces = []
         if k == 0:
             centre = [(-neutral + 2 * neutral * j / (n_span - 1),
@@ -351,10 +371,17 @@ def _rear():
     lv = []
     te_x, te_z = spec.chord_point(*spec.rear_elements()[-1], 1.0)
     for sgn in (-1.0, 1.0):
-        y = sgn * (RW["span"] / 2 + 22.0)
+        # on the plate's own centre plane, not 22 mm outboard of the wing's
+        # semi-span. The endplate is at span/2 - 6, so the louvres were
+        # sitting 28 mm outboard of the plate they are slots in -- four of
+        # the ten touched nothing at all.
+        y = sgn * (RW["span"] / 2 - 6.0)
         for k in range(5):
-            lv.append(shapes.rounded_box(te_x - 250.0 + k * 52.0, y,
-                               te_z - 60.0 + k * 22.0, 40.0, 14.0, 56.0))
+            # 40 mm apart from te_x - 300, not 52 from - 250. The plate's
+            # upper trailing edge falls away aft of x 4880 and the last two
+            # of the five were marching off the end of it into open air.
+            lv.append(shapes.rounded_box(te_x - 300.0 + k * 40.0, y,
+                               te_z - 60.0 + k * 20.0, 40.0, 14.0, 56.0))
     # louvres are individually cut slots, not one lump
     half = len(lv) // 2
     for i, m in enumerate(lv):

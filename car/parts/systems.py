@@ -227,7 +227,10 @@ def _hydraulics():
         flex = [(x - 10.0, y_union, z_union),
                 (x + 26.0, y * 0.70, z_union - 26.0),
                 (x + 18.0, y * 0.76, z_cal + 34.0),
-                (x - 6.0, y * 0.78, z_cal)]
+                # 0.93 of the wheel's y, not 0.78: the caliper's inner face
+                # is at 766 and the flexible line stopped at 648, so the
+                # brakes were plumbed to within 120 mm of themselves.
+                (x - 6.0, y * 0.93, z_cal)]
         lines.append(_run(flex, SV["line_r"], per_seg=8))
     out["brake_lines"] = mesh.join(*lines)
 

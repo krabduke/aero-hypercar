@@ -87,23 +87,11 @@ def _nose():
     """
     out = {}
     px_x = BD["nose_pylon_x"]
-    pylons = []
-    for sgn in (-1.0, 1.0):
-        y = sgn * BD["nose_pylon_y"]
-        top = chassis.surface_point(px_x + 190.0, -90.0)
-        # The pylon holds the whole front wing up and sits in the cleanest
-        # air on the car. Round, it would be the largest single drag item
-        # forward of the front axle for no benefit at all.
-        t = BD["nose_pylon_t"]
-        pylons.append(shapes.swept_profile(
-            [(FW["x"] + 140.0, y, FW["z"] + 30.0),
-             (px_x + 40.0, y, FW["z"] + (top[2] - FW["z"]) * 0.34),
-             (px_x + 120.0, y, (FW["z"] + top[2]) / 2),
-             (px_x + 190.0, y * 0.7, top[2] + 20.0)],
-            shapes.teardrop_section(t * 2.0, t * 6.2, 26),
-            scale=[(1.0, 1.0), (1.0, 0.94), (0.96, 0.88), (0.90, 0.74)],
-            subdiv=5))
-    out["nose_pylons"] = mesh.join(*pylons)
+    # The pylons that carry the front wing are built by wings.py, which is
+    # the module that owns the wing and the only one that knows about
+    # FW["arch"] -- it lands them on the arched mainplane, 25 mm above where
+    # this copy put them. Both were being built under the same name, so
+    # assembly made two sets of pylons 25 mm apart and renamed the second.
 
     capes = []
     for sgn in (-1.0, 1.0):
@@ -204,7 +192,11 @@ def _crash_structures():
             # the seat, and through the driver's hip.
             hw = max(abs(p[1]) for p in chassis.body_section(1740.0,
                                                              segments=64))
-            a = (1740.0, sgn * (hw + 44.0), 0.0)
+            # 6 mm inside the body's surface, not 44 mm outboard of it. The
+            # tube is the load path from the sidepod into the survival cell
+            # and it was touching the bargeboards and nothing else; 34 mm in
+            # put it through the seat and the driver.
+            a = (1740.0, sgn * (hw + 24.0), 0.0)
             b = chassis.sidepod_point(1980.0, sgn * 0.94, 0.0,
                                       -BD["crash_r"])
             # A side impact tube is an oval so it crushes along its length
@@ -261,7 +253,13 @@ def _airbox():
             (L * 0.40, w * 0.77, h * 0.64, -14.0),
             (L * 0.62, w * 0.62, h * 0.46, -40.0),
             (L * 0.82, w * 0.47, h * 0.31, -70.0),
-            (L, w * 0.34, h * 0.20, -96.0))
+            (L, w * 0.34, h * 0.20, -96.0),
+            # ...and on into the engine. The airbox stopped at x 2400 with
+            # the engine's front face at 2868, so the one thing on the car
+            # whose entire job is to feed the engine fed 470 mm of air.
+            (L + 240.0, w * 0.30, h * 0.18, -112.0),
+            (L + 500.0, w * 0.27, h * 0.16, -128.0),
+            (L + 700.0, w * 0.25, h * 0.15, -164.0))
     rows = []
     for (dx, sw, sh, dz) in ctrl:
         ring = []

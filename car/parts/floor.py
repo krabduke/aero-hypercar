@@ -61,12 +61,24 @@ def _inlet_lip():
         for j in range(21):
             a = math.pi / 2.0 * j / 20.0
             r = 16.0
+            # _floor_z carries an 18 mm offset that the tunnel loft does not,
+            # so the lip sat 7 mm above the tunnel roof it is the leading
+            # edge of.
             sect.append((F["x0"] + 16.0 - r * math.cos(a),
-                         _floor_z(F["x0"]) + 16.0 - r + r * math.sin(a),
+                         _floor_z(F["x0"]) + 4.0 - r + r * math.sin(a),
                          y))
         sect.append((F["x0"] + 16.0 + 6.0,
-                     _floor_z(F["x0"]) + 1.0, y))
-        rings.append([(px, pz, py) for (px, pz, py) in sect])
+                     _floor_z(F["x0"]) - 11.0, y))
+        # (x, z, y) in, (x, y, z) out. This line read
+        # `[(px, pz, py) for (px, pz, py) in sect]`, which unpacks and
+        # re-emits in the SAME order -- the names say swap and the tuple does
+        # nothing. So the lip was built with its height in the y slot and its
+        # span in the z slot: a 16 mm blade standing on the centreline from
+        # z -608 to +608, straight up through the cockpit. It came out
+        # touching the driver and the steering wheel, and it passed every
+        # audit, because a part in the wrong place is still a closed,
+        # well-formed, correctly-named part.
+        rings.append([(px, py, pz) for (px, pz, py) in sect])
     return {"floor_inlet_lip": _loft(rings)}
 
 

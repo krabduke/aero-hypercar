@@ -97,7 +97,10 @@ def _fan_drive():
         parts = []
         x0, x1 = 4020.0, 4360.0
         y0, y1 = s * D["gearbox_y"], s * 300.0
-        z0, z1 = D["input_z"], 448.0
+        # 386, not 448: the fan rotor's top is at z 392, so the crown wheel
+        # was turning 56 mm above the wheel it drives -- the one mechanism on
+        # a car built entirely round two underbody fans.
+        z0, z1 = D["input_z"], 386.0
         # the shaft, with a splined collar at each end
         parts.append(_tube((x0, y0, z0), (x1, y1, z1), D["shaft_r"]))
         for (px, py, pz) in ((x0, y0, z0), (x1, y1, z1)):
@@ -106,7 +109,7 @@ def _fan_drive():
         # bevel pinion on the shaft, crown wheel on the fan
         parts.append(_disc(x1, y1, z1, D["pinion_r"], D["pinion_t"],
                            axis="y", seg=D["teeth"] * 2))
-        parts.append(_disc(x1 + 40.0, s * 362.0, 448.0,
+        parts.append(_disc(x1 + 40.0, s * 362.0, 386.0,
                            D["crown_r"], D["crown_t"], axis="z",
                            seg=D["teeth"] * 3))
         # the bearing carrier that holds the shaft off the floor
@@ -187,15 +190,24 @@ def _antiroll_blades():
     """The adjustable blades on each anti-roll bar."""
     A = spec.ANTIROLL_BLADE
     out = {}
-    for tag, (x, y, z) in (("f", (1039.0, 214.0, 608.0)),
+    # The front blade's collar goes on the bar, at z 520 and y 207. At
+    # (214, 608) it was 66 mm above the torsion tube, which runs z 497-542 at
+    # this station -- an adjuster clamped to nothing, on the one part of the
+    # suspension whose whole job is to be adjustable.
+    for tag, (x, y, z) in (("f", (1039.0, 168.0, 520.0)),
                            ("r", (3899.0, 258.0, 248.0))):
         parts = []
         for sy in (-1.0, 1.0):
             parts.append(_disc(x, sy * y, z, A["collar_r"], 34.0,
                                axis="y", seg=18))
             # the flat blade, whose stiffness is set by which way it is turned
+            # 84 long from x + 42, not 108 from x + 54: at the old reach the
+            # front blade ran back into the dash bulkhead.
+            # and set back to x + 80 on the rear bar, which is where the
+            # rear lower wishbone's inboard leg sweeps past
+            dx0 = 42.0 if tag == "f" else 80.0
             parts.append(shapes.rounded_box(
-                x + 54.0, sy * y, z, 108.0, A["plate_t"], A["plate_h"], r=3.0))
+                x + dx0, sy * y, z, 84.0, A["plate_t"], A["plate_h"], r=3.0))
             # the detent steps that index the setting
             for k in range(A["steps"]):
                 a = math.pi * (k + 0.5) / A["steps"]
@@ -203,7 +215,8 @@ def _antiroll_blades():
                     x, sy * y, z, A["collar_r"] + 5.0, 6.0, axis="y", seg=8))
                 break
             parts.append(mesh.pipe(
-                [(x + 108.0, sy * y, z), (x + 150.0, sy * (y + 30.0), z)],
+                [(x + dx0 + 42.0, sy * y, z),
+                 (x + dx0 + 76.0, sy * (y + 26.0), z)],
                 7.0, segments=10))
         out[f"antiroll_blade_{tag}"] = mesh.join(*parts)
     return out
@@ -256,10 +269,14 @@ def _wing_mounts():
         parts.append(shapes.rounded_box(
             (M["foot_x0"] + M["foot_x1"]) / 2, y, M["foot_z"],
             M["foot_x1"] - M["foot_x0"], 74.0, M["foot_t"], r=4.0))
-        # the collar that wraps the wing spar
-        parts.append(_disc(M["foot_x0"] + 40.0, y, M["foot_z"] + 26.0,
+        # the collar that wraps the wing spar, INSIDE the section rather
+        # than 26 mm above it: the mainplane's surface at this station and
+        # span is at z 839-870, and the foot was sitting at 902 with the
+        # collar at 928, so the swan-neck that carries the rear wing was
+        # bolted to nothing and the whole mount was a detached object.
+        parts.append(_disc(M["foot_x0"] + 40.0, y, M["foot_z"] - 12.0,
                            M["collar_r1"], 26.0, axis="y", seg=22))
-        parts.append(_disc(M["foot_x0"] + 40.0, y, M["foot_z"] + 26.0,
+        parts.append(_disc(M["foot_x0"] + 40.0, y, M["foot_z"] - 12.0,
                            M["collar_r0"], 30.0, axis="y", seg=20))
         for k in range(M["bolts"]):
             bx = M["foot_x0"] + 14.0 + k * (M["foot_x1"] - M["foot_x0"] - 28.0) / max(M["bolts"] - 1, 1)

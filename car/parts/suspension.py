@@ -80,10 +80,31 @@ def build():
         low_z = S["lower_z"] if front else S["lower_z_rear"]
         for (z_out, z_in) in ((S["upper_z"], S["upper_z"] + 40.0),
                               (low_z, low_z + 10.0)):
-            outb = (x, y * 0.74, z_out)
+            # 0.77 of the wheel's own y, not 0.74. The uprights' inner faces
+            # are at 623 front and 545 rear; at 0.74 the outboard rod ends
+            # finished 10 mm inboard of the casting they pick up on, so the
+            # upper wishbone and the rear pullrod were carrying load into
+            # thin air.
+            outb = (x, y * 0.77, z_out)
+            # only the FORWARD leg is moved onto the gearbox: the aft leg's
+            # pickup would land at x 4170, which is inside the fan rotor.
+            rear_low = (not front and z_out == low_z)
+            lvl_y = S["lower_inboard_rear_y"] if rear_low else inb_y
+            if rear_low:
+                z_in = S["lower_inboard_rear_z"]
             for dx in (-AERO_LINK["pickup_dx"], AERO_LINK["pickup_dx"]):
-                inb = (x + dx, sgn * inb_y,
-                       z_in + math.tan(rake) * abs(inb_y - y * 0.74))
+                # MINUS the rake, not plus. The comment above says outboard
+                # end up, and adding it raised the inboard end instead --
+                # which put the front upper wishbone's chassis pickup at
+                # z 545, sixty millimetres above the top of the tub at that
+                # station. Both front upper legs picked up on nothing.
+                # ...and only on the UPPER legs, which is what the comment
+                # above says and what anti-dive means. Applied to both, it
+                # dragged the lower arm's pickup down to z 117 and out of the
+                # tub as soon as the sign was corrected.
+                lift = rake if z_out == S["upper_z"] else 0.0
+                inb = (x + dx, sgn * lvl_y,
+                       z_in - math.tan(lift) * abs(lvl_y - y * 0.77))
                 leg = "fwd" if dx < 0 else "aft"
                 lvl = "upper" if z_out == S["upper_z"] else "lower"
                 arms.append((f"wishbone_{tag}_{lvl}_{leg}",
@@ -94,7 +115,7 @@ def build():
 
         # push/pull rod into a rocker on the chassis
         if front:
-            rod = [(x, y * 0.74, low_z), (x + 120.0, sgn * inb_y, 455.0)]
+            rod = [(x, y * 0.77, low_z), (x + 120.0, sgn * inb_y, 455.0)]
             rockers.append((f"rocker_{tag}",
                             _rocker(x + 130.0, sgn * inb_y, 475.0, 1.0)))
         else:
@@ -102,7 +123,9 @@ def build():
             # carries the load into the structure. At z 180 it hung below
             # the casing and reached down to 85 -- through the diffuser
             # roof, into the tunnel, and into the outermost strake.
-            rod = [(x, y * 0.74, S["upper_z"] + 60.0),
+            # +20, not +60: the rear upright tops out at z 492 and a pullrod
+            # picking up at 522 was 30 mm above the casting it pulls on.
+            rod = [(x, y * 0.77, S["upper_z"] + 20.0),
                    (x - 150.0, sgn * inb_y, S["rear_rocker_z"])]
             rockers.append((f"rocker_{tag}",
                             _rocker(x - 160.0, sgn * inb_y,
@@ -119,14 +142,26 @@ def build():
             n_sta=11, end_r=S["rod_r"] * 0.95)))
 
         # track rod / toe link
-        trk_x = x + (-230.0 if front else 200.0)
+        # The rear toe link stops just short of the fan rotor, which fills
+        # x 4150-4650 from y 51 to 550. At x + 200 it reached into it;
+        # forward of the axle it runs into the rocker and the blade instead.
+        trk_x = x + (-230.0 if front else 92.0)
         # Below the driveshaft, not across it. At low_z + 70 the rear toe link
         # ran at z 294-346 and the shaft is 294-396: the link went through it.
         # A rear toe link sits under the shaft on a real car for exactly this
         # reason.
+        # The front track rod runs between the steering arm's outer end and
+        # the rack, which is what a track rod is. It used to run from the
+        # upright straight inboard to x - 230, which is 200 mm ahead of the
+        # rack and nowhere near the arm.
+        SA = spec.STEER_ARM
+        t_out = ((SA["end_x"], sgn * SA["y_out"], SA["end_z"]) if front
+                 else (x, y * 0.77, low_z + 42.0))
+        t_in = ((x - 200.0, sgn * S["inboard_front_y"] * 0.72,
+                 SA["end_z"] + 8.0) if front
+                else (trk_x, sgn * inb_y * 0.8, low_z - 24.0))
         rods.append((f"trackrod_{tag}", shapes.suspension_link(
-            (x, y * 0.74, low_z + (70.0 if front else 42.0)),
-            (trk_x, sgn * inb_y * 0.8, low_z + (90.0 if front else 58.0)),
+            t_out, t_in,
             _section(AERO_LINK["trackrod_c"], AERO_LINK["trackrod_t"]),
             AERO_LINK["trackrod_c"], AERO_LINK["trackrod_c"] * 0.9, n_sta=9,
             end_r=S["rod_r"] * 0.78)))
@@ -188,7 +223,10 @@ def _inboard():
 
     # steering: rack, column and track rods
     ax = spec.FRONT_AXLE_X
-    out["steering_rack"] = _rack(ax - 40.0, S["inboard_front_y"] * 0.85)
+    # The rack goes at the steering arm's own station, 200 mm ahead of the
+    # axle, so the track rod is a transverse link between the two. At ax - 40
+    # it was 200 mm behind the arm's outer end and the rod reached neither.
+    out["steering_rack"] = _rack(ax - 200.0, S["inboard_front_y"] * 0.85)
     out["steering_column"] = _steering_column(ax)
     return out
 
@@ -262,8 +300,11 @@ def _torsion_bars(x, half_y, z):
 def _steering_column(ax):
     """A column with a universal joint at each break in it, and the quick
     release the driver pulls the wheel off."""
-    path = [(ax - 40.0, 0.0, 270.0), (ax + 180.0, 0.0, 348.0),
-            (ax + 420.0, 0.0, 430.0), (ax + 620.0, 0.0, 520.0)]
+    # From the rack's new station to the wheel's hub. It used to start at
+    # ax - 40 and run on to ax + 620, which is past the wheel and 100 mm
+    # under it: the column ended in mid-air behind the steering wheel.
+    path = [(ax - 200.0, 0.0, 258.0), (ax + 150.0, 0.0, 360.0),
+            (ax + 320.0, 0.0, 452.0), (ax + 433.0, 0.0, 562.0)]
     parts = [mesh.pipe(path, [15.0, 15.0, 17.0, 17.0], 22, subdiv=4)]
     for (i, p) in enumerate(path[1:3]):
         d = (path[i + 2][0] - path[i][0], 0.0, path[i + 2][2] - path[i][2])
@@ -295,7 +336,10 @@ def _driveshaft(x, sgn, y, od):
     """
     # the outboard joint sits in the upright, at the hub -- not 80 mm
     # inboard of it, which is where it used to stop
-    y0, y1 = sgn * 180.0, y * 0.875
+    # 95 inboard, not 180: the gearbox casing is a cylinder that has closed
+    # to 101 mm of half width by the driveshaft's station, so an inboard
+    # joint at 180 was 78 mm outside the case it takes drive from.
+    y0, y1 = sgn * 95.0, y * 0.875
     z = od / 2
     parts = []
     # the bar itself, waisted between the two joints
