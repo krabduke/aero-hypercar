@@ -21,6 +21,7 @@ import shapes
 import airfoil
 
 F = spec.FAN
+E = spec.FAN_EXHAUST
 
 
 def centres():
@@ -65,6 +66,8 @@ def build():
 
         out[f"fan_rotor_{tag}"] = _rotor(cx, cy, cz, spin)
         stators.append(_stators(cx, cy, cz, spin))
+        out[f"fan_scroll_{tag}"] = _scroll(cx, cy, cz)
+        out[f"fan_nozzle_{tag}"] = _nozzle(cx, cy, cz)
 
         # The motor.
         #
@@ -111,6 +114,68 @@ def build():
 
 
 # --------------------------------------------------------------------------
+
+def _open_loft(rings):
+    n = len(rings[0])
+    verts = [p for ring in rings for p in ring]
+    faces = [(j * n + i, j * n + (i + 1) % n,
+              (j + 1) * n + (i + 1) % n, (j + 1) * n + i)
+             for j in range(len(rings) - 1) for i in range(n)]
+    return verts, faces
+
+
+def _exhaust_rings(cx, cy, cz):
+    side = -1.0 if cy < 0.0 else 1.0
+    theta = math.radians(E["theta"])
+    cant = side * math.radians(E["cant"])
+    axis = (math.cos(theta) * math.cos(cant),
+            math.cos(theta) * math.sin(cant), math.sin(theta))
+    start = (cx, cy, cz + 70.0)
+    end = (E["exit_x"], side * E["exit_y"], E["exit_z"])
+    p1 = (cx, cy, start[2] + E["scroll_r"])
+    p2 = tuple(end[k] - E["scroll_r"] * axis[k] for k in range(3))
+    rings = []
+    for j in range(17):
+        t = j / 16.0
+        s = 1.0 - t
+        centre = tuple(s ** 3 * start[k] + 3.0 * s * s * t * p1[k]
+                       + 3.0 * s * t * t * p2[k] + t ** 3 * end[k]
+                       for k in range(3))
+        tangent = tuple(3.0 * s * s * (p1[k] - start[k])
+                        + 6.0 * s * t * (p2[k] - p1[k])
+                        + 3.0 * t * t * (end[k] - p2[k])
+                        for k in range(3))
+        length = math.sqrt(sum(v * v for v in tangent))
+        tx, ty, tz = (v / length for v in tangent)
+        width = (-math.sin(cant), math.cos(cant), 0.0)
+        height = (ty * width[2] - tz * width[1],
+                  tz * width[0] - tx * width[2],
+                  tx * width[1] - ty * width[0])
+        length = math.sqrt(sum(v * v for v in height))
+        height = tuple(v / length for v in height)
+        blend = t * t * (3.0 - 2.0 * t)
+        ring = []
+        for i in range(32):
+            a = 2.0 * math.pi * i / 32.0
+            ca, sa = math.cos(a), math.sin(a)
+            edge = max(abs(ca), abs(sa))
+            u = ca * ((1.0 - blend) * (F["duct_r"] - 22.0)
+                      + blend * E["exit_w"] / (2.0 * edge))
+            v = sa * ((1.0 - blend) * (F["duct_r"] - 22.0)
+                      + blend * E["exit_h"] / (2.0 * edge))
+            ring.append(tuple(centre[k] + u * width[k] + v * height[k]
+                              for k in range(3)))
+        rings.append(ring)
+    return rings
+
+
+def _scroll(cx, cy, cz):
+    return _open_loft(_exhaust_rings(cx, cy, cz)[:13])
+
+
+def _nozzle(cx, cy, cz):
+    return _open_loft(_exhaust_rings(cx, cy, cz)[12:])
+
 
 def _lathe_z(cx, cy, cz, profile, segments=36):
     """Revolve an (along-axis, radius) profile about the fan's own +z axis."""
