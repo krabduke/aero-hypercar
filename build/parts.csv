@@ -127,8 +127,8 @@ torsion_bars_f,05 Suspension,steel,,,,,,,,,1400,1200,1000.5,1104.0,-179.5,179.5,
 torsion_bars_r,05 Suspension,steel,,,,,,,,,1400,1200,3860.5,3964.0,-274.0,274.0,144.8,188.0
 trackrod_fl,05 Suspension,carbon_matte,,,,,,,,,2872,2802,672.9,832.6,-753.9,-126.5,216.7,255.3
 trackrod_fr,05 Suspension,carbon_matte,,,,,,,,,2872,2802,672.9,832.6,126.5,753.9,216.7,255.3
-trackrod_rl,05 Suspension,carbon_matte,,,,,,,,,2872,2802,4020.6,4194.9,-630.0,-225.3,199.6,298.4
-trackrod_rr,05 Suspension,carbon_matte,,,,,,,,,2872,2802,4020.6,4194.9,225.3,630.0,199.6,298.4
+trackrod_rl,05 Suspension,carbon_matte,,,,,,,,,2872,2802,4009.1,4114.3,-629.4,-225.8,173.3,298.7
+trackrod_rr,05 Suspension,carbon_matte,,,,,,,,,2872,2802,4009.1,4114.3,225.8,629.4,173.3,298.7
 wishbone_fl_lower_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,866.0,1151.2,-659.1,-175.0,128.8,181.2
 wishbone_fl_lower_fwd,05 Suspension,carbon_matte,,,,,,,,,3016,2946,682.3,973.0,-659.1,-175.0,128.8,181.2
 wishbone_fl_upper_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,866.0,1151.2,-657.0,-177.1,395.5,480.8
@@ -137,11 +137,11 @@ wishbone_fr_lower_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,866.0,1151.2,
 wishbone_fr_lower_fwd,05 Suspension,carbon_matte,,,,,,,,,3016,2946,682.3,973.0,175.0,659.1,128.8,181.2
 wishbone_fr_upper_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,866.0,1151.2,177.2,656.9,437.2,480.1
 wishbone_fr_upper_fwd,05 Suspension,carbon_matte,,,,,,,,,3016,2946,682.3,973.0,177.2,656.9,437.2,480.1
-wishbone_rl_lower_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,4016.0,4301.2,-635.5,-129.7,217.3,362.7
+wishbone_rl_lower_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,3954.5,4130.8,-634.6,-130.6,217.2,362.8
 wishbone_rl_lower_fwd,05 Suspension,carbon_matte,,,,,,,,,3016,2946,3832.3,4123.0,-635.5,-129.7,217.3,362.7
 wishbone_rl_upper_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,4016.0,4301.2,-634.3,-281.0,443.1,520.9
 wishbone_rl_upper_fwd,05 Suspension,carbon_matte,,,,,,,,,3016,2946,3832.3,4123.0,-634.3,-281.0,443.1,520.9
-wishbone_rr_lower_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,4016.0,4301.2,129.7,635.5,217.3,362.7
+wishbone_rr_lower_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,3954.5,4130.8,130.6,634.6,217.2,362.8
 wishbone_rr_lower_fwd,05 Suspension,carbon_matte,,,,,,,,,3016,2946,3832.3,4123.0,129.7,635.5,217.3,362.7
 wishbone_rr_upper_aft,05 Suspension,carbon_matte,,,,,,,,,3016,2946,4016.0,4301.2,281.0,634.3,443.1,520.9
 wishbone_rr_upper_fwd,05 Suspension,carbon_matte,,,,,,,,,3016,2946,3832.3,4123.0,281.0,634.3,443.1,520.9

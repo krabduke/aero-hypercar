@@ -1691,15 +1691,15 @@
   "trackrod_rl": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 4020.6,
-   "x1": 4194.9,
+   "x0": 4009.1,
+   "x1": 4114.3,
    "f": 2802
   },
   "trackrod_rr": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 4020.6,
-   "x1": 4194.9,
+   "x0": 4009.1,
+   "x1": 4114.3,
    "f": 2802
   },
   "wishbone_fl_lower_aft": {
@@ -1761,8 +1761,8 @@
   "wishbone_rl_lower_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 4016.0,
-   "x1": 4301.2,
+   "x0": 3954.5,
+   "x1": 4130.8,
    "f": 2946
   },
   "wishbone_rl_lower_fwd": {
@@ -1789,8 +1789,8 @@
   "wishbone_rr_lower_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 4016.0,
-   "x1": 4301.2,
+   "x0": 3954.5,
+   "x1": 4130.8,
    "f": 2946
   },
   "wishbone_rr_lower_fwd": {

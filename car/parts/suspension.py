@@ -28,6 +28,18 @@ P = spec.RES["pipe"]
 
 # These aerofoil dimensions and pickup settings belong in spec.py.
 AERO_LINK = {
+    # The rear lower wishbone's aft pickup, relative to the rear axle.
+    #
+    # It has to miss four things at once. At +190 it was 162 mm behind the
+    # gearbox casing, which ends at 4078, and 219 mm from the fan axis
+    # against a 250 mm rotor tip -- bolted to nothing, inside the fan. At
+    # +20 it lands on the casing but crosses the driveshaft, which runs
+    # x 4000-4100 at z 294-396. Dropping the whole pickup under the shaft
+    # does not work either: the rear anti-roll bar and its blade fill
+    # z 140-289 right there, so the gap between them is five millimetres.
+    # At -60 it is forward of the shaft in x and above the bar in z, on the
+    # casing, and 437 mm from the fan axis.
+    "rear_lower_aft_dx": -60.0,
     "wishbone_c": 130.0, "wishbone_t": 18.0,
     "pushrod_c": 110.0, "pushrod_t": 18.0,
     "trackrod_c": 100.0, "trackrod_t": 14.0,
@@ -86,13 +98,24 @@ def build():
             # upper wishbone and the rear pullrod were carrying load into
             # thin air.
             outb = (x, y * 0.77, z_out)
-            # only the FORWARD leg is moved onto the gearbox: the aft leg's
-            # pickup would land at x 4170, which is inside the fan rotor.
+            # Both legs go on the gearbox. The note here used to say only
+            # the forward one was moved because the aft one "would land at
+            # x 4170, which is inside the fan rotor" -- but the code moved
+            # both and the aft pickup came out at x 4240, y 150, which is
+            # 219 mm from the fan axis against a 250 mm rotor tip. So it was
+            # inside the rotor anyway, and 162 mm behind the gearbox's rear
+            # face at 4078, which is to say bolted to nothing. A rear lower
+            # wishbone picks up on the gearbox casing; there is nothing else
+            # back there to pick up on.
             rear_low = (not front and z_out == low_z)
             lvl_y = S["lower_inboard_rear_y"] if rear_low else inb_y
             if rear_low:
                 z_in = S["lower_inboard_rear_z"]
-            for dx in (-AERO_LINK["pickup_dx"], AERO_LINK["pickup_dx"]):
+            dxs = (-AERO_LINK["pickup_dx"], AERO_LINK["pickup_dx"])
+            if rear_low:
+                dxs = (-AERO_LINK["pickup_dx"],
+                       AERO_LINK["rear_lower_aft_dx"])
+            for leg, dx in zip(("fwd", "aft"), dxs):
                 # MINUS the rake, not plus. The comment above says outboard
                 # end up, and adding it raised the inboard end instead --
                 # which put the front upper wishbone's chassis pickup at
@@ -105,7 +128,11 @@ def build():
                 lift = rake if z_out == S["upper_z"] else 0.0
                 inb = (x + dx, sgn * lvl_y,
                        z_in - math.tan(lift) * abs(lvl_y - y * 0.77))
-                leg = "fwd" if dx < 0 else "aft"
+                # The leg is named by which one it is, not by the sign of
+                # its offset. Once the rear lower aft pickup moved forward
+                # of the axle, `"fwd" if dx < 0 else "aft"` called both legs
+                # `fwd` and the second overwrote the first in the dict --
+                # two wishbones silently gone out of the car.
                 lvl = "upper" if z_out == S["upper_z"] else "lower"
                 arms.append((f"wishbone_{tag}_{lvl}_{leg}",
                              shapes.suspension_link(
@@ -142,10 +169,13 @@ def build():
             n_sta=11, end_r=S["rod_r"] * 0.95)))
 
         # track rod / toe link
-        # The rear toe link stops just short of the fan rotor, which fills
-        # x 4150-4650 from y 51 to 550. At x + 200 it reached into it;
-        # forward of the axle it runs into the rocker and the blade instead.
-        trk_x = x + (-230.0 if front else 92.0)
+        # The rear toe link picks up on the gearbox, which ends at x 4078.
+        # At x + 92 its rod end reached 4195: 117 mm behind the casing and
+        # inside the fan fairing, which starts at 4106. Forward of that it
+        # would run into the rear anti-roll blade -- x 3869 to 4059, z 216
+        # to 280 -- so it goes UNDER the blade, at z 190, which is still
+        # 46 mm clear of the tunnel roof at 144.
+        trk_x = x + (-230.0 if front else -10.0)
         # Below the driveshaft, not across it. At low_z + 70 the rear toe link
         # ran at z 294-346 and the shaft is 294-396: the link went through it.
         # A rear toe link sits under the shaft on a real car for exactly this
@@ -159,7 +189,7 @@ def build():
                  else (x, y * 0.77, low_z + 42.0))
         t_in = ((x - 200.0, sgn * S["inboard_front_y"] * 0.72,
                  SA["end_z"] + 8.0) if front
-                else (trk_x, sgn * inb_y * 0.8, low_z - 24.0))
+                else (trk_x, sgn * inb_y * 0.8, low_z - 50.0))
         rods.append((f"trackrod_{tag}", shapes.suspension_link(
             t_out, t_in,
             _section(AERO_LINK["trackrod_c"], AERO_LINK["trackrod_t"]),

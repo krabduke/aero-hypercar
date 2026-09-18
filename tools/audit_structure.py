@@ -66,6 +66,22 @@ CFG = {
         "front wing mainplane": (("front_wing_main",), 1),
         "steering rack": (("steering_rack",), 1),
         "steering column": (("steering_column",), 1),
+
+        # Counts, not just ones-of. The rear lower wishbones' aft legs were
+        # named by the sign of their pickup offset -- `"fwd" if dx < 0 else
+        # "aft"` -- so moving that pickup forward of the axle called both
+        # legs `fwd` and the second overwrote the first. Two structural
+        # members left the car and the only thing that noticed was the part
+        # count in the manifest. `joins` names one of the sixteen legs, so
+        # it would have caught that one; this catches any of them.
+        "wishbone legs": (("wishbone_*",), 16),
+        "uprights": (("upright_*",), 4),
+        "toe and track rods": (("trackrod_*",), 4),
+        "push/pull rods": (("pushrod_*", "pullrod_*"), 4),
+        "rockers": (("rocker_*",), 4),
+        "driveshafts": (("driveshaft_*",), 2),
+        "rims": (("rim_*",), 4),
+        "tyres": (("tyre_f*", "tyre_r*"), 4),
     },
 
 }
