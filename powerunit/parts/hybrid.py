@@ -261,7 +261,13 @@ def _electronics():
     # closes its bodywork 2 mm inside the box's aft outboard corner, so the
     # ECU stood 2.3 mm proud of the car -- a part that fits the engine on its
     # own and not the thing the engine goes in.
-    ex, ey, ez = 124.0, 196.0, -50.0
+    # x 0, not 124. The right engine mount's bracket spans x 114 to 186 at
+    # this height and the box is 168 long, so at 124 it straddled the
+    # bracket -- 138 of its vertices inside it. Forward of the bracket it
+    # bolts to its front face instead of sitting inside it, which is also
+    # what the joint audit means by engine management being bolted to the
+    # engine: at x 0 it was clear of the bracket and 30 mm from anything.
+    ex, ey, ez = 31.0, 196.0, -50.0
     out["ecu"] = shapes.finned_case(ex, ey, ez, sx, sy, sz,
                                     n_fins=9, fin_h=5.0, fin_t=2.6, r=5.0)
     out["ecu_connector"] = shapes.connector(ex - sx * 0.5 - 10.0, ey, ez,

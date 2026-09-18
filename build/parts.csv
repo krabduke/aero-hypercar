@@ -156,7 +156,7 @@ fan_stators,06 Fan System,alu_bright,,,,,,,,,504,288,4146.0,4651.0,-553.2,554.0,
 fanduct,06 Fan System,carbon_matte,,,,,,,,,954,900,3727.5,4680.0,-579.9,579.9,55.4,448.0
 battery,08 Cooling and Energy,anodised,,,,,,,,,2548,2210,2040.4,2799.6,-149.6,149.6,86.0,205.0
 battery_modules,08 Cooling and Energy,alu_dark,,,,,,,,,980,850,2054.7,2785.3,-144.0,144.0,111.5,188.5
-engine,07 Power Unit,alu_cast,,,,,,,,,1291482,1294764,2868.5,3571.9,-320.7,320.7,96.3,698.6
+engine,07 Power Unit,alu_cast,,,,,,,,,1290760,1294042,2868.5,3571.9,-320.7,320.7,96.3,698.6
 fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,112.0,538.0
 fuel_fittings,08 Cooling and Energy,alu_bright,,,,,,,,,250,208,2157.0,2969.1,-55.0,55.0,404.2,551.8
 gearbox,07 Power Unit,magnesium,,,,,,,,,6695,6427,3550.5,4078.5,-206.5,206.5,123.5,536.5

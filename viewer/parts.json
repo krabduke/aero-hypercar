@@ -312,7 +312,7 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 2,
-   "faces": 1301191
+   "faces": 1300469
   },
   {
    "key": "08 Cooling and Energy",
@@ -1924,7 +1924,7 @@
    "mat": "alu_cast",
    "x0": 2868.5,
    "x1": 3571.9,
-   "f": 1294764
+   "f": 1294042
   },
   "fuel_cell": {
    "g": "08 Cooling and Energy",

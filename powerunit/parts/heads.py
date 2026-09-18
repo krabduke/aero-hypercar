@@ -467,11 +467,19 @@ def _covers():
         v = [(x, y + 2.0, zz) for (x, y, zz) in v]
         out[f"camcover_{'lr'[bank]}"] = (rot(v), f)
 
+        # A cam cover's bolts go round the injector bosses, not through
+        # them. At eleven evenly spaced stations two of them landed within
+        # 10 mm of a cylinder centre, and a port injector is 9 mm across the
+        # body on a 7 mm boss -- so cylinders 4 and 8 had their injectors
+        # inside a cover bolt.
+        bores = [cx for (_n, _p, b, cx, _a) in spec.cylinders() if b == bank]
         bolts = []
         n = 11
         for i in range(n):
             fx = (i + 0.5) / n
             x = H["x_front"] + (H["x_rear"] - H["x_front"]) * fx
+            if min(abs(x - cx) for cx in bores) < 18.0:
+                continue
             for sgn in (-1.0, 1.0):
                 bv, bf = shapes.bolt_boss(0, 0, 0, 7.0, 9.0)
                 bv = [(pz + x, py + 8.0 + sgn * H["half_width"] * 0.88,

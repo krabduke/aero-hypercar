@@ -220,8 +220,14 @@ def _fuel():
         # Between two cylinders, on the cover's outer face. The coil wells
         # reach y 188 and the car's bodywork closes to 248 at this height,
         # so this is the 60 mm of flank there is.
-        0.0, 218.0, 165.0,
-        72.0, 54.0, 84.0, n_fins=6, fin_h=5.0, fin_t=3.0, r=12.0)
+        #
+        # x 8 and 60 long, not x 0 and 72. At 0 the case spanned -36 to 36
+        # and cylinder 4's port injector, whose body is 9 mm across at
+        # x -41.5, reached -32.5; moving it aft alone put the far end into
+        # cylinder 6's connector at 43.5. The gap between those two is
+        # 76 mm and the case is sized to sit inside it.
+        8.0, 218.0, 165.0,
+        60.0, 54.0, 84.0, n_fins=6, fin_h=5.0, fin_t=3.0, r=12.0)
 
     # The pipe that makes it a fuel system rather than three fuel parts.
     #
@@ -239,10 +245,24 @@ def _fuel():
     x_back = spec.BLOCK["x_rear"] - 8.0
     p0r, p1r = rail_ends[1]
     p0l, _p1l = rail_ends[0]
+    # Outboard of the cam cover, and above the port rail.
+    #
+    # At y 226 the line ran along the top of the cover in the middle of the
+    # bolt row, which spans y 145 to 234 and z 134 to 223: 48 of its
+    # vertices inside them. At 243 it is in the port fuel rail instead,
+    # which runs the length of this flank at y 238-252. Outboard of the
+    # cover's own edge at 245 there is a band, and it is 8 mm wide: the
+    # hypercar's bodywork closes to 253 at this height, and a 10 mm pipe put
+    # 4.3 mm of itself through the car. Going over the cover instead is not
+    # available -- its crown is at z 242 and the pump sits against its
+    # flank, so a line leaving the pump is inside the cover until it climbs
+    # out, and it meets the breather gallery, the intake camshaft's tail and
+    # the charge pipes doing it. A direct-injection supply line is a 7 mm
+    # pipe on a real engine, which is what fits.
     out["fuel_hp_line"] = mesh.pipe(
-        [(24.0, 206.0, 168.0), (140.0, 226.0, 150.0),
-         (x_back, 226.0, 120.0), (x_back, 190.0, 72.0),
-         (p1r[0] + 12.0, p1r[1], p1r[2])], 5.0, SM, subdiv=3)
+        [(24.0, 218.0, 180.0), (120.0, 249.0, 176.0),
+         (x_back, 249.0, 150.0), (x_back, 190.0, 72.0),
+         (p1r[0] + 12.0, p1r[1], p1r[2])], 3.5, SM, subdiv=3)
 
     # and the same station, 22 mm higher, carries the pressure across to the
     # other bank. Above the crankcase, which stops at z 28, and below the
@@ -433,12 +453,19 @@ def _breathers():
         d = common.bank_dir(bank)
         way = [(H["x_rear"] - 90.0, d[1] * along, d[2] * along),
                (H["x_front"] + 120.0, d[1] * along, d[2] * along),
-               # outboard of the cam drive gears, which are 241 of half
+               # Outboard of the cam drive gears, which are 241 of half
                # width and stand to z 241, rather than over the top of them
+               # -- and the whole transit across their station has to be
+               # outboard, not just its ends. The gallery runs along the
+               # cover at 238 of half width, three millimetres inside them,
+               # and the run out to 258 happened at x -248 to -280, which is
+               # the gear band. Going over the top instead is not available:
+               # the tailpipes fill z 229 to 322 from y -115 to 115 and the
+               # two galleries have to meet in there.
                (H["x_front"] + 16.0, d[1] * along * 1.02, d[2] * along * 1.02),
-               (B["x_front"] - 16.0, d[1] * 258.0, 236.0),
-               (B["x_front"] - 48.0, d[1] * 236.0, 230.0),
-               (B["x_front"] - 56.0, d[1] * 210.0, 224.0)]
+               (B["x_front"] - 14.0, d[1] * 268.0, 240.0),
+               (B["x_front"] - 50.0, d[1] * 268.0, 236.0),
+               (B["x_front"] - 58.0, d[1] * 228.0, 226.0)]
         if bank == 1:                      # the right bank crosses the front
             way.append((B["x_front"] - 58.0, 40.0, 216.0))
         way.append(junction)
@@ -450,10 +477,22 @@ def _breathers():
     # plenum, which stands on the head from z 30 to 110, and forward of the
     # block so it misses the engine mount and the oil pump.
     vent = spec.oil_tank_union("breather")
+    # It also stays outboard until it is level with the tank's lid, at
+    # y -252. Turning in at x -288 took it diagonally across the number one
+    # scavenge line, which climbs from the pan at y -150 to the pump's port
+    # at -200 and whose own wall reaches -234. Above z -120 the car allows
+    # 293 of half width, so there is room to pass outside it.
+    #
+    # It comes back inboard BELOW the oil pump, not across it. The pump
+    # fills y -250 to -155 from z -59 up, so anything crossing that band
+    # above -59 goes through it, and the feed line landing on the pump's
+    # own union sits at y -155, z -60. At z -86 the vent passes under both
+    # and arrives at the tank's lid from underneath its own union.
     pipes.append(mesh.pipe(
         [junction, (B["x_front"] - 60.0, -186.0, 168.0),
-         (B["x_front"] - 60.0, -236.0, 60.0), (B["x_front"] - 56.0, -238.0, -74.0),
-         (vent[0] - 34.0, -176.0, vent[2] - 4.0), vent], 10.0, SM, subdiv=3))
+         (B["x_front"] - 60.0, -242.0, 60.0), (B["x_front"] - 56.0, -252.0, -74.0),
+         (vent[0] - 26.0, -252.0, vent[2] - 4.0),
+         (vent[0] - 26.0, -146.0, vent[2] - 8.0), vent], 10.0, SM, subdiv=3))
     out["breathers"] = mesh.join(*pipes)
     out["catch_tank"] = _catch_tank()
     out["dipstick"] = mesh.pipe(

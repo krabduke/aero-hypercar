@@ -110,7 +110,10 @@ def _injection():
         # high up the body, where the connector actually is: at 28 of 48 it
         # was level with the runner's crown and buried in it
         plug_at = (reach - FEED_LEN) * 0.78
-        plug = (tip[0] + 10.0, tip[1] + u[1] * plug_at, tip[2] + u[2] * plug_at)
+        # forward of the injector, not aft: the high-pressure fuel pump sits
+        # on the right bank's cam drive from x -36 to 36, and cylinder 4's
+        # connector at tip + 10 landed inside it, 214 vertices deep
+        plug = (tip[0] - 10.0, tip[1] + u[1] * plug_at, tip[2] + u[2] * plug_at)
         out[f"pfi_plug_{n}"] = shapes.connector(*plug, 14.0, 12.0, 10.0, 2)
         inlet = tuple(tip[k] + u[k] * (reach - FEED_LEN) for k in range(3))
         out[f"pfi_feed_{n}"] = mesh.pipe([inlet, rail], 3.5, SM)

@@ -228,22 +228,45 @@ def _pumps():
     for sgn in (-1.0, 1.0):
         y_rail = sgn * (spec.BLOCK["half_width"] + 8.0)
         z_top = spec.COOLANT["outlet_z"] + spec.COOLANT["outlet_len"] - 20.0
+        # The forward run is at x -242, not x_fwd = -250. The accessory
+        # belt's tensioner occupies x -334 to -246 from y -172 to -66, and
+        # the left rail crossed it on its way in to the thermostat. The pipe
+        # is 14 mm in the radius, so clearing the tensioner means the
+        # centreline sits 6 mm BEHIND the block's front face, not 10 in
+        # front of it -- at -242 the pipe's own wall still reached -256.
+        #
+        # It also starts 8 mm further out. At y_rail - 12 the first bend
+        # clipped number one cylinder's intake valve, which stands at
+        # y -103 to -112 at this height.
+        x_rail = spec.BLOCK["x_front"] + 6.0
         wp.append(mesh.pipe(
-            [(-190.0, y_rail, z_top), (-208.0, y_rail - sgn * 12.0, z_top + 6.0),
-             (x_fwd, y_rail - sgn * 12.0, z_top + 26.0),
-             (x_fwd, sgn * 56.0, stat[2] - 6.0), (stat[0] + 30.0, sgn * 22.0,
-                                                  stat[2])], 14.0, SM, subdiv=3))
+            [(-190.0, y_rail, z_top), (-208.0, y_rail - sgn * 4.0, z_top + 6.0),
+             (x_rail, y_rail - sgn * 4.0, z_top + 26.0),
+             (x_rail, sgn * 56.0, stat[2] - 6.0), (stat[0] + 30.0, sgn * 22.0,
+                                                   stat[2])], 14.0, SM, subdiv=3))
     # thermostat back to the pump's eye
     wp.append(mesh.pipe(
         [(stat[0] + 26.0, 26.0, stat[2] - 10.0), (x_fwd, 90.0, stat[2] - 40.0),
          (x_fwd, 170.0, 10.0), (pump_in[0] - 40.0, pump_in[1], pump_in[2]),
          pump_in], 15.0, SM, subdiv=3))
-    # the header tank on the front face, above the thermostat
-    tv, tf = mesh.tube(x_fwd - 32.0, x_fwd + 8.0, 0.0, 44.0, 22)
-    tv = [(px, py + 130.0, pz + 150.0) for (px, py, pz) in tv]
+    # The header tank on the front face, above the thermostat.
+    #
+    # At y 130, z 150 it was a 44 mm barrel spanning y 86-174 and z 106-194,
+    # and the right bank's exhaust camshaft noses forward to x -254 at
+    # y 124-153, z 180-208. The tank and the camshaft were the same metal;
+    # rerouting the head rails, which is what I tried first, moved a pipe
+    # that was never the problem and put it through an intake valve instead.
+    # The right bank's two camshafts box it in: the exhaust cam is at
+    # y 124-153, z 180-208 and the intake cam at y 180-208, z 124-153, and a
+    # 44 mm barrel is too fat to sit in the corner between them. At y 132,
+    # z 100 on a 38 mm radius it passes under both -- 10 mm clear of the
+    # intake cam -- and stays clear of the thermostat inboard of it at
+    # y +/-52 and of the water pump below it, which tops out at z 30.
+    tv, tf = mesh.tube(x_fwd - 32.0, x_fwd + 8.0, 0.0, 38.0, 22)
+    tv = [(px, py + 132.0, pz + 100.0) for (px, py, pz) in tv]
     wp.append((tv, tf))
-    wp.append(mesh.pipe([(x_fwd - 12.0, 130.0, 150.0),
-                         (x_fwd - 12.0, 60.0, 140.0),
+    wp.append(mesh.pipe([(x_fwd - 12.0, 132.0, 100.0),
+                         (x_fwd - 12.0, 60.0, 118.0),
                          (stat[0] - 6.0, 18.0, stat[2] + 30.0),
                          (stat[0] - 6.0, 0.0, stat[2] + 34.0)], 8.0, SM,
                         subdiv=3))
@@ -664,10 +687,15 @@ def _dry_sump():
     # front of the engine
     feed = spec.oil_tank_union("feed")
     pin = spec.oil_pump_union("feed")
+    # Outboard of the left mount bracket on the way up. The bracket fills
+    # x -186 to -114 from z -74 to 21 and the climb was at y -180 to -200,
+    # straight through it: 295 vertices. Out at -236 it is clear of the
+    # bracket and still inside the 293 mm the car allows above z -120.
     parts.append(mesh.pipe(
         [feed, (-214.0, -180.0, feed[2] + 10.0),
-         (pin[0] - 8.0, -180.0, -140.0),
-         (pin[0] - 8.0, -200.0, -60.0), pin], 12.0, SM, subdiv=3))
+         (pin[0] - 8.0, -190.0, -140.0),
+         (pin[0] - 8.0, -236.0, -90.0),
+         (pin[0] - 8.0, -220.0, -50.0), pin], 12.0, SM, subdiv=3))
 
     # and the pressure stage feeds the cooler, which hands on to the filter
     # and the filter to the block's main gallery

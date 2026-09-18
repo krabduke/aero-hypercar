@@ -166,14 +166,28 @@ def _block_detail():
     # either of them. ancillaries.py hangs a bracket at x = -150 and +150 on
     # BOTH banks; the only two bosses down at mount height were at x -80 on
     # one bank and +80 on the other, so not one of the four brackets that
-    # carry the engine had anything to bolt to. The four at z 60 stay: those
-    # are the upper brackets.
+    # carry the engine had anything to bolt to.
+    #
+    # The other four were at x +/-172, z 60 and the note here said they were
+    # "the upper brackets". There are no upper brackets: ancillaries builds
+    # one bracket per side per station and nothing at z 60. What is at
+    # x +/-172, z 22-64 is a water outlet -- the bosses were inside all four
+    # of them, 60 voxels of 60.
+    #
+    # z 40, not 4: the bank's flank is what they bolt to, and at 4 they were
+    # 20 mm below it, hanging off the crankcase joint with nothing under
+    # them.
+    #
+    # There is one gap on this flank at mount height and it is 34 mm wide.
+    # The knock sensors sit at x -102, 0 and 102 and reach out to 124; the
+    # water outlets start at 158. The upper bosses go at x +/-141 between
+    # them, low enough that the outlet above them is not in the way either.
     bosses = []
-    for (x, y, z) in ((x0 + 60.0, hw, 60.0), (x0 + 60.0, -hw, 60.0),
-                      (x1 - 60.0, hw, 60.0), (x1 - 60.0, -hw, 60.0),
+    for (x, y, z) in ((-141.0, hw, 40.0), (-141.0, -hw, 40.0),
+                      (141.0, hw, 40.0), (141.0, -hw, 40.0),
                       (-150.0, hw, -30.0), (-150.0, -hw, -30.0),
                       (150.0, hw, -30.0), (150.0, -hw, -30.0)):
-        bv, bf = shapes.bolt_boss(0, 0, 0, 13.0, 12.0)
+        bv, bf = shapes.bolt_boss(0, 0, 0, 12.0, 12.0)
         sgn = 1.0 if y > 0 else -1.0
         bosses.append(([(px * 0 + pz + x, y + sgn * py, px + z)
                         for (px, py, pz) in bv], bf))

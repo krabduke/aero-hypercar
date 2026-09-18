@@ -137,7 +137,10 @@ def _cooling():
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 27.0), (34.0, 27.0), (38.0, 31.0),
          (44.0, 31.0), (48.0, 27.0), (62.0, 27.0), (62.0, 0.0)],
-        x - 50.0, 0.0, zc, axis="x", seg=20))
+        # x - 32, not - 50: the stub's mouth was at -298 and the crank
+        # trigger wheel occupies -313 to -287 at this height, so the top
+        # hose connection was inside the trigger
+        x - 32.0, 0.0, zc, axis="x", seg=20))
     # the thermostat itself, inside: wax capsule, frame and jiggle pin
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 34.0), (6.0, 36.0), (12.0, 34.0), (12.0, 20.0),
