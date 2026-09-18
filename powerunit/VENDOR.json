@@ -2,7 +2,7 @@
  "source": "car-engine",
  "files": {
   "spec.py": "31fc4085a16e",
-  "mesh.py": "be66b4d48c10",
+  "mesh.py": "9ce861e0f11e",
   "shapes.py": "26402caf3461",
   "gaspath.py": "a44a9a7da218",
   "parts/__init__.py": "e3b0c44298fc",
@@ -13,10 +13,10 @@
   "parts/plumbing.py": "bcf22315922b",
   "parts/induction.py": "07640a5367a0",
   "parts/turbo.py": "bbe5ce3a2ed3",
-  "parts/hybrid.py": "408392da8070",
+  "parts/hybrid.py": "081c635fd15e",
   "parts/drive.py": "12e3bec3ab49",
   "parts/detail.py": "bdac3762e984",
   "parts/ancillaries.py": "2c7d6f8c617c"
  },
- "commit": "4479f8f"
+ "commit": "98f25e6"
 }

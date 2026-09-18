@@ -114,7 +114,13 @@ def _hv_loom():
                 (spec.BLOCK["x_rear"] * 0.70, sgn * fl, under),
                 (term[0] + sgn * 40.0, term[1] * 1.34, under + 6.0),
                 term]
-        out[f"hv_store_{tag}"] = mesh.pipe(path, 5.0, SM, subdiv=4)
+        # subdiv 16, not 4. A high-voltage run is a bundle in a conduit
+        # clipped to the engine; at four subdivisions between waypoints that
+        # are 100 to 300 mm apart it came out as a polygon in space, and the
+        # three orange runs together read as a roll cage round the engine
+        # rather than as its loom.
+        out[f"hv_store_{tag}"] = mesh.pipe(
+            mesh.smooth_path(path, 3), 5.0, SM, subdiv=2)
 
     # inverter forward along the flank to the MGU-K on the crank nose
     # forward of the timing cover, which spans x -284..-266: a terminal you
@@ -128,11 +134,18 @@ def _hv_loom():
             (drop_x - 16.0, -(flank_l + 14.0), -150.0),
             (spec.BLOCK["x_rear"] * 0.55, -(flank_l + 14.0), under - 8.0),
             (spec.BLOCK["x_front"] * 0.55, -(flank_l + 14.0), under - 8.0),
-            (spec.BLOCK["x_front"] - 26.0, -140.0, -132.0),
-            (spec.BLOCK["x_front"] - 34.0, -128.0, -96.0),
-            (Y["mguk_x"] + 22.0, -106.0, -42.0),
+            # Round the OUTSIDE of the timing cover, which is a 152 mm disc
+            # on the crank from x -284 to -266. The MGU-K is forward of it,
+            # so a cable that comes inboard before it is past the cover goes
+            # through the cover -- and rounding the corners of this run, which
+            # is what stopped it reading as a cage, pulled it in far enough
+            # to do exactly that.
+            (spec.BLOCK["x_front"] - 26.0, -222.0, -148.0),
+            (spec.BLOCK["x_front"] - 62.0, -196.0, -92.0),
+            (Y["mguk_x"] - 8.0, -132.0, -40.0),
             motor]
-    out["hv_motor_k"] = mesh.pipe(path, 6.0, SM, subdiv=4)
+    out["hv_motor_k"] = mesh.pipe(
+        mesh.smooth_path(path, 3), 6.0, SM, subdiv=2)
     out["hv_motor_k_connector"] = shapes.connector(*motor, 24.0, 20.0, 18.0, 3)
 
     # and up over the cam cover into the vee for each MGU-H. The vee itself is
@@ -153,7 +166,8 @@ def _hv_loom():
                 # over the primaries, which peak at z 368, before dropping in
                 (x, sgn * 50.0, top + 18.0),
                 term]
-        out[f"hv_motor_h_{index}"] = mesh.pipe(path, 4.0, SM, subdiv=4)
+        out[f"hv_motor_h_{index}"] = mesh.pipe(
+            mesh.smooth_path(path, 3), 4.0, SM, subdiv=2)
         out[f"hv_motor_h_connector_{index}"] = shapes.connector(
             *term, 18.0, 16.0, 14.0, 3)
     return out

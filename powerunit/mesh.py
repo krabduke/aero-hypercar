@@ -187,6 +187,31 @@ def _cross(a, b):
             a[0] * b[1] - a[1] * b[0])
 
 
+def smooth_path(path, rounds=3):
+    """Round the corners off a polyline, so a swept run reads as a cable or a
+    hose and not as a polygon in space.
+
+    `pipe`'s `subdiv` inserts points ALONG each segment. That makes the tube
+    finer but leaves every corner exactly as sharp as it was, which is why
+    raising it from 4 to 16 changed nothing about the high-voltage loom: the
+    three runs still described a hard-edged cage round the engine. This is
+    Chaikin's corner cut, which does the other thing, and it keeps the two
+    end points so a run still lands on the terminals it is drawn between.
+    """
+    pts = [tuple(p) for p in path]
+    for _ in range(max(0, int(rounds))):
+        if len(pts) < 3:
+            break
+        out = [pts[0]]
+        for i in range(len(pts) - 1):
+            a, b = pts[i], pts[i + 1]
+            out.append(tuple(a[k] * 0.75 + b[k] * 0.25 for k in range(3)))
+            out.append(tuple(a[k] * 0.25 + b[k] * 0.75 for k in range(3)))
+        out.append(pts[-1])
+        pts = out
+    return pts
+
+
 def pipe(path, radius, segments=16, caps=True, subdiv=1):
     segments = _T(segments)
     """Sweep a circular section along a 3D polyline using parallel transport,
