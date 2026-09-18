@@ -277,6 +277,27 @@ EXPECTED = [
     ("diffuser_fences", "floor_strake_"),
     ("front_y250_vanes", "nose_pylons"),
     ("rear_light_panel", "fan_fairing_"),
+    # ----------------------------------------------------------------
+    # The ejector. `spec.FAN_EXHAUST` sets the jet's lower lip deliberately
+    # just under the diffuser exit -- "which is the ejector" -- so the
+    # tunnels discharge into the fan's exhaust duct and the jet entrains
+    # them. Measured at the exit plane the nozzle spans y 56-523 and z
+    # 163-661 while the diffuser's trailing edge is y 210-586 at z 248-269,
+    # so the lip runs through the nozzle's bore for most of its span and
+    # clips the outboard wall at one spanwise station, 10 vertices of 240.
+    # The nozzle area is held at the fan annulus on purpose: contracting it
+    # would entrain harder and cost flow, and the flow is the downforce.
+    # `tools/check_fan_exhaust.py` tests the jet envelope in 3-D and passes.
+    # ----------------------------------------------------------------
+    ("diffuser_lip", "fan_nozzle_"), ("diffuser_lip", "fanduct"),
+    ("diffuser_fences", "fanduct"), ("fan_nozzle_", "tunnel_"),
+    # The nose cape's trailing edge lands on the front wing's mainplane --
+    # 26 vertices at x 340-375, which is the joint between them.
+    ("nose_cape", "front_wing_main"),
+    # A rear toe link and a rear lower wishbone both pick up on the same
+    # upright, 30 mm apart, so their rod ends touch there. Along their
+    # spans they are clear: the link runs under the arm the whole way.
+    ("trackrod_", "wishbone_"),
     # the loom is clipped along the top wishbone on its way to the corner
     ("wiring_loom", "wishbone_"),
     ("seat", "extinguisher"),   # it is strapped to the seat back

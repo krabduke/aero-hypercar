@@ -175,6 +175,11 @@ def build():
         # would run into the rear anti-roll blade -- x 3869 to 4059, z 216
         # to 280 -- so it goes UNDER the blade, at z 190, which is still
         # 46 mm clear of the tunnel roof at 144.
+        #
+        # It runs under the lower wishbone for the whole of its length too.
+        # Outboard at low_z + 42 and inboard below the arm, the two crossed
+        # at y 530, z 259 -- a toe link through a wishbone. Outboard at
+        # low_z - 30 it stays below the arm from the upright to the casing.
         trk_x = x + (-230.0 if front else -10.0)
         # Below the driveshaft, not across it. At low_z + 70 the rear toe link
         # ran at z 294-346 and the shaft is 294-396: the link went through it.
@@ -186,7 +191,7 @@ def build():
         # rack and nowhere near the arm.
         SA = spec.STEER_ARM
         t_out = ((SA["end_x"], sgn * SA["y_out"], SA["end_z"]) if front
-                 else (x, y * 0.77, low_z + 42.0))
+                 else (x, y * 0.77, low_z - 30.0))
         t_in = ((x - 200.0, sgn * S["inboard_front_y"] * 0.72,
                  SA["end_z"] + 8.0) if front
                 else (trk_x, sgn * inb_y * 0.8, low_z - 50.0))

@@ -418,7 +418,9 @@ def _tether(x, y, z, w, tag):
     s = _sgn(y)
     inboard = y - s * (w / 2 + 120.0)
     parts = []
-    for k, (dx, dz) in enumerate(((-150.0, 40.0), (150.0, -30.0))):
+    # the aft strand drops further: at dz -30 it crossed the pushrod on its
+    # way in, three vertices deep at x 979, y 504
+    for k, (dx, dz) in enumerate(((-150.0, 40.0), (150.0, -130.0))):
         # 0.94 of the wheel's own y: the upright's inner face is at 728 and
         # this anchor was landing at 701, just inboard of the casting it is
         # supposed to be bolted to.

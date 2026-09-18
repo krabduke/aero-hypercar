@@ -61,8 +61,12 @@ def _brake_ducts():
         feed = y - sgn * (w * 0.5 + BD["width"] * 0.55 + 10.0)
 
         # the scoop: a shaped inlet facing forward, inboard of the tyre
+        # r * 0.04 below the axle, not 0.26. At 0.26 the mouth spanned
+        # z 215-345 and the front track rod sweeps across it at z 231 on its
+        # way from the steering arm to the rack -- a steering link through
+        # the middle of a brake duct's inlet.
         out[f"bduct_inlet_{tag}"] = shapes.rounded_box(
-            x - r * 0.92, feed, z - r * 0.26, 90.0, BD["width"],
+            x - r * 0.92, feed, z - r * 0.04, 90.0, BD["width"],
             BD["inlet_h"], 16.0, draft=3.0)
         # the duct carrying it back to the drum
         # the duct narrows as it goes back, because the drum needs velocity
@@ -585,7 +589,9 @@ def _pit_hardware():
         # because the temperature that matters is the difference between the
         # inner shoulder and the outer one -- one lens on a box tells you
         # nothing about how the car is using the tyre.
-        hx, hy, hz = x - od * 0.10, y - sgn * w * 0.46, od * 0.34
+        # 0.55 of the tread width in, not 0.46: at 0.46 the array's outboard
+        # face sat at the same station as the track rod's outer rod end.
+        hx, hy, hz = x - od * 0.10, y - sgn * w * 0.55, od * 0.34
         parts = [shapes.rounded_box(hx, hy, hz, 40.0, 26.0, 20.0, 5.0)]
         for i in range(5):
             f = (i + 0.5) / 5

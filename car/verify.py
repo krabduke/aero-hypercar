@@ -45,8 +45,16 @@ def _wheel_clashes():
     """
     from parts import (chassis, floor as floormod, wings, wheels, suspension,
                        fans, powertrain, aerodetail, detail)
-    allowed = ("tyre", "rim", "wheel", "disc", "caliper", "upright",
-               "wishbone", "pushrod", "driveshaft", "brake_duct", "rocker")
+    # The prefixes have to be the ones the parts are actually called.
+    # "brake_duct" matched nothing -- every duct on this car is `bduct_` --
+    # and the hub, the steering arm, the tether and the track rod were all
+    # missing, though a track rod's outer end bolts to the steering arm and
+    # the steering arm bolts to the upright, which is 70 mm inside the rim.
+    # A corner's own hardware belongs in its own wheel.
+    allowed = ("tyre", "rim", "wheel", "disc", "caliper", "brake_pad",
+               "upright", "hub", "wishbone", "pushrod", "pullrod",
+               "driveshaft", "bduct_", "rocker", "steering_arm", "tether",
+               "trackrod")
     built = {}
     for m in (chassis, floormod, wings, suspension, fans, powertrain,
               aerodetail, detail):
@@ -70,7 +78,7 @@ def _wheel_clashes():
                     hits.append(f"{name} into wheel {tag}")
                     break
     if hits:
-        return False, "; ".join(sorted(set(hits))[:5])
+        return False, "; ".join(sorted(set(hits))[:12])
     return True, "4 corners clear"
 
 
