@@ -257,6 +257,67 @@ def mode_cutaway(s):
     shoot("03_cutaway")
 
 
+def corners_of(prefixes):
+    """`collect_corners` over named parts only, for a close view of one area."""
+    from mathutils import Vector as V
+    sel = [o for o in meshes() if o.name.startswith(tuple(prefixes))]
+    if not sel:
+        return collect_corners()
+    xs, ys, zs = [], [], []
+    for o in sel:
+        for c in o.bound_box:
+            w = o.matrix_world @ V(c)
+            xs.append(w.x); ys.append(w.y); zs.append(w.z)
+    cen = V(((min(xs)+max(xs))/2, (min(ys)+max(ys))/2, (min(zs)+max(zs))/2))
+    CORNERS.clear()
+    for o in sel:
+        for c in o.bound_box:
+            CORNERS.append((o.matrix_world @ V(c)) - cen)
+    return cen
+
+
+def mode_fan(s):
+    """The fan, from under the car.
+
+    This is the thing the whole car is arranged around -- the floor's
+    tunnels feed it, the diffuser discharges into its exhaust, and the 650 kg
+    it pulls down is what makes the lap time. It is also the one assembly
+    nothing in the render set has ever shown: it lives under the floor, so
+    the hero and the plan see bodywork and the cutaway sections the skin on
+    a plane that misses it entirely.
+    """
+    from mathutils import Vector as V
+    setup_render(s); setup_world(0.55); setup_lights()
+    # the floor is what you would be looking through
+    # the floor is what you would be looking through, and the fairing and
+    # the duct's own shell are what would be in the way once you were
+    for o in meshes():
+        if o.name.startswith(("floor_surface", "floor_plank", "floor_skirts",
+                              "tunnel_", "floor_strake_", "floor_fence_",
+                              "diffuser_", "floor_edge", "fanduct",
+                              "fan_fairing_", "floor_plenum_edge_",
+                              "rear_light_panel", "crash_structure",
+                              "fan_scroll_", "fan_nozzle_", "exhaust",
+                              "beam_wing", "rear_wing_", "rear_endplate_",
+                              "rear_pylon_", "tether_r",
+                              "floor_fan_throat_")):
+            o.hide_render = True
+    # framed on the rotor, not on the duct: the duct spans the whole width
+    # of the car, so a frame fitted to it is a frame fitted to the car
+    c = corners_of(("fan_rotor_r",))
+    rad = max(V(p).length for p in CORNERS)
+    # from below, behind and outboard: the rotor's disc is horizontal, so a
+    # view from the side is a view of its edge
+    n = V((0.30, 0.34, -0.89)).normalized() * (rad * 5.2)
+    cd = bpy.data.cameras.new("cam_fan"); cd.lens = 52
+    ob = bpy.data.objects.new("cam_fan", cd)
+    bpy.context.scene.collection.objects.link(ob)
+    bpy.context.scene.camera = ob
+    ob.location = c + n
+    ob.rotation_euler = (-n).to_track_quat("-Z", "Y").to_euler()
+    shoot("05_fan")
+
+
 def mode_exploded(s):
     setup_render(s); setup_world(); setup_lights()
     moves = {
@@ -281,7 +342,7 @@ def mode_exploded(s):
     shoot("04_exploded")
 
 
-MODES = {"hero": mode_hero, "top": mode_top,
+MODES = {"hero": mode_hero, "top": mode_top, "fan": mode_fan,
          "cutaway": mode_cutaway, "exploded": mode_exploded}
 
 if __name__ == "__main__":
@@ -289,7 +350,7 @@ if __name__ == "__main__":
     mode = argv[0]
     samples = int(argv[1]) if len(argv) > 1 else 128
     if mode == "all":
-        for m in ("hero", "top", "cutaway", "exploded"):
+        for m in ("hero", "top", "cutaway", "exploded", "fan"):
             MODES[m](samples)
     else:
         MODES[mode](samples)
