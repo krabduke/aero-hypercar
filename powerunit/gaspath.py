@@ -307,8 +307,13 @@ def boost_path(side):
     # to get back -- through the MGU-H, which is a 64 mm rotor sitting on the
     # shaft exactly there.
     return [compressor_outlet(0 if side < 0 else 2),
-            (tx + hw * 0.4, side * 70.0, T["z"] - 18.0),
-            (tx, side * 118.0, 216.0),
+            # The station at which this crosses the primaries is not the
+            # turbo's. The eight primaries climb the vee to the collector and
+            # leave one gap on each bank, and the pipe goes through it: tied
+            # to `tx`, moving the turbos 32 mm outboard took the crossing
+            # forward into number one's tube, 142 of its vertices deep.
+            (tx + hw * 1.6, side * 70.0, T["z"] - 18.0),
+            (tx + hw * 1.2, side * 118.0, 216.0),
             (-152.0, side * 150.0, 250.0),
             (152.0, side * 150.0, 250.0),
             (120.0, side * 120.0, 300.0),

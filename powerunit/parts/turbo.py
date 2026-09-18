@@ -486,31 +486,30 @@ def _inlets():
         # would run into the other one.
         # near enough vertical: the two banks' primaries climb the vee at
         # y = +-85, so a duct that leans out at all lands in one of them
-        # This duct overhangs the wheel's inducer, and it is not a local
-        # fault. The compressor eyes face each other across the middle of
-        # the vee 29 mm apart, so each duct has to turn upward within a
-        # couple of centimetres of its own eye plane -- which puts its first
-        # ring at about 70 degrees to the shaft, reaching out over blades
-        # whose tips are 2.2 mm away. Measured: fifteen of its 9824 vertices
-        # end up inside the wheel.
+        # An axial stub off the eye, then up.
         #
-        # Three ways out were tried and all of them cost more than they
-        # bought. Moving the duct outboard of the wheel moves it towards the
-        # other turbo's duct and the two collide instead (40%). Sizing the
-        # bore to the eye it bolts to, which is the right thing on its own
-        # terms, makes both ducts big enough to thread through each other
-        # over their whole height (204 vertices, the full run from z 243 to
-        # 380). Belling only the mouth halves the wheel overlap and still
-        # leaves the ducts touching at 42%.
-        #
-        # What is actually wrong is the clocking: two compressors breathing
-        # from the same 29 mm of vee. That is a layout decision in
-        # `turbo_side`, not a fix to this function, so this stays as it is
-        # and the permission below says what it is covering.
-        path = [(eye[0] - ib * 8.0, 0.0, T["z"]),
-                (eye[0] + ib * 2.0, sgn * 8.0, T["z"] + 30.0),
-                (eye[0] - ib * 2.0, sgn * 22.0, T["z"] + 72.0),
-                (eye[0] - ib * 8.0, sgn * 30.0, T["z"] + 106.0)]
+        # This used to start already turning, because it had to: the two
+        # compressor eyes faced each other 29 mm apart and there was nowhere
+        # to run. Its first ring therefore stood at about 70 degrees to the
+        # shaft and reached out over the wheel's inducer, whose blade tips
+        # are 2.2 mm from the eye plane. Sizing the bore to the eye it bolts
+        # to made the two ducts thread through each other instead, over the
+        # whole run from z 243 to 380, and belling only the mouth left them
+        # touching at 42%. The fault was never in this function -- it was the
+        # turbos' spacing, and `spec.TURBO["x"]` now gives each duct its own
+        # side of the vee.
+        r_eye = T["comp_r"] * T["comp_wheel_frac"] + T["wheel_tip_clear"]
+        # `compressor_path[0]` is 60 mm off the housing centre and the eye
+        # snout's mouth is 76.6, so that point is INSIDE the snout -- the
+        # stub runs out from it along +ib, away from the turbo, not back
+        # into it over the wheel and the shaft.
+        # ...and then back outboard as it climbs, so the two ducts diverge
+        # instead of meeting over the middle of the vee
+        path = [(eye[0] + ib * 2.0, 0.0, T["z"]),
+                (eye[0] + ib * 22.0, sgn * 20.0, T["z"] + 10.0),
+                (eye[0] + ib * 16.0, sgn * 36.0, T["z"] + 48.0),
+                (eye[0] + ib * 2.0, sgn * 38.0, T["z"] + 82.0),
+                (eye[0] - ib * 10.0, sgn * 34.0, T["z"] + 106.0)]
         # A duct with a bore, not a capped rod.
         #
         # mesh.pipe caps both ends, so this finished in a flat disc 60 mm
@@ -520,7 +519,10 @@ def _inlets():
         # compressor end and by the flange at the other, so the part is still
         # watertight and you can see down it.
         wall = 4.0
-        r_out = [26.0, 27.0, 29.0, 30.0]
+        # ...and it necks down from the eye's own bore to the duct's within
+        # the first two stations, because the two ducts leave eyes that are
+        # 81 mm apart and each is 88 mm across at the eye
+        r_out = [r_eye + 4.0, 34.0, 30.0, 29.0, 30.0]
         parts = [_bored_duct(path, r_out, wall, spec.RES["pipe"], 5)]
         r_in = [r - wall for r in r_out]
         end = (path[-1][0] + (path[-1][0] - path[-2][0]),

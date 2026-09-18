@@ -214,7 +214,12 @@ def _charge():
         # in: this bank's two pipes go up at y = +-85, and the charge pipe
         # leaves the volute at y = +-62, so the only way past them is under
         # them -- they are 70 mm higher by the time they get there.
-        out_x = mouth[0] - (30.0 if bank == 0 else -30.0)
+        # ...and it crosses at the station where this bank's primaries have
+        # already climbed, which is BETWEEN two cylinders and not over one.
+        # Offset the other way, as it used to be relative to a turbo at 118,
+        # it now lands on number one's tube just out of the port, where the
+        # primary is still low and there is nothing to pass under.
+        out_x = mouth[0] + (3.0 if bank == 0 else -3.0)
         path = [mouth,
                 # y 82, not 64: this is a 60 mm pipe, so at 64 its inboard
                 # wall is at y 34 and the MGU-H is a 64 mm rotor on the shaft
