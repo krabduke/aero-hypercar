@@ -103,7 +103,15 @@ def build():
     # Its station used to be a number in the spec that had drifted 34 mm
     # clear of the engine's rear face, leaving the two structural halves of
     # the car not touching.
-    x_rear = max(v[0] for v in out["engine"][0])
+    #
+    # It bolts to the BELLHOUSING, which is the flange it is actually held
+    # by, and not to whatever vertex of the engine happens to be furthest
+    # aft. That was a high-voltage cable once, and then -- when the turbine
+    # outlet moved back past the wheel where it belongs, and the tailpipe
+    # behind it with it -- it was a tailpipe, which pushed the whole gearbox
+    # 36 mm aft and 1.2 mm out through the car's own bodywork.
+    bell_v, _bell_f = built["bellhousing"]
+    x_rear = max(v[0] for v in bell_v) + PT["engine_x"]
     out["gearbox"] = _gearbox(x_rear)
     # A radiator drawn as a solid block is the laziest part on a car. These
     # are cores: tubes with fin packs between them, in a frame, with header

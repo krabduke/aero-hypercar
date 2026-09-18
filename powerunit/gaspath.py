@@ -179,6 +179,11 @@ def turbo_side(bank_pair):
     return i, T["x"][i], (-1.0 if i == 0 else 1.0), (1.0 if i == 0 else -1.0)
 
 
+def turbine_wheel_depth():
+    """Inducer face to exducer face, the same number detail.py builds to."""
+    return T["turb_r"] * T["turb_wheel_frac"] * T["wheel_depth_frac"]
+
+
 def turbine_scroll(bank_pair):
     """The turbine volute, as (point, passage radius) round the spiral.
 
@@ -197,10 +202,21 @@ def turbine_scroll(bank_pair):
         # The passage centreline has to clear the wheel: at 0.62 r it ran
         # through the blade tips, so the volute and the turbine it wraps were
         # the same metal.
+        #
+        # Clearing it at the first station is not clearing it. The centreline
+        # tightened faster than the passage shrank, so the inner wall crept in
+        # a third of a millimetre a station and was 5.2 mm inside the blade
+        # tips by the cutwater -- the volute and the wheel were the same metal
+        # again, just further round. The inner wall belongs ON the shroud
+        # circle the whole way: that is what a volute is, a passage whose
+        # inner wall is the wheel's shroud and whose outer wall spirals in as
+        # the area falls. The compressor next door has been drawn that way all
+        # along; this is the same line.
         a = math.radians(90.0 - 300.0 * f)
-        rr = r * (0.98 - 0.26 * f)
-        out.append(((x, rr * math.cos(a), T["z"] + rr * math.sin(a)),
-                    21.0 - 11.0 * f))
+        r_tip = r * T["turb_wheel_frac"]
+        pas = 21.0 - 11.0 * f
+        rr = max(r * (0.98 - 0.26 * f), r_tip + T["wheel_tip_clear"] + pas)
+        out.append(((x, rr * math.cos(a), T["z"] + rr * math.sin(a)), pas))
     return out
 
 
@@ -250,9 +266,13 @@ def turbine_path(bank_pair):
     hw = T["housing_w"] * 0.6
     pts = [collector_path(bank_pair)[-1]]
     pts.extend(p for (p, _r) in turbine_scroll(bank_pair))
-    # and out along the shaft axis, which is where a turbine discharges
-    pts.append((tx - ib * (hw + 18.0), 0.0, T["z"]))
-    pts.append((tx - ib * (hw + 52.0), 0.0, T["z"]))
+    # and out along the shaft axis, which is where a turbine discharges.
+    # Past the wheel first: the gas is still in the blades until the exducer
+    # face, and the outlet that used to start 6 mm off the volute plane was
+    # bored down the middle of them.
+    depth = turbine_wheel_depth()
+    pts.append((tx - ib * (hw + depth + 14.0), 0.0, T["z"]))
+    pts.append((tx - ib * (hw + depth + 50.0), 0.0, T["z"]))
     return pts
 
 

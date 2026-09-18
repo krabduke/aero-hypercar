@@ -28,6 +28,29 @@ def build():
     return out
 
 
+# Where the port rail sits, measured from the intake port: RAIL_OUT mm
+# outboard of the bore axis and RAIL_UP mm further up it. That lands it at
+# y 245, z 136 on the left bank -- the point in that pocket furthest from
+# anything, found by measuring the distance from every candidate rail axis
+# to every other part in the model rather than by eye. It clears its nearest
+# neighbour, the blow-off valve, by 20 mm.
+#
+# The pocket it has to live in is small and it is bounded on all four sides.
+# Below it are the runners, which reach z 116, and the two water unions
+# standing out of the charge cooler's end tanks, which reach 115.6 at
+# x +/- 152. Above and outboard is the cam cover, from z 147.7. Inboard is
+# the intake camshaft -- y 179.7 to 208.5, from z 124.5 up -- and its lobes,
+# which swing out to y 220. Outboard of 252 is wider than the car. Probed on
+# a 4 mm grid at every 10 mm of x along the bank, what is left is roughly
+# y 204 to 252 between z 116 and 122, opening out to y 220-252 above that.
+RAIL_OUT = 27.0
+RAIL_UP = 89.0
+
+# How much of the run from the injector's tip to the rail is the injector
+# itself; the rest is the union on top of it.
+FEED_LEN = 10.0
+
+
 def _injection():
     """Port injection: one injector into each runner, on its own low-pressure
     rail.
@@ -48,23 +71,48 @@ def _injection():
         runner = gaspath.runner_path(bank, x)[-2]
         d, lat = common.bank_dir(bank), common.bank_lat(bank)
         tip = tuple((port[k] + runner[k]) / 2 for k in range(3))
+        # The rail, and then the injector aimed at it.
+        #
+        # The whole system used to run straight out along -lat from the tip:
+        # injector 48 mm out, rail 68. Outboard of the port is where the
+        # plenum, the intercooler and the trumpets are, so the rail sat at
+        # y 223, z 49 -- inside the plenum, inside the intercooler and
+        # through every runner on the bank. Sixty of the engine's hundred
+        # and twenty remaining overlaps were this one mistake.
+        #
+        # Probed on a 5 mm grid at all four cylinder stations, the clear air
+        # on this side of the engine is a band from z 116 to 144 between
+        # y 200 and 250: above the runners and the intercooler, below the cam
+        # cover, outboard of the head. That is also where a port rail goes on
+        # a real engine -- along the flank of the head under the cam cover,
+        # with the injectors leaning up into it out of the runners.
+        rail = tuple(port[k] - lat[k] * RAIL_OUT + d[k] * RAIL_UP
+                     for k in range(3))
+        rail_points[bank].append(rail)
+        reach = math.dist(tip, rail)
+        u = mesh._normalise([rail[k] - tip[k] for k in range(3)])
+        w = (0.0, u[2], -u[1])          # across the injector, in the y-z plane
+        # the body fills the run bar the union, rather than being a fixed
+        # 48 mm that happened to be longer than the gap it had to fit
+        k_ax = (reach - FEED_LEN) / 48.0
         profile = [(0.0, 0.0), (0.0, 3.0), (12.0, 3.0),
                    (14.0, 7.0), (38.0, 7.0), (40.0, 9.0),
                    (46.0, 9.0), (48.0, 4.0), (48.0, 0.0)]
+        profile = [(ax * k_ax, r) for (ax, r) in profile]
         verts, faces = mesh.revolve_closed(profile, SM)
         verts = [(tip[0] + py,
-                  tip[1] - lat[1] * px + d[1] * pz,
-                  tip[2] - lat[2] * px + d[2] * pz)
+                  tip[1] + u[1] * px + w[1] * pz,
+                  tip[2] + u[2] * px + w[2] * pz)
                  for px, py, pz in verts]
-        if lat[1] * d[2] - lat[2] * d[1] < 0.0:
+        if -(u[1] * w[2] - w[1] * u[2]) < 0.0:
             faces = [tuple(reversed(face)) for face in faces]
         out[f"pfi_injector_{n}"] = (verts, faces)
-        plug = (tip[0] + 10.0, tip[1] - lat[1] * 28.0,
-                tip[2] - lat[2] * 28.0)
+        # high up the body, where the connector actually is: at 28 of 48 it
+        # was level with the runner's crown and buried in it
+        plug_at = (reach - FEED_LEN) * 0.78
+        plug = (tip[0] + 10.0, tip[1] + u[1] * plug_at, tip[2] + u[2] * plug_at)
         out[f"pfi_plug_{n}"] = shapes.connector(*plug, 14.0, 12.0, 10.0, 2)
-        inlet = tuple(tip[k] - lat[k] * 48.0 for k in range(3))
-        rail = tuple(tip[k] - lat[k] * 68.0 for k in range(3))
-        rail_points[bank].append(rail)
+        inlet = tuple(tip[k] + u[k] * (reach - FEED_LEN) for k in range(3))
         out[f"pfi_feed_{n}"] = mesh.pipe([inlet, rail], 3.5, SM)
     ends = []
     for bank, tag in ((0, "l"), (1, "r")):

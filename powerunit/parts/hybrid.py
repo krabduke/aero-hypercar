@@ -55,14 +55,42 @@ def build():  # placeholder probe
 
 
 def _hv_loom():
+    """The high-voltage cables, clipped to the engine.
+
+    These used to be Manhattan routes: every waypoint changed exactly one
+    coordinate, so every bend was a right angle, and `side` put them 24 mm
+    outboard of the plenums -- the widest thing on the engine. The result was
+    a bright orange rectangular cage standing off the castings, touching
+    nothing, and it was the first thing you saw in any render.
+
+    Real HV cable on a hybrid power unit runs in shielded conduit clipped
+    along the block, takes swept bends because 600 V cable has a bend radius,
+    and never stands proud of the widest casting. So: a corridor down the
+    crankcase flank at y 150 -- outboard of the crankcase at 101, inboard of
+    the engine mounts at 210, and below the plenums, which start at z 30 --
+    and enough waypoints that `mesh.pipe`'s subdivision has something to
+    round off.
+    """
     ix, iy, iz = Y["inverter_pos"]
     iw, _, ih = Y["inverter"]
     bx, by, bz = Y["battery_pos"]
     bw, bd, bh = Y["battery"]
-    rear = ix + iw / 2 + 38.0
-    side = max(spec.INTAKE["plenum_y"] + spec.INTAKE["plenum_r"] + 24.0,
-               abs(by) + bd / 2 + 24.0)
-    low = bz + bh / 2 + 35.0
+    # The corridor.
+    #
+    # Not down the block's side at head height: the heads fill y 47 to 215
+    # from z 59 to 224, the cam covers and the plenums fill everything
+    # outboard of them, and a cable crossing from the vee to the flank at
+    # that height goes through a cylinder head. The one clear way down is the
+    # inverter's own aft face at x 336, which is behind the bellhousing at
+    # 318, and then forward under the sump at y 168 -- outboard of the sump
+    # at 92 and the scavenge lines at 150, inboard of the oil cooler at 194.
+    # ...and it is not the same on both sides. The dry-sump tank fills
+    # y -240 to -116 from z -206 to -78 and the oil cooler sits outboard of
+    # it, so the left-hand run has to go outboard of the tank while the right
+    # has a clear corridor close in.
+    flank_l, flank_r = 252.0, 168.0
+    drop_x = 336.0
+    under = -196.0
     out = {}
     out["inverter_connectors"] = mesh.join(*[
         shapes.connector(ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1,
@@ -72,39 +100,62 @@ def _hv_loom():
         shapes.connector(bx - sgn * bw * 0.3, by + sgn * bd * 0.38,
                          bz + bh / 2 + 7.0, 34.0, 20.0, 14.0, 2)
         for sgn in (1.0, -1.0)])
-    for sgn, tag in ((-1.0, "l"), (1.0, "r")):
-        source = (ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1)
-        terminal = (bx - sgn * bw * 0.3, by + sgn * bd * 0.38,
-                    bz + bh / 2 + 7.0)
-        path = [source, (source[0], sgn * side, source[2]),
-                (rear, sgn * side, source[2]), (rear, sgn * side, low),
-                (terminal[0], sgn * side, low),
-                (terminal[0], terminal[1], low), terminal]
-        # Numbered, not sided. These two run to the MGU-H on each
-        # turbocharger, and the turbos are fore and aft of each other on the
-        # centreline -- so _l / _r claims a mirror in y that does not exist,
-        # and the structure audit checks exactly that claim. It was 235 mm
-        # from being true. turbo.py already carries the same note about
-        # turbine_housing_1 and _2 for the same reason.
-        out[f"hv_store_{'12'[0 if tag == 'l' else 1]}"] = mesh.pipe(path, 5.0, SM)
-    motor = (Y["mguk_x"], -Y["mguk_r"], 0.0)
-    source = (ix - iw / 2 - 12.0, iy, iz + ih * 0.1)
-    path = [source, (source[0], -side, source[2]),
-            (rear, -side, source[2]), (rear, -side, low + 16.0),
-            (motor[0], -side, low + 16.0), (motor[0], -side, 0.0), motor]
-    out["hv_motor_k"] = mesh.pipe(path, 6.0, SM)
+
+    # inverter down the flank to the pack under the sump
+    for sgn, tag in ((-1.0, "1"), (1.0, "2")):
+        src = (ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1)
+        term = (bx - sgn * bw * 0.3, by + sgn * bd * 0.38, bz + bh / 2 + 7.0)
+        fl = flank_l if sgn < 0 else flank_r
+        path = [src,
+                (ix + iw * 0.36, sgn * 74.0, iz + ih * 0.02),
+                (drop_x, sgn * 118.0, iz - ih * 0.70),
+                (drop_x + 4.0, sgn * fl, 10.0),
+                (drop_x, sgn * fl, -130.0),
+                (spec.BLOCK["x_rear"] * 0.70, sgn * fl, under),
+                (term[0] + sgn * 40.0, term[1] * 1.34, under + 6.0),
+                term]
+        out[f"hv_store_{tag}"] = mesh.pipe(path, 5.0, SM, subdiv=4)
+
+    # inverter forward along the flank to the MGU-K on the crank nose
+    # forward of the timing cover, which spans x -284..-266: a terminal you
+    # cannot get a spanner to is not a terminal
+    motor = (Y["mguk_x"] - 14.0, -Y["mguk_r"], 0.0)
+    src = (ix - iw / 2 - 12.0, iy, iz + ih * 0.1)
+    path = [src,
+            (ix + iw * 0.30, -66.0, iz - ih * 0.10),
+            (drop_x - 6.0, -124.0, iz - ih * 0.80),
+            (drop_x - 2.0, -(flank_l + 14.0), -20.0),
+            (drop_x - 16.0, -(flank_l + 14.0), -150.0),
+            (spec.BLOCK["x_rear"] * 0.55, -(flank_l + 14.0), under - 8.0),
+            (spec.BLOCK["x_front"] * 0.55, -(flank_l + 14.0), under - 8.0),
+            (spec.BLOCK["x_front"] - 26.0, -140.0, -132.0),
+            (spec.BLOCK["x_front"] - 34.0, -128.0, -96.0),
+            (Y["mguk_x"] + 22.0, -106.0, -42.0),
+            motor]
+    out["hv_motor_k"] = mesh.pipe(path, 6.0, SM, subdiv=4)
     out["hv_motor_k_connector"] = shapes.connector(*motor, 24.0, 20.0, 18.0, 3)
+
+    # and up over the cam cover into the vee for each MGU-H. The vee itself is
+    # full of turbocharger, so the run goes along the top of the cover -- clear
+    # of the plenum below it and the collector inboard of it -- and drops in
+    # at the turbo's own station.
     for index, x in enumerate(spec.TURBO["x"]):
         sgn = -1.0 if index % 2 == 0 else 1.0
-        terminal = (x, sgn * Y["mguh_r"], spec.TURBO["z"])
-        source = (ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1)
-        high = spec.TURBO["z"] + Y["mguh_r"] + 100.0
-        path = [source, (source[0], sgn * side, source[2]),
-                (source[0], sgn * side, high), (x, sgn * side, high),
-                (x, terminal[1], high), terminal]
-        out[f"hv_motor_h_{index}"] = mesh.pipe(path, 4.0, SM)
+        term = (x, sgn * Y["mguh_r"], spec.TURBO["z"])
+        src = (ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1)
+        top = spec.TURBO["z"] + Y["mguh_r"] + 86.0
+        path = [src,
+                (ix + iw * 0.10, sgn * 88.0, iz + ih * 0.44),
+                (spec.BLOCK["x_rear"] + 10.0, sgn * 170.0, 250.0),
+                (spec.BLOCK["x_rear"] * 0.60, sgn * 196.0, 274.0),
+                (x + sgn * 112.0, sgn * 182.0, top - 4.0),
+                (x + sgn * 40.0, sgn * 120.0, top + 24.0),
+                # over the primaries, which peak at z 368, before dropping in
+                (x, sgn * 50.0, top + 18.0),
+                term]
+        out[f"hv_motor_h_{index}"] = mesh.pipe(path, 4.0, SM, subdiv=4)
         out[f"hv_motor_h_connector_{index}"] = shapes.connector(
-            *terminal, 18.0, 16.0, 14.0, 3)
+            *term, 18.0, 16.0, 14.0, 3)
     return out
 
 

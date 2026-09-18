@@ -409,12 +409,40 @@ def _breathers():
     """
     out = {}
     pipes = []
+    # A gallery along the top of each cam cover, forward to a collector.
+    #
+    # Each bank's pipe used to run from x_front+70 FORWARD to x_front+10 and
+    # then back AFT to x_front+40, a hairpin in x with a hundred millimetres
+    # of y swing across it -- and the right bank's then crossed the whole
+    # engine to a junction on the left. Smoothed, the hairpin came out as a
+    # ring standing over the cam cover, and it was the one thing in the hero
+    # render that did not look like part of an engine.
+    # The two banks join across the FRONT FACE, at x -284.
+    #
+    # Not over the vee: the tailpipes fill y +/-115 from z 229 to 322 for the
+    # whole length of the engine, and the collectors and heat blankets fill
+    # what is under them. Not across the front of the block either -- the cam
+    # drive gears are at x -269 to -250 and stand 241 tall. Forward of the
+    # gears and above the accessory drive there is a clear band, and that is
+    # where a real engine would run it too.
+    # +58, not +40: the high-pressure fuel pump stands on the right cover to
+    # z 212 and the gallery was running straight through it at 211.7.
+    along = spec.DECK_HEIGHT + H["height"] + 58.0
+    junction = (B["x_front"] - 58.0, -132.0, 214.0)
     for bank in (0, 1):
         d = common.bank_dir(bank)
-        along = spec.DECK_HEIGHT + H["height"] + 40.0
-        start = (H["x_front"] + 70.0, d[1] * along, d[2] * along)
-        pipes.append(mesh.pipe([start, (start[0] - 60.0, start[1] * 0.5, 232.0),
-                                (B["x_front"] + 40.0, -58.0, 236.0)], 11.0, SM))
+        way = [(H["x_rear"] - 90.0, d[1] * along, d[2] * along),
+               (H["x_front"] + 120.0, d[1] * along, d[2] * along),
+               # outboard of the cam drive gears, which are 241 of half
+               # width and stand to z 241, rather than over the top of them
+               (H["x_front"] + 16.0, d[1] * along * 1.02, d[2] * along * 1.02),
+               (B["x_front"] - 16.0, d[1] * 258.0, 236.0),
+               (B["x_front"] - 48.0, d[1] * 236.0, 230.0),
+               (B["x_front"] - 56.0, d[1] * 210.0, 224.0)]
+        if bank == 1:                      # the right bank crosses the front
+            way.append((B["x_front"] - 58.0, 40.0, 216.0))
+        way.append(junction)
+        pipes.append(mesh.pipe(way, 11.0, SM, subdiv=3))
     # and down the front-left corner into the tank's lid.
     #
     # The two bank pipes met over the vee and stopped there, 300 mm from the
@@ -423,9 +451,9 @@ def _breathers():
     # block so it misses the engine mount and the oil pump.
     vent = spec.oil_tank_union("breather")
     pipes.append(mesh.pipe(
-        [(B["x_front"] + 40.0, -58.0, 236.0), (B["x_front"] - 14.0, -230.0, 190.0),
-         (B["x_front"] - 18.0, -250.0, 20.0), (B["x_front"] - 18.0, -250.0, -60.0),
-         (vent[0] - 30.0, -180.0, vent[2]), vent], 10.0, SM, subdiv=3))
+        [junction, (B["x_front"] - 60.0, -186.0, 168.0),
+         (B["x_front"] - 60.0, -236.0, 60.0), (B["x_front"] - 56.0, -238.0, -74.0),
+         (vent[0] - 34.0, -176.0, vent[2] - 4.0), vent], 10.0, SM, subdiv=3))
     out["breathers"] = mesh.join(*pipes)
     out["catch_tank"] = _catch_tank()
     out["dipstick"] = mesh.pipe(

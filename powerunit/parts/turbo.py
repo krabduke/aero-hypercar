@@ -67,19 +67,28 @@ def build():
 # the volutes
 # --------------------------------------------------------------------------
 
-def _scroll(points, radii, sect=16, wall=None):
+def _scroll(points, radii, sect=16, wall=None, zc=0.0):
     """Loft a circular section of varying radius along a spiral.
 
     The section lies in the plane containing the shaft axis and the local
     radius, which is what makes a scroll a scroll rather than a bent tube:
     it is a passage wrapped round a wheel, so its section stands up out of
     the plane of the spiral.
+
+    `zc` is the height of that shaft axis. It is not optional in practice:
+    the radius has to be measured from the axis the spiral is drawn about,
+    and these spirals are drawn about z = T["z"] = 255. Measured from z = 0
+    instead, every section stood within 12 degrees of vertical all the way
+    round -- so the section never rotated with the spiral, and round the
+    bottom of the volute it leaned inwards, into the wheel the volute is
+    wrapped round. Station 6 of the turbine wanted (+0.50, -0.87), down and
+    outboard, and got (+0.13, +0.99), which is very nearly straight up.
     """
     rings = []
     for (p, r) in zip(points, radii):
         x, y, z = p
-        m = math.hypot(y, z) or 1.0
-        uy, uz = y / m, z / m            # outward radial direction
+        m = math.hypot(y, z - zc) or 1.0
+        uy, uz = y / m, (z - zc) / m     # outward radial direction
         ring = []
         for i in range(sect):
             a = 2 * math.pi * i / sect
@@ -116,14 +125,36 @@ def _housings():
         sc = gaspath.turbine_scroll(pair)
         pts = [p for (p, _r) in sc]
         rad = [r for (_p, r) in sc]
-        parts = [_loft_open(_scroll(pts, rad, 18))]
+        parts = [_loft_open(_scroll(pts, rad, 18, zc=T["z"]))]
         # the exhaust-side face closes the scroll onto the wheel: a disc
         # standing inboard of it, bored for the outlet
         # the back plate faces the bearing housing, the snout faces out
-        parts.append(_backplate(pts[0][0] + ib * 2.0, T["turb_r"] * 0.98,
+        parts.append(_backplate(pts[0][0] + ib * 2.0, _footprint(sc),
                                 T["shaft_r"] * 3.4, ib * 9.0))
-        # the outlet snout, axial, which is where a radial turbine discharges
-        parts.append(_snout(pts[0][0] - ib * 6.0, -ib, 34.0, 30.0, 26.0))
+        # The shroud: the wall that runs over the blade tips, from the
+        # volute's tongue to the exducer face, and then in to the outlet.
+        #
+        # Without it the housing was a spiral tube and a disc with a wheel
+        # spinning in open air between them, which is why the blades were
+        # visible from outside and why the outlet, bored at 34 against a
+        # 39.7 mm tip, could be bolted straight through them. `EXPECTED`
+        # carried ("turbine_housing", "turbine_wheel") to keep the audit
+        # quiet about it -- a permission standing in for the one surface
+        # that makes a turbine housing a housing.
+        depth = gaspath.turbine_wheel_depth()
+        sh = T["turb_r"] * T["turb_wheel_frac"] + T["wheel_tip_clear"]
+        x0 = pts[0][0]
+        prof = [(x0, sh), (x0 - ib * depth, sh),
+                (x0 - ib * (depth + 12.0), 34.0),
+                (x0 - ib * (depth + 12.0), 40.0),
+                (x0 - ib * depth, sh + 6.0), (x0, sh + 6.0)]
+        if ib < 0:
+            prof = list(reversed(prof))
+        sv, sf = mesh.revolve_closed(prof, SEG // 2)
+        parts.append(([(px, py, pz + T["z"]) for (px, py, pz) in sv], sf))
+        # the outlet snout, axial, which is where a radial turbine
+        # discharges -- starting where the blades stop, not inside them
+        parts.append(_snout(x0 - ib * (depth + 12.0), -ib, 34.0, 30.0, 26.0))
         # inlet flange, standing off the first section of the spiral
         parts.append(_flange_at(pts[0], (pts[0][0], pts[0][1] * 1.7,
                                          pts[0][2] * 1.0 + 26.0),
@@ -134,9 +165,21 @@ def _housings():
         cs = gaspath.compressor_scroll(pair)
         pts = [p for (p, _r) in cs]
         rad = [r for (_p, r) in cs]
-        parts = [_loft_open(_scroll(pts, rad, 18))]
-        parts.append(_backplate(pts[0][0] - ib * 2.0, T["comp_r"] * 0.98,
+        parts = [_loft_open(_scroll(pts, rad, 18, zc=T["z"]))]
+        parts.append(_backplate(pts[0][0] - ib * 2.0, _footprint(cs),
                                 T["shaft_r"] * 3.2, -ib * 8.0))
+        # and the shroud over this wheel too, eye to exducer. Without it the
+        # inlet duct and the charge pipe both ran through the blades, and
+        # EXPECTED carried a permission for each.
+        depth_c = T["comp_r"] * T["comp_wheel_frac"] * T["wheel_depth_frac"]
+        shc = T["comp_r"] * T["comp_wheel_frac"] + T["wheel_tip_clear"]
+        x0c = pts[0][0]
+        prof = [(x0c, shc), (x0c + ib * depth_c, shc),
+                (x0c + ib * depth_c, shc + 6.0), (x0c, shc + 6.0)]
+        if ib > 0:
+            prof = list(reversed(prof))
+        cv, cf = mesh.revolve_closed(prof, SEG // 2)
+        parts.append(([(px, py, pz + T["z"]) for (px, py, pz) in cv], cf))
         # The eye: a bellmouth on the axis, which is the only way in.
         #
         # At the eye PLANE, pointing away from the wheel. The volute wraps the
@@ -155,6 +198,18 @@ def _housings():
                                 rad[-1], 7.0, 10.0))
         out[f"compressor_housing_{tag}"] = mesh.join(*parts)
     return out
+
+
+def _footprint(scroll):
+    """How far out the volute actually reaches, from the shaft axis.
+
+    The backplate is the face the volute closes onto, so it has to be at
+    least as big as the volute. Both plates were sized off the housing
+    constant instead -- 0.98 of turb_r and of comp_r -- and both volutes
+    stood proud of their own backplate, the turbine by 21 mm and the
+    compressor by 16. Measuring the spiral cannot disagree with the spiral.
+    """
+    return max(math.hypot(y, z - T["z"]) + r for ((_x, y, z), r) in scroll)
 
 
 def _backplate(x, r_out, r_bore, t):
@@ -431,6 +486,27 @@ def _inlets():
         # would run into the other one.
         # near enough vertical: the two banks' primaries climb the vee at
         # y = +-85, so a duct that leans out at all lands in one of them
+        # This duct overhangs the wheel's inducer, and it is not a local
+        # fault. The compressor eyes face each other across the middle of
+        # the vee 29 mm apart, so each duct has to turn upward within a
+        # couple of centimetres of its own eye plane -- which puts its first
+        # ring at about 70 degrees to the shaft, reaching out over blades
+        # whose tips are 2.2 mm away. Measured: fifteen of its 9824 vertices
+        # end up inside the wheel.
+        #
+        # Three ways out were tried and all of them cost more than they
+        # bought. Moving the duct outboard of the wheel moves it towards the
+        # other turbo's duct and the two collide instead (40%). Sizing the
+        # bore to the eye it bolts to, which is the right thing on its own
+        # terms, makes both ducts big enough to thread through each other
+        # over their whole height (204 vertices, the full run from z 243 to
+        # 380). Belling only the mouth halves the wheel overlap and still
+        # leaves the ducts touching at 42%.
+        #
+        # What is actually wrong is the clocking: two compressors breathing
+        # from the same 29 mm of vee. That is a layout decision in
+        # `turbo_side`, not a fix to this function, so this stays as it is
+        # and the permission below says what it is covering.
         path = [(eye[0] - ib * 8.0, 0.0, T["z"]),
                 (eye[0] + ib * 2.0, sgn * 8.0, T["z"] + 30.0),
                 (eye[0] - ib * 2.0, sgn * 22.0, T["z"] + 72.0),
@@ -485,8 +561,9 @@ def _tailpipes():
     also went through the car's engine-cover louvres.
 
     A radial turbine discharges along its own axis, so each one gets the
-    elbow that turns that discharge outboard and down, and a V-band flange on
-    the end. What happens after that is the car's problem, which is correct:
+    elbow that turns that discharge outboard and up over the cam cover, and a
+    V-band flange on the end. What happens after that is the car's problem,
+    which is correct:
     this engine goes in a car that already builds its own exhaust exit.
     """
     parts = []

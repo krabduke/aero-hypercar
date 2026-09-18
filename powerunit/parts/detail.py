@@ -280,16 +280,25 @@ def _turbo_internals():
         # towards the exducer and the blades sweep back against the rotation
         xc = tx - ib * hw
         out[f"turbine_wheel_{tag}"] = _wheel(
-            xc, -ib, T["turb_r"] * 0.62, 11, 0,
+            xc, -ib, T["turb_r"] * T["turb_wheel_frac"], 11, 0,
             hub=[(0.00, 0.30), (0.25, 0.42), (0.55, 0.52), (0.80, 0.56),
                  (1.00, 0.54)],
             twist=(58.0, 18.0), chord=(0.62, 0.54))
 
         # compressor: in along the axis at the eye, out at the tip, so the
-        # inducer is steeply raked and the exducer nearly radial
-        xc = tx + ib * hw
+        # inducer is steeply raked and the exducer nearly radial.
+        #
+        # The wheel faces the air, which means the small end faces the eye.
+        # It was built from the volute plane outwards, so the hub grew from
+        # 0.22 at the volute to 0.58 at the inlet: the exducer was against
+        # the air intake and the inducer was against the discharge, with the
+        # whole wheel back to front. Same rule as the turbine next to it --
+        # the hub grows towards the exducer, and the exducer is where the
+        # volute is.
+        r_tip_c = T["comp_r"] * T["comp_wheel_frac"]
+        xc = tx + ib * hw + ib * r_tip_c * T["wheel_depth_frac"]
         out[f"compressor_wheel_{tag}"] = _wheel(
-            xc, ib, T["comp_r"] * T["comp_wheel_frac"], 7, 7,
+            xc, -ib, r_tip_c, 7, 7,
             hub=[(0.00, 0.22), (0.25, 0.30), (0.55, 0.42), (0.80, 0.52),
                  (1.00, 0.58)],
             twist=(-62.0, -8.0), chord=(0.58, 0.46))
@@ -304,7 +313,7 @@ def _wheel(xc, dirn, r_tip, n_full, n_split, hub, twist, chord):
     length at each as a fraction of the wheel's axial depth. A splitter blade
     starts half way down and is half as long.
     """
-    depth = r_tip * 0.96
+    depth = r_tip * T["wheel_depth_frac"]
     prof = [(xc + dirn * f * depth, rr * r_tip) for (f, rr) in hub]
     hv, hf = mesh.revolve_open(
         [(prof[0][0], 0.001)] + prof + [(prof[-1][0], 0.001)],
@@ -470,9 +479,24 @@ def _heat_shields():
         # a shell standing off the volute, open where the inlet flange and
         # the outlet snout come through
         def scroll_rings(off):
-            # only the outer two thirds of each section: a blanket is laced
+            # Only the outer two thirds of each section: a blanket is laced
             # over the outside of a volute, and a full ring at this offset
-            # would pass through the wheel the volute is wrapped round
+            # would pass through the wheel the volute is wrapped round.
+            #
+            # Which two thirds is the whole of it. This arc used to be
+            # centred on the axial direction and swept 230 degrees from
+            # there, so the covered sector was the outboard FACE of the
+            # volute and the two free edges ran down the inside, 0.91 of a
+            # section radius in towards the wheel -- and since the spiral's
+            # own radius shrinks as it goes round, each free edge cut
+            # through the surface laid down by the stations before it. That
+            # is the shredded-paper look: not a blanket, two free edges
+            # spiralling through their own wrap.
+            #
+            # The sector is centred on the outward radius instead, which is
+            # where a blanket goes. The free edges land on the two axial
+            # faces, and the deepest either reaches is 0.34 of a section in
+            # -- still clear of the passage, let alone the wheel.
             out = []
             for (p, r) in sc:
                 x, y, z = p
@@ -480,9 +504,9 @@ def _heat_shields():
                 uy, uz = y / m, (z - T["z"]) / m
                 ring = []
                 for k in range(13):
-                    a = math.radians(-115.0 + 230.0 * k / 12)
+                    a = math.radians(90.0 - 110.0 + 220.0 * k / 12)
                     rr = r + off
-                    ring.append((x + rr * math.cos(a) * 1.35,
+                    ring.append((x + rr * math.cos(a),
                                  y + rr * math.sin(a) * uy,
                                  z + rr * math.sin(a) * uz))
                 out.append(ring)
@@ -497,16 +521,21 @@ def _heat_shields():
         parts.append(_shell_rings(_sleeve(cp, gaspath.COLLECTOR_RADII, 9.0),
                                   _sleeve(cp, gaspath.COLLECTOR_RADII, 5.0)))
         # the lace line down the seam, which is how a blanket is held on
+        # The tie-downs, which is how a blanket is held on. They sit on the
+        # crown -- straight out along the radius, on top of the wrap -- and
+        # not on the diagonal between crown and face, where they used to be
+        # and where nothing could have reached them.
         lace = []
         for k in range(9):
             f = (k + 0.5) / 9
             idx = min(int(f * (len(sc) - 1)), len(sc) - 2)
             (px, py, pz), r = sc[idx]
             m = math.hypot(py, pz - T["z"]) or 1.0
-            lv, lf = mesh.ring_torus(0.0, 1.9, 0.9, 10, 6)
-            lv = mesh.translate(lv, px + (r + 6.0) * 1.35 * 0.72,
-                                py + (r + 6.0) * 0.5 * (py / m),
-                                pz + (r + 6.0) * 0.5 * ((pz - T["z"]) / m))
+            uy, uz = py / m, (pz - T["z"]) / m
+            lv, lf = mesh.ring_torus(0.0, 2.2, 0.9, 10, 6)
+            lv = mesh.translate(lv, px,
+                                py + (r + 10.0) * uy,
+                                pz + (r + 10.0) * uz)
             lace.append((lv, lf))
         parts.append(mesh.join(*lace))
     return {"heat_shields": mesh.join(*parts)}

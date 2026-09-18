@@ -200,6 +200,8 @@ TURBO = {
     "wheel_tip_clear": 1.6,    # running clearance from the wheel to the volute
     "comp_wheel_len": 37.0,    # inducer face to exducer face
     "turb_r": 64.0,            # turbine housing
+    "turb_wheel_frac": 0.62,   # wheel tip radius, as a fraction of turb_r
+    "wheel_depth_frac": 0.96,  # inducer face to exducer face, over tip radius
     "housing_w": 46.0,
     "shaft_r": 9.0,
     "inlet_r": 36.0,

@@ -36,18 +36,36 @@ def _banks():
         along1 = spec.DECK_HEIGHT
         half_len = (B["x_rear"] - B["x_front"]) / 2
         w = B["bank_half_width"]
+        # The slab runs the length of the block, the same on both banks.
+        # It used to be centred on the bank's own cylinder offset instead,
+        # so the right bank's casting ran from -222 to 241 -- 9 mm past the
+        # block's rear face at 232, and 16 mm into the flywheel, which
+        # starts at 225. A V8's bank offset staggers the BORES within the
+        # casting; it does not stagger the casting. Both banks' outermost
+        # bores need metal only out to 213.5, so both fit inside 232.
         v, f = shapes.rounded_box(
-            spec.cylinder_x(0, bank) - spec.cylinder_x(0), 0.0,
+            (B["x_front"] + B["x_rear"]) / 2, 0.0,
             (along0 + along1) / 2,
             B["x_rear"] - B["x_front"], w * 2, along1 - along0,
             r=14.0, seg=5, draft=1.5)
-        # push the slab a little outboard so the two banks leave a vee valley
-        # between them for the turbos, instead of merging into one lump
-        v = [(px, py + 8.0, pz) for (px, py, pz) in v]
         # box is built in world axes; rotate it onto the bank
         a = spec.bank_angle_rad(bank)
         ca, sa = math.cos(a), math.sin(a)
         v = [(x, y * ca - z * sa, y * sa + z * ca) for (x, y, z) in v]
+        # push the slab a little outboard so the two banks leave a vee valley
+        # between them for the turbos, instead of merging into one lump.
+        #
+        # Outboard is a direction in the BANK's frame, so it has to be taken
+        # after the rotation. Applied before it, as a flat +8 mm in y, the
+        # same shift came out as 5.66 outboard and 5.66 down on the right
+        # bank and 5.66 INBOARD and 5.66 down on the left -- so the two banks
+        # of a 90-degree V8 were not symmetric about the engine's own centre
+        # plane, and the right one stood 11.3 mm higher than the left. The
+        # vee floor went with it, and both of the rear turbo's oil lines ran
+        # 14 mm down inside the block casting on their way to a union that
+        # was supposed to be screwed into its face.
+        lat = common.bank_lat(bank)          # inboard-positive
+        v = [(x, y - lat[1] * 8.0, z - lat[2] * 8.0) for (x, y, z) in v]
         feats = []
         for (n2, pair2, b2, x2, a2) in spec.cylinders():
             if b2 != bank:
