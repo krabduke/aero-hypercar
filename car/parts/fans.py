@@ -170,11 +170,43 @@ def _exhaust_rings(cx, cy, cz):
 
 
 def _scroll(cx, cy, cz):
-    return _open_loft(_exhaust_rings(cx, cy, cz)[:13])
+    return _duct(_exhaust_rings(cx, cy, cz)[:13])
 
 
 def _nozzle(cx, cy, cz):
-    return _open_loft(_exhaust_rings(cx, cy, cz)[12:])
+    return _duct(_exhaust_rings(cx, cy, cz)[12:])
+
+
+def _closed_loft(rings):
+    """Loft a stack of rings and wrap the last one back onto the first."""
+    n, m = len(rings[0]), len(rings)
+    verts = [p for ring in rings for p in ring]
+    faces = []
+    for j in range(m):
+        j2 = (j + 1) % m
+        for i in range(n):
+            i2 = (i + 1) % n
+            faces.append((j * n + i, j * n + i2, j2 * n + i2, j2 * n + i))
+    return verts, faces
+
+
+def _duct(rings, wall=6.0):
+    """A duct with a wall: the outer surface, the bore, and a rim at each end.
+
+    The scroll and the nozzle were open tubes -- a single surface of zero
+    thickness with two free rims, 64 loose edges each. The fan's exhaust is
+    the part of this car that makes the downforce it is built around, and it
+    was a sheet you could see the back of.
+    """
+    inner = []
+    for ring in rings:
+        n = len(ring)
+        c = tuple(sum(p[k] for p in ring) / n for k in range(3))
+        r = sum(math.dist(p, c) for p in ring) / n
+        k = max(0.25, (r - wall) / r) if r > 0.0 else 0.0
+        inner.append([tuple(c[j] + (p[j] - c[j]) * k for j in range(3))
+                      for p in ring])
+    return _closed_loft(rings + list(reversed(inner)))
 
 
 def _lathe_z(cx, cy, cz, profile, segments=36):

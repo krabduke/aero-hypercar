@@ -247,6 +247,36 @@ EXPECTED = [
     # the fan throat is formed through the rear structure, as the duct around
     # it already says
     ("fan_rotor_", "crash_structure"),
+    # ----------------------------------------------------------------
+    # The fan, as one machine. Air comes up the throat cast into the floor,
+    # through the rotor, past the stators, round the scroll and out of the
+    # nozzle; the throat carries the motor and the drive, the scroll is
+    # built into the tub and picked up by the rear pylons, and the fairing
+    # goes over the lot with the light panel on its back. Every one of these
+    # overlaps is that assembly. They appeared when the scroll, the nozzle
+    # and the throat stopped being zero-thickness sheets and got a wall.
+    # ----------------------------------------------------------------
+    ("fan_stators", "fan_scroll_"), ("fan_stators", "floor_fan_throat_"),
+    ("fan_rotor_", "floor_fan_throat_"), ("fanduct", "floor_fan_throat_"),
+    ("fan_nozzle_", "fan_scroll_"), ("fan_nozzle_", "fanduct"),
+    ("fan_scroll_", "fanduct"), ("fan_nozzle_", "fan_fairing_"),
+    ("floor_fan_throat_", "fan_motors"), ("floor_fan_throat_", "fan_drive_"),
+    ("floor_fan_throat_", "tub"), ("fan_scroll_", "tub"),
+    ("fan_scroll_", "crash_structure"), ("fan_scroll_", "fan_drive_"),
+    ("floor_fan_throat_", "floor_strake_"),
+    ("floor_fan_throat_", "floor_surface"), ("rear_pylon_", "fan_scroll_"),
+    ("fanduct", "fan_fairing_"), ("fan_fairing_", "tub"),
+    ("fan_fairing_", "crash_structure"),
+    # The floor's own edges and leading edge are part of the floor, and the
+    # diffuser's fences, kick and lip all land on each other at the exit.
+    ("floor_plenum_edge_", "floor_surface"),
+    ("floor_plenum_edge_", "floor_skirts"),
+    ("floor_inlet_lip", "tunnel_"), ("diffuser_fences", "diffuser_lip"),
+    ("diffuser_kick", "diffuser_lip"),
+    ("diffuser_kick", "floor_plenum_edge_"),
+    ("diffuser_fences", "floor_strake_"),
+    ("front_y250_vanes", "nose_pylons"),
+    ("rear_light_panel", "fan_fairing_"),
     # the loom is clipped along the top wishbone on its way to the corner
     ("wiring_loom", "wishbone_"),
     ("seat", "extinguisher"),   # it is strapped to the seat back

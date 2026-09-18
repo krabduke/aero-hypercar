@@ -29,15 +29,20 @@ def build():
     return out
 
 
-def _loft(rings, capped=True):
+def _loft(rings, capped=True, closed=False):
+    """`closed` wraps the last ring back onto the first, for a duct whose
+    outer wall runs out and whose bore runs back -- rather than repeating the
+    first ring at the end, which leaves both of its rims free."""
     m = len(rings[0])
+    n = len(rings)
     verts = [v for ring in rings for v in ring]
     faces = []
-    for i in range(len(rings) - 1):
+    for i in range(n if closed else n - 1):
+        i2 = (i + 1) % n
         for j in range(m):
             a = i * m + j
             b = i * m + (j + 1) % m
-            faces.append((a, b, b + m, a + m))
+            faces.append((a, b, i2 * m + (j + 1) % m, i2 * m + j))
     if capped:
         faces.append(tuple(range(m - 1, -1, -1)))
         base = (len(rings) - 1) * m
@@ -54,8 +59,12 @@ def _inlet_lip():
     into the contraction and keeps the inlet attached across the range.
     """
     rings = []
-    for i in range(6):
-        y = (half_width(F["x0"]) - 22.0) * (2.0 * i / 5.0 - 1.0)
+    # 12 stations across, not 6. This is the surface that decides how much
+    # air the whole underfloor gets; at six it was four flat facets and a
+    # rolled lip that is faceted is a cut edge with extra steps.
+    n_span = 12
+    for i in range(n_span):
+        y = (half_width(F["x0"]) - 22.0) * (2.0 * i / (n_span - 1) - 1.0)
         # a rounded roll: entry face curves down and under to meet the floor
         sect = []
         for j in range(21):
@@ -111,7 +120,11 @@ def _plenum():
                      fan["plenum_z0"] + (fan["z"] - fan["plenum_z0"])
                      * (i / 24.0) ** 2 * (3.0 - 2.0 * i / 24.0)
                      for i in range(25)])]
-        out[f"floor_fan_throat_{side}"] = _loft(rings + list(reversed(inner)) + [rings[0]], False)
+        # The outer wall out, the bore back, and the loop closed -- rather
+        # than repeating ring 0 at the end, which duplicated its 48 vertices
+        # and left both rims free: 96 loose edges, exactly two rings' worth.
+        out[f"floor_fan_throat_{side}"] = _loft(
+            rings + list(reversed(inner)), capped=False, closed=True)
     return out
 
 
@@ -324,8 +337,8 @@ def _diffuser():
             y = sgn * (F["tunnel_inner_y"] +
                        (F["tunnel_half_w"] - F["tunnel_inner_y"]) * frac)
             lo, hi = [], []
-            for i in range(9):
-                t = i / 8.0
+            for i in range(15):
+                t = i / 14.0
                 x = x_d + (x_e - x_d) * t
                 z = _floor_z(x)
                 lo.append((x, y, 8.0))
@@ -341,15 +354,22 @@ def _diffuser():
         y_in = sgn * F["tunnel_inner_y"]
         y_out = sgn * max(half_width(x_e) - 34.0, F["tunnel_inner_y"] + 60.0)
         z = _floor_z(x_e)
-        lo = [(x_e - 6.0, y_in, z), (x_e - 6.0, y_out, z)]
-        hi = [(x_e - 6.0, y_in, z - 18.0), (x_e - 6.0, y_out, z - 18.0)]
-        verts = [(x, y, zz) for (x, y, zz) in lo] + \
-                [(x, y, zz) for (x, y, zz) in hi]
-        verts += [(x + 7.0, y, zz) for (x, y, zz) in lo] + \
-                 [(x + 7.0, y, zz) for (x, y, zz) in hi]
-        f = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 2, 6, 4),
-             (1, 5, 7, 3), (0, 4, 5, 1), (2, 3, 7, 6)]
-        lips.append((verts, f))
+        # A section, swept across the exit. It was a rectangular block --
+        # eight vertices for both sides together, the crudest part on the
+        # car -- and a square leading edge on the one element that sets the
+        # base pressure the whole diffuser pumps against is the difference
+        # between a Gurney and a piece of angle. Radiused where the flow
+        # arrives, square where it leaves, which is what makes it work.
+        sect = [(-5.0, 0.6), (-2.2, -5.5), (-1.2, -12.0), (-1.2, -17.6),
+                (1.4, -19.6), (4.6, -18.0), (5.6, -12.5), (5.6, -6.0),
+                (3.2, -1.2), (0.0, 0.8)]
+        rings = []
+        n_span = 12
+        for i in range(n_span):
+            t = i / (n_span - 1)
+            y = y_in + (y_out - y_in) * t
+            rings.append([(x_e - 1.0 + dx, y, z + dz) for (dx, dz) in sect])
+        lips.append(_loft(rings))
     out["diffuser_lip"] = mesh.join(*lips)
 
     # and the kick: the last 120 mm of ramp turned up, so the expansion ends
@@ -358,23 +378,24 @@ def _diffuser():
     for sgn in (-1.0, 1.0):
         y_in = sgn * F["tunnel_inner_y"]
         y_out = sgn * max(half_width(x_e) - 34.0, F["tunnel_inner_y"] + 60.0)
+        # 11 stations and a radiused section, not five and a rectangle. The
+        # kick is a curve; sampled five times it was four straight facets,
+        # and each facet's join was a hard edge across the full span of the
+        # tunnel exit -- four spanwise shed lines on the last 120 mm of a
+        # surface whose whole job is to let the flow leave cleanly.
+        d = 1.0 if y_out > y_in else -1.0
+        cr = 1.6
         rings = []
-        for i in range(5):
-            t = i / 4.0
+        for i in range(11):
+            t = i / 10.0
             x = x_e - 120.0 + 120.0 * t
             z = _floor_z(x) - 22.0 * t * t
-            rings.append([(x, y_in, z), (x, y_out, z),
-                          (x, y_out, z + 5.0), (x, y_in, z + 5.0)])
-        verts = [v for r in rings for v in r]
-        faces = []
-        for i in range(4):
-            a, b = i * 4, (i + 1) * 4
-            for k in range(4):
-                k2 = (k + 1) % 4
-                faces.append((a + k, a + k2, b + k2, b + k))
-        faces.append((3, 2, 1, 0))
-        faces.append((16, 17, 18, 19))
-        kicks.append((verts, faces))
+            rings.append([
+                (x, y_in + d * cr, z), (x, y_out - d * cr, z),
+                (x, y_out, z + cr), (x, y_out, z + 5.0 - cr),
+                (x, y_out - d * cr, z + 5.0), (x, y_in + d * cr, z + 5.0),
+                (x, y_in, z + 5.0 - cr), (x, y_in, z + cr)])
+        kicks.append(_loft(rings))
     out["diffuser_kick"] = mesh.join(*kicks)
     return out
 

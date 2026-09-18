@@ -270,14 +270,14 @@
    "label": "Bodywork",
    "color": "#5A6066",
    "parts": 20,
-   "faces": 25231
+   "faces": 25619
   },
   {
    "key": "02 Floor and Diffuser",
    "label": "Floor",
    "color": "#46505A",
    "parts": 18,
-   "faces": 25944
+   "faces": 26076
   },
   {
    "key": "03 Wings",
@@ -305,7 +305,7 @@
    "label": "Fans",
    "color": "#C06A30",
    "parts": 13,
-   "faces": 18368
+   "faces": 19648
   },
   {
    "key": "07 Power Unit",
@@ -433,21 +433,21 @@
    "mat": "carbon_matte",
    "x0": 3860.0,
    "x1": 4560.0,
-   "f": 80
+   "f": 128
   },
   "diffuser_kick": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
    "x0": 4440.0,
    "x1": 4560.0,
-   "f": 36
+   "f": 164
   },
   "diffuser_lip": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
    "x0": 4554.0,
-   "x1": 4561.0,
-   "f": 12
+   "x1": 4564.6,
+   "f": 224
   },
   "floor_fan_throat_l": {
    "g": "02 Floor and Diffuser",
@@ -468,7 +468,7 @@
    "mat": "carbon_matte",
    "x0": 1300.0,
    "x1": 1322.0,
-   "f": 112
+   "f": 244
   },
   "floor_plank": {
    "g": "02 Floor and Diffuser",
@@ -1826,14 +1826,14 @@
    "mat": "alu_bright",
    "x0": 4455.1,
    "x1": 4820.3,
-   "f": 128
+   "f": 320
   },
   "fan_nozzle_r": {
    "g": "06 Fan System",
    "mat": "alu_bright",
    "x0": 4455.1,
    "x1": 4820.3,
-   "f": 128
+   "f": 320
   },
   "fan_rotor_l": {
    "g": "06 Fan System",
@@ -1882,14 +1882,14 @@
    "mat": "alu_bright",
    "x0": 4143.1,
    "x1": 4657.8,
-   "f": 384
+   "f": 832
   },
   "fan_scroll_r": {
    "g": "06 Fan System",
    "mat": "alu_bright",
    "x0": 4143.1,
    "x1": 4657.8,
-   "f": 384
+   "f": 832
   },
   "fan_stators": {
    "g": "06 Fan System",
