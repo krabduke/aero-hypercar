@@ -2,7 +2,7 @@
  "source": "car-engine",
  "files": {
   "spec.py": "2e0305840dfe",
-  "mesh.py": "9ce861e0f11e",
+  "mesh.py": "088ae1d60bb1",
   "shapes.py": "26402caf3461",
   "gaspath.py": "89697ba2348e",
   "parts/__init__.py": "e3b0c44298fc",
@@ -18,5 +18,5 @@
   "parts/detail.py": "bdac3762e984",
   "parts/ancillaries.py": "b0d1e27b73fc"
  },
- "commit": "747855e"
+ "commit": "e4ecd57"
 }
