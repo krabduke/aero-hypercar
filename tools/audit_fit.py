@@ -76,8 +76,8 @@ OUTSIDE = {
     # bodywork in clean air ahead of the driver, and the test had been told
     # to expect that. It is under the skin now, so the test does its job.
     "steering_rack": "ahead of the tub, in the nose",
-    "fan_": "in the fan duct under the floor",
-    "fanduct": "under the floor",
+    "fan_": "the fan pods at the tail, outside the body",
+    "fanduct": "the fan pods at the tail, outside the body",
     "radiator": "in the sidepod, checked against the sidepod",
     "rad_": "in the sidepod, checked against the sidepod",
 }

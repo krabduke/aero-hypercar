@@ -85,33 +85,40 @@ def collector_path(bank_pair):
     """
     _, tx, _, ib = turbo_side(bank_pair)
     inlet = turbine_scroll(bank_pair)[0][0]
-    # the mouth sits over the middle of the four cylinders it serves and
-    # falls into the turbine inlet; the four primaries land on its rim
-    # 92 mm above the shaft, not 66: the two inboard cylinders' primaries
-    # have to pass over the compressor housing to reach the mouth, and the
-    # top of that housing is 65 mm above the shaft. Not higher than 92
-    # either -- the car this engine goes in has cooling louvres in its engine
-    # cover 700 mm off the ground, and the collector is the tallest thing
-    # here.
+    # The drum sits over the middle of the four cylinders it serves, 92 mm
+    # above the shaft: the two inboard cylinders' primaries have to pass over
+    # the compressor housing to reach it, and the top of that housing is
+    # 65 mm above the shaft. Not higher -- the car this engine goes in has
+    # cooling louvres in its engine cover 700 mm off the ground, and this is
+    # the tallest thing here.
     #
-    # Mouth to flange is 46 mm across and 29 down for a duct 54 mm through,
-    # so there is room for one gentle bend and no more: the route used to
-    # dive to 34 mm below the flange and climb back up to it, a 100-degree
-    # kink with 11 mm legs that folded the duct 16 mm through itself. It
-    # now runs straight down to a point on the flange's own axis and turns
-    # 22 degrees onto it.
-    end = (inlet[0] - ib * 2.0, 0.0, inlet[2])
-    ax, az = -ib * 10.0, -3.4
-    axis = (ax / math.hypot(ax, az), 0.0, az / math.hypot(ax, az))
-    return [(tx + ib * 16.0, 0.0, T["z"] + 92.0),
-            tuple(end[k] - axis[k] * 22.0 for k in range(3)),
+    # From the drum the leg drops onto the volute's inlet, which faces up,
+    # and ends on the inlet flange: straight down the last 28 mm, square to
+    # it, so the two flanges meet face to face.
+    # 4 mm outboard of the turbo, not 16 inboard: inboard, the drum was in
+    # the compressor inlet ducts, which cross the vee at this height
+    # 90 mm up and 25 in radius: the car's engine cover comes down over the
+    # back of the vee, and at 92 and 29 the drum's wrap was 6.5 mm through it
+    drum = (tx - ib * 4.0, 0.0, T["z"] + 90.0)
+    end = (inlet[0], inlet[1], inlet[2] + TURBINE_NECK + 8.0)
+    return [drum,
+            (drum[0] + (inlet[0] - drum[0]) * 0.6, inlet[1] * 0.55,
+             drum[2] - 8.0),
+            (inlet[0], inlet[1], end[2] + 28.0),
             end]
 
+
+# The collector's body: a drum lying across the vee. Each bank's two
+# primaries come in sideways, from their own side, so they enter its two end
+# caps; the outlet leg leaves from its middle, down to the turbine. A mouth
+# facing fore and aft, which is what it had, took pipes arriving sideways
+# through its own wall.
+COLLECTOR_DRUM = {"half_len": 30.0, "r": 25.0}
 
 # Four 25 mm primaries merging: 1,960 mm2, which is a 25 mm radius. The
 # mouth is 30 so the four pipes land on its rim with room between them,
 # and it necks to the turbine inlet from there.
-COLLECTOR_RADII = [30.0, 27.0, 24.0]
+COLLECTOR_RADII = [24.0, 24.0, 22.0, 21.0]
 
 
 def primary_path(pair, bank, x):
@@ -198,6 +205,12 @@ def turbine_wheel_depth():
     return T["turb_r"] * T["turb_wheel_frac"] * T["wheel_depth_frac"]
 
 
+# The turbine's inlet runs straight up this far from the volute before its
+# flange: the volute's first section sits beside the wheel, and a flange
+# there reached in over the blades.
+TURBINE_NECK = 45.0
+
+
 def turbine_scroll(bank_pair):
     """The turbine volute, as (point, passage radius) round the spiral.
 
@@ -226,7 +239,12 @@ def turbine_scroll(bank_pair):
         # inner wall is the wheel's shroud and whose outer wall spirals in as
         # the area falls. The compressor next door has been drawn that way all
         # along; this is the same line.
-        a = math.radians(90.0 - 300.0 * f)
+        # Clocked so the inlet is on the side and the gas enters going down:
+        # the collector comes from the drum above, and a turbine inlet is
+        # tangential to the volute. Clocked from the top, the inlet faced
+        # sideways along y and the collector, arriving from above and along
+        # x, met it at right angles through its own flange.
+        a = math.radians(0.0 - 300.0 * f)
         r_tip = r * T["turb_wheel_frac"]
         pas = 21.0 - 11.0 * f
         rr = max(r * (0.98 - 0.26 * f), r_tip + T["wheel_tip_clear"] + pas)

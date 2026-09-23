@@ -95,16 +95,24 @@ def _collectors():
         path = gaspath.collector_path(pair)
         parts = [mesh.pipe(path, gaspath.COLLECTOR_RADII,
                            spec.RES["pipe"], subdiv=6)]
-        # the mouth the four primaries land in, and the flange at the turbine
-        mouth, r0 = path[0], gaspath.COLLECTOR_RADII[0]
-        mv, mf = mesh.revolve_ring(
-            [(-6.0, r0), (-6.0, r0 + 3.0), (3.0, r0 + 3.0), (3.0, r0)], SM)
-        parts.append(([(px + mouth[0], py + mouth[1], pz + mouth[2])
-                       for (px, py, pz) in mv], mf))
+        # the drum the four primaries land in, across the vee, with domed
+        # end caps the primaries come through
+        parts.append(_collector_drum(path[0]))
         parts.append(_inlet_flange(path[-1], path[-2],
                                    gaspath.COLLECTOR_RADII[-1]))
         out[f"collector_{i + 1}"] = mesh.join(*parts)
     return out
+
+
+def _collector_drum(centre):
+    """A drum along y centred on the collector's mouth."""
+    D = gaspath.COLLECTOR_DRUM
+    hl, r = D["half_len"], D["r"]
+    v, f = mesh.revolve_closed(
+        [(-hl, 0.0), (-hl, r - 9.0), (-hl + 9.0, r), (hl - 9.0, r),
+         (hl, r - 9.0), (hl, 0.0)], spec.RES["pipe"] * 2)
+    v = mesh.rot_z(v, math.pi / 2)           # its axis along y
+    return mesh.translate(v, *centre), f
 
 
 def _inlet_flange(at, towards, r, thick=7.0, pad=11.0):

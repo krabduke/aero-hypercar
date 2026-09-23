@@ -4,19 +4,19 @@
   "spec.py": "164798eb3b0b",
   "mesh.py": "7a61f9dcccf1",
   "shapes.py": "1d7ea5dea4e8",
-  "gaspath.py": "48f87ce660ae",
+  "gaspath.py": "d3baf991eaa3",
   "parts/__init__.py": "e3b0c44298fc",
   "parts/common.py": "d46ee4408ed8",
   "parts/block.py": "f8e24d697e31",
   "parts/bottomend.py": "98d9a219d934",
   "parts/heads.py": "2490f1b08816",
-  "parts/plumbing.py": "dcb124aec78e",
+  "parts/plumbing.py": "5783420b3b7e",
   "parts/induction.py": "db0761373f23",
-  "parts/turbo.py": "a4a1a869e27a",
-  "parts/hybrid.py": "8e6a969b588c",
+  "parts/turbo.py": "1349fde72669",
+  "parts/hybrid.py": "96b100302fef",
   "parts/drive.py": "8ec89537f947",
-  "parts/detail.py": "614d069f6100",
+  "parts/detail.py": "6b541b7cc0aa",
   "parts/ancillaries.py": "2583f3834203"
  },
- "commit": "5516920"
+ "commit": "d3e01b6"
 }

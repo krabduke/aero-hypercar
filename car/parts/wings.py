@@ -334,6 +334,28 @@ def pivots():
     return out
 
 
+# The rear frame: one streamlined cross-beam across the tail, carrying both
+# fan pods at its ends and both rear-wing pylons on top, on a post down onto
+# the crash structure's spine. The tail had nothing tying it together once the
+# fans stopped being a scroll built into the tub.
+FRAME = {"x": 4415.0, "z": 452.0, "h": 28.0, "chord": 60.0}
+
+
+def _rear_frame():
+    fan = spec.FAN
+    # to 9 mm inside each fan cowl's inner face at this station
+    half = fan["y"] - (fan["duct_r"] + 40.0) + 9.0
+    beam = shapes.rounded_box(FRAME["x"], 0.0, FRAME["z"], FRAME["chord"],
+                              2.0 * half, FRAME["h"], 8.0)
+    # the post, down onto the crash structure's top at z ~398 on its spine,
+    # ahead of the rain light's panel on its tail
+    z_top = FRAME["z"] - FRAME["h"] / 2 + 4.0
+    z_bot = 385.0
+    post = shapes.rounded_box(FRAME["x"], 0.0, (z_top + z_bot) / 2,
+                              FRAME["chord"] * 0.8, 70.0, z_top - z_bot, 6.0)
+    return mesh.join(beam, post)
+
+
 def _rear():
     """Two-element rear wing on swan-neck pylons, shown in its loaded
     (non-DRS) position. The flap is its own object hinged at its leading edge,
@@ -363,18 +385,34 @@ def _rear():
         # exactly where a neck at y 150 passes it.
         path = [(mx, sgn * 196.0, mz),
                 (mx - 60.0, sgn * 194.0, mz - 52.0),
-                (RW["x"] - 70.0, sgn * 176.0, RW["z"] - 300.0),
-                (RW["x"] - 200.0, sgn * 130.0, RW["z"] - 440.0)]
+                (RW["x"] - 70.0, sgn * 192.0, RW["z"] - 300.0),
+                # down onto the rear frame's cross-beam, which is what
+                # carries it. Its foot used to stand at y 130 over a crash
+                # structure that is a tapering cone 60 mm across there, and
+                # it was held up by the fan scroll it ran through.
+                # outboard of the tailpipe, 332 mm across above the beam
+                (FRAME["x"], sgn * 205.0, FRAME["z"] + FRAME["h"] / 2 - 4.0)]
         # A swan neck is a wing section on edge: it is carrying the whole
         # rear wing load in bending and standing in the flow that feeds the
         # beam wing, so its own wake matters.
+        #
+        # Long along the flow. The section's frame puts its first axis fore
+        # and aft on this path, and the teardrop was handed to it the other
+        # way round: 140 mm deep ACROSS the car and 44 along it, a strut
+        # standing broadside to the air it is supposed to part.
         t = RW["pylon_t"]
+        # The frame's second axis flips with the side, so the left pylon
+        # takes the section reflected across it -- round nose forward on
+        # both, and the two a true mirror pair.
+        sect = [(v, sgn * u) for (u, v) in
+                shapes.teardrop_section(t * 1.7, t * 5.4, 26)]
         pylons.append(shapes.swept_profile(
-            path, shapes.teardrop_section(t * 1.7, t * 5.4, 26),
-            scale=[(1.0, 1.0), (1.02, 1.05), (1.10, 1.16), (1.16, 1.24)],
+            path, sect,
+            scale=[(1.0, 1.0), (1.05, 1.02), (1.16, 1.10), (1.24, 1.16)],
             subdiv=6))
     for i, m in enumerate(pylons):
         out[f"rear_pylon_{'lr'[i]}"] = m
+    out["rear_frame"] = _rear_frame()
 
     # Endplate louvres, bleeding the pressure difference at the tip to cut the
     # tip vortex and the drag that comes with it. On the OUTER face of the

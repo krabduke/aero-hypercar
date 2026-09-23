@@ -113,6 +113,12 @@ def build():
             if rear_low:
                 z_in = S["lower_inboard_rear_z"]
             dxs = (-AERO_LINK["pickup_dx"], AERO_LINK["pickup_dx"])
+            if not front and z_out == S["upper_z"]:
+                # The rear upper aft leg picks up on the gearbox's rear
+                # face, as the lower one does. At the axle + 190 it landed
+                # at x 4284, 200 mm behind the casing and 75 mm outboard of
+                # it -- bolted to nothing, and across the fans' intakes.
+                dxs = (-AERO_LINK["pickup_dx"], -30.0)
             if rear_low:
                 dxs = (-AERO_LINK["pickup_dx"],
                        AERO_LINK["rear_lower_aft_dx"])

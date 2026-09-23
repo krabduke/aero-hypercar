@@ -23,7 +23,6 @@ import shapes
 def build():
     out = {}
     out.update(_roll_hoop())
-    out.update(_fan_drive())
     out.update(_drs())
     out.update(_steering_arms())
     out.update(_springs())
@@ -84,40 +83,6 @@ def _roll_hoop():
                            (T["x_rear"] - 30.0, sy * hw * 0.55, R["brace_z"]),
                            r * 0.62))
     return {"roll_hoop": mesh.join(*parts)}
-
-
-def _fan_drive():
-    """Gearbox to fan: shaft, bevel pinion and crown wheel, per side.
-
-    The whole car is built round two underbody fans and nothing turned them.
-    """
-    D = spec.FAN_DRIVE
-    out = {}
-    for tag, s in (("l", -1.0), ("r", 1.0)):
-        parts = []
-        x0, x1 = 4020.0, 4360.0
-        y0, y1 = s * D["gearbox_y"], s * 300.0
-        # 386, not 448: the fan rotor's top is at z 392, so the crown wheel
-        # was turning 56 mm above the wheel it drives -- the one mechanism on
-        # a car built entirely round two underbody fans.
-        z0, z1 = D["input_z"], 386.0
-        # the shaft, with a splined collar at each end
-        parts.append(_tube((x0, y0, z0), (x1, y1, z1), D["shaft_r"]))
-        for (px, py, pz) in ((x0, y0, z0), (x1, y1, z1)):
-            parts.append(_disc(px, py, pz, D["shaft_r"] * 1.8, 26.0,
-                               axis="y", seg=18))
-        # bevel pinion on the shaft, crown wheel on the fan
-        parts.append(_disc(x1, y1, z1, D["pinion_r"], D["pinion_t"],
-                           axis="y", seg=D["teeth"] * 2))
-        parts.append(_disc(x1 + 40.0, s * 362.0, 386.0,
-                           D["crown_r"], D["crown_t"], axis="z",
-                           seg=D["teeth"] * 3))
-        # the bearing carrier that holds the shaft off the floor
-        parts.append(shapes.rounded_box(
-            (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2 - 30.0,
-            70.0, 54.0, 76.0, r=7.0))
-        out[f"fan_drive_{tag}"] = mesh.join(*parts)
-    return out
 
 
 def _drs():

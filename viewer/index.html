@@ -651,7 +651,7 @@ function buildTunnel(box){
    */
   function flowPorts(state){
     const v = state && state.v ? state.v/68 : 1;
-    const fq = fansOn ? 9.0*v : 0;
+    const fq = fansOn ? 4.0*v : 0;   // m3/s a fan, at the reference speed
     /* The fan pair balances itself -- what it pulls out of the floor it blows
      * out at the rear. The engine did not: the airbox was a sink with nothing
      * answering it, which leaves a net monopole that the source solve reads as
@@ -676,10 +676,13 @@ function buildTunnel(box){
     const ports = [
       {p: [2.20, 0.00, 0.78], Q: -aq,      r: 0.10},  // airbox -> engine
       {p: [4.53, 0.00, 0.47], Q:  aq*2.6,  r: 0.11},  // tailpipe, above the diffuser
-      {p: [4.40, -0.30, 0.30], Q: -fq,  r: 0.14},  // fan L, pulling the floor
-      {p: [4.40,  0.30, 0.30], Q: -fq,  r: 0.14},  // fan R
-      {p: [4.72, -0.30, 0.24], Q:  fq,  r: 0.12},  // fan L exhaust, aft
-      {p: [4.72,  0.30, 0.24], Q:  fq,  r: 0.12}, // fan R exhaust
+      // The fans lie on their sides at the tail: each draws up through a
+      // slot in the floor behind the axle and blows straight back over the
+      // diffuser exit from its nozzle.
+      {p: [4.33, -0.446, 0.03], Q: -fq, r: 0.12},  // fan L intake, the floor
+      {p: [4.33,  0.446, 0.03], Q: -fq, r: 0.12},  // fan R intake
+      {p: [4.69, -0.446, 0.452], Q: fq, r: 0.12},  // fan L nozzle, aft
+      {p: [4.69,  0.446, 0.452], Q: fq, r: 0.12},  // fan R nozzle
       {p: [1.78, -0.74, 0.45], Q: -pod, r: 0.11},  // sidepod inlet L
       {p: [1.78,  0.74, 0.45], Q: -pod, r: 0.11},  // sidepod inlet R
       {p: [3.52, -0.60, 0.62], Q:  pod, r: 0.12},  // radiator exit L

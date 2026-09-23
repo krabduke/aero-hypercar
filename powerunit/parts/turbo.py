@@ -156,8 +156,13 @@ def _housings():
         # discharges -- starting where the blades stop, not inside them
         parts.append(_snout(x0 - ib * (depth + 12.0), -ib, 34.0, 30.0, 26.0))
         # inlet flange, standing off the first section of the spiral
-        parts.append(_flange_at(pts[0], (pts[0][0], pts[0][1] * 1.7,
-                                         pts[0][2] * 1.0 + 26.0),
+        # The inlet neck, straight up out of the volute's first section,
+        # and its flange on top, square to the collector that drops onto it.
+        # On the section itself the flange sat beside the wheel and reached
+        # in over the blades.
+        top = (pts[0][0], pts[0][1], pts[0][2] + gaspath.TURBINE_NECK)
+        parts.append(mesh.pipe([pts[0], top], rad[0], 18))
+        parts.append(_flange_at(top, (top[0], top[1], top[2] + 30.0),
                                 rad[0], 8.0, 11.0))
         out[f"turbine_housing_{tag}"] = mesh.join(*parts)
 

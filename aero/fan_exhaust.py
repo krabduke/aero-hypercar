@@ -16,13 +16,14 @@ RHO = spec.RHO
 
 def flow(fan, exhaust, rho=RHO):
     values = (rho, fan["diameter"], fan["hub_r"], fan["axial_velocity"],
-              fan["n"], exhaust["exit_w"], exhaust["exit_h"])
+              fan["n"], exhaust["exit_r"])
     if not all(math.isfinite(v) and v > 0 for v in values):
         raise ValueError("Flow inputs must be finite and positive")
     if fan["n"] != int(fan["n"]) or fan["hub_r"] >= fan["diameter"] / 2:
         raise ValueError("Invalid fan count or hub radius")
-    # duct_r, not diameter/2. FAN carries both: "diameter" 520 is the ROTOR,
-    # "duct_r" 280 is the shroud, and the 20 mm between them is tip clearance.
+    # duct_r, not diameter/2. FAN carries both: "diameter" is the ROTOR,
+    # "duct_r" is the shroud's bore, and the gap between them is tip
+    # clearance.
     # Continuity is set by the passage the air flows through, which is the
     # duct -- the rotor sweeps slightly less than the duct passes, and the
     # difference leaks over the tips rather than vanishing. Sizing the annulus
@@ -30,7 +31,7 @@ def flow(fan, exhaust, rho=RHO):
     # 17.4 % mismatch that was two definitions of "annulus", not a real one.
     annulus = math.pi * ((fan["duct_r"] * MM) ** 2
                          - (fan["hub_r"] * MM) ** 2)
-    area = exhaust["exit_w"] * exhaust["exit_h"] * MM ** 2
+    area = math.pi * (exhaust["exit_r"] * MM) ** 2
     volume = annulus * fan["axial_velocity"]
     return {"annulus_m2": annulus, "exit_m2": area,
             "area_mismatch": abs(area / annulus - 1),

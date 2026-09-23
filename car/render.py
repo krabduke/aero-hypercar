@@ -277,38 +277,25 @@ def corners_of(prefixes):
 
 
 def mode_fan(s):
-    """The fan, from under the car.
+    """The fans, from behind and outboard.
 
-    This is the thing the whole car is arranged around -- the floor's
-    tunnels feed it, the diffuser discharges into its exhaust, and the 650 kg
-    it pulls down is what makes the lap time. It is also the one assembly
-    nothing in the render set has ever shown: it lives under the floor, so
-    the hero and the plan see bodywork and the cutaway sections the skin on
-    a plane that misses it entirely.
+    This is the thing the whole car is arranged around: the floor feeds it,
+    it pulls the 650 kg down, and its jets pump the diffuser. The fans lie
+    on their sides at the tail, so the view is into the nozzle from behind,
+    with the cowl, the nozzle and the wings above taken away to show the
+    stators, the motor and the rotor behind them.
     """
     from mathutils import Vector as V
     setup_render(s); setup_world(0.55); setup_lights()
-    # the floor is what you would be looking through
-    # the floor is what you would be looking through, and the fairing and
-    # the duct's own shell are what would be in the way once you were
     for o in meshes():
-        if o.name.startswith(("floor_surface", "floor_plank", "floor_skirts",
-                              "tunnel_", "floor_strake_", "floor_fence_",
-                              "diffuser_", "floor_edge", "fanduct",
-                              "fan_fairing_", "floor_plenum_edge_",
-                              "rear_light_panel", "crash_structure",
-                              "fan_scroll_", "fan_nozzle_", "exhaust",
-                              "beam_wing", "rear_wing_", "rear_endplate_",
-                              "rear_pylon_", "tether_r",
-                              "floor_fan_throat_")):
+        if o.name.startswith(("fan_fairing_", "fan_nozzle_", "beam_wing",
+                              "rear_wing_", "rear_endplate_", "rear_flap",
+                              "rear_gurney", "rear_louvre_", "drs_",
+                              "wing_mount_")):
             o.hide_render = True
-    # framed on the rotor, not on the duct: the duct spans the whole width
-    # of the car, so a frame fitted to it is a frame fitted to the car
-    c = corners_of(("fan_rotor_r",))
+    c = corners_of(("fan_rotor_r", "floor_fan_throat_r", "fanduct"))
     rad = max(V(p).length for p in CORNERS)
-    # from below, behind and outboard: the rotor's disc is horizontal, so a
-    # view from the side is a view of its edge
-    n = V((0.30, 0.34, -0.89)).normalized() * (rad * 5.2)
+    n = V((0.95, 0.55, 0.40)).normalized() * (rad * 3.2)
     cd = bpy.data.cameras.new("cam_fan"); cd.lens = 52
     ob = bpy.data.objects.new("cam_fan", cd)
     bpy.context.scene.collection.objects.link(ob)

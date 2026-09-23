@@ -88,18 +88,26 @@ def _hv_loom():
     # y -240 to -116 from z -206 to -78 and the oil cooler sits outboard of
     # it, so the left-hand run has to go outboard of the tank while the right
     # has a clear corridor close in.
-    flank_l, flank_r = 252.0, 168.0
-    drop_x = 336.0
+    #
+    # The drop is alongside the bellhousing, not behind it. At x 336 the
+    # runs crossed the bellhousing's back face, which is where the gearbox
+    # bolts on: across the flywheel in every render of the engine, and
+    # through the gearbox in the car.
+    flank_l, flank_r = 252.0, 176.0
+    drop_x = 300.0
     under = -196.0
     out = {}
     # Both connectors on the inverter's aft face, side by side. One was on
     # its front face, so the two cables from it -- to the pack and to the
     # MGU-K -- left forward and turned straight back over the unit to reach
     # the drop at its aft face: a hairpin loop standing above the engine.
-    ax = ix + iw / 2 + 12.0
+    #
+    # On its two side faces, over the drop on each side.
+    iy_half = Y["inverter"][1] / 2
+    ax = drop_x
 
     def plug(sgn):
-        return (ax, iy + sgn * 40.0, iz + ih * 0.1)
+        return (ax, iy + sgn * (iy_half + 10.0), iz + ih * 0.1)
 
     out["inverter_connectors"] = mesh.join(*[
         shapes.connector(*plug(sgn), 28.0, 22.0, 16.0, 8)
@@ -115,9 +123,8 @@ def _hv_loom():
         term = (bx - sgn * bw * 0.3, by + sgn * bd * 0.38, bz + bh / 2 + 7.0)
         fl = flank_l if sgn < 0 else flank_r
         path = [src,
-                (ax + 4.0, sgn * 74.0, iz - ih * 0.10),
-                (drop_x, sgn * 118.0, iz - ih * 0.70),
-                (drop_x + 4.0, sgn * fl, 10.0),
+                (drop_x, sgn * 118.0, iz - ih * 0.40),
+                (drop_x, sgn * fl, 10.0),
                 (drop_x, sgn * fl, -130.0),
                 (spec.BLOCK["x_rear"] * 0.70, sgn * fl, under),
                 (term[0] + sgn * 40.0, term[1] * 1.34, under + 6.0),
@@ -136,8 +143,7 @@ def _hv_loom():
     motor = (Y["mguk_x"] - 14.0, -Y["mguk_r"], 0.0)
     src = plug(-1.0)
     path = [src,
-            (ax + 4.0, -66.0, iz - ih * 0.20),
-            (drop_x - 6.0, -124.0, iz - ih * 0.80),
+            (drop_x - 6.0, -124.0, iz - ih * 0.60),
             (drop_x - 2.0, -(flank_l + 14.0), -20.0),
             (drop_x - 16.0, -(flank_l + 14.0), -150.0),
             (spec.BLOCK["x_rear"] * 0.55, -(flank_l + 14.0), under - 8.0),
@@ -161,11 +167,11 @@ def _hv_loom():
     # of the plenum below it and the collector inboard of it -- and drops in
     # at the turbo's own station.
     for index, x in enumerate(spec.TURBO["x"]):
-        sgn = -1.0 if index % 2 == 0 else 1.0
+        # Both on the -y side of their turbo: the collector drops onto the
+        # volute's inlet on the +y side, so that side is taken.
+        src = plug(-1.0 if index % 2 == 0 else 1.0)
+        sgn = -1.0
         term = (x, sgn * Y["mguh_r"], spec.TURBO["z"])
-        # from the inverter's aft plugs, running aft-to-fore without doubling
-        # back over the unit
-        src = plug(sgn)
         top = spec.TURBO["z"] + Y["mguh_r"] + 86.0
         # Both leads come forward from the inverter at the back, so both
         # reach their turbo from behind it. The approach was offset by the
@@ -173,15 +179,23 @@ def _hv_loom():
         # the rear one past its own before each turned back: a loop over
         # each turbo.
         path = [src,
-                (ax + 4.0, sgn * 88.0, iz + ih * 0.30),
                 (spec.BLOCK["x_rear"] + 10.0, sgn * 170.0, 250.0)]
         if spec.BLOCK["x_rear"] * 0.60 > x + 70.0:
             path.append((spec.BLOCK["x_rear"] * 0.60, sgn * 196.0, 274.0))
-        path += [(x + 60.0, sgn * 182.0, top - 4.0),
-                 (x + 24.0, sgn * 120.0, top + 24.0),
-                 # over the primaries, which peak at z 368, before dropping in
-                 (x, sgn * 50.0, top + 18.0),
-                 term]
+        if index % 2 == 0:
+            path += [(x + 60.0, sgn * 182.0, top - 4.0),
+                     (x + 24.0, sgn * 120.0, top + 24.0),
+                     # over the primaries, which peak at z 368, before
+                     # dropping in
+                     (x, sgn * 50.0, top + 18.0),
+                     term]
+        else:
+            # The aft turbo's wastegate fills this side above the shaft from
+            # z 284, and its collector the other: in underneath the wastegate
+            path += [(x + 60.0, sgn * 182.0, top - 4.0),
+                     (x + 12.0, sgn * 112.0, spec.TURBO["z"] + 14.0),
+                     (x, sgn * 60.0, spec.TURBO["z"] + 4.0),
+                     term]
         out[f"hv_motor_h_{index}"] = mesh.pipe(
             mesh.smooth_path(path, 3), 4.0, SM, subdiv=2)
         out[f"hv_motor_h_connector_{index}"] = shapes.connector(

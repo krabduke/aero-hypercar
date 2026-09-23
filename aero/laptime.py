@@ -45,7 +45,7 @@ K_BAND = (0.15, 0.25)
 
 class Car:
     def __init__(self, name, mass, power_kw, cla, cda, fan_kg=0.0,
-                 fan_power_kw=0.0, mu_ref=None):
+                 fan_power_kw=0.0, mu_ref=None, fan_control=None):
         self.name = name
         self.mass = mass
         self.power = power_kw * 1000.0
@@ -53,6 +53,7 @@ class Car:
         self.cda = cda
         self.fan_n = fan_kg * G
         self.fan_power = fan_power_kw * 1000.0
+        self.fan_control = fan_control
         self.mu_ref = mu_ref if mu_ref is not None else spec.F1["mu"]
         # the reference load the coefficient is quoted at: static, per tyre
         self.fz_ref = mass * G / 4.0
@@ -62,26 +63,39 @@ class Car:
         fz = max(normal_total / 4.0, 1.0)
         return self.mu_ref * (fz / self.fz_ref) ** (-k)
 
-    def downforce(self, v):
-        return 0.5 * RHO * self.cla * v * v + self.fan_n
+    def fan_frac(self, v):
+        """The share of full fan suction the controller runs at speed v:
+        flat out up to full_kph, eased back linearly to min_frac by
+        taper_kph. Without a schedule the fan is flat out everywhere."""
+        c = self.fan_control
+        if not c:
+            return 1.0
+        kph = v * 3.6
+        if kph <= c["full_kph"]:
+            return 1.0
+        f = min(1.0, (kph - c["full_kph"]) / (c["taper_kph"] - c["full_kph"]))
+        return 1.0 - (1.0 - c["min_frac"]) * f
+
+    def downforce(self, v, seal=1.0):
+        return 0.5 * RHO * self.cla * v * v + self.fan_n * self.fan_frac(v) * seal
 
     def drag(self, v):
         return 0.5 * RHO * self.cda * v * v
 
-    def normal(self, v):
-        return self.mass * G + self.downforce(v)
+    def normal(self, v, seal=1.0):
+        return self.mass * G + self.downforce(v, seal)
 
-    def lat_capability(self, v, k):
+    def lat_capability(self, v, k, seal=1.0):
         """Lateral acceleration available at this speed, m/s^2."""
-        n = self.normal(v)
+        n = self.normal(v, seal)
         a = self.mu(n, k) * n / self.mass
         return min(a, spec.DRIVER_G_LIMIT * G)
 
-    def corner_speed(self, radius, k):
+    def corner_speed(self, radius, k, seal=1.0):
         """Fastest steady speed through a corner of this radius."""
         v = 30.0
         for _ in range(60):
-            a = self.lat_capability(v, k)
+            a = self.lat_capability(v, k, seal)
             vn = math.sqrt(max(a * radius, 1e-6))
             if abs(vn - v) < 1e-4:
                 break
@@ -89,23 +103,25 @@ class Car:
         return v
 
     def tractive(self, v):
-        """Force available at the wheels, after the fan takes its share."""
-        usable = max(self.power - self.fan_power, 1.0) * 0.90   # driveline
+        """Force available at the wheels, after the fan takes its share --
+        which goes as the cube of its speed, so as suction^1.5."""
+        fan = self.fan_power * self.fan_frac(v) ** 1.5
+        usable = max(self.power - fan, 1.0) * 0.90   # driveline
         return usable / max(v, 5.0)
 
-    def accel(self, v, lat_used, k):
+    def accel(self, v, lat_used, k, seal=1.0):
         """Longitudinal acceleration with `lat_used` of the ellipse spent."""
-        n = self.normal(v)
+        n = self.normal(v, seal)
         grip = self.mu(n, k) * n
         frac = min(lat_used, 0.999)
         long_grip = grip * math.sqrt(1.0 - frac * frac)
         f = min(self.tractive(v), long_grip) - self.drag(v)
         return f / self.mass
 
-    def brake(self, v, lat_used, k):
+    def brake(self, v, lat_used, k, seal=1.0):
         """Braking deceleration, positive. Downforce helps here too, and that
         gain is as large as the cornering one and usually forgotten."""
-        n = self.normal(v)
+        n = self.normal(v, seal)
         grip = self.mu(n, k) * n
         frac = min(lat_used, 0.999)
         long_grip = grip * math.sqrt(1.0 - frac * frac)
@@ -146,16 +162,23 @@ def circuit(straight_scale=1.0):
     return segs
 
 
-def simulate(car, segs, k, ds=5.0):
-    """Three passes: corner limits, then accelerate, then brake into them."""
-    xs, lim, kind = [], [], []
+def simulate(car, segs, k, ds=5.0, seal_loss=0.0, kerb_frac=0.15):
+    """Three passes: corner limits, then accelerate, then brake into them.
+
+    `seal_loss` is the share of fan suction lost on the first and last
+    `kerb_frac` of every corner, where the car rides the kerbs and the skirts
+    lift off the track."""
+    xs, lim, kind, seal = [], [], [], []
     for length, radius, knd in segs:
         n = max(int(length / ds), 1)
-        vlim = car.corner_speed(radius, k) if radius else 1.0e9
-        for _ in range(n):
+        for j in range(n):
+            f = (j + 0.5) / n
+            kerb = radius is not None and (f < kerb_frac or f > 1 - kerb_frac)
+            sl = 1.0 - seal_loss if kerb else 1.0
             xs.append(length / n)
-            lim.append(vlim)
+            lim.append(car.corner_speed(radius, k, sl) if radius else 1.0e9)
             kind.append(knd)
+            seal.append(sl)
     n = len(xs)
     v = [min(l, 120.0) for l in lim]
 
@@ -165,13 +188,13 @@ def simulate(car, segs, k, ds=5.0):
         for i in range(n):
             prev = v[i - 1] if i else start
             lat = (prev * prev / (lim[i] * lim[i])) if lim[i] < 1e8 else 0.0
-            a = car.accel(prev, min(lat, 1.0), k)
+            a = car.accel(prev, min(lat, 1.0), k, seal[i])
             v[i] = min(lim[i], math.sqrt(max(prev * prev + 2 * a * xs[i], 1.0)))
         # backward: brake into what is coming
         for i in range(n - 1, -1, -1):
             nxt = v[(i + 1) % n]
             lat = (nxt * nxt / (lim[i] * lim[i])) if lim[i] < 1e8 else 0.0
-            b = car.brake(v[i], min(lat, 1.0), k)
+            b = car.brake(v[i], min(lat, 1.0), k, seal[i])
             v[i] = min(v[i], math.sqrt(max(nxt * nxt + 2 * b * xs[i], 1.0)))
         if abs(v[-1] - start) < 0.5:
             break
@@ -193,7 +216,8 @@ def build_cars():
     ours = Car("VX-1 Vortex", spec.MASS_KG, POWER_KW,
                spec.AERO["cla_wings"] + spec.AERO["cla_floor"],
                spec.AERO["cda"], fan_kg=spec.FAN["downforce_kg"],
-               fan_power_kw=spec.FAN["power_kw"])
+               fan_power_kw=spec.FAN["power_kw"],
+               fan_control=spec.FAN_CONTROL)
     f1 = Car("Formula 1 reference", spec.F1["mass"], spec.F1["power_kw"],
              spec.F1["cla"], spec.F1["cda"])
     return ours, f1
@@ -293,6 +317,18 @@ def main():
         print("  nothing and its drag is pure loss -- which is a design")
         print("  finding, not a modelling artefact.")
         print()
+    c = spec.FAN_CONTROL
+    print("  FAN SEAL AT THE KERBS (k = %.2f)" % K_BAND[1])
+    print("  The skirts lift where the car rides the kerbs, on the first and")
+    print("  last %.0f %% of every corner, and that much fan suction is lost."
+          % (100 * c["kerb_frac"]))
+    rf = simulate(f1, segs, K_BAND[1])
+    for loss in c["kerb_seal_loss"]:
+        r = simulate(ours, segs, K_BAND[1], seal_loss=loss,
+                     kerb_frac=c["kerb_frac"])
+        print("  %3.0f %% of suction lost      %7.2fs  vs F1 %7.2fs  %+6.2fs"
+              % (100 * loss, r["time"], rf["time"], r["time"] - rf["time"]))
+    print()
     print("  Assumptions: mu_ref %.2f for both cars, same rubber. Load"
           % ours.mu_ref)
     print("  sensitivity swept over the sourced band %.2f-%.2f; the spec's"

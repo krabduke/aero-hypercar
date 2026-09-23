@@ -96,33 +96,36 @@ AERO = {
 
 FAN = {
     "n": 2,
-    "diameter": 520.0,
-    # Behind the rear tyres and inboard of them. At x = 4180, y = 460 with a
-    # 310 mm duct the shrouds ran straight through both rear wheels.
-    "x": 4400.0,
-    "y": 300.0,
-    "z": 320.0,
-    "blades": 13,
-    "rpm": 7200.0,
-    "power_kw": 62.0,          # drawn from the hybrid system
+    # 340 mm, horizontal axes, at the tail -- see parts/fans.py for why. At
+    # 520 mm on vertical axes they needed an exhaust duct that could not be
+    # built, and they were sized for four times the flow the skirts leak.
+    "diameter": 340.0,
+    # Behind the rear wheels (rims end at x 4290), outboard of the rear
+    # pylons (y 241) and inboard of the endplates, above the diffuser's lip
+    # (z 269) and below the endplates' foot (z 627).
+    "x": 4490.0,
+    "y": 446.0,
+    "z": 452.0,
+    "blades": 11,
+    "rpm": 7200.0,             # full speed; the controller runs it slower
+    # 8 m3/s at 1.2 kPa of suction plus the jet's own head is 25 kW of air;
+    # 38 kW at the shaft is that at 0.65 efficiency. It was 62 for a fan
+    # sized for four times the leakage the skirts let in.
+    "power_kw": 38.0,          # drawn from the hybrid system, both fans
     "downforce_kg": 650.0,     # near-constant, this is the point of the car
-    "duct_r": 280.0,
-    # the plenum that feeds each fan from its tunnel. Its centreline has to
-    # clear its own radius above the track, or the duct digs into the surface.
-    "plenum_r": 150.0,
-    "plenum_z0": 200.0,
+    "duct_r": 170.0,
     # blade geometry. A fan blade is twisted: to pull a uniform axial velocity
     # the blade angle has to fall with radius, beta = atan(Va / (omega r)).
-    "hub_r": 74.0,
-    "blade_root_chord": 96.0,
-    "blade_tip_chord": 62.0,
+    "hub_r": 56.0,
+    "blade_root_chord": 66.0,
+    "blade_tip_chord": 46.0,
     "blade_thickness": 0.10,
     "blade_camber": 0.045,
     "blade_beta_root": 52.0,     # deg from the disc plane
     "blade_beta_tip": 24.0,
     "blade_rake": 16.0,          # deg of sweep, for noise
-    "stator_vanes": 9,           # straighten the swirl before the exit
-    "axial_velocity": 42.0,      # m/s through the disc, sets the twist
+    "stator_vanes": 7,           # straighten the swirl before the exit
+    "axial_velocity": 50.0,      # m/s through the disc, sets the twist
 }
 
 TYRE_MU = 1.80                 # bespoke slick at the reference load
@@ -424,8 +427,12 @@ FLOOR_EDGE = {
     "edge_root_dy": -18.0, "edge_root_z": 53.0,
 }
 
+# Above the fans, which now lie across its old place at the tail, and below
+# the rear wing's main plane at z 839: it still works the diffuser exit and
+# the rear wing together, and the fan jets underneath it pump the diffuser
+# as well.
 BEAM_WING = {
-    "x": 4280.0, "z": 430.0, "span": 1100.0, "chord": 210.0,
+    "x": 4280.0, "z": 690.0, "span": 1100.0, "chord": 210.0,
     "elements": 2, "aoa": 12.0, "gap": 18.0, "overlap": 6.0,
 }
 
@@ -648,15 +655,6 @@ ROLL_HOOP = {
 
 # Shaft and bevel gears taking fan drive off the gearbox case. The fans can
 # be driven mechanically as well as electrically; this is the mechanical path.
-FAN_DRIVE = {
-    "shaft_r": 16.0,
-    "pinion_r": 26.0, "pinion_t": 18.0,
-    "crown_r": 52.0, "crown_t": 16.0,
-    "teeth": 13,
-    "input_z": 552.0,        # layshaft height above the floor line
-    "gearbox_y": 150.0,      # where the flange leaves the case
-}
-
 # DRS: the actuator is a body, a rod and a clevis on the flap underside just
 # ahead of its trailing edge. It stands under the mainplane's lower surface,
 # which it touches, and reaches up-aft to the flap, which it moves.
@@ -747,12 +745,6 @@ INLET = {
 }
 
 # Fan motors: finned case, end bells, terminal block, mounting feet.
-FAN_MOTOR = {
-    "bore_r": 25.0,          # the drive shaft passes through the case
-    "fin_h": 8.0, "fins": 14, "bell_r": 46.0,
-    "foot_w": 18.0, "term": (34.0, 24.0, 20.0),
-}
-
 # Pit-lane and service hardware
 SERVICE = {
     "gun_bore_r": 46.0, "gun_lug_r": 10.0, "gun_lugs": 9, "gun_len": 30.0,
@@ -817,7 +809,7 @@ MATERIAL_MAP = {
     "tub": "carbon_gloss", "nose": "carbon_gloss", "floor": "carbon_matte",
     "tunnel": "carbon_matte", "diffuser": "carbon_matte", "strake": "carbon_matte",
     "wing": "carbon_gloss", "endplate": "carbon_gloss", "flap": "carbon_gloss",
-    "pylon": "carbon_gloss", "sidepod": "carbon_gloss", "engine_cover": "carbon_gloss",
+    "pylon": "carbon_gloss", "rear_frame": "carbon_gloss", "sidepod": "carbon_gloss", "engine_cover": "carbon_gloss",
     "airbox": "carbon_gloss", "halo": "titanium", "skirt": "rubber_seal",
     "tyre": "rubber_tyre", "rim": "alu_dark", "disc": "cf_disc",
     "caliper": "alu_bright", "upright": "alu_bright",
@@ -1009,33 +1001,28 @@ def top_speed_kph(power_kw=935.0):
 #
 # The exit that actually clears everything sits behind the beam wing, below
 # the mainplane, and inboard of the endplates.
+# How the fans are run. Below `full_kph` they are flat out -- that is where
+# a fan earns its place, where a wing has nothing. Above it the controller
+# eases them back, linearly in suction, to `min_frac` by `taper_kph`: by then
+# the tunnels and wings are making most of the load and the car is at the
+# driver's g limit in the fast corners anyway, and a fan's power goes as the
+# cube of its speed, so the suction it keeps costs a fraction of the power.
+# `kerb_seal_loss` is the band of suction lost where the car rides the kerbs
+# on corner entry and exit and the skirts lift; the lap is run at both ends.
+FAN_CONTROL = {
+    "full_kph": 180.0, "taper_kph": 280.0, "min_frac": 0.35,
+    "kerb_seal_loss": (0.0, 0.30), "kerb_frac": 0.15,
+}
+
 FAN_EXHAUST = {
-    "theta":     28.0,      # degrees above horizontal, aimed aft
-    "cant":       6.0,      # degrees outboard, to keep the two jets apart
-    "exit_x":  4680.0,      # 65 mm behind the beam wing, clear of the pylons
-    "exit_z":   440.0,      # spans z 220-660: lower lip just under the
-                            # diffuser exit at z 250, which is the ejector
-    # The endplates are thin plates at y +/- 710 running back to x 5101. The
-    # jet passes INBOARD of them rather than under them: spreading at the
-    # standard 11.8 degree half-angle from y 530, it does not reach y 710
-    # until x 5255, which is past the endplates' aft end. That is an argument,
-    # not a test; nothing tests the jet's envelope yet.
-    #
-    # The duct that feeds this exit cannot be built as placed:
-    # tools/check_fan_exhaust.py measures it. The air leaves the stators
-    # going up at z 445 and the mouth's lower lip is at z 232, so the lower
-    # half of the jet would have to turn back down past the rotor; the swept
-    # duct bends 214 mm tighter than it is deep and folds 128 mm through
-    # itself. Raising the exit above the beam wing, or turning the fans to
-    # blow aft, is a layout decision still to be made.
-    "exit_y":   300.0,      # spans y 70-530, 180 mm inboard of the endplates
-    # The nozzle area matches the fan annulus, 0.229 m^2 a side. It is
-    # tempting to contract it -- a faster jet entrains harder and carries more
-    # momentum -- but a contraction is back pressure, and back pressure moves
-    # the fan up its own curve and down in flow. The flow is the downforce.
-    "exit_w":   460.0,
-    "exit_h":   498.0,
-    "scroll_r": 260.0,      # radius of the turn out of the fan
+    # Straight aft along each fan's own axis, over the diffuser's exit: the
+    # jet pumps the diffuser the way a beam wing does. The nozzle runs from
+    # the end of the shroud to `exit_a` behind the disc and contracts from the
+    # duct's bore to `exit_r`, which keeps the exit area within a couple of
+    # per cent of the fan annulus -- a contraction is back pressure, and back
+    # pressure moves the fan up its own curve and down in flow.
+    "exit_a": 200.0,           # mm aft of the disc
+    "exit_r": 162.0,
 }
 
 # --------------------------------------------------------------------------

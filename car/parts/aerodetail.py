@@ -236,22 +236,21 @@ def _details():
 
 
 def _fan_fairings():
-    fan = spec.FAN
-    radius = fan["duct_r"]
-    profile = [(-90.0, radius + 2.0),
-               (-82.0, radius + 6.0),
-               (-60.0, radius + 12.0),
-               (-24.0, radius + 14.0),
-               (20.0, radius + 12.0),
-               (56.0, radius + 6.0),
-               (70.0, radius + 2.0),
-               (70.0, radius),
-               (-90.0, radius)]
+    """The cowl round each fan: from the lip of the bellmouth back over the
+    shroud and the nozzle to the exit, shaped so the air passing outside the
+    fan follows it rather than breaking off a square step. Its bore is the
+    shroud's and the nozzle's outside, which it is bonded over."""
+    fan, ex = spec.FAN, spec.FAN_EXHAUST
+    R = fan["duct_r"]
+    profile = [(-76.0, R + 30.0), (-50.0, R + 40.0), (10.0, R + 42.0),
+               (90.0, R + 34.0), (ex["exit_a"], ex["exit_r"] + 12.0),
+               (ex["exit_a"], ex["exit_r"] + 6.0), (70.0, R + 8.0),
+               (-54.0, R + 8.0), (-66.0, R + 16.0)]
     verts, faces = mesh.revolve_closed(profile, 64)
     out = {}
     for tag, sgn in (("l", -1.0), ("r", 1.0)):
         out[f"fan_fairing_{tag}"] = (
-            [(fan["x"] + py, sgn * fan["y"] + pz, fan["z"] + px)
+            [(fan["x"] + px, sgn * fan["y"] + py, fan["z"] + pz)
              for px, py, pz in verts], list(faces))
     return out
 

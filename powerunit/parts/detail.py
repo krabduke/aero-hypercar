@@ -523,68 +523,28 @@ def _heat_shields():
     for pair in (0, 2):
         _, tx, _sgn, ib = gaspath.turbo_side(pair)
         sc = gaspath.turbine_scroll(pair)
-        # a shell standing off the volute, open where the inlet flange and
-        # the outlet snout come through
-        def scroll_rings(off):
-            # Only the outer two thirds of each section: a blanket is laced
-            # over the outside of a volute, and a full ring at this offset
-            # would pass through the wheel the volute is wrapped round.
-            #
-            # Which two thirds is the whole of it. This arc used to be
-            # centred on the axial direction and swept 230 degrees from
-            # there, so the covered sector was the outboard FACE of the
-            # volute and the two free edges ran down the inside, 0.91 of a
-            # section radius in towards the wheel -- and since the spiral's
-            # own radius shrinks as it goes round, each free edge cut
-            # through the surface laid down by the stations before it. That
-            # is the shredded-paper look: not a blanket, two free edges
-            # spiralling through their own wrap.
-            #
-            # The sector is centred on the outward radius instead, which is
-            # where a blanket goes. The free edges land on the two axial
-            # faces, and the deepest either reaches is 0.34 of a section in
-            # -- still clear of the passage, let alone the wheel.
-            out = []
-            for (p, r) in sc:
-                x, y, z = p
-                m = math.hypot(y, z - T["z"]) or 1.0
-                uy, uz = y / m, (z - T["z"]) / m
-                ring = []
-                for k in range(13):
-                    a = math.radians(90.0 - 110.0 + 220.0 * k / 12)
-                    rr = r + off
-                    ring.append((x + rr * math.cos(a),
-                                 y + rr * math.sin(a) * uy,
-                                 z + rr * math.sin(a) * uz))
-                out.append(ring)
-            return out
-        # a 4 mm wrap, not a solid: what is under a blanket is under it, not
-        # inside it, and the audit is right to say so
-        parts.append(_shell_rings(scroll_rings(9.0), scroll_rings(5.0),
-                                  closed=False))
-
-        # and the same over the collector that feeds it
+        # A quilted wrap round the collector's drum and down its outlet leg
+        # to the turbine, which is the hottest metal on the car and the part
+        # nearest the bodywork. The volute's own blanket was a 220-degree
+        # arc swept along its spiral, and whichever way it was clocked it
+        # read as strips of paper wound loosely round the housing; the
+        # volute is cast and runs bare, as they do.
+        D = gaspath.COLLECTOR_DRUM
         cp = gaspath.collector_path(pair)
-        parts.append(_shell_rings(_sleeve(cp, gaspath.COLLECTOR_RADII, 9.0),
-                                  _sleeve(cp, gaspath.COLLECTOR_RADII, 5.0)))
-        # the lace line down the seam, which is how a blanket is held on
-        # The tie-downs, which is how a blanket is held on. They sit on the
-        # crown -- straight out along the radius, on top of the wrap -- and
-        # not on the diagonal between crown and face, where they used to be
-        # and where nothing could have reached them.
-        lace = []
-        for k in range(9):
-            f = (k + 0.5) / 9
-            idx = min(int(f * (len(sc) - 1)), len(sc) - 2)
-            (px, py, pz), r = sc[idx]
-            m = math.hypot(py, pz - T["z"]) or 1.0
-            uy, uz = py / m, (pz - T["z"]) / m
-            lv, lf = mesh.ring_torus(0.0, 2.2, 0.9, 10, 6)
-            lv = mesh.translate(lv, px,
-                                py + (r + 10.0) * uy,
-                                pz + (r + 10.0) * uz)
-            lace.append((lv, lf))
-        parts.append(mesh.join(*lace))
+        c = cp[0]
+        wv, wf = mesh.tube(-D["half_len"] + 12.0, D["half_len"] - 12.0,
+                           D["r"] + 1.0, D["r"] + 4.0, SEG)
+        wv = mesh.rot_z(wv, math.pi / 2)
+        parts.append((mesh.translate(wv, *c), wf))
+        leg = [cp[0], cp[1], cp[2]]
+        parts.append(_shell_rings(_sleeve(leg, gaspath.COLLECTOR_RADII, 5.0),
+                                  _sleeve(leg, gaspath.COLLECTOR_RADII, 1.0)))
+        # tie-downs round the drum, on top of the wrap
+        for k in (-1.0, 1.0):
+            lv, lf = mesh.ring_torus(0.0, D["r"] + 4.0, 1.2, SEG, 6)
+            lv = mesh.rot_z(lv, math.pi / 2)
+            parts.append((mesh.translate(lv, c[0], c[1] + k * 14.0, c[2]),
+                          lf))
     return {"heat_shields": mesh.join(*parts)}
 
 

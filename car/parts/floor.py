@@ -93,39 +93,98 @@ def _inlet_lip():
 
 def _plenum():
     out = {}
+    holes = []
     for side, sgn in (("l", -1.0), ("r", 1.0)):
         rings = []
+        # to the fan intakes, which take over the seal behind it: it ran on
+        # to the floor's trailing edge, through the intakes' walls
+        x_end = spec.FAN["x"] - 80.0 - 80.0 - 94.0 - 12.0
         for i in range(65):
-            x = F["x0"] + (F["x1"] - F["x0"]) * i / 64.0
+            x = F["x0"] + (x_end - F["x0"]) * i / 64.0
             y = sgn * (half_width(x) - 28.0)
             z = _floor_z(x)
             rings.append([(x, y - 4.0, 10.0), (x, y + 4.0, 10.0),
                           (x, y + 4.0, z + 6.0), (x, y - 4.0, z + 6.0)])
         out[f"floor_plenum_edge_{side}"] = _loft(rings)
-        rings = []
-        fan = spec.FAN
-        for i in range(25):
-            t = i / 24.0
-            e = t * t * (3.0 - 2.0 * t)
-            x = fan["x"] - 240.0 + 240.0 * t
-            z = fan["plenum_z0"] + (fan["z"] - fan["plenum_z0"]) * e
-            r = fan["plenum_r"] * (1.0 + 0.12 * (1.0 - t) ** 2)
-            rings.append([(x, sgn * fan["y"] + r * math.cos(a),
-                           z + r * math.sin(a))
-                          for a in [2.0 * math.pi * j / 48.0 for j in range(48)]])
-        inner = [[(x, sgn * fan["y"] + (y - sgn * fan["y"]) * 0.97,
-                   zc + (z - zc) * 0.97)
-                  for x, y, z in ring]
-                 for ring, zc in zip(rings, [
-                     fan["plenum_z0"] + (fan["z"] - fan["plenum_z0"])
-                     * (i / 24.0) ** 2 * (3.0 - 2.0 * i / 24.0)
-                     for i in range(25)])]
-        # The outer wall out, the bore back, and the loop closed -- rather
-        # than repeating ring 0 at the end, which duplicated its 48 vertices
-        # and left both rims free: 96 loose edges, exactly two rings' worth.
-        out[f"floor_fan_throat_{side}"] = _loft(
-            rings + list(reversed(inner)), capped=False, closed=True)
+        out[f"floor_fan_throat_{side}"] = _fan_intake(sgn)
+        hole = _fan_intake(sgn, bore_only=True)
+        out[f"cut:tunnel_{side}"] = hole
+        holes.append(hole)
+    out["cut:floor_surface"] = mesh.join(*holes)
     return out
+
+
+def _fan_intake(sgn, n=28, m=40, wall=5.0, bore_only=False):
+    """A fan's intake: out of a slot in the floor behind the axle, up, and
+    round into the fan's face.
+
+    The fan lies on its side at the tail, so the air leaves the sealed floor
+    going up and has to arrive going aft. The slot is long across the car and
+    short along it -- 160 by 300 mm -- to fit between the rear tethers ahead
+    of it and the wheel rims outboard, and the section rounds out to the
+    fan's bellmouth over the turn. A wall with a bore, open at both ends.
+    """
+    fan = spec.FAN
+    y = sgn * fan["y"]
+    R = fan["duct_r"]
+    lip_x = fan["x"] - 80.0
+    # open through the floor's underside, facing down onto the track: this
+    # is where the air under the floor comes up into the fan
+    p0 = (lip_x - 80.0, y, 2.0)
+    p3 = (lip_x, y, fan["z"])             # the fan's lip, facing aft
+    p1 = (p0[0], y, p0[2] + 280.0)
+    p2 = (p3[0] - 70.0, y, p3[2])
+
+    def at(t):
+        s = 1.0 - t
+        c = tuple(s ** 3 * p0[k] + 3 * s * s * t * p1[k]
+                  + 3 * s * t * t * p2[k] + t ** 3 * p3[k] for k in range(3))
+        d = tuple(3 * s * s * (p1[k] - p0[k]) + 6 * s * t * (p2[k] - p1[k])
+                  + 3 * t * t * (p3[k] - p2[k]) for k in range(3))
+        L = math.sqrt(sum(v * v for v in d))
+        return c, tuple(v / L for v in d)
+
+    def rings(off):
+        out = []
+        for i in range(n + 1):
+            t = i / n
+            c, T = at(t)
+            # the section's two axes: across the car, and square to it
+            W = (0.0, 1.0, 0.0)
+            H = (T[1] * W[2] - T[2] * W[1], T[2] * W[0] - T[0] * W[2],
+                 T[0] * W[1] - T[1] * W[0])
+            L = math.sqrt(sum(v * v for v in H))
+            H = tuple(v / L for v in H)
+            e = t * t * (3.0 - 2.0 * t)
+            ha = 94.0 + (R + 28.0 - 94.0) * e - off
+            # across the car it stays a slot until it is clear of the rear
+            # tyre, and only then opens out to the fan's lip
+            g = max(0.0, (t - 0.86) / 0.14)
+            # and at the floor it fits inside the skirts, which seal the
+            # floor's edge 92 mm outboard of the fan's axis
+            h0 = max(0.0, min(1.0, (t - 0.22) / 0.30))
+            hb = (84.0 + 56.0 * h0 * h0 * (3 - 2 * h0)
+                  + (R + 28.0 - 140.0) * g * g * (3 - 2 * g) - off)
+            p = 2.0 / (4.0 - 2.0 * e)          # boxy slot to a circle
+            ring = []
+            for j in range(m):
+                a = 2.0 * math.pi * j / m
+                ca, sa = math.cos(a), math.sin(a)
+                u = ha * math.copysign(abs(ca) ** p, ca)
+                v = hb * math.copysign(abs(sa) ** p, sa)
+                ring.append(tuple(c[k] + u * H[k] + v * W[k]
+                                  for k in range(3)))
+            out.append(ring)
+        return out
+
+    if bore_only:
+        # the hole the intake makes through the floor and the tunnel roof,
+        # run on below the floor so it opens right through
+        bore = rings(wall)
+        drop = [[(p[0], p[1], p[2] - 30.0) for p in bore[0]]]
+        return _loft(drop + bore[:n // 2])
+    return _loft(rings(0.0) + list(reversed(rings(wall))),
+                 capped=False, closed=True)
 
 
 def _floor_z(x):
