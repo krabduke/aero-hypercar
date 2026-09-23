@@ -157,6 +157,33 @@ def ribbed_cover(x0, x1, half_w, z_base, height, n_ribs=7, rib_h=5.0,
     return mesh.join(*parts)
 
 
+def cover_cavity(x0, x1, half_w, z_base, height, wall, crown=0.35, n=18):
+    """The inside of `ribbed_cover`: the same section `wall` in from it,
+    and open underneath from z_base down, where the cover sits on the head
+    it covers."""
+    rings = []
+    for x in (x0 + wall, x0 + (x1 - x0) * 0.06, x1 - (x1 - x0) * 0.06,
+              x1 - wall):
+        t = 0.0 if x in (x0 + wall, x1 - wall) else 1.0
+        hw = half_w * (0.90 + 0.10 * t) - wall
+        h = height * (0.72 + 0.28 * t) - wall
+        ring = []
+        for i in range(n):
+            a = 2 * math.pi * i / n
+            ca, sa = math.cos(a), math.sin(a)
+            p = 2.0 / 2.6
+            y = hw * math.copysign(abs(ca) ** p, ca)
+            z = z_base + h * crown + h * math.copysign(abs(sa) ** p, sa)
+            ring.append((x, y, min(z, z_base) if sa < 0 else z))
+        rings.append(ring)
+    # and on down through whatever of the loft hung below the flange
+    for ring in rings:
+        for i in range(n):
+            if math.sin(2 * math.pi * i / n) < 0:
+                ring[i] = (ring[i][0], ring[i][1], z_base - 60.0)
+    return _loft_closed(rings)
+
+
 def tapered_pan(x0, x1, hw0, hw1, z_top, depth, sump_w, sump_x, seg=4):
     """A sump: a wide rail at the block face falling into a narrow keel.
 

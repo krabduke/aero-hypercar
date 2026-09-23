@@ -311,8 +311,8 @@
    "key": "07 Power Unit",
    "label": "Power unit",
    "color": "#A8763E",
-   "parts": 7,
-   "faces": 2302325
+   "parts": 9,
+   "faces": 2302589
   },
   {
    "key": "08 Cooling and Energy",
@@ -1924,7 +1924,7 @@
    "mat": "alu_cast",
    "x0": 2868.5,
    "x1": 3597.9,
-   "f": 2269395
+   "f": 2266223
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -1946,6 +1946,20 @@
    "x0": 3008.4,
    "x1": 3471.6,
    "f": 11595
+  },
+  "engine_camcover_l": {
+   "g": "07 Power Unit",
+   "mat": "alu_cast",
+   "x0": 3019.0,
+   "x1": 3461.0,
+   "f": 1718
+  },
+  "engine_camcover_r": {
+   "g": "07 Power Unit",
+   "mat": "alu_cast",
+   "x0": 3019.0,
+   "x1": 3461.0,
+   "f": 1718
   },
   "engine_head_l": {
    "g": "07 Power Unit",

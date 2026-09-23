@@ -488,6 +488,20 @@ def _covers():
         # outer corner stood 3 mm proud of the casting it bolts to
         v = [(x, y + 2.0, zz) for (x, y, zz) in v]
         out[f"camcover_{'lr'[bank]}"] = (rot(v), f)
+        # It is a casting, 4 mm thick and open underneath. It was solid, and
+        # a third of it hung below its own flange inside the head, so the
+        # camshafts, their lobes and their caps were all inside a block of
+        # aluminium.
+        cv, cf = shapes.cover_cavity(
+            H["x_front"] + 7.0, H["x_rear"] - 7.0,
+            H["half_width"] * 0.86, z, 34.0, 4.0)
+        # and nothing of it below the flange, end walls included
+        x0c, x1c = H["x_front"] + 7.0, H["x_rear"] - 7.0
+        below = mesh.box((x0c + x1c) / 2, 0.0, z - 40.0, x1c - x0c + 6.0,
+                         H["half_width"] * 2.2, 80.0)
+        cv, cf = mesh.join((cv, cf), below)
+        cv = [(x, y + 2.0, zz) for (x, y, zz) in cv]
+        out[f"cut:camcover_{'lr'[bank]}"] = (rot(cv), cf)
 
         # A cam cover's bolts go round the injector bosses, not through
         # them. At eleven evenly spaced stations two of them landed within

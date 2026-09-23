@@ -156,10 +156,12 @@ fan_stators,06 Fan System,alu_bright,,,,,,,,,504,288,4146.0,4651.0,-553.2,554.0,
 fanduct,06 Fan System,carbon_matte,,,,,,,,,780,780,4120.3,4680.0,-579.9,579.9,230.0,390.0
 battery,08 Cooling and Energy,anodised,,,,,,,,,2548,2210,2040.4,2799.6,-149.6,149.6,86.0,205.0
 battery_modules,08 Cooling and Energy,alu_dark,,,,,,,,,980,850,2054.7,2785.3,-144.0,144.0,111.5,188.5
-engine,07 Power Unit,alu_cast,,,,,,,,,2267880,2269395,2868.5,3597.9,-320.7,320.7,80.0,705.0
+engine,07 Power Unit,alu_cast,,,,,,,,,2264208,2266223,2868.5,3597.9,-320.7,320.7,80.0,705.0
 engine_block_bank_l,07 Power Unit,alu_cast,,,,,,,,,8406,5719,3008.9,3471.1,-126.2,122.2,289.8,440.2
 engine_block_bank_r,07 Power Unit,alu_cast,,,,,,,,,7509,4780,3008.9,3471.1,-122.2,126.2,289.8,440.2
 engine_block_crankcase,07 Power Unit,alu_cast,,,,,,,,,18114,11595,3008.4,3471.6,-101.1,101.1,218.0,342.0
+engine_camcover_l,07 Power Unit,alu_cast,,,,,,,,,2146,1718,3019.0,3461.0,-242.2,-148.2,465.1,559.0
+engine_camcover_r,07 Power Unit,alu_cast,,,,,,,,,2146,1718,3019.0,3461.0,151.1,245.0,462.2,556.2
 engine_head_l,07 Power Unit,alu_cast,,,,,,,,,2555,2395,3002.7,3458.3,-215.1,-47.4,372.7,538.4
 engine_head_r,07 Power Unit,alu_cast,,,,,,,,,2357,2014,3021.7,3477.3,47.4,215.1,372.7,538.4
 fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,112.0,538.0
