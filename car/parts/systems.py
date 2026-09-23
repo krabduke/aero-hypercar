@@ -373,8 +373,9 @@ def _electrical():
     # On top of the fuel cell, under the engine cover: the only place in
     # this bay that is neither bladder nor radiator. At y 150 they were in
     # the fuel; at y 288 they were in the radiator core.
+    # standing on the cell's lid
     fz = (spec.POWERTRAIN["fuel_z"] + spec.POWERTRAIN["fuel"][2] / 2
-          + 62.0)
+          + 40.0)
     out["control_boxes"] = mesh.join(
         shapes.finned_case(2500.0, 118.0, fz, 180.0, 120.0, 80.0,
                            n_fins=7, fin_h=6.0, fin_t=3.0, r=12.0),
@@ -386,6 +387,20 @@ def _electrical():
 def _strap(path, normals, width, thick=5.0):
     """A flat belt along `path`, lying on the surface whose outward normal
     at each point is given: `width` across, `thick` off the surface."""
+    # three stations a segment, so the belt bends over the body rather than
+    # cutting a straight chord through it
+    dense, dn = [], []
+    for i in range(len(path) - 1):
+        for k in range(3):
+            f = k / 3.0
+            dense.append(tuple(path[i][j] + (path[i + 1][j] - path[i][j]) * f
+                               for j in range(3)))
+            dn.append(mesh._normalise(tuple(
+                normals[i][j] + (normals[i + 1][j] - normals[i][j]) * f
+                for j in range(3))))
+    dense.append(path[-1])
+    dn.append(normals[-1])
+    path, normals = dense, dn
     n = len(path)
     verts = []
     for i in range(n):

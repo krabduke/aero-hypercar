@@ -73,7 +73,7 @@ CIRCUITS = [
     ('drive: engine to gearbox to the rear wheel',
      ['engine', 'gearbox', 'driveshaft_rl', 'hub_rl']),
     ('the pack and cell are carried on the engine bulkhead',
-     ['tub', 'bulkhead_engine', 'fuel_cell', 'battery']),
+     ['tub', 'bulkhead_engine', 'battery', 'fuel_cell']),
     ('fuel: cell to fittings to engine',
      ['fuel_cell', 'fuel_fittings', 'engine']),
     ('fuel filler',

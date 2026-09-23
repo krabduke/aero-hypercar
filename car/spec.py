@@ -575,7 +575,7 @@ BODY_DETAIL = {
         "shoulder_x": 1850.0, "shoulder_z": 510.0, "shoulder_w": 190.0,
         "hip_x": 1480.0, "hip_z": 300.0,
         "arm_r": 58.0, "leg_r": 72.0,
-        "knee_x": 1140.0, "knee_z": 350.0, "foot_x": 860.0,
+        "knee_x": 1210.0, "knee_z": 362.0, "foot_x": 965.0,
     },
     "airbox_x": 2060.0, "airbox_w": 168.0, "airbox_h": 146.0,
     "airbox_len": 340.0,
@@ -634,8 +634,9 @@ POWERTRAIN = {
     # tanks, and it is thicker to keep the heat it rejects.
     "radiator": (400.0, 120.0, 280.0),
     "rad_x": 2336.0, "rad_y": 480.0, "rad_z": 358.0,
-    "battery": (760.0, 300.0, 110.0),
-    "battery_x": 2420.0, "battery_z": 150.0,
+    # back to the engine bulkhead, which carries it
+    "battery": (792.0, 300.0, 110.0),
+    "battery_x": 2436.0, "battery_z": 150.0,
     # on top of the battery, not round it: at z 330 and 320 tall its sump
     # was 35 mm down into the pack
     "fuel_x": 2380.0, "fuel": (560.0, 420.0, 300.0), "fuel_z": 366.0,

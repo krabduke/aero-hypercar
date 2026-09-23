@@ -333,14 +333,14 @@
    "label": "Cockpit",
    "color": "#9A5A52",
    "parts": 11,
-   "faces": 20534
+   "faces": 20750
   },
   {
    "key": "11 Structure and Service",
    "label": "Structure",
    "color": "#6A6E72",
    "parts": 17,
-   "faces": 93398
+   "faces": 93266
   }
  ],
  "parts": {
@@ -1902,14 +1902,14 @@
    "g": "08 Cooling and Energy",
    "mat": "anodised",
    "x0": 2040.4,
-   "x1": 2799.6,
+   "x1": 2831.6,
    "f": 2210
   },
   "battery_modules": {
    "g": "08 Cooling and Energy",
    "mat": "alu_dark",
-   "x0": 2054.7,
-   "x1": 2785.3,
+   "x0": 2055.3,
+   "x1": 2816.7,
    "f": 850
   },
   "engine": {
@@ -2265,7 +2265,7 @@
   "driver": {
    "g": "10 Cockpit",
    "mat": "suit",
-   "x0": 809.0,
+   "x0": 914.0,
    "x1": 1913.5,
    "f": 3768
   },
@@ -2461,9 +2461,9 @@
   "brake_lines": {
    "g": "11 Structure and Service",
    "mat": "steel",
-   "x0": 666.6,
+   "x0": 771.3,
    "x1": 4081.7,
-   "f": 31916
+   "f": 31784
   },
   "bulkhead_dash": {
    "g": "11 Structure and Service",
@@ -2554,7 +2554,7 @@
    "mat": "suit",
    "x0": 1398.0,
    "x1": 1939.2,
-   "f": 118
+   "f": 334
   },
   "harness_buckle": {
    "g": "10 Cockpit",
@@ -2566,15 +2566,15 @@
   "master_cylinders": {
    "g": "11 Structure and Service",
    "mat": "alu_bright",
-   "x0": 670.0,
-   "x1": 843.4,
+   "x0": 775.0,
+   "x1": 948.4,
    "f": 4442
   },
   "pedal_box": {
    "g": "10 Cockpit",
    "mat": "alu_bright",
-   "x0": 798.0,
-   "x1": 958.0,
+   "x0": 903.0,
+   "x1": 1063.0,
    "f": 510
   },
   "side_intrusion": {

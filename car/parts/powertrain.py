@@ -281,9 +281,10 @@ def _bladder(cx, cy, cz, sx, sy, sz, n_z=18, n_a=44):
 
     # the collector: a small pot at the bottom that stays full under
     # cornering, so the pickup never sees air. It is mostly inside the
-    # bladder; 66 mm of it hung below, into the battery the cell sits on.
+    # bladder, and its foot is what the cell stands on the battery by; 66 mm
+    # of it hung below, into the pack.
     pv, pf = mesh.revolve_closed(
-        [(0.0, 0.0), (0.0, 92.0), (6.0, 92.0), (14.0, 74.0), (14.0, 0.0)], 26)
+        [(0.0, 0.0), (0.0, 92.0), (12.0, 92.0), (20.0, 74.0), (20.0, 0.0)], 26)
     parts.append(([(py + cx + sx * 0.10, pz + cy, -px + cz - sz / 2 + 8.0)
                    for (px, py, pz) in pv], pf))
     # filler neck and the dry-break coupling on top of it
