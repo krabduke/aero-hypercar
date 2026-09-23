@@ -91,10 +91,26 @@ def _stations(table, n):
     return out
 
 
+# The body's skin. It was a solid from nose to tail, so the seat, the driver,
+# the engine and everything else in the car were inside a block of carbon,
+# and every one of them "touched" the body whether or not anything held it.
+SKIN = 6.0
+
+
 def _body():
     xs = _stations(spec.BODY, 68)
     rings = [body_section(x) for x in xs]
-    return {"tub": common.loft(rings)}
+    # the space inside the skin, over the length where there is room for one
+    inner = [body_section(x, inset=SKIN) for x in xs[2:-2]]
+    # and the cockpit opening through the top of it, under the coaming's lip
+    rim = cockpit_outline()
+    opening = []
+    for (x, w, z) in rim:
+        w = max(w - 9.0, 1.0)
+        opening.append([(x, -w, z - 90.0), (x, w, z - 90.0),
+                        (x, w, z + 160.0), (x, -w, z + 160.0)])
+    return {"tub": common.loft(rings),
+            "cut:tub": mesh.join(common.loft(inner), common.loft(opening))}
 
 
 def _sidepod_section(x, segments=40):
@@ -185,28 +201,32 @@ def _sidepods():
     return out
 
 
-def _cockpit_surround():
-    """Cockpit opening coaming, sunk into the body top."""
-    parts = []
+def cockpit_outline(n=18):
+    """Half-width and rim height of the cockpit opening at n stations.
+
+    The opening closes just short of x1; at f * 1.1 it closed 50 mm sooner,
+    on the back of the driver's helmet. Past the closing station the list
+    stops -- the lip used to carry on down the centreline as a tail.
+    """
     x0, x1 = T["cockpit_x0"], T["cockpit_x1"]
-    n = 18
-    path_l, path_r = [], []
+    out = []
     for i in range(n):
         f = i / (n - 1)
         x = x0 + (x1 - x0) * f
         hw, z_bot, z_top, ex, bias = _sample(spec.BODY, x)
-        # the opening closes just short of x1; at f * 1.1 it closed 50 mm
-        # sooner, on the back of the driver's helmet
-        w = min(T["cockpit_half_w"], hw * 0.80) * math.sin(math.pi * min(f * 1.04, 1.0)) ** 0.35
-        z = z_top - 22.0
-        path_l.append((x, -w, z))
-        path_r.append((x, w, z))
-        # the opening closes a little ahead of x1; past that the lip used to
-        # carry on down the centreline as a tail behind the driver's head
+        w = (min(T["cockpit_half_w"], hw * 0.80)
+             * math.sin(math.pi * min(f * 1.04, 1.0)) ** 0.35)
+        out.append((x, w, z_top - 22.0))
         if f > 0.5 and w == 0.0:
             break
-    parts.append(mesh.pipe(path_l, 15.0, 10))
-    parts.append(mesh.pipe(path_r, 15.0, 10))
+    return out
+
+
+def _cockpit_surround():
+    """Cockpit opening coaming, sunk into the body top."""
+    rim = cockpit_outline()
+    parts = [mesh.pipe([(x, sgn * w, z) for (x, w, z) in rim], 15.0, 10)
+             for sgn in (-1.0, 1.0)]
     return {"cockpit_coaming": mesh.join(*parts)}
 
 

@@ -57,12 +57,12 @@ def build():
         # a square edge on its way in
         ducts.append(_shroud(cx, cy, cz))
 
-        # plenum throat feeding the fan from the tunnels
-        z_in = F["plenum_z0"]
-        ducts.append(mesh.pipe([(cx - 620.0, cy * 0.55, z_in),
-                                (cx - 260.0, cy * 0.85, z_in + 100.0),
-                                (cx - 60.0, cy, cz - 30.0)],
-                               F["plenum_r"], 16))
+        # The fan is fed from the floor by `floor.floor_fan_throat_*`, a
+        # hollow duct rising from the plenum just aft of the axle into the
+        # shroud's bellmouth. There was a second one here: a 300 mm solid
+        # bar from 620 mm ahead of the fan, through the gearbox, the rear
+        # dampers, rockers, torsion bars and anti-roll bar and both
+        # driveshafts, to the same bellmouth.
 
         out[f"fan_rotor_{tag}"] = _rotor(cx, cy, cz, spin)
         stators.append(_stators(cx, cy, cz, spin))

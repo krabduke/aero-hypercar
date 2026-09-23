@@ -270,7 +270,7 @@
    "label": "Bodywork",
    "color": "#5A6066",
    "parts": 20,
-   "faces": 26915
+   "faces": 30141
   },
   {
    "key": "02 Floor and Diffuser",
@@ -305,7 +305,7 @@
    "label": "Fans",
    "color": "#C06A30",
    "parts": 13,
-   "faces": 19822
+   "faces": 19528
   },
   {
    "key": "07 Power Unit",
@@ -426,7 +426,7 @@
    "mat": "carbon_gloss",
    "x0": 0.0,
    "x1": 4560.0,
-   "f": 3486
+   "f": 6712
   },
   "diffuser_fences": {
    "g": "01 Bodywork",
@@ -1901,9 +1901,9 @@
   "fanduct": {
    "g": "06 Fan System",
    "mat": "carbon_matte",
-   "x0": 3727.5,
+   "x0": 4120.3,
    "x1": 4680.0,
-   "f": 1074
+   "f": 780
   },
   "battery": {
    "g": "08 Cooling and Energy",

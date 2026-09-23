@@ -57,7 +57,7 @@ EXPECTED = [
     ("rocker_", "antiroll_"), ("rocker_", "tub"),
     ("damper", "torsion_bars"), ("damper", "tub"), ("heave_", "tub"),
     ("antiroll_", "tub"), ("antiroll_blade_", "antiroll_"),
-    ("torsion_bars", "tub"), ("steering_rack", "tub"),
+    ("torsion_bars", "tub"),
     ("steering_column", "steering_rack"), ("steering_column", "steering"),
     ("trackrod_", "steering_rack"), ("wishbone_", "tub"),
     ("pushrod_", "tub"), ("driveshaft_", "gearbox"),
@@ -66,20 +66,17 @@ EXPECTED = [
     # seal its edge
     ("tunnel_", "floor_surface"), ("floor_strake_", "tunnel_"),
     ("floor_strake_", "floor_surface"),
-    ("floor_strake_", "fanduct"),
     ("floor_skirts", "floor_surface"), ("floor_plank", "floor_surface"),
     ("floor_fence_", "floor_surface"),
-    ("fanduct", "tunnel_"), ("fanduct", "gearbox"), ("fanduct", "tub"),
-    ("fan_rotor_", "fanduct"), ("fan_stators", "fanduct"),
+    ("fanduct", "tunnel_"), ("fanduct", "tub"),
     ("fan_drive_", "fan_motors"), ("fan_drive_", "fan_rotor_"),
-    ("fan_motors", "fanduct"),
 
     # power unit and cooling: hoses clamp to what they feed
     ("rad_hoses_", "engine"), ("rad_hoses_", "radiator_"),
     ("rad_hoses_", "rad_tanks_"),
     ("radiator_", "sidepod_"), ("engine", "gearbox"), ("engine", "tub"),
-    ("exhaust", "engine"), ("fuel_cell", "tub"), ("fuel_fittings", "fuel_cell"),
-    ("battery", "tub"), ("battery_modules", "battery"),
+    ("exhaust", "engine"), ("fuel_fittings", "fuel_cell"),
+    ("battery_modules", "battery"),
     ("gearbox", "tub"),
 
     # bodywork: everything lofted or louvred into it
@@ -109,15 +106,13 @@ EXPECTED = [
     ("nose_cape", "nose_pylons"),
 
     # cockpit and service
-    ("seat", "tub"), ("headrest", "tub"),
     ("driver", "seat"), ("driver", "harness"),
-    ("driver", "steering"), ("helmet", "driver"), ("dash", "tub"),
+    ("driver", "steering"), ("helmet", "driver"),
     # the column passes through the dash panel on its way down to the rack
     ("dash", "steering_column"),
-    ("steering", "steering_column"), ("pedal_box", "tub"),
-    ("master_cylinders", "pedal_box"), ("master_cylinders", "tub"),
-    ("extinguisher", "tub"), ("drink_bottle", "tub"), ("control_boxes", "tub"),
-    ("bulkhead_", "tub"), ("side_intrusion", "tub"),
+    ("steering", "steering_column"),
+    ("master_cylinders", "pedal_box"),
+    ("side_intrusion", "tub"),
     ("jack_points", "tub"), ("tow_hooks", "tub"),
     ("tow_hooks", "crash_structure"),   # the rear hook bolts to it
     ("fuel_coupling", "tub"), ("brake_lines", "tub"), ("wiring_loom", "tub"),
@@ -130,14 +125,14 @@ EXPECTED = [
     ("nose_pylons", "front_wing_main"),
     # the bargeboards are a nested cascade sharing one root, like the wing
     ("bargeboard_", "bargeboard_"),
-    ("fanduct", "beam_wing"), ("fanduct", "crash_structure"),
+    ("fanduct", "crash_structure"),
     ("beam_wing", "fan_motors"),
     ("beam_wing", "fan_"), ("gearbox", "damper"),
     ("gearbox", "torsion_bars"), ("gearbox", "heave_"), ("gearbox", "antiroll_"),
     ("gearbox", "driveshaft_"),
     ("fuel_cell", "battery"),
     ("battery_modules", "fuel_cell"),
-    ("driver", "tub"), ("driver", "headrest"), ("driver", "pedal_box"),
+    ("driver", "headrest"), ("driver", "pedal_box"),
 
     # ----------------------------------------------------------------
     # Joints the check could not reach until it stopped spending its
@@ -161,9 +156,8 @@ EXPECTED = [
     ("tether_", "bduct_"), ("trackrod_", "tub"),
     ("antiroll_", "dampers_"), ("torsion_bars", "dampers_"),
 
-    # the cockpit is a closed cell and everything in it reads as inside it
-    ("harness", "tub"), ("drink_bottle", "seat"),
-    ("drink_bottle", "tub"), ("helmet", "tub"), ("extinguisher", "tub"),
+    # the drink bottle is strapped to the seat's flank
+    ("drink_bottle", "seat"),
 
     # panels and frames bond to the bulkheads they are carried on
     ("side_intrusion", "bulkhead_"), ("cockpit_coaming", "bulkhead_"),
@@ -181,7 +175,7 @@ EXPECTED = [
     ("sidepod_", "bargeboard_"),
     ("sidepod_", "gearbox"), ("sidepod_", "sidepod_"),
     ("bargeboard_", "side_impact"), ("bargeboard_", "sidepod_inlets"),
-    ("rainlight", "fanduct"), ("rainlight", "tub"),
+    ("rainlight", "fanduct"),
     ("rainlight", "rear_light_panel"), ("rear_light_panel", "tub"),
     ("rear_light_panel", "fanduct"), ("sharkfin", "tow_hooks"),
     ("starter_socket", "tow_hooks"), ("nose_pylons", "tow_hooks"),
@@ -192,8 +186,7 @@ EXPECTED = [
 
     # the fan is one machine
     ("fan_rotor_", "fan_motors"), ("fan_rotor_", "tub"),
-    ("fan_stators", "fan_drive_"), ("fanduct", "fan_drive_"),
-    ("fanduct", "heave_"), ("fanduct", "trackrod_"),
+    ("fan_stators", "fan_drive_"),
 
     # the loom plugs into the boxes it feeds
     ("wiring_loom", "gearbox"),
@@ -206,11 +199,12 @@ EXPECTED = [
     ("floor_strake_", "floor_skirts"),
 
     # `tub` is the whole central body -- nose, survival cell and engine
-    # cover are one continuous lofted surface, which `verify.py` checks --
-    # so everything packaged inside the bodywork reads as inside it. The
-    # list above already says so for the engine, the gearbox, the fuel cell
-    # and the battery; these are the rest of the same statement.
-    ("rad_hoses_", "tub"), ("rad_tanks_", "tub"), ("steering", "tub"),
+    # cover are one continuous lofted skin, which `verify.py` checks. It
+    # was a solid, so everything packaged inside it read as inside it; it
+    # is a 6 mm skin now, and these are the things that pass through it:
+    # hoses and driveshafts out to the sidepods and wheels, the tanks where
+    # the sidepods meet it, louvres and the filler set into it.
+    ("rad_hoses_", "tub"), ("rad_tanks_", "tub"),
     ("cooling_louvres", "tub"), ("driveshaft_", "tub"),
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it
@@ -218,7 +212,7 @@ EXPECTED = [
     # the brake duct is moulded around the steering arm, and the fan duct
     # around the rear suspension: in both cases the duct is the part that
     # is shaped to clear, and they are one corner assembly
-    ("bduct_", "steering_arm_"), ("fanduct", "wishbone_"),
+    ("bduct_", "steering_arm_"),
 
     # a bulkhead is a mounting face: the dash, the headrest, the battery
     # and the roll hoop all land on one
@@ -268,7 +262,7 @@ EXPECTED = [
     ("fan_scroll_", "crash_structure"), ("fan_scroll_", "fan_drive_"),
     ("floor_fan_throat_", "floor_strake_"),
     ("floor_fan_throat_", "floor_surface"), ("rear_pylon_", "fan_scroll_"),
-    ("fanduct", "fan_fairing_"), ("fan_fairing_", "tub"),
+    ("fan_fairing_", "tub"),
     ("fan_fairing_", "crash_structure"),
     # The floor's own edges and leading edge are part of the floor, and the
     # diffuser's fences, kick and lip all land on each other at the exit.
@@ -293,7 +287,7 @@ EXPECTED = [
     # `tools/check_fan_exhaust.py` tests the jet envelope in 3-D and passes.
     # ----------------------------------------------------------------
     ("diffuser_lip", "fan_nozzle_"), ("diffuser_lip", "fanduct"),
-    ("diffuser_fences", "fanduct"), ("fan_nozzle_", "tunnel_"),
+    ("fan_nozzle_", "tunnel_"),
     # The nose cape's trailing edge lands on the front wing's mainplane --
     # 26 vertices at x 340-375, which is the joint between them.
     ("nose_cape", "front_wing_main"),
@@ -333,22 +327,9 @@ TOL = 0.3            # mm, full size: deeper than this is sharing material
 # through a part that nobody meant. Fix them and --shrink; never add to it.
 # --- KNOWN: rewritten by --shrink, never by hand to add ---
 KNOWN = {
-    ("fuel_fittings", "tub"): 283.0,   # at (2950.9, -4.2, 404.2)
-    ("dampers_r", "fanduct"): 134.6,   # at (3912.0, 188.1, 225.0)
-    ("starter_socket", "tub"): 129.5,   # at (4122.0, 24.2, 297.7)
-    ("antiroll_r", "fanduct"): 120.3,   # at (3974.1, 243.3, 253.5)
-    ("antiroll_blade_r", "fanduct"): 110.6,   # at (3924.5, -241.0, 242.9)
     ("diffuser_fences", "floor_surface"): 99.5,   # at (4210.0, 254.0, 94.4)
-    ("fanduct", "torsion_bars_r"): 97.6,   # at (3886.6, -180.9, 176.9)
-    ("fanduct", "wiring_loom"): 93.8,   # at (4030.2, 212.7, 323.6)
-    ("driveshaft_rl", "fanduct"): 93.3,   # at (4034.9, -223.9, 326.8)
-    ("driveshaft_rr", "fanduct"): 92.7,   # at (4033.6, 223.9, 328.0)
-    ("fanduct", "rocker_rr"): 84.3,   # at (3974.3, 270.0, 293.7)
-    ("fanduct", "rocker_rl"): 84.1,   # at (3976.8, -270.0, 295.4)
     ("floor_fan_throat_l", "tunnel_l"): 77.3,   # at (4220.0, -397.5, 91.7)
     ("floor_fan_throat_r", "tunnel_r"): 77.3,   # at (4220.0, 397.5, 91.7)
-    ("fanduct", "pushrod_rr"): 67.8,   # at (3905.7, 280.0, 250.7)
-    ("fanduct", "pushrod_rl"): 67.5,   # at (3907.8, -280.7, 248.3)
     ("airbox", "cameras"): 56.1,   # at (2133.0, 24.0, 794.0)
     ("brake_lines", "sidepod_l"): 50.2,   # at (1678.4, -249.5, 260.0)
     ("brake_lines", "sidepod_r"): 50.2,   # at (1678.4, 249.5, 260.0)
@@ -358,8 +339,6 @@ KNOWN = {
     ("fan_scroll_l", "tunnel_l"): 41.6,   # at (4461.2, -434.5, 182.0)
     ("fan_scroll_r", "tunnel_r"): 41.6,   # at (4461.2, 434.5, 182.0)
     ("harness", "steering"): 41.3,   # at (1490.0, -95.0, 555.5)
-    ("fan_nozzle_l", "tub"): 38.3,   # at (4521.7, -59.1, 260.1)
-    ("fan_nozzle_r", "tub"): 38.3,   # at (4521.7, 59.1, 260.1)
     ("fanduct", "tether_rl"): 36.3,   # at (4120.3, -300.0, 310.0)
     ("fanduct", "tether_rr"): 36.3,   # at (4120.3, 300.0, 310.0)
     ("rad_tanks_l", "sidepod_l"): 31.7,   # at (2062.0, -378.0, 488.0)
@@ -373,6 +352,8 @@ KNOWN = {
     ("diffuser_fences", "tunnel_r"): 28.9,   # at (3860.0, 250.8, 57.0)
     ("bduct_fence_fl", "trackrod_fl"): 27.4,   # at (800.9, -665.4, 238.6)
     ("bduct_fence_fr", "trackrod_fr"): 27.4,   # at (800.9, 665.4, 238.6)
+    ("fan_nozzle_l", "tub"): 26.5,   # at (4557.0, -59.9, 284.2)
+    ("fan_nozzle_r", "tub"): 26.5,   # at (4557.0, 59.9, 284.2)
     ("bduct_drum_fl", "trackrod_fl"): 25.8,   # at (786.7, -741.7, 232.0)
     ("bduct_drum_fr", "trackrod_fr"): 25.8,   # at (786.7, 741.7, 232.0)
     ("diffuser_kick", "fanduct"): 24.9,   # at (4542.0, 398.0, 252.8)
@@ -508,7 +489,6 @@ KNOWN = {
     ("brake_lines", "brake_pad_rr"): 2.5,   # at (4045.0, 757.1, 501.1)
     ("brake_lines", "brake_pad_rl"): 2.4,   # at (4046.0, -756.9, 500.0)
     ("torsion_bars_f", "wishbone_fl_upper_aft"): 2.2,   # at (1080.5, -177.1, 416.2)
-    ("fanduct", "tow_hooks"): 1.9,   # at (4153.4, -104.6, 293.1)
     ("hub_fl", "steering_arm_fl"): 0.8,   # at (903.6, -768.8, 274.4)
     ("hub_fr", "steering_arm_fr"): 0.8,   # at (903.6, 768.8, 274.4)
     ("diffuser_lip", "tunnel_l"): 0.7,   # at (4560.0, -486.4, 249.6)
