@@ -270,7 +270,7 @@
    "label": "Bodywork",
    "color": "#5A6066",
    "parts": 20,
-   "faces": 31260
+   "faces": 32291
   },
   {
    "key": "02 Floor and Diffuser",
@@ -312,7 +312,7 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 9,
-   "faces": 2303351
+   "faces": 2324169
   },
   {
    "key": "08 Cooling and Energy",
@@ -405,7 +405,7 @@
    "mat": "carbon_gloss",
    "x0": 1700.0,
    "x1": 3700.0,
-   "f": 1206
+   "f": 2237
   },
   "sidepod_r": {
    "g": "01 Bodywork",
@@ -1931,21 +1931,21 @@
    "mat": "alu_cast",
    "x0": 3008.9,
    "x1": 3471.1,
-   "f": 5719
+   "f": 8131
   },
   "engine_block_bank_r": {
    "g": "07 Power Unit",
    "mat": "alu_cast",
    "x0": 3008.9,
    "x1": 3471.1,
-   "f": 4780
+   "f": 8131
   },
   "engine_block_crankcase": {
    "g": "07 Power Unit",
    "mat": "alu_cast",
    "x0": 3008.4,
    "x1": 3471.6,
-   "f": 11595
+   "f": 27970
   },
   "engine_camcover_l": {
    "g": "07 Power Unit",
@@ -1966,14 +1966,14 @@
    "mat": "alu_cast",
    "x0": 3002.7,
    "x1": 3458.3,
-   "f": 2395
+   "f": 1547
   },
   "engine_head_r": {
    "g": "07 Power Unit",
    "mat": "alu_cast",
    "x0": 3021.7,
    "x1": 3477.3,
-   "f": 2014
+   "f": 1542
   },
   "fuel_cell": {
    "g": "08 Cooling and Energy",

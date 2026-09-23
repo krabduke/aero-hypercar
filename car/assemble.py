@@ -117,6 +117,9 @@ def make_object(name, verts, faces, coll, pivot=None):
 
 def apply_cutters(obj, cv, cf):
     cutter = make_object(obj.name + "__cut", cv, cf, bpy.context.scene.collection)
+    # an exact boolean reads inside from outside off the normals, and a
+    # cutter is joined from pieces authored in whatever winding they came in
+    recalc_normals(cutter)
     m = obj.modifiers.new("cut", "BOOLEAN")
     m.operation = "DIFFERENCE"
     m.solver = "EXACT"
@@ -226,6 +229,10 @@ def main():
             spec_p = piv.get(name)
             ob = make_object(name, v, f, cols[cname],
                              pivot=spec_p[0] if spec_p else None)
+            # outward before cutting, not only after: the boolean takes the
+            # part's inside from its normals too
+            if name in cutters and name != "engine":
+                recalc_normals(ob)
             for cv, cf in cutters.get(name, ()):
                 n_cut += 1
                 n_cut_ok += bool(apply_cutters(ob, cv, cf))
