@@ -129,8 +129,8 @@ def _brake_ducts():
         # lower wishbone and the toe link pass under the axle, so the fence
         # stops above them.
         lo = z - r * (0.66 if front else 0.30)
-        front_lo = ((x - r * 0.80, z - r * 0.28), (x - r * 0.30, lo)) \
-            if front else ((x - r * 0.80, lo),)
+        front_lo = ((x - r * 0.80, z - r * 0.31), (x - r * 0.12, z - r * 0.31),
+                    (x - r * 0.04, lo)) if front else ((x - r * 0.80, lo),)
         prof = shapes.panel_outline(
             list(front_lo) + [(x + r * 0.44, lo),
              (x + r * 0.74, z - r * 0.18), (x + r * 0.60, z + r * 0.26),

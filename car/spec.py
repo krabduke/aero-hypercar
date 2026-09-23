@@ -543,7 +543,7 @@ DETAIL = {
     # z = 0 it sat half under the track surface
     # above the beam wing, which tops out at 489 -- the tailpipe used to
     # end inside it
-    "exhaust_z": 604.0, "wastegate_z": 528.0,
+    "exhaust_z": 604.0,
 }
 
 # Surface and hardware detail. These are the parts that separate a shape from

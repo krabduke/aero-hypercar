@@ -25,7 +25,6 @@ TOL = 0.3            # mm, full size: further off than this is not touching
 
 # --- DETACHED: rewritten by --shrink, never by hand to add ---
 DETACHED = {
-    "exhaust": 2,
 }
 # --- end DETACHED ---
 

@@ -183,7 +183,7 @@ bargeboard_r4,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1318.0,1693.1,319.9,45
 beam_wing,03 Wings,carbon_gloss,,,,,,,,,1008,868,4281.1,4615.1,-550.0,550.0,669.6,789.4
 cameras,09 Aero Detail,carbon_matte,,,,,,,,,588,510,635.0,2525.0,-145.0,145.0,407.0,1029.5
 cooling_louvres,09 Aero Detail,carbon_matte,,,,,,,,,2352,2040,3145.0,3695.0,-168.3,168.3,582.4,701.3
-exhaust,09 Aero Detail,steel,,,,,,,,,1564,1534,3476.9,4530.0,-166.0,166.0,494.0,667.9
+exhaust,09 Aero Detail,steel,,,,,,,,,1044,1014,3476.9,4530.0,-62.0,62.0,520.4,667.9
 fan_fairing_l,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,-657.9,-234.0,240.0,664.0
 fan_fairing_r,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,234.1,658.0,240.0,664.0
 floor_edge_wings,03 Wings,carbon_matte,,,,,,,,,3400,3304,1900.0,3640.0,-989.4,989.4,53.0,161.7
@@ -217,8 +217,8 @@ bduct_drum_fl,09 Aero Detail,carbon_matte,,,,,,,,,1032,887,711.5,1084.8,-774.1,-
 bduct_drum_fr,09 Aero Detail,carbon_matte,,,,,,,,,1032,887,711.5,1084.8,700.1,774.1,150.2,534.7
 bduct_drum_rl,09 Aero Detail,carbon_matte,,,,,,,,,976,958,3845.0,4254.2,-713.1,-639.1,140.8,562.0
 bduct_drum_rr,09 Aero Detail,carbon_matte,,,,,,,,,976,958,3845.0,4254.2,639.1,713.1,140.8,562.0
-bduct_fence_fl,09 Aero Detail,carbon_matte,,,,,,,,,194,224,716.6,1056.5,-665.5,-632.4,185.3,407.3
-bduct_fence_fr,09 Aero Detail,carbon_matte,,,,,,,,,194,224,716.6,1056.5,632.4,665.5,185.3,407.3
+bduct_fence_fl,09 Aero Detail,carbon_matte,,,,,,,,,218,252,714.3,1056.5,-665.5,-632.4,185.7,407.3
+bduct_fence_fr,09 Aero Detail,carbon_matte,,,,,,,,,218,252,714.3,1056.5,632.4,665.5,185.7,407.3
 bduct_fence_rl,09 Aero Detail,carbon_matte,,,,,,,,,170,196,3836.7,4222.9,-584.5,-551.3,272.6,424.9
 bduct_fence_rr,09 Aero Detail,carbon_matte,,,,,,,,,170,196,3836.7,4222.9,551.3,584.5,272.6,424.9
 bduct_inlet_fl,09 Aero Detail,carbon_matte,,,,,,,,,196,170,662.6,751.0,-660.7,-542.3,261.6,391.6

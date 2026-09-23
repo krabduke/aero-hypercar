@@ -207,12 +207,10 @@ def _details():
     v, f = mesh.tube(D["exhaust_x"], D["exhaust_x"] + 130.0,
                      D["exhaust_r"] - 9.0, D["exhaust_r"], 26)
     ex.append(([(px, py, pz + D["exhaust_z"]) for (px, py, pz) in v], f))
-    for sgn in (-1.0, 1.0):
-        wv, wf = mesh.tube(D["exhaust_x"] + 20.0, D["exhaust_x"] + 96.0,
-                           26.0, 34.0, 20)
-        wv = [(px, py + sgn * 132.0, pz + D["wastegate_z"])
-              for (px, py, pz) in wv]
-        ex.append((wv, wf))
+    # No separate wastegate pipes. The engine's wastegates are integral
+    # flaps that dump into the turbine outlet, so their gas leaves through
+    # this tailpipe; the two screamer pipes that stood beside it were fed by
+    # nothing and joined to nothing.
     # and the pipe that gets there from the engine. The tailpipe sat 848 mm
     # behind the engine with nothing between them, so the exhaust left from
     # nowhere. It runs over the gearbox, which tops out at z 536, and in

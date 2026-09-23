@@ -326,7 +326,7 @@
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 54,
-   "faces": 50738
+   "faces": 50274
   },
   {
    "key": "10 Cockpit",
@@ -2113,7 +2113,7 @@
    "mat": "steel",
    "x0": 3476.9,
    "x1": 4530.0,
-   "f": 1534
+   "f": 1014
   },
   "fan_fairing_l": {
    "g": "06 Fan System",
@@ -2349,16 +2349,16 @@
   "bduct_fence_fl": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 716.6,
+   "x0": 714.3,
    "x1": 1056.5,
-   "f": 224
+   "f": 252
   },
   "bduct_fence_fr": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 716.6,
+   "x0": 714.3,
    "x1": 1056.5,
-   "f": 224
+   "f": 252
   },
   "bduct_fence_rl": {
    "g": "09 Aero Detail",
