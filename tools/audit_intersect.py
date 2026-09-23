@@ -271,7 +271,7 @@ EXPECTED = [
     # diffuser's fences, kick and lip all land on each other at the exit.
     ("floor_plenum_edge_", "floor_surface"),
     ("floor_plenum_edge_", "floor_skirts"),
-    ("floor_inlet_lip", "tunnel_"), ("diffuser_fences", "diffuser_lip"),
+    ("floor_inlet_lip", "tunnel_"),
     ("diffuser_kick", "diffuser_lip"),
 
     ("diffuser_fences", "floor_strake_"),
@@ -315,12 +315,9 @@ TOL = 0.3            # mm, full size: deeper than this is sharing material
 # through a part that nobody meant. Fix them and --shrink; never add to it.
 # --- KNOWN: rewritten by --shrink, never by hand to add ---
 KNOWN = {
-    ("diffuser_fences", "floor_surface"): 99.5,   # at (4311.4, 254.0, 87.1)
     ("antiroll_f", "heave_f"): 30.7,   # at (977.8, -32.1, 504.2)
     ("antiroll_r", "heave_r"): 30.7,   # at (3837.8, -32.1, 249.2)
     ("gearbox", "sharkfin"): 29.6,   # at (4078.4, -2.1, 451.5)
-    ("diffuser_fences", "tunnel_l"): 28.9,   # at (3860.0, -250.8, 76.8)
-    ("diffuser_fences", "tunnel_r"): 28.9,   # at (3860.0, 250.8, 76.8)
     ("bduct_fence_fl", "trackrod_fl"): 27.4,   # at (766.8, -665.4, 226.2)
     ("bduct_fence_fr", "trackrod_fr"): 27.4,   # at (766.8, 665.4, 226.2)
     ("bduct_drum_fl", "trackrod_fl"): 25.8,   # at (786.7, -741.7, 232.0)
@@ -336,10 +333,11 @@ KNOWN = {
     ("bduct_fence_rr", "wishbone_rr_lower_fwd"): 20.3,   # at (4113.3, 568.0, 245.8)
     ("diffuser_kick", "fan_fairing_l"): 20.0,   # at (4560.0, -409.6, 249.3)
     ("diffuser_kick", "fan_fairing_r"): 20.0,   # at (4560.0, 482.4, 249.3)
-    ("diffuser_fences", "diffuser_kick"): 19.9,   # at (4548.0, 294.8, 247.3)
     ("floor_plenum_edge_l", "tunnel_l"): 14.7,   # at (1358.8, -621.8, 103.8)
     ("floor_plenum_edge_r", "tunnel_r"): 14.7,   # at (1358.8, 621.8, 103.8)
     ("brake_lines", "wishbone_fr_upper_aft"): 13.8,   # at (928.0, 600.9, 452.5)
+    ("diffuser_fences", "tunnel_l"): 13.8,   # at (3887.3, -254.0, 72.6)
+    ("diffuser_fences", "tunnel_r"): 13.8,   # at (3887.3, 254.0, 72.6)
     ("diffuser_lip", "fan_fairing_l"): 13.7,   # at (4556.8, -415.1, 262.5)
     ("diffuser_lip", "fan_fairing_r"): 13.7,   # at (4556.8, 415.1, 262.5)
     ("brake_lines", "wishbone_fr_upper_fwd"): 13.3,   # at (924.1, 599.8, 453.5)
@@ -385,10 +383,8 @@ KNOWN = {
     ("bduct_fence_fl", "tyre_sensors"): 4.9,   # at (819.2, -665.4, 237.8)
     ("bduct_fence_fr", "tyre_sensors"): 4.9,   # at (819.2, 665.4, 237.8)
     ("fan_fairing_r", "tunnel_r"): 4.2,   # at (4560.0, 479.7, 248.8)
-    ("floor_skirts", "tunnel_l"): 3.9,   # at (1475.8, -721.1, 33.1)
     ("diffuser_kick", "tunnel_l"): 3.6,   # at (4552.5, -469.3, 246.8)
     ("diffuser_kick", "tunnel_r"): 3.6,   # at (4552.5, 469.3, 246.8)
-    ("floor_skirts", "tunnel_r"): 3.6,   # at (1489.4, 729.5, 37.0)
     ("gearbox", "wishbone_rl_lower_aft"): 3.5,   # at (3967.8, -142.3, 342.2)
     ("gearbox", "wishbone_rr_lower_aft"): 3.5,   # at (3967.8, 142.3, 342.2)
     ("tether_rl", "tow_hooks"): 3.5,   # at (4168.7, -97.6, 372.4)

@@ -26,6 +26,10 @@ def build():
     out.update(_skirts())
     out.update(_inlet_lip())
     out.update(_plenum())
+    # the floor panel is open under each tunnel: the tunnel's roof is the
+    # floor there, and the panel below it was filling the channel
+    channels = [out.pop(f"_channel_{side}") for side in ("l", "r")]
+    out["cut:floor_surface"] = mesh.join(out["cut:floor_surface"], *channels)
     return out
 
 
@@ -301,11 +305,17 @@ def _tunnels():
     side deep so the low pressure sits where the floor is widest, and every
     corner has a radius because that is where the flow would otherwise
     separate first.
+
+    Each tunnel is a moulded skin -- a roof and two walls, open underneath
+    -- not a solid. As a solid it was the channel's air made into carbon:
+    the diffuser fences stood 100 mm inside it and the floor panel filled
+    its lower half, and from underneath the car had no tunnels at all, only
+    two smooth bulges.
     """
     out = {}
     n = 40
     for side, sgn in (("l", -1.0), ("r", 1.0)):
-        rings = []
+        rings, bores = [], []
         for i in range(n):
             t = i / (n - 1)
             x = F["x0"] + (F["x1"] - F["x0"]) * t
@@ -314,7 +324,12 @@ def _tunnels():
             # the tunnel's outer wall follows the floor edge, so the tunnel
             # narrows where the floor waists in around the rear tyre
             y_out = sgn * max(half_width(x) - 34.0, F["tunnel_inner_y"] + 60.0)
-            rings.append(_tunnel_section(x, y_in, y_out, 10.0, z_roof))
+            rings.append(_tunnel_section(x, y_in, y_out, 10.0, z_roof,
+                                         skin=TUNNEL_T))
+            bores.append(_tunnel_section(
+                x, y_in + sgn * TUNNEL_T, y_out - sgn * TUNNEL_T, 4.0,
+                z_roof - TUNNEL_T))
+        out[f"_channel_{side}"] = _loft(bores)
         verts = [v for r in rings for v in r]
         m = len(rings[0])
         faces = []
@@ -330,23 +345,62 @@ def _tunnels():
     return out
 
 
-def _tunnel_section(x, y_in, y_out, z_floor, z_roof):
-    """One cross-section of a tunnel: flat floor, arched roof, filleted."""
-    h = z_roof - z_floor
-    w = y_out - y_in
-    z_keel = z_floor + h * 0.52
-    z_wall = z_floor + h * 0.90
-    pts = [(y_in, z_floor), (y_out, z_floor), (y_out, z_wall)]
-    # the roof, as a Bezier arch from the outer wall over to the keel
-    crown = (y_in + w * 0.46, z_floor + h * 1.04)
-    for k in range(1, 13):
-        u = k / 12.0
+TUNNEL_T = 5.0      # mm, the tunnel skin
+
+
+def _arch(y0, y1, zf, hh, ww, k_n=12):
+    """The tunnel roof, as a Bezier arch from the outer wall (y1) over to the
+    keel (y0): (y, z) points, the outer wall's top first."""
+    z_keel = zf + hh * 0.52
+    z_wall = zf + hh * 0.90
+    crown = (y0 + ww * 0.46, zf + hh * 1.04)
+    pts = [(y1, z_wall)]
+    for k in range(1, k_n + 1):
+        u = k / float(k_n)
         pts.append((
-            (1 - u) ** 2 * y_out + 2 * (1 - u) * u * crown[0] + u * u * y_in,
+            (1 - u) ** 2 * y1 + 2 * (1 - u) * u * crown[0] + u * u * y0,
             (1 - u) ** 2 * z_wall + 2 * (1 - u) * u * crown[1]
             + u * u * z_keel))
-    r = min(abs(w) * 0.10, h * 0.26)
-    loop = shapes.rounded_polygon(pts, [r, r] + [0.0] * (len(pts) - 2), seg=5)
+    return pts
+
+
+def tunnel_roof_under(x, y):
+    """Height of the underside of the tunnel roof at station x and lateral
+    position y (either side)."""
+    sgn = 1.0 if y > 0 else -1.0
+    y_in = sgn * F["tunnel_inner_y"]
+    y_out = sgn * max(half_width(x) - 34.0, F["tunnel_inner_y"] + 60.0)
+    t = TUNNEL_T
+    h = _floor_z(x) - 10.0
+    pts = _arch(y_in + sgn * t, y_out - sgn * t, 10.0, h - 1.5 * t,
+                (y_out - y_in) - 2 * sgn * t, k_n=48)
+    best = min(pts, key=lambda p: abs(p[0] - y))
+    return best[1]
+
+
+def _tunnel_section(x, y_in, y_out, z_floor, z_roof, skin=None):
+    """One cross-section of a tunnel: walls and an arched roof, filleted.
+
+    With `skin`, the section is the moulding itself -- the outline and, back
+    along it, the same outline `skin` inside, open at the bottom. Without,
+    it is the channel the moulding encloses."""
+    h = z_roof - z_floor
+    w = y_out - y_in
+    s = 1.0 if w > 0 else -1.0
+    arch = _arch
+    outer = arch(y_in, y_out, z_floor, h, w)
+    if skin is None:
+        pts = [(y_in, z_floor), (y_out, z_floor)] + outer
+        r = min(abs(w) * 0.10, h * 0.26)
+        radii = [r, r] + [0.0] * (len(pts) - 2)
+    else:
+        t = skin
+        inner = arch(y_in + s * t, y_out - s * t, z_floor, h - 1.5 * t,
+                     w - 2 * s * t)
+        pts = ([(y_out - s * t, z_floor), (y_out, z_floor)] + outer
+               + [(y_in, z_floor), (y_in + s * t, z_floor)] + inner[::-1])
+        radii = [0.0] * len(pts)
+    loop = shapes.rounded_polygon(pts, radii, seg=5)
     return [(x, py, pz) for (py, pz) in loop]
 
 
@@ -399,9 +453,11 @@ def _diffuser():
             for i in range(15):
                 t = i / 14.0
                 x = x_d + (x_e - x_d) * t
-                z = _floor_z(x)
+                # up to the underside of the roof at its own y, which the
+                # arch puts well below the roof line at the centre
+                z = tunnel_roof_under(x, y)
                 lo.append((x, y, 8.0))
-                hi.append((x, y, z - 6.0 * (1.0 - t) - 2.0))
+                hi.append((x, y, z + 1.0))
             fences.append(plate(lo, hi, F["strake_t"] * 0.7))
     out["diffuser_fences"] = mesh.join(*fences)
 
@@ -507,13 +563,15 @@ def _skirts():
     """
     parts = []
     x0, x1 = F["x0"] + 120.0, F["x1"] - 60.0
-    n = 26
+    # as finely stationed as the tunnels beside them, and clear of the
+    # tunnel's outer wall rather than 1 mm off it between stations
+    n = 48
     t = 12.0
     for sgn in (-1.0, 1.0):
         rows = []
         for i in range(n):
             x = x0 + (x1 - x0) * i / (n - 1)
-            y = sgn * (half_width(x) - 22.0)
+            y = sgn * (half_width(x) - 19.0)
             rows.append((x, y))
         # A skirt is a blade with a replaceable wear strip along the bottom
         # and a rebate up the back where it slides in its carrier. Square in

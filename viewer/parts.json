@@ -277,7 +277,7 @@
    "label": "Floor",
    "color": "#46505A",
    "parts": 18,
-   "faces": 26814
+   "faces": 28766
   },
   {
    "key": "03 Wings",
@@ -496,7 +496,7 @@
    "mat": "carbon_matte",
    "x0": 1420.0,
    "x1": 4500.0,
-   "f": 1604
+   "f": 3012
   },
   "floor_strake_l1": {
    "g": "02 Floor and Diffuser",
@@ -559,21 +559,21 @@
    "mat": "carbon_matte",
    "x0": 1300.0,
    "x1": 4560.0,
-   "f": 2064
+   "f": 2676
   },
   "tunnel_l": {
    "g": "02 Floor and Diffuser",
    "mat": "carbon_matte",
    "x0": 1300.0,
    "x1": 4560.0,
-   "f": 1280
+   "f": 1246
   },
   "tunnel_r": {
    "g": "02 Floor and Diffuser",
    "mat": "carbon_matte",
    "x0": 1300.0,
    "x1": 4560.0,
-   "f": 1280
+   "f": 1246
   },
   "front_diveplane_l1": {
    "g": "01 Bodywork",
