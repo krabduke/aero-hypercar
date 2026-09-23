@@ -126,7 +126,11 @@ FAN = {
 }
 
 TYRE_MU = 1.80                 # bespoke slick at the reference load
-TYRE_LOAD_SENS = 0.12          # mu falls as (load / static load) ^ -k
+# mu falls as (load / static load) ^ -k. 0.18 is the centre of the sourced
+# band in docs/research/ANCHORS.md, 0.15-0.25; it was 0.12, outside the band
+# on the side that flatters a car making several times its weight in
+# downforce, while the lap simulation already used the band.
+TYRE_LOAD_SENS = 0.18
 DRIVER_G_LIMIT = 7.0           # sustained lateral g a trained driver can work at
 
 # --------------------------------------------------------------------------
@@ -1012,10 +1016,16 @@ FAN_EXHAUST = {
     # The endplates are thin plates at y +/- 710 running back to x 5101. The
     # jet passes INBOARD of them rather than under them: spreading at the
     # standard 11.8 degree half-angle from y 530, it does not reach y 710
-    # until x 5255, which is past the endplates' aft end. That is a
-    # three-dimensional argument and this comment is not a proof of it --
-    # tools/check_fan_exhaust.py is, and it tests the envelope in 3-D across
-    # the whole speed range.
+    # until x 5255, which is past the endplates' aft end. That is an argument,
+    # not a test; nothing tests the jet's envelope yet.
+    #
+    # The duct that feeds this exit cannot be built as placed:
+    # tools/check_fan_exhaust.py measures it. The air leaves the stators
+    # going up at z 445 and the mouth's lower lip is at z 232, so the lower
+    # half of the jet would have to turn back down past the rotor; the swept
+    # duct bends 214 mm tighter than it is deep and folds 128 mm through
+    # itself. Raising the exit above the beam wing, or turning the fans to
+    # blow aft, is a layout decision still to be made.
     "exit_y":   300.0,      # spans y 70-530, 180 mm inboard of the endplates
     # The nozzle area matches the fan annulus, 0.229 m^2 a side. It is
     # tempting to contract it -- a faster jet entrains harder and carries more

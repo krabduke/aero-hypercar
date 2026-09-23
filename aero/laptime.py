@@ -13,9 +13,9 @@ load rises, so a car making several times its own weight in downforce does not
 convert that downforce into grip one for one. docs/research/ANCHORS.md fixes
 the exponent from Milliken's table -- Fy/Fz of 1.10 at 900 lbf falling to 0.97
 at 1800 lbf, which is k = 0.181 across a doubling -- against a general rule of
-Fz^0.7 to Fz^0.9, so the honest band is 0.15 to 0.25. spec.TYRE_LOAD_SENS says
-0.12, which is outside that band on the optimistic side and would flatter this
-car; the sweep below uses the sourced band instead and reports both ends.
+Fz^0.7 to Fz^0.9, so the honest band is 0.15 to 0.25. spec.TYRE_LOAD_SENS is
+the band's centre, 0.18; the sweep below runs both ends of it and reports the
+worse.
 
 The other thing that decides it is that the fan's download does not scale with
 V^2. It is there at 40 km/h exactly as much as at 300, which is why a fan car
@@ -295,10 +295,9 @@ def main():
         print()
     print("  Assumptions: mu_ref %.2f for both cars, same rubber. Load"
           % ours.mu_ref)
-    print("  sensitivity swept over the sourced band %.2f-%.2f; spec says"
+    print("  sensitivity swept over the sourced band %.2f-%.2f; the spec's"
           % K_BAND)
-    print("  %.2f, which is outside it on the optimistic side." %
-          spec.TYRE_LOAD_SENS)
+    print("  own figures use its centre, %.2f." % spec.TYRE_LOAD_SENS)
 
 
 if __name__ == "__main__":

@@ -73,7 +73,7 @@ Requires Blender (`brew install --cask blender`). Nothing else.
 
 ```
 make build      # generate geometry, assemble build/car.blend, write parts.csv
-make verify     # 41 dimensional, mass, aero, clash and performance checks
+make verify     # the car's 45 design checks, then every audit of the build
 make render     # hero, plan, cutaway and exploded views
 make export     # build/car.glb
 make manifest   # viewer/parts.json
@@ -82,7 +82,11 @@ make viewer     # serve the interactive viewer
 
 ## Verification
 
-`make verify` runs 41 checks. Dimensions are measured out of
+`make verify` runs `car/verify.py`, 45 checks, and then sixteen audits of the
+build: structure, geometry, closed surfaces, interference between parts,
+joints and supports, the underfloor, the fan exhaust, the lap simulation,
+fit inside the bodywork, the viewer's manifest and scripts, the vendored
+engine and the panel solver. In `car/verify.py`, dimensions are measured out of
 `build/parts.csv`; the rest are design rules, including direct comparisons
 against the F1 reference:
 

@@ -19,10 +19,14 @@ verify:
 	python3 tools/audit_joints.py
 	python3 tools/audit_support.py
 	python3 tools/check_floor.py
+	python3 tools/check_fan_exhaust.py
+	python3 tools/check_laptime.py
 	python3 tools/audit_fit.py
 	python3 tools/audit_manifest.py
 	python3 tools/check_vendor.py
 	node tools/check_panels.mjs
+	node tools/check_panelkernel.mjs
+	node tools/check_panelflow.mjs
 	node tools/validate_viewer.mjs .
 
 render:
