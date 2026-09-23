@@ -13,10 +13,10 @@
   "parts/plumbing.py": "74a453ea182b",
   "parts/induction.py": "db0761373f23",
   "parts/turbo.py": "a4a1a869e27a",
-  "parts/hybrid.py": "f14fd07186bb",
+  "parts/hybrid.py": "030b6db48486",
   "parts/drive.py": "e8da03cc0edc",
   "parts/detail.py": "da0a53327236",
   "parts/ancillaries.py": "bf4b3fb08fa5"
  },
- "commit": "ae853d4"
+ "commit": "6e2fb2d"
 }

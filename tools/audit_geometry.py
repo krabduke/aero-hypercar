@@ -39,7 +39,7 @@ EXEMPT = {
 # a pin in it. They are built now, so the exemptions are gone.
 
 FLOOR = 150          # vertices, for anything not exempt
-TOTAL = 1_520_000      # vertices, over the whole model
+TOTAL = 2_760_000      # vertices, over the whole model
 
 # The total, not the mean.
 #

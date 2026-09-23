@@ -45,7 +45,7 @@ def _tray(cx, cy, cz, sx, sy, sz, wall=3.0):
                    sx - 2 * wall, wall, sz - wall) for s in (-1, 1)])
 
 
-def build():  # placeholder probe
+def build():
     out = {}
     out.update(_mguk())
     out.update(_mguh())
