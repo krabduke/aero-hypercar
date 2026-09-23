@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import spec
 import mesh
 import shapes
-from parts import wheels, chassis, floor
+from parts import wheels, chassis, floor, detail
 
 S = spec.SUSP
 W = spec.WHEEL
@@ -204,6 +204,13 @@ def _run(path, r, clips=(), per_seg=7, seg=12):
     return mesh.join(*parts)
 
 
+# The master cylinders: their origin (the front of the body) and height.
+# Each is pushed by a pedal, so they sit ahead of the driver's feet with the
+# clevis 160 mm back, on the pedal.
+MC_X = spec.BODY_DETAIL["driver"]["foot_x"] - 190.0
+MC_Y, MC_Z = 70.0, 376.0
+
+
 def _hydraulics():
     """Brake lines to every corner and the master cylinders that feed them.
 
@@ -224,12 +231,20 @@ def _hydraulics():
         z_cal = od / 2 + W["caliper_r"] * 0.8
         y_union = y * 0.62
         z_union = od / 2 + 40.0
-        hard = [(spec.FRONT_AXLE_X + 60.0, sgn * 88.0, 306.0),
-                (spec.FRONT_AXLE_X + 110.0, sgn * 150.0, 292.0)]
+        # out of the master cylinder's union, over the steering rack and
+        # outboard of the driver's shins
+        hard = [(MC_X + 14.0, sgn * MC_Y, MC_Z + 48.0),
+                (MC_X + 120.0, sgn * 120.0, 380.0)]
         if front:
+            # round behind the pushrod, not across it
             hard += [(x + 180.0, sgn * 250.0, 250.0),
                      (x + 60.0, sgn * 330.0, 214.0)]
         else:
+            # through the dash bulkhead's aperture, not its frame
+            hard += [(spec.FRONT_AXLE_X + 110.0, sgn * 168.0, 292.0),
+                     (1250.0, sgn * 170.0, 280.0),
+                     (1360.0, sgn * 209.0, 250.0),
+                     (1500.0, sgn * 211.0, 226.0)]
             # over the rear lower wishbone, not through it
             hard += [(2100.0, sgn * 300.0, 250.0),
                      (3050.0, sgn * 330.0, 262.0),
@@ -266,13 +281,16 @@ def _hydraulics():
         uv, uf = mesh.revolve_closed(
             [(0.0, 0.0), (26.0, 0.0), (26.0, 8.0), (20.0, 9.5),
              (14.0, 9.5), (14.0, 12.0), (0.0, 12.0)], 16)
-        parts.append(([(pz + 14.0, py, -px - 22.0)
+        # on top, where the line can leave it clear of the steering rack
+        parts.append(([(pz + 14.0, py, px + 22.0)
                        for (px, py, pz) in uv], uf))
         parts.append(shapes.rod_end((160.0, 0.0, 0.0), (1.0, 0.0, 0.0), 10.0))
         v, f = mesh.join(*parts)
-        # below the front torsion bars, which live at z 400 and up
-        cyl.append(([(px + spec.FRONT_AXLE_X + 40.0, py + sgn * 86.0,
-                      pz + 292.0) for (px, py, pz) in v], f))
+        # Ahead of the pedals, pushed by them: the clevis at the back of
+        # each is on its pedal. They were at the front axle, 250 mm behind
+        # the pedals and in the driver's shins.
+        cyl.append(([(px + MC_X, py + sgn * MC_Y, pz + MC_Z)
+                     for (px, py, pz) in v], f))
     out["master_cylinders"] = mesh.join(*cyl)
 
     # The pedals go under the driver's feet, which are behind the front axle
@@ -281,7 +299,7 @@ def _hydraulics():
     # the nearest part of the driver.
     fx = spec.BODY_DETAIL["driver"]["foot_x"]
     out["pedal_box"] = mesh.join(
-        shapes.rounded_box(fx + 10.0, 0.0, 250.0, 210.0, 260.0, 40.0, 10.0),
+        shapes.rounded_box(fx + 18.0, 0.0, 250.0, 160.0, 260.0, 40.0, 10.0),
         shapes.rounded_box(fx - 10.0, -78.0, 330.0, 34.0, 60.0, 170.0, 8.0),
         shapes.rounded_box(fx - 10.0, 78.0, 330.0, 34.0, 60.0, 170.0, 8.0))
     return out
@@ -301,15 +319,24 @@ def _electrical():
     # inboard: under the seat pan, which bottoms at z 214, and inboard of it,
     # which begins at y 132.
     # It leaves the battery forward. It used to go 180 mm aft first and
-    # double back, a hairpin a 32 mm bundle folded through itself on.
-    spine = [(spec.POWERTRAIN["battery_x"], 60.0, 210.0),
-             (2200.0, 112.0, 200.0),
-             (T["cockpit_x0"], 112.0, 190.0),
+    # double back, a hairpin a 32 mm bundle folded through itself on; then
+    # it went 160 mm aft into the battery's own case before turning forward.
+    # Under the seat it is low enough to clear the pan, which comes down to
+    # z 178 at the front now the driver's hips sit there, and in the footwell
+    # it passes outboard of the pedal box and under the driver's heels.
+    PT = spec.POWERTRAIN
+    spine = [(PT["battery_x"] - PT["battery"][0] / 2 - 4.0, 60.0,
+              PT["battery_z"]),
+             (1990.0, 112.0, 160.0),
+             (1400.0, 140.0, 156.0),
+             (T["cockpit_x0"], 100.0, 192.0),
+             (900.0, 150.0, 180.0),
+             (770.0, 150.0, 215.0),
              (T["x_front"] + 40.0, 60.0, 300.0)]
     # A loom is a taped bundle, so it is fattest where the most circuits are
     # still in it -- at the battery -- and thins as branches leave. Drawing it
     # at one diameter end to end says every circuit runs the whole length.
-    grow = [1.00, 0.86, 0.72, 0.52]
+    grow = [1.00, 0.90, 0.80, 0.72, 0.62, 0.56, 0.52]
     for sy in (1.0, -1.0):
         path = [(px, sy * py, pz) for (px, py, pz) in spine]
         dense = mesh.smooth_path(path, 8)
@@ -346,7 +373,8 @@ def _electrical():
     # On top of the fuel cell, under the engine cover: the only place in
     # this bay that is neither bladder nor radiator. At y 150 they were in
     # the fuel; at y 288 they were in the radiator core.
-    fz = 330.0 + spec.POWERTRAIN["fuel"][2] / 2 + 62.0
+    fz = (spec.POWERTRAIN["fuel_z"] + spec.POWERTRAIN["fuel"][2] / 2
+          + 62.0)
     out["control_boxes"] = mesh.join(
         shapes.finned_case(2500.0, 118.0, fz, 180.0, 120.0, 80.0,
                            n_fins=7, fin_h=6.0, fin_t=3.0, r=12.0),
@@ -355,22 +383,86 @@ def _electrical():
     return out
 
 
+def _strap(path, normals, width, thick=5.0):
+    """A flat belt along `path`, lying on the surface whose outward normal
+    at each point is given: `width` across, `thick` off the surface."""
+    n = len(path)
+    verts = []
+    for i in range(n):
+        a = path[max(i - 1, 0)]
+        b = path[min(i + 1, n - 1)]
+        t = mesh._normalise(tuple(b[k] - a[k] for k in range(3)))
+        nn = normals[i]
+        w = mesh._normalise(mesh._cross(t, nn))
+        p = path[i]
+        for (sw, sn) in ((-1, 0), (1, 0), (1, 1), (-1, 1)):
+            verts.append(tuple(p[k] + sw * w[k] * width / 2
+                               + sn * nn[k] * thick for k in range(3)))
+    faces = []
+    for i in range(n - 1):
+        a, b = i * 4, (i + 1) * 4
+        for k in range(4):
+            k2 = (k + 1) % 4
+            faces.append((a + k, a + k2, b + k2, b + k))
+    faces.append((3, 2, 1, 0))
+    faces.append(tuple(range((n - 1) * 4, n * 4)))
+    return verts, faces
+
+
 def _cockpit():
     """A driver sits in this. Seat, belts, wheel, dash, extinguisher."""
     out = {}
     cx = (T["cockpit_x0"] + T["cockpit_x1"]) / 2
 
-    # six-point harness
+    # Six-point harness, laid on the driver. The belts were four flat boxes
+    # at heights picked for a driver who sat upright further aft: the lap
+    # belts ran 55 mm through his hips and the buckle 69 mm into his belly.
+    # Now each belt is a strap along the surface of his torso
+    # (detail.chest_point): the shoulder belts come out of the seat back
+    # behind him, over the HANS collar and down his chest; the lap belts
+    # come up from the sides of the bucket over his hips; the crotch strap
+    # comes up between his legs; all four meet at the buckle.
+    cp = detail.chest_point
     belts = []
+    t_b = 0.82
     for sgn in (-1.0, 1.0):
-        belts.append(shapes.rounded_box(cx - 90.0, sgn * 95.0, 560.0,
-                                        300.0, 62.0, 9.0, 3.0))     # shoulder
-        belts.append(shapes.rounded_box(cx + 60.0, sgn * 130.0, 330.0,
-                                        62.0, 220.0, 9.0, 3.0))     # lap
-    belts.append(shapes.rounded_box(cx + 20.0, 0.0, 300.0, 200.0, 60.0, 9.0, 3.0))
+        y = sgn * 92.0
+        path = [(1925.0, y, 420.0), (1935.0, y, 510.0), (1915.0, y, 566.0),
+                (1878.0, y * 1.08, 598.0), (1810.0, y * 1.20, 606.0),
+                (1750.0, y * 1.32, 598.0)]
+        norms = [(1.0, 0.0, 0.0), (0.84, 0.0, 0.54), (0.5, 0.0, 0.87),
+                 (0.0, 0.0, 1.0), (0.0, 0.0, 1.0), (-0.3, 0.0, 0.95)]
+        for (t, yy) in ((0.20, 92.0), (0.40, 76.0), (0.60, 58.0),
+                        (t_b - 0.05, 34.0)):
+            p_, n_ = cp(t, sgn * yy, 7.0)
+            path.append(p_)
+            norms.append(n_)
+        belts.append(_strap(path, norms, 50.0))
+        # lap belt: from the bucket's side wall, over the hip
+        # it comes up outboard of the thigh and over its root
+        path = [(1540.0, sgn * 184.0, 300.0), (1505.0, sgn * 160.0, 392.0)]
+        norms = [(0.0, -sgn, 0.0), (0.3, 0.0, 0.95)]
+        for (t, yy, lift) in ((0.95, 110.0, 12.0), (0.88, 60.0, 9.0)):
+            p_, n_ = cp(t, sgn * yy, lift)
+            path.append(p_)
+            norms.append(n_)
+        belts.append(_strap(path, norms, 50.0))
+    # crotch strap: from the seat pan up between the legs
+    path = [(1420.0, 0.0, 206.0), (1402.0, 0.0, 290.0)]
+    norms = [(-1.0, 0.0, 0.0), (-0.8, 0.0, 0.6)]
+    for t in (1.04, 0.94):
+        p_, n_ = cp(t, 0.0, 7.0)
+        path.append(p_)
+        norms.append(n_)
+    belts.append(_strap(path, norms, 44.0))
     out["harness"] = mesh.join(*belts)
-    out["harness_buckle"] = shapes.rounded_box(cx + 22.0, 0.0, 352.0,
-                                               90.0, 110.0, 34.0, 8.0)
+    # the buckle, flat on his belly where the six belts meet
+    c, n_ = cp(t_b, 0.0, 16.0)
+    u = (n_[2], 0.0, -n_[0])
+    bv, bf = shapes.rounded_box(0.0, 0.0, 0.0, 90.0, 110.0, 26.0, 8.0)
+    out["harness_buckle"] = ([(c[0] + px * u[0] + pz * n_[0], py,
+                               c[2] + px * u[2] + pz * n_[2])
+                              for (px, py, pz) in bv], bf)
 
     # The steering wheel used to be built here as well as in chassis.py: two
     # wheels 30 mm apart in the same cockpit, plus a second display and a
@@ -408,6 +500,20 @@ def _cockpit():
     return out
 
 
+def _squircle(x, hw, z0, z1, n, p=4.0):
+    """A rounded-square loop in the y-z plane at x, in body_section's order:
+    from +y, up over the top and round."""
+    zc, hh = (z0 + z1) / 2, (z1 - z0) / 2
+    e = 2.0 / p
+    out = []
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        ca, sa = math.cos(a), math.sin(a)
+        out.append((x, hw * math.copysign(abs(ca) ** e, ca),
+                    zc + hh * math.copysign(abs(sa) ** e, sa)))
+    return out
+
+
 def _survival_cell():
     """Bulkheads, side intrusion panels and the roll structure.
 
@@ -425,8 +531,16 @@ def _survival_cell():
         # outer edge and the aperture was 2 mm, so the 17 mm lightening-hole
         # eyelets centred on it stood 8 mm outside a body surface only 9 mm
         # away -- all four bulkheads were poking through the car.
-        ring = chassis.body_section(x, inset=8.0, segments=72)
-        inner = chassis.body_section(x, inset=56.0, segments=72)
+        if name == "engine":
+            # The engine bulkhead is the face the engine bolts to, sized to
+            # the block's front rather than to the bodywork: this far back
+            # the body section takes in the sidepods and the airbox, and a
+            # frame drawn round it stood in both.
+            ring = _squircle(x, 214.0, 64.0, 540.0, 72)
+            inner = _squircle(x, 166.0, 112.0, 492.0, 72)
+        else:
+            ring = chassis.body_section(x, inset=8.0, segments=72)
+            inner = chassis.body_section(x, inset=56.0, segments=72)
         n = len(ring)
         verts = ([(p[0] - 9.0, p[1], p[2]) for p in ring]
                  + [(p[0] + 9.0, p[1], p[2]) for p in ring]

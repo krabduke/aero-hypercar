@@ -319,7 +319,7 @@
    "label": "Cooling",
    "color": "#4E6E7A",
    "parts": 11,
-   "faces": 37474
+   "faces": 37708
   },
   {
    "key": "09 Aero Detail",
@@ -333,14 +333,14 @@
    "label": "Cockpit",
    "color": "#9A5A52",
    "parts": 11,
-   "faces": 21406
+   "faces": 20534
   },
   {
    "key": "11 Structure and Service",
    "label": "Structure",
    "color": "#6A6E72",
    "parts": 17,
-   "faces": 86086
+   "faces": 93398
   }
  ],
  "parts": {
@@ -375,16 +375,16 @@
   "headrest": {
    "g": "10 Cockpit",
    "mat": "carbon_matte",
-   "x0": 1830.0,
-   "x1": 2050.0,
-   "f": 170
+   "x0": 1670.0,
+   "x1": 1949.3,
+   "f": 326
   },
   "seat": {
    "g": "10 Cockpit",
    "mat": "carbon_matte",
    "x0": 1370.0,
-   "x1": 2010.0,
-   "f": 3772
+   "x1": 1950.0,
+   "f": 3424
   },
   "sharkfin": {
    "g": "01 Bodywork",
@@ -1979,8 +1979,8 @@
    "g": "08 Cooling and Energy",
    "mat": "alu_bright",
    "x0": 2157.0,
-   "x1": 2969.1,
-   "f": 298
+   "x1": 2962.2,
+   "f": 532
   },
   "gearbox": {
    "g": "07 Power Unit",
@@ -2265,9 +2265,9 @@
   "driver": {
    "g": "10 Cockpit",
    "mat": "suit",
-   "x0": 1109.0,
-   "x1": 2060.0,
-   "f": 3716
+   "x0": 809.0,
+   "x1": 1913.5,
+   "f": 3768
   },
   "gills": {
    "g": "09 Aero Detail",
@@ -2461,9 +2461,9 @@
   "brake_lines": {
    "g": "11 Structure and Service",
    "mat": "steel",
-   "x0": 877.1,
+   "x0": 666.6,
    "x1": 4081.7,
-   "f": 28704
+   "f": 31916
   },
   "bulkhead_dash": {
    "g": "11 Structure and Service",
@@ -2475,8 +2475,8 @@
   "bulkhead_engine": {
    "g": "11 Structure and Service",
    "mat": "carbon_matte",
-   "x0": 2336.0,
-   "x1": 2371.0,
+   "x0": 2826.0,
+   "x1": 2861.0,
    "f": 2496
   },
   "bulkhead_front": {
@@ -2552,29 +2552,29 @@
   "harness": {
    "g": "10 Cockpit",
    "mat": "suit",
-   "x0": 1340.0,
-   "x1": 1700.0,
-   "f": 850
+   "x0": 1398.0,
+   "x1": 1939.2,
+   "f": 118
   },
   "harness_buckle": {
    "g": "10 Cockpit",
    "mat": "suit",
-   "x0": 1557.0,
-   "x1": 1647.0,
+   "x0": 1449.3,
+   "x1": 1534.6,
    "f": 170
   },
   "master_cylinders": {
    "g": "11 Structure and Service",
    "mat": "alu_bright",
-   "x0": 940.0,
-   "x1": 1113.4,
+   "x0": 670.0,
+   "x1": 843.4,
    "f": 4442
   },
   "pedal_box": {
    "g": "10 Cockpit",
    "mat": "alu_bright",
-   "x0": 1065.0,
-   "x1": 1275.0,
+   "x0": 798.0,
+   "x1": 958.0,
    "f": 510
   },
   "side_intrusion": {
@@ -2601,9 +2601,9 @@
   "wiring_loom": {
    "g": "11 Structure and Service",
    "mat": "hose",
-   "x0": 657.8,
+   "x0": 653.6,
    "x1": 4087.5,
-   "f": 11928
+   "f": 16028
   },
   "antiroll_blade_f": {
    "g": "05 Suspension",
@@ -2636,7 +2636,7 @@
   "roll_hoop": {
    "g": "11 Structure and Service",
    "mat": "titanium",
-   "x0": 2315.1,
+   "x0": 2334.7,
    "x1": 2545.0,
    "f": 2804
   },

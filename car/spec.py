@@ -242,7 +242,10 @@ SIDEPOD_TABLE = [
 
 TUB = {
 
-    "x_front": 620.0, "x_rear": 2360.0,
+    # The tub ends where the engine bolts on. It ended at 2360, 500 mm
+    # short of the engine's front face, with its bulkhead through the middle
+    # of the fuel cell and the battery.
+    "x_front": 620.0, "x_rear": 2850.0,
     "top_z": 720.0, "floor_z": 60.0,
     "half_w_front": 240.0, "half_w_rear": 390.0,
     "cockpit_x0": 1180.0, "cockpit_x1": 1980.0,
@@ -563,10 +566,16 @@ BODY_DETAIL = {
     "crash_r": 78.0,
     "jack_r": 46.0,
     "driver": {
-        "helmet_r": 132.0, "helmet_x": 1760.0, "helmet_z": 690.0,
-        "shoulder_x": 1900.0, "shoulder_w": 190.0,
+        "helmet_r": 132.0, "helmet_x": 1760.0, "helmet_z": 710.0,
+        # Lying back the way a single-seater driver does: feet forward at
+        # the pedals, hips low in the seat, back reclined up to shoulders
+        # just under and behind the helmet. It used to be the other way
+        # round -- head forward, shoulders behind it and hips furthest aft,
+        # 70 mm through the rear bulkhead.
+        "shoulder_x": 1850.0, "shoulder_z": 510.0, "shoulder_w": 190.0,
+        "hip_x": 1480.0, "hip_z": 300.0,
         "arm_r": 58.0, "leg_r": 72.0,
-        "knee_x": 1400.0, "foot_x": 1160.0,
+        "knee_x": 1140.0, "knee_z": 350.0, "foot_x": 860.0,
     },
     "airbox_x": 2060.0, "airbox_w": 168.0, "airbox_h": 146.0,
     "airbox_len": 340.0,
@@ -627,7 +636,9 @@ POWERTRAIN = {
     "rad_x": 2336.0, "rad_y": 480.0, "rad_z": 358.0,
     "battery": (760.0, 300.0, 110.0),
     "battery_x": 2420.0, "battery_z": 150.0,
-    "fuel_x": 2380.0, "fuel": (560.0, 420.0, 320.0),
+    # on top of the battery, not round it: at z 330 and 320 tall its sump
+    # was 35 mm down into the pack
+    "fuel_x": 2380.0, "fuel": (560.0, 420.0, 300.0), "fuel_z": 366.0,
 }
 
 # --------------------------------------------------------------------------

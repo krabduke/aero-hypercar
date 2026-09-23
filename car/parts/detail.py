@@ -328,55 +328,54 @@ def _driver():
 
     # ---- body ----
     body = []
-    # torso: shoulders wide, waist narrow, chest deep -- lofted, not a box
-    # He is reclined: head forward and low, shoulders behind it, hips further
-    # back again, legs running forward to the pedals. The torso therefore runs
-    # aft from the shoulders to the hips, and stops at the back of the seat --
-    # it used to run 250 mm past it.
+    # torso: shoulders wide, waist narrow, chest deep -- lofted, not a box.
+    # It is lofted along the line of his back, from the shoulders down and
+    # forward to the hips: a single-seater driver lies reclined with his
+    # feet up at the pedals, so his head is the aft end of him, not the
+    # front. The rings are built across that line, with the chest facing up
+    # and forward.
+    sx, sz = D["shoulder_x"], D["shoulder_z"]
+    px_, pz_ = D["hip_x"], D["hip_z"]
+    (ux, uz), (nx, nz), L = _torso_frame()
     rings = []
-    for (dx, hw, hh, dz) in ((-90.0, 0.44, 0.54, 22.0),
-                             (-30.0, 0.82, 0.82, 10.0),
-                             (20.0, 1.00, 0.94, 0.0),
-                             (70.0, 0.98, 0.92, -12.0),
-                             (120.0, 0.86, 0.82, -28.0),
-                             (160.0, 0.72, 0.70, -44.0)):
+    for (t, hw, hh) in TORSO:
+        cx_, cz_ = sx + ux * L * t, sz + uz * L * t
         ring = []
         for i in range(26):
             a_ = 2 * math.pi * i / 26
             ca, sa = math.cos(a_), math.sin(a_)
             e = 2.0 / 2.6
-            ring.append((D["shoulder_x"] + dx,
+            w = TORSO_DEPTH * hh * math.copysign(abs(sa) ** e, sa)
+            ring.append((cx_ + nx * w,
                          D["shoulder_w"] * hw
                          * math.copysign(abs(ca) ** e, ca),
-                         hz - 190.0 + dz
-                         + 130.0 * hh * math.copysign(abs(sa) ** e, sa)))
+                         cz_ + nz * w))
         rings.append(ring)
     body.append(shapes._loft_closed(rings))
-    # neck
-    body.append(mesh.pipe([(hx + 40.0, 0.0, hz - R * 0.82),
-                           (D["shoulder_x"] - 70.0, 0.0, hz - 172.0)],
+    # neck: from the base of the skull down to the top of the chest
+    body.append(mesh.pipe([(hx + 30.0, 0.0, hz - R * 0.78),
+                           (sx - 10.0, 0.0, sz + 40.0)],
                           [R * 0.40, R * 0.54], 20, subdiv=3))
     # HANS: the collar the belts trap against the shoulders, with the two
     # tethers to the helmet. The halo exists to protect a head that this
     # holds on to a neck.
     for sgn in (-1.0, 1.0):
         body.append(shapes.rounded_box(
-            D["shoulder_x"] - 66.0, sgn * D["shoulder_w"] * 0.60, hz - 150.0,
-            120.0, D["shoulder_w"] * 0.52, 40.0, 14.0, seg=6))
+            sx - 40.0, sgn * D["shoulder_w"] * 0.64, sz + 70.0,
+            110.0, D["shoulder_w"] * 0.38, 36.0, 14.0, seg=6))
         body.append(mesh.pipe(
             [(hx + R * 0.55, sgn * R * 0.52, hz - R * 0.30),
-             (D["shoulder_x"] - 80.0, sgn * D["shoulder_w"] * 0.52,
-              hz - 138.0)], 7.0, 12, subdiv=2))
-    body.append(shapes.rounded_box(D["shoulder_x"] - 20.0, 0.0, hz - 148.0,
-                                   90.0, D["shoulder_w"] * 1.10, 34.0,
+             (sx - 40.0, sgn * D["shoulder_w"] * 0.50, sz + 90.0)],
+            7.0, 12, subdiv=2))
+    body.append(shapes.rounded_box(sx - 90.0, 0.0, sz + 60.0,
+                                   80.0, D["shoulder_w"] * 1.00, 32.0,
                                    12.0, seg=6))
 
     # arms: shoulder, elbow, wrist, and a hand on the wheel rim
     wheel_x = 1333.0
     for sgn in (-1.0, 1.0):
-        shoulder = (D["shoulder_x"] - 30.0, sgn * D["shoulder_w"] * 0.86,
-                    hz - 175.0)
-        elbow = (1590.0, sgn * 198.0, hz - 232.0)
+        shoulder = (sx - 10.0, sgn * D["shoulder_w"] * 0.84, sz + 30.0)
+        elbow = (1570.0, sgn * 174.0, 548.0)
         wrist = (wheel_x + 46.0, sgn * 126.0, 594.0)
         body.append(_limb(shoulder, elbow, wrist,
                           D["arm_r"], D["arm_r"] * 0.78, D["arm_r"] * 0.58))
@@ -391,17 +390,64 @@ def _driver():
                 9.0, 10, subdiv=2))
         body.append(mesh.join(*hand))
 
-    # legs: hip, knee, ankle, and a boot on the pedal
+    # legs: hip, knee, ankle, and a boot on the pedal. Nearly straight, the
+    # way they are in a single-seater: the knees stay low, under the front
+    # dampers and torsion bars on top of the tub, and the shins run through
+    # the dash bulkhead's aperture into the footwell.
     for sgn in (-1.0, 1.0):
-        hip = (D["shoulder_x"] + 150.0, sgn * 116.0, hz - 318.0)
-        knee = (D["knee_x"], sgn * 142.0, 452.0)
-        ankle = (D["foot_x"] + 40.0, sgn * 112.0, 372.0)
+        hip = (px_ + 10.0, sgn * 100.0, pz_ + 10.0)
+        knee = (D["knee_x"], sgn * 118.0, D["knee_z"])
+        ankle = (D["foot_x"] + 40.0, sgn * 96.0, 330.0)
         body.append(_limb(hip, knee, ankle,
                           D["leg_r"], D["leg_r"] * 0.66, D["leg_r"] * 0.46))
-        body.append(shapes.rounded_box(D["foot_x"] + 4.0, sgn * 108.0, 350.0,
+        body.append(shapes.rounded_box(D["foot_x"] + 4.0, sgn * 92.0, 312.0,
                                        110.0, 72.0, 56.0, 18.0, seg=6))
     out["driver"] = mesh.join(*body)
     return out
+
+
+# The torso's sections along the line from the shoulders (t 0) to the hips
+# (t 1): (t, half-width, half-depth) as fractions of shoulder_w and
+# TORSO_DEPTH.
+TORSO = ((-0.10, 0.62, 0.50), (0.00, 0.94, 0.80), (0.14, 1.00, 0.96),
+         (0.36, 0.94, 1.00), (0.60, 0.78, 0.86), (0.86, 0.84, 0.88),
+         (1.04, 0.76, 0.74), (1.14, 0.52, 0.44))
+TORSO_DEPTH = 108.0
+_E = 2.6                                # the sections' superellipse power
+
+
+def _torso_frame():
+    """(along, chest normal, length): the unit vector from the shoulders to
+    the hips, the one the chest faces along (up and forward), and the
+    distance between them -- all in the x-z plane."""
+    D = BD["driver"]
+    sx, sz = D["shoulder_x"], D["shoulder_z"]
+    L = math.hypot(sx - D["hip_x"], sz - D["hip_z"])
+    ux, uz = (D["hip_x"] - sx) / L, (D["hip_z"] - sz) / L
+    nx, nz = uz, -ux
+    if nz < 0.0:
+        nx, nz = -nx, -nz
+    return (ux, uz), (nx, nz), L
+
+
+def chest_point(t, y, lift=0.0):
+    """The point on the front of the driver's torso at station t and
+    lateral offset y, lifted `lift` off the skin along the chest normal.
+    The harness is laid on this, so the belts lie on the driver rather than
+    at a height picked for a driver who sat somewhere else."""
+    D = BD["driver"]
+    (ux, uz), (nx, nz), L = _torso_frame()
+    for (t0, w0, h0), (t1, w1, h1) in zip(TORSO, TORSO[1:]):
+        if t <= t1:
+            f = min(max((t - t0) / (t1 - t0), 0.0), 1.0)
+            hw, hh = w0 + (w1 - w0) * f, h0 + (h1 - h0) * f
+            break
+    Y = D["shoulder_w"] * hw
+    q = min(abs(y) / Y, 0.999) ** _E
+    w = TORSO_DEPTH * hh * (1.0 - q) ** (1.0 / _E) + lift
+    cx_ = D["shoulder_x"] + ux * L * t
+    cz_ = D["shoulder_z"] + uz * L * t
+    return (cx_ + nx * w, y, cz_ + nz * w), (nx, 0.0, nz)
 
 
 def _limb(a, b, c, r0, r1, r2):

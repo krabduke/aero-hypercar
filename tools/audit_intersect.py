@@ -129,9 +129,10 @@ EXPECTED = [
 ("gearbox", "damper"),
     ("gearbox", "torsion_bars"), ("gearbox", "heave_"), ("gearbox", "antiroll_"),
     ("gearbox", "driveshaft_"),
-    ("fuel_cell", "battery"),
-    ("battery_modules", "fuel_cell"),
-    ("driver", "headrest"), ("driver", "pedal_box"),
+    ("driver", "pedal_box"),
+    # the belts anchor through slots in the seat shell, and all six clip
+    # into the buckle
+    ("harness", "seat"), ("harness", "harness_buckle"),
 
     # ----------------------------------------------------------------
     # Joints the check could not reach until it stopped spending its
@@ -164,8 +165,7 @@ EXPECTED = [
     ("side_intrusion", "bulkhead_"), ("cockpit_coaming", "bulkhead_"),
     ("halo_mounts", "bulkhead_"),
     ("halo", "bulkhead_"), ("halo_pillar", "bulkhead_"),
-    ("airbox", "bulkhead_"), ("nose_cape", "bulkhead_"),
-    ("battery_modules", "bulkhead_"),
+    ("nose_cape", "bulkhead_"),
 
     # the front wing roots into the nose, and the vanes stand on the flaps
     ("front_wing_main", "tub"),
@@ -201,7 +201,7 @@ EXPECTED = [
 
     # the loom plugs into the boxes it feeds
     ("wiring_loom", "gearbox"),
-    ("wiring_loom", "fuel_cell"), ("brake_lines", "side_impact"),
+    ("brake_lines", "side_impact"),
 
     # the floor edge fences bolt to the floor edge, the strakes stand in
     # the tunnel, and the tunnel is formed in the floor: all three share
@@ -224,10 +224,8 @@ EXPECTED = [
     # is shaped to clear, and they are one corner assembly
     ("bduct_", "steering_arm_"),
 
-    # a bulkhead is a mounting face: the dash, the headrest, the battery
-    # and the roll hoop all land on one
-    ("bulkhead_", "dash"), ("bulkhead_", "headrest"),
-    ("bulkhead_", "battery"), ("bulkhead_", "roll_hoop"),
+    # a bulkhead is a mounting face: the dash lands on one
+    ("bulkhead_", "dash"),
     # the sidepod is bodywork, and the engine lives inside the bodywork --
     # the same statement as ("engine", "tub") a few lines up
     ("engine", "sidepod_"),
@@ -240,9 +238,6 @@ EXPECTED = [
     # looked at on its own before being written down here; the overlap was
     # always there, the sampling only just started reporting it.
     # ----------------------------------------------------------------
-    # the headrest and the airbox both land on the rear cockpit bulkhead,
-    # from opposite sides, and meet in the 30 mm they share
-    ("headrest", "airbox"),
     # the front tow hook comes down through the wing it is mounted above --
     # the flap stack is already declared for the same reason
     ("front_wing_main", "tow_hooks"),
@@ -280,7 +275,6 @@ EXPECTED = [
     ("trackrod_", "wishbone_"),
     # the loom is clipped along the top wishbone on its way to the corner
     ("wiring_loom", "wishbone_"),
-    ("seat", "extinguisher"),   # it is strapped to the seat back
     ("engine", "gills"),   # the louvres are cut in the cover over it
     # An exhaust runs inside the engine cover and exits through the tail --
     # the bodywork it passes through is the bodywork it is routed inside.

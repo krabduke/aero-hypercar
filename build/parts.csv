@@ -3,8 +3,8 @@ cockpit_coaming,01 Bodywork,carbon_matte,,,,,,,,,1944,1912,1166.2,1993.0,-218.1,
 halo,01 Bodywork,titanium,,,,,,,,,888,866,1119.1,2032.9,-372.6,372.5,685.0,985.1
 halo_mounts,01 Bodywork,titanium,,,,,,,,,588,510,1113.0,2035.0,-233.6,233.6,612.0,680.0
 halo_pillar,01 Bodywork,titanium,,,,,,,,,364,338,1071.2,1188.3,-16.7,16.7,620.0,962.6
-headrest,10 Cockpit,carbon_matte,,,,,,,,,196,170,1830.0,2050.0,-150.0,150.0,555.0,685.0
-seat,10 Cockpit,carbon_matte,,,,,,,,,3922,3772,1370.0,2010.0,-231.3,231.3,57.7,483.0
+headrest,10 Cockpit,carbon_matte,,,,,,,,,368,326,1670.0,1949.3,-189.9,189.9,618.0,731.5
+seat,10 Cockpit,carbon_matte,,,,,,,,,3574,3424,1370.0,1950.0,-228.3,228.3,57.7,490.0
 sharkfin,01 Bodywork,carbon_gloss,,,,,,,,,528,497,3100.0,4180.0,-5.6,5.6,413.7,758.3
 sidepod_inlets,01 Bodywork,carbon_gloss,,,,,,,,,872,820,1721.0,1910.0,-518.0,518.0,196.6,407.4
 sidepod_l,01 Bodywork,carbon_gloss,,,,,,,,,2415,2237,1700.0,3700.0,-772.0,-162.0,145.8,540.6
@@ -163,8 +163,8 @@ engine_camcover_l,07 Power Unit,alu_cast,,,,,,,,,2146,1718,3019.0,3461.0,-242.2,
 engine_camcover_r,07 Power Unit,alu_cast,,,,,,,,,2146,1718,3019.0,3461.0,151.1,245.0,462.2,556.2
 engine_head_l,07 Power Unit,alu_cast,,,,,,,,,1707,1547,3002.7,3458.3,-215.1,-47.4,372.7,538.4
 engine_head_r,07 Power Unit,alu_cast,,,,,,,,,1705,1542,3021.7,3477.3,47.4,215.1,372.7,538.4
-fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,112.0,538.0
-fuel_fittings,08 Cooling and Energy,alu_bright,,,,,,,,,340,298,2157.0,2969.1,-55.0,55.0,404.2,550.3
+fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,210.0,564.0
+fuel_fittings,08 Cooling and Energy,alu_bright,,,,,,,,,574,532,2157.0,2962.2,-55.0,55.0,419.1,571.6
 gearbox,07 Power Unit,magnesium,,,,,,,,,6695,6427,3550.5,4078.5,-206.5,206.5,123.5,536.5
 rad_hoses_l,08 Cooling and Energy,hose,,,,,,,,,7482,7400,2552.0,3251.5,-515.5,-64.9,140.1,505.1
 rad_hoses_r,08 Cooling and Energy,hose,,,,,,,,,7482,7400,2552.0,3251.5,64.9,515.5,140.2,505.2
@@ -205,9 +205,9 @@ turning_vane_r1,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1320.0,1640.5,350.0,
 turning_vane_r2,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1380.0,1641.1,288.1,337.8,86.0,282.0
 airbox,11 Structure and Service,carbon_gloss,,,,,,,,,374,342,2020.0,3100.0,-174.7,174.7,550.8,907.1
 crash_structure,11 Structure and Service,carbon_matte,,,,,,,,,3746,3880,4113.0,4485.0,-146.0,146.0,184.0,476.0
-driver,10 Cockpit,suit,,,,,,,,,4396,3716,1109.0,2060.0,-244.1,244.1,300.5,652.6
+driver,10 Cockpit,suit,,,,,,,,,4448,3768,809.0,1913.5,-220.1,220.1,222.5,673.5
 gills,09 Aero Detail,carbon_matte,,,,,,,,,5096,4420,3001.8,3653.2,-261.1,261.1,470.6,686.9
-helmet,10 Cockpit,helmet,,,,,,,,,5056,4946,1614.8,1896.0,-118.8,124.1,558.0,822.0
+helmet,10 Cockpit,helmet,,,,,,,,,5056,4946,1614.8,1896.0,-118.8,124.1,578.0,842.0
 jack_points,11 Structure and Service,alu_bright,,,,,,,,,3876,3936,350.1,4129.9,-70.0,70.0,127.0,245.7
 nose_cape,09 Aero Detail,carbon_gloss,,,,,,,,,572,568,340.0,760.0,-300.0,300.0,72.7,158.8
 side_impact,11 Structure and Service,carbon_matte,,,,,,,,,1232,1128,1660.6,2076.8,-700.0,700.0,189.2,480.8
@@ -233,12 +233,12 @@ bduct_vanes_fl,09 Aero Detail,carbon_matte,,,,,,,,,980,850,732.6,1038.8,-773.6,-
 bduct_vanes_fr,09 Aero Detail,carbon_matte,,,,,,,,,980,850,732.6,1038.8,754.1,773.6,411.1,505.4
 bduct_vanes_rl,09 Aero Detail,carbon_matte,,,,,,,,,980,850,3868.9,4200.0,-712.6,-693.1,429.3,530.7
 bduct_vanes_rr,09 Aero Detail,carbon_matte,,,,,,,,,980,850,3868.9,4200.0,693.1,712.6,429.3,530.7
-brake_lines,11 Structure and Service,steel,,,,,,,,,28884,28704,877.1,4081.7,-790.7,790.7,189.8,545.6
+brake_lines,11 Structure and Service,steel,,,,,,,,,32096,31916,666.6,4081.7,-790.7,790.7,189.8,545.6
 bulkhead_dash,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,1156.0,1191.0,-240.0,240.0,95.9,637.9
-bulkhead_engine,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,2336.0,2371.0,-270.2,270.2,53.9,698.0
+bulkhead_engine,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,2826.0,2861.0,-214.0,214.0,64.0,540.0
 bulkhead_front,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,596.0,631.0,-197.5,197.5,115.0,456.1
 bulkhead_rear,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,1956.0,1991.0,-254.0,254.0,60.9,756.9
-control_boxes,11 Structure and Service,alu_dark,,,,,,,,,3136,2720,2410.3,2589.7,-177.7,177.7,512.0,597.4
+control_boxes,11 Structure and Service,alu_dark,,,,,,,,,3136,2720,2410.3,2589.7,-177.7,177.7,538.0,623.4
 dash,10 Cockpit,carbon_matte,,,,,,,,,196,170,1176.3,1243.7,-148.7,148.7,478.0,578.0
 drink_bottle,10 Cockpit,suit,,,,,,,,,196,170,1765.0,1915.0,-195.0,-105.0,235.0,325.0
 exit_louvres_l,09 Aero Detail,carbon_matte,,,,,,,,,2940,2550,2671.3,3268.6,-722.2,-547.3,370.6,464.8
@@ -246,19 +246,19 @@ exit_louvres_r,09 Aero Detail,carbon_matte,,,,,,,,,2940,2550,2671.3,3268.6,547.3
 extinguisher,10 Cockpit,alu_bright,,,,,,,,,4140,4140,1760.0,2056.0,90.6,209.4,200.6,319.4
 fuel_coupling,08 Cooling and Energy,alu_bright,,,,,,,,,286,244,1880.0,2390.1,125.6,341.0,444.8,611.0
 gun_sockets,11 Structure and Service,alu_bright,,,,,,,,,13444,13444,838.0,4112.0,-989.9,989.9,273.1,407.0
-harness,10 Cockpit,suit,,,,,,,,,980,850,1340.0,1700.0,-240.0,240.0,295.5,564.5
-harness_buckle,10 Cockpit,suit,,,,,,,,,196,170,1557.0,1647.0,-55.0,55.0,335.0,369.0
-master_cylinders,11 Structure and Service,alu_bright,,,,,,,,,4442,4442,940.0,1113.4,-116.0,116.0,244.0,384.0
-pedal_box,10 Cockpit,alu_bright,,,,,,,,,588,510,1065.0,1275.0,-130.0,130.0,230.0,415.0
+harness,10 Cockpit,suit,,,,,,,,,128,118,1398.0,1939.2,-184.0,184.0,206.0,611.0
+harness_buckle,10 Cockpit,suit,,,,,,,,,196,170,1449.3,1534.6,-55.0,55.0,403.5,464.7
+master_cylinders,11 Structure and Service,alu_bright,,,,,,,,,4442,4442,670.0,843.4,-100.0,100.0,346.1,468.0
+pedal_box,10 Cockpit,alu_bright,,,,,,,,,588,510,798.0,958.0,-130.0,130.0,230.0,415.0
 side_intrusion,11 Structure and Service,carbon_matte,,,,,,,,,392,340,1180.0,1980.0,-239.3,239.3,290.0,550.0
 starter_socket,11 Structure and Service,alu_bright,,,,,,,,,1004,978,4122.0,4304.0,-48.0,48.0,282.0,378.0
 tyre_sensors,04 Wheels and Brakes,alu_dark,,,,,,,,,9168,8976,813.0,4045.9,-681.2,681.2,190.0,250.1
-wiring_loom,11 Structure and Service,hose,,,,,,,,,11854,11928,657.8,4087.5,-550.0,550.0,170.9,475.6
+wiring_loom,11 Structure and Service,hose,,,,,,,,,15954,16028,653.6,4087.5,-550.0,550.0,134.4,475.6
 antiroll_blade_f,05 Suspension,alu_bright,,,,,,,,,832,748,1008.8,1161.3,-199.6,199.6,488.0,552.0
 antiroll_blade_r,05 Suspension,alu_bright,,,,,,,,,832,748,3868.8,4059.3,-289.6,289.6,216.0,280.0
 drs_actuator,03 Wings,alu_bright,,,,,,,,,824,696,4666.0,4872.0,-25.5,25.5,937.0,1025.0
 rear_light_panel,09 Aero Detail,alu_bright,,,,,,,,,628,602,4440.0,4466.0,-45.0,45.0,258.0,392.0
-roll_hoop,11 Structure and Service,titanium,,,,,,,,,2940,2804,2315.1,2545.0,-271.0,271.0,633.9,978.0
+roll_hoop,11 Structure and Service,titanium,,,,,,,,,2940,2804,2334.7,2545.0,-271.0,271.0,634.8,978.0
 steering_arm_fl,05 Suspension,alu_bright,,,,,,,,,478,429,756.0,910.0,-761.9,-690.0,222.1,281.0
 steering_arm_fr,05 Suspension,alu_bright,,,,,,,,,478,429,756.0,910.0,690.1,762.0,222.1,281.0
 wing_mount_l,03 Wings,alu_bright,,,,,,,,,788,762,4428.0,4528.0,-185.0,-111.0,810.0,898.0

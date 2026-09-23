@@ -372,9 +372,57 @@ def _cockpit():
     sx = (T["cockpit_x0"] + T["cockpit_x1"]) / 2
     out["seat"] = _seat(sx + 110.0)
     out["steering"] = _wheel(T["cockpit_x0"] + 140.0, 570.0)
-    # headrest / roll structure padding
-    out["headrest"] = shapes.rounded_box(T["cockpit_x1"] - 40.0, 0.0, 620.0, 220.0, 300.0, 130.0)
+    out["headrest"] = _headrest()
     return out
+
+
+def _headrest():
+    """The energy-absorbing pads round the helmet, in the cockpit opening.
+
+    A single-seater's headrest is a U of foam: a pad each side of the helmet
+    and one behind it, filling the opening up to the rim so the head has
+    something to hit in every direction but forward. It was a box 220 mm
+    long centred behind the cockpit, which put its front face 66 mm inside
+    the back of the driver's head; moved behind the helmet, the same box was
+    52 mm into his shoulders. The pads stand above the shoulders and inside
+    the rim, and each station's width is the opening's own.
+    """
+    D = spec.BODY_DETAIL["driver"]
+    hx, R = D["helmet_x"], D["helmet_r"]
+    rim = cockpit_outline(40)
+    z0 = D["shoulder_z"] + 108.0        # above the shoulders and the HANS
+
+    def at(x):
+        for (xa, wa, za), (xb, wb, zb) in zip(rim, rim[1:]):
+            if xa <= x <= xb:
+                f = (x - xa) / (xb - xa)
+                return wa + (wb - wa) * f, za + (zb - za) * f
+        return rim[-1][1], rim[-1][2]
+
+    def loft(stations, section):
+        rings = []
+        for x in stations:
+            w, z_rim = at(x)
+            loop = shapes.rounded_polygon(section(w, z_rim - 18.0), 8.0,
+                                          seg=3)
+            rings.append([(x, py, pz) for (py, pz) in loop])
+        return shapes._loft_closed(rings)
+
+    parts = []
+    y_in = R + 6.0                      # clear of the helmet's side
+    for sgn in (-1.0, 1.0):
+        def side(w, top, sgn=sgn):
+            y_out = max(y_in + 24.0, w - 8.0)
+            pts = [(y_in, z0), (y_out, z0), (y_out, top), (y_in, top)]
+            return [(sgn * py, pz) for (py, pz) in pts][::int(sgn)]
+        parts.append(loft([hx - 90.0 + 30.0 * k for k in range(9)], side))
+
+    def back(w, top):
+        y = max(y_in + 24.0, w - 8.0)
+        return [(-y, z0), (y, z0), (y, top), (-y, top)]
+    helmet_back = hx + R * 1.04
+    parts.append(loft([helmet_back + 4.0 + 12.0 * k for k in range(5)], back))
+    return mesh.join(*parts)
 
 
 def surface_point(x, angle_deg, standoff=0.0):
@@ -405,10 +453,23 @@ def sidepod_point(x, f_y, f_z, standoff=0.0):
     return (x, sgn * (y + standoff * abs(f_y)), z)
 
 
+# The seat's inside surface along the centreline, (x, z): a pan under the
+# thighs and hips, then a back that climbs with the driver's reclined spine
+# up to his shoulder blades. It was a flat pan rising 40 mm, which suited a
+# driver sitting up -- and one whose hips were where his shoulders are.
+SEAT_LINE = ((1370.0, 204.0), (1500.0, 204.0), (1590.0, 240.0),
+             (1700.0, 300.0), (1855.0, 380.0), (1950.0, 430.0))
+SEAT_X0, SEAT_X1 = SEAT_LINE[0][0], SEAT_LINE[-1][0]
+
+
 def _seat_floor(cx, x):
-    """Underside of the seat's bucket at station x: it rises 40 mm aft."""
-    f = (x - (cx - 320.0)) / 640.0
-    return 300.0 - 96.0 + 40.0 * (1.0 - math.cos(math.pi * f)) / 2
+    """Underside of the seat's shell at station x."""
+    pts = SEAT_LINE
+    x = min(max(x, pts[0][0]), pts[-1][0])
+    for (x0, z0), (x1, z1) in zip(pts, pts[1:]):
+        if x <= x1:
+            return z0 + (z1 - z0) * (x - x0) / (x1 - x0) - 26.0
+    return pts[-1][1] - 26.0
 
 
 def _seat(cx):
@@ -425,12 +486,13 @@ def _seat(cx):
     n = 13
     for i in range(n):
         f = i / (n - 1)
-        x = cx - 320.0 + 640.0 * f
-        # the bucket deepens towards the back of the seat and the bolsters
-        # rise with it
-        hw = 150.0 + 60.0 * math.sin(math.pi * min(1.0, f * 1.15))
+        x = SEAT_X0 + (SEAT_X1 - SEAT_X0) * f
+        # the bolsters stand highest alongside the hips and ribs, where the
+        # cornering load goes in, and come down at the shoulders so the arms
+        # can reach forward over them
+        hw = 170.0 + 26.0 * math.sin(math.pi * f)
         floor_z = _seat_floor(cx, x)
-        bol = 60.0 + 130.0 * f ** 1.4
+        bol = 60.0 + 130.0 * math.sin(math.pi * f) ** 1.2
         sect = [(-hw, floor_z), (hw, floor_z),
                 (hw + 22.0, floor_z + bol * 0.55),
                 (hw + 14.0, floor_z + bol),
@@ -445,7 +507,8 @@ def _seat(cx):
     parts.append(shapes._loft_closed(rings))
     # harness slots: the shoulder belts come through the back of the shell
     for sgn in (-1.0, 1.0):
-        parts.append(shapes.rounded_box(cx + 296.0, sgn * 92.0, 470.0,
+        parts.append(shapes.rounded_box(1920.0, sgn * 92.0,
+                                        _seat_floor(cx, 1920.0) + 14.0,
                                         30.0, 76.0, 26.0, 8.0, seg=5))
     # The seat base: two cross-car pedestals it sits on, bonded to the tub
     # floor. The bucket is 130-180 mm above the floor -- the loom and the
@@ -469,9 +532,9 @@ def _seat(cx):
     # impact tubes, which pass the bolsters 20 mm outboard.
     for sgn in (-1.0, 1.0):
         parts.append(mesh.pipe(
-            [(cx + 120.0, sgn * 210.0, 400.0),
-             (cx + 160.0, sgn * 216.0, 452.0),
-             (cx + 200.0, sgn * 210.0, 400.0)], 11.0, 16, subdiv=3))
+            [(1560.0, sgn * 214.0, 440.0),
+             (1600.0, sgn * 218.0, 486.0),
+             (1640.0, sgn * 214.0, 450.0)], 11.0, 16, subdiv=3))
     return mesh.join(*parts)
 
 

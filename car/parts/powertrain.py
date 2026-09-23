@@ -30,6 +30,8 @@ PT = spec.POWERTRAIN
 SHADOWED = ("spec", "mesh", "shapes", "airfoil")
 
 
+T_REAR = spec.TUB["x_rear"]
+
 def _load_engine():
     """Import the power-unit generators with powerunit/ ahead on the path, so
     their modules resolve their own `spec` rather than the car's."""
@@ -210,7 +212,7 @@ def build():
                                        sx / 6.2, sy * 0.96, sz * 0.7, 6.0))
     out["battery_modules"] = mesh.join(*mods)
 
-    fx, fy, fz = PT["fuel_x"], 0.0, 330.0
+    fx, fy, fz = PT["fuel_x"], 0.0, PT["fuel_z"]
     sx, sy, sz = PT["fuel"]
     out["fuel_cell"] = _bladder(fx, fy, fz, sx, sy, sz)
     # ...and the line carries on to the engine. It used to stop at x 2716
@@ -218,6 +220,8 @@ def build():
     out["fuel_fittings"] = mesh.join(
         mesh.pipe([(fx + sx * 0.3, 0.0, fz + sz * 0.5),
                    (fx + sx * 0.6, 0.0, fz + sz * 0.62),
+                   # down through the engine bulkhead's aperture
+                   (T_REAR - 50.0, 0.0, fz + sz * 0.25),
                    (PT["engine_x"] - 280.0, 0.0, fz + sz * 0.30)], 24.0, 10),
         shapes.rounded_box(fx - sx * 0.3, 0.0, fz + sz * 0.5 + 18.0,
                            110.0, 110.0, 36.0, 12.0))
@@ -276,9 +280,10 @@ def _bladder(cx, cy, cz, sx, sy, sz, n_z=18, n_a=44):
     parts = [(verts, faces)]
 
     # the collector: a small pot at the bottom that stays full under
-    # cornering, so the pickup never sees air
+    # cornering, so the pickup never sees air. It is mostly inside the
+    # bladder; 66 mm of it hung below, into the battery the cell sits on.
     pv, pf = mesh.revolve_closed(
-        [(0.0, 0.0), (0.0, 92.0), (58.0, 92.0), (66.0, 74.0), (66.0, 0.0)], 26)
+        [(0.0, 0.0), (0.0, 92.0), (6.0, 92.0), (14.0, 74.0), (14.0, 0.0)], 26)
     parts.append(([(py + cx + sx * 0.10, pz + cy, -px + cz - sz / 2 + 8.0)
                    for (px, py, pz) in pv], pf))
     # filler neck and the dry-break coupling on top of it
@@ -291,7 +296,8 @@ def _bladder(cx, cy, cz, sx, sy, sz, n_z=18, n_a=44):
     vv, vf = mesh.revolve_closed(
         [(0.0, 0.0), (0.0, 26.0), (18.0, 26.0), (24.0, 20.0), (24.0, 9.0),
          (44.0, 9.0), (44.0, 0.0)], 18)
-    parts.append(([(py + cx + sx * 0.24, pz + cy - sy * 0.24,
+    # forward of the control boxes on the cell's lid, not under one
+    parts.append(([(py + cx + sx * 0.42, pz + cy - sy * 0.24,
                     px + cz + sz / 2 - 6.0) for (px, py, pz) in vv], vf))
     return mesh.join(*parts)
 

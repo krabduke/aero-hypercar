@@ -80,7 +80,7 @@ def _roll_hoop():
     # the rear brace down to the bulkhead
     for sy in (-1.0, 1.0):
         parts.append(_tube((x - 10.0, sy * hw * 0.45, top - 40.0),
-                           (T["x_rear"] - 30.0, sy * hw * 0.55, R["brace_z"]),
+                           (x - 100.0, sy * hw * 0.55, R["brace_z"]),
                            r * 0.62))
     return {"roll_hoop": mesh.join(*parts)}
 
