@@ -109,6 +109,12 @@ def _brake_ducts():
         # was the 2.8 mm the two drums were from being mirror images.
         out[f"bduct_drum_{tag}"] = (
             [(pz + x, sgn * px + inb, py + z) for (px, py, pz) in dv], df)
+        if front:
+            # a slot in the drum's lower front quarter for the steering arm,
+            # which reaches forward from the upright through the drum's plane
+            # to the track rod
+            out[f"cut:bduct_drum_{tag}"] = shapes.rounded_box(
+                x - 85.0, inb, z - 82.0, 200.0, dw * 0.9, 90.0, 12.0)
         # the fence standing the whole assembly off the tyre
         # A fence cut to the shape of the job: it wraps the front of the
         # drum, is cut away behind the axle line where the wheel rim would
@@ -117,13 +123,22 @@ def _brake_ducts():
         # clear of the tyre's inner face, which is what it stands the
         # assembly off
         fy = y - sgn * (w * 0.5 + 16.0)
+        # Its lower edge stops above the links that cross its plane: at the
+        # front the track rod reaches the steering arm through the fence's
+        # lower front corner, so that corner is cut away; at the rear the
+        # lower wishbone and the toe link pass under the axle, so the fence
+        # stops above them.
+        lo = z - r * (0.66 if front else 0.30)
+        front_lo = ((x - r * 0.80, z - r * 0.28), (x - r * 0.30, lo)) \
+            if front else ((x - r * 0.80, lo),)
         prof = shapes.panel_outline(
-            [(x - r * 0.80, z - r * 0.62), (x + r * 0.44, z - r * 0.66),
+            list(front_lo) + [(x + r * 0.44, lo),
              (x + r * 0.74, z - r * 0.18), (x + r * 0.60, z + r * 0.26),
              # the top edge clears the upper wishbone, which picks up at the
              # top of the upright and used to run through this plate
              (x + r * 0.02, z + r * 0.34), (x - r * 0.66, z + r * 0.18),
-             (x - r * 0.86, z - r * 0.20)], subdiv=4)
+             (x - r * 0.86, z - r * 0.20 if front else lo + 20.0)],
+            subdiv=4)
         out[f"bduct_fence_{tag}"] = shapes.shaped_panel(
             prof, fy, 8.0, rim_seg=5,
             bow=lambda fx, fz, sgn=sgn: -sgn * 26.0 * max(0.0, fx - 0.45) ** 2

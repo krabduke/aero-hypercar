@@ -260,8 +260,12 @@ def _inboard():
         # aerodynamic load
         out[f"heave_{tag}"] = _damper(ax + dx - 165.0, 0.0, z + 38.0)
 
-        # anti-roll bar: a blade each side on a cross tube
-        out[f"antiroll_{tag}"] = _antiroll(ax + dx - 60.0, inb_y, z + 62.0)
+        # anti-roll bar: a blade each side on a cross tube. The tube crosses
+        # the car ahead of the heave damper, not through it -- at ax + dx - 60
+        # it ran straight through the heave damper's body and reservoir --
+        # and longer levers take the drop links back to the rockers.
+        out[f"antiroll_{tag}"] = _antiroll(ax + dx - 195.0, inb_y, z + 62.0,
+                                           reach=135.0)
 
     # steering: rack, column and track rods
     ax = spec.FRONT_AXLE_X
@@ -452,9 +456,10 @@ def _rocker(x, y, z, dirn):
     return mesh.join(*parts)
 
 
-def _antiroll(x, half_y, z):
+def _antiroll(x, half_y, z, reach=0.0):
     """A blade anti-roll bar: a cross tube on bearings, a lever arm each side,
-    and a flat blade the driver can rotate to change the rate."""
+    and a flat blade the driver can rotate to change the rate. `reach`
+    lengthens the levers aft of the tube."""
     parts = [mesh.pipe([(x, -half_y * 0.86, z), (x, half_y * 0.86, z)],
                        15.0, 22, subdiv=4)]
     for sgn in (-1.0, 1.0):
@@ -463,13 +468,15 @@ def _antiroll(x, half_y, z):
         parts.append(shapes.rounded_box(x, sgn * half_y * 0.60, z,
                                         54.0, 30.0, 54.0, 9.0, seg=6))
         # lever arm, and the blade sticking out of it on edge
-        parts.append(shapes.rounded_box(x + 40.0, yy, z, 96.0, 22.0, 40.0,
+        parts.append(shapes.rounded_box(x + 40.0 + reach / 2, yy, z,
+                                        96.0 + reach, 22.0, 40.0,
                                         8.0, seg=6))
-        parts.append(shapes.rounded_box(x + 104.0, yy, z + 4.0,
+        parts.append(shapes.rounded_box(x + 104.0 + reach, yy, z + 4.0,
                                         86.0, 7.0, 42.0, 2.5, seg=5))
         # drop link down to the rocker
         parts.append(shapes.suspension_link(
-            (x + 140.0, yy, z - 6.0), (x + 150.0, yy * 0.86, z - 108.0),
+            (x + 140.0 + reach, yy, z - 6.0),
+            (x + 150.0 + reach, yy * 0.86, z - 108.0),
             common.section_points(20, 0.34, 0.0), 26.0, 24.0,
             n_sta=7, end_r=9.0))
     return mesh.join(*parts)

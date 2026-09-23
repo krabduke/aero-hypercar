@@ -456,7 +456,11 @@ def _tether(x, y, z, w, tag):
         # this anchor was landing at 701, just inboard of the casting it is
         # supposed to be bolted to.
         # low on the upright, under the caliper's mounting lugs
-        p0 = (x + dx * 0.25, y * 0.94, z + dz * 0.4 - 92.0)
+        # The front aft strand leaves the upright well aft of the pushrod's
+        # foot: at dx * 0.25 it set off from beside it and ran 21 mm through
+        # the pushrod on its way in.
+        kx = 0.52 if (tag.startswith("f") and dx > 0) else 0.25
+        p0 = (x + dx * kx, y * 0.94, z + dz * 0.4 - 92.0)
         # ...into the tub, which is what the docstring says and what the
         # regulation is for. It used to stop at y 680, which is 440 mm short
         # of the survival cell: a tether anchored to the upright at both ends.

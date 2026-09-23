@@ -90,7 +90,6 @@ EXPECTED = [
     ("sidepod_", "tub"), ("sidepod_inlets", "sidepod_"),
     ("sidepod_gills", "sidepod_"),
     ("exit_louvres_", "sidepod_"), ("gills", "tub"),
-    ("sharkfin", "tub"),
     ("airbox", "tub"), ("cockpit_coaming", "tub"), ("nose_cape", "tub"),
     ("nose_pylons", "tub"), ("nose_pylons", "front_wing_main"),
     ("crash_structure", "tub"), ("side_impact", "tub"),
@@ -163,7 +162,7 @@ EXPECTED = [
     ("wishbone_", "rocker_"), ("tether_", "wishbone_"),
     ("tether_", "steering_arm_"), ("tether_", "driveshaft_"),
     ("tether_", "bduct_"), ("trackrod_", "tub"),
-    ("antiroll_", "dampers_"), ("torsion_bars", "dampers_"),
+    ("torsion_bars", "dampers_"),
 
     # the drink bottle is strapped to the seat's flank
     ("drink_bottle", "seat"),
@@ -225,11 +224,6 @@ EXPECTED = [
     ("cooling_louvres", "tub"), ("driveshaft_", "tub"),
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it
-
-    # the brake duct is moulded around the steering arm, and the fan duct
-    # around the rear suspension: in both cases the duct is the part that
-    # is shaped to clear, and they are one corner assembly
-    ("bduct_", "steering_arm_"),
 
     # a bulkhead is a mounting face: the dash lands on one, and the battery
     # is bolted to the engine bulkhead's flange
@@ -315,22 +309,9 @@ TOL = 0.3            # mm, full size: deeper than this is sharing material
 # through a part that nobody meant. Fix them and --shrink; never add to it.
 # --- KNOWN: rewritten by --shrink, never by hand to add ---
 KNOWN = {
-    ("antiroll_f", "heave_f"): 30.7,   # at (977.8, -32.1, 504.2)
-    ("antiroll_r", "heave_r"): 30.7,   # at (3837.8, -32.1, 249.2)
-    ("gearbox", "sharkfin"): 29.6,   # at (4078.4, -2.1, 451.5)
-    ("bduct_fence_fl", "trackrod_fl"): 27.4,   # at (766.8, -665.4, 226.2)
-    ("bduct_fence_fr", "trackrod_fr"): 27.4,   # at (766.8, 665.4, 226.2)
-    ("bduct_drum_fl", "trackrod_fl"): 25.8,   # at (786.7, -741.7, 232.0)
-    ("bduct_drum_fr", "trackrod_fr"): 25.8,   # at (786.7, 741.7, 232.0)
-    ("pushrod_fl", "tether_fl"): 21.0,   # at (951.5, -612.5, 169.2)
-    ("pushrod_fr", "tether_fr"): 21.0,   # at (951.5, 612.5, 169.2)
+    ("bduct_fence_fl", "trackrod_fl"): 27.4,   # at (818.8, -665.5, 228.9)
+    ("bduct_fence_fr", "trackrod_fr"): 27.4,   # at (818.8, 665.5, 228.9)
     ("engine", "fuel_fittings"): 20.9,   # at (2934.0, 1.0, 451.0)
-    ("bduct_fence_rl", "trackrod_rl"): 20.8,   # at (4089.8, -572.2, 208.9)
-    ("bduct_fence_rr", "trackrod_rr"): 20.8,   # at (4089.8, 572.2, 208.9)
-    ("bduct_fence_rl", "wishbone_rl_lower_aft"): 20.7,   # at (4119.2, -567.0, 247.6)
-    ("bduct_fence_rr", "wishbone_rr_lower_aft"): 20.7,   # at (4119.2, 567.0, 247.6)
-    ("bduct_fence_rl", "wishbone_rl_lower_fwd"): 20.3,   # at (4113.3, -568.0, 245.9)
-    ("bduct_fence_rr", "wishbone_rr_lower_fwd"): 20.3,   # at (4113.3, 568.0, 245.8)
     ("diffuser_kick", "fan_fairing_l"): 20.0,   # at (4560.0, -409.6, 249.3)
     ("diffuser_kick", "fan_fairing_r"): 20.0,   # at (4560.0, 482.4, 249.3)
     ("floor_plenum_edge_l", "tunnel_l"): 14.7,   # at (1358.8, -621.8, 103.8)
@@ -366,8 +347,8 @@ KNOWN = {
     ("trackrod_fl", "tyre_sensors"): 8.7,   # at (827.6, -674.9, 229.6)
     ("trackrod_fr", "tyre_sensors"): 8.7,   # at (827.6, 674.9, 229.6)
     ("floor_surface", "tub"): 8.2,   # at (2333.4, -0.0, 45.7)
-    ("bduct_fence_rl", "tyre_sensors"): 7.9,   # at (3967.3, -576.4, 244.6)
-    ("bduct_fence_rr", "tyre_sensors"): 7.9,   # at (3967.3, 576.4, 244.6)
+    ("pushrod_fl", "tether_fl"): 8.1,   # at (982.7, -587.5, 182.0)
+    ("pushrod_fr", "tether_fr"): 8.1,   # at (982.7, 587.5, 182.0)
     ("steering_arm_fl", "trackrod_fl"): 7.3,   # at (793.4, -704.0, 233.5)
     ("steering_arm_fr", "trackrod_fr"): 7.3,   # at (793.6, 704.0, 234.8)
     ("brake_lines", "sidepod_l"): 6.9,   # at (2710.4, -321.5, 257.2)
@@ -380,8 +361,8 @@ KNOWN = {
     ("fan_fairing_l", "tunnel_l"): 5.9,   # at (4560.0, -482.8, 249.3)
     ("bduct_fence_rl", "brake_lines"): 5.1,   # at (4074.5, -578.9, 424.3)
     ("bduct_fence_rr", "brake_lines"): 5.1,   # at (4074.5, 578.9, 424.3)
-    ("bduct_fence_fl", "tyre_sensors"): 4.9,   # at (819.2, -665.4, 237.8)
-    ("bduct_fence_fr", "tyre_sensors"): 4.9,   # at (819.2, 665.4, 237.8)
+    ("bduct_fence_fl", "tyre_sensors"): 4.8,   # at (821.6, -665.5, 237.8)
+    ("bduct_fence_fr", "tyre_sensors"): 4.8,   # at (821.6, 665.5, 237.8)
     ("fan_fairing_r", "tunnel_r"): 4.2,   # at (4560.0, 479.7, 248.8)
     ("diffuser_kick", "tunnel_l"): 3.6,   # at (4552.5, -469.3, 246.8)
     ("diffuser_kick", "tunnel_r"): 3.6,   # at (4552.5, 469.3, 246.8)

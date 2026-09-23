@@ -259,7 +259,9 @@ def _sharkfin():
         f = i / (n - 1)
         x = x0 + (x1 - x0) * f
         hw, z_bot, z_top, ex, bias = _sample(spec.BODY, x)
-        z_base = z_top - 8.0
+        # 3 mm into the cover, not 8: at the tail the cover is only 7 mm
+        # over the gearbox, and the fin's root went into its casing
+        z_base = z_top - 3.0
         z_tip = D["sharkfin_z"] - 130.0 * f ** 1.6
         # thickest around a third of the way back, closing towards the
         # trailing edge, which is where a section's thickness actually goes

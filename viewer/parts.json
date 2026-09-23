@@ -326,7 +326,7 @@
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 54,
-   "faces": 50824
+   "faces": 50738
   },
   {
    "key": "10 Cockpit",
@@ -1544,14 +1544,14 @@
   "antiroll_f": {
    "g": "05 Suspension",
    "mat": "steel",
-   "x0": 943.0,
+   "x0": 808.0,
    "x1": 1135.0,
    "f": 5730
   },
   "antiroll_r": {
    "g": "05 Suspension",
    "mat": "steel",
-   "x0": 3803.0,
+   "x0": 3668.0,
    "x1": 3995.0,
    "f": 5730
   },
@@ -2323,14 +2323,14 @@
    "mat": "carbon_matte",
    "x0": 711.5,
    "x1": 1084.8,
-   "f": 958
+   "f": 887
   },
   "bduct_drum_fr": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
    "x0": 711.5,
    "x1": 1084.8,
-   "f": 958
+   "f": 887
   },
   "bduct_drum_rl": {
    "g": "09 Aero Detail",
@@ -2349,28 +2349,28 @@
   "bduct_fence_fl": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 707.0,
+   "x0": 716.6,
    "x1": 1056.5,
-   "f": 196
+   "f": 224
   },
   "bduct_fence_fr": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 707.0,
+   "x0": 716.6,
    "x1": 1056.5,
-   "f": 196
+   "f": 224
   },
   "bduct_fence_rl": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 3836.8,
+   "x0": 3836.7,
    "x1": 4222.9,
    "f": 196
   },
   "bduct_fence_rr": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 3836.8,
+   "x0": 3836.7,
    "x1": 4222.9,
    "f": 196
   },
