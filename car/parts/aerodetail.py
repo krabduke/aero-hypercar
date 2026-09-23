@@ -191,7 +191,12 @@ def _details():
     for sgn in (-1.0, 1.0):
         cv, cf = shapes.rounded_box(D["camera_x"], sgn * 122.0, D["camera_z"], 130.0, 46.0, 46.0)
         cams.append((cv, cf))
-    cv, cf = shapes.rounded_box(spec.TUB["cockpit_x1"] + 90.0, 0.0, 820.0, 150.0, 60.0, 52.0)
+    # The T-camera sits on top of the roll hoop, where it looks down the
+    # car. Just aft of the cockpit at z 820 it was 56 mm inside the airbox.
+    RH = spec.ROLL_HOOP
+    cv, cf = shapes.rounded_box(RH["x"], 0.0,
+                                RH["top_z"] + RH["leg_r"] + 25.5,
+                                150.0, 60.0, 52.0)
     cams.append((cv, cf))
     out["cameras"] = mesh.join(*cams)
 

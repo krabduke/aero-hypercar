@@ -298,7 +298,9 @@ def _caliper(x, y, z, w):
                   (r - 16.0) * sa - px * ca + pz * sa)
                  for (px, py, pz) in v]
             parts.append((_place(v, x, y, z), fc))
-    bv, bf = shapes.rounded_box(0.0, y0, r + 26.0, 150.0, 2 * half, 34.0)
+    # The bridge stays inside the rim's drop well: at r + 26 and 150 mm long
+    # its corners stood at radius 250, out through the rim into the tyre.
+    bv, bf = shapes.rounded_box(0.0, y0, r + 8.0, 80.0, 2 * half, 20.0)
     parts.append((_place(bv, x, y, z), bf))
     # pistons, pressing the pads onto the disc
     for side in (-1.0, 1.0):
@@ -323,7 +325,7 @@ def _caliper(x, y, z, w):
     # inboard to meet it, which is exactly what they do on a real corner.
     for dx in (-58.0, 58.0):
         parts.append(mesh.pipe(
-            [(x + dx, y + s * (w * 0.02 + 6.0), z + r * 0.30),
+            [(x + dx, y + s * (w * 0.02 + 6.0), z + 59.0),
              (x + dx, y * 0.93, z - 12.0),
              (x + dx, s * 800.0, z - 40.0)], 15.0, 12, subdiv=2))
 

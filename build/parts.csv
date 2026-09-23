@@ -66,14 +66,14 @@ brake_pad_fl,04 Wheels and Brakes,cf_disc,,,,,,,,,856,968,796.2,1003.8,-855.4,-7
 brake_pad_fr,04 Wheels and Brakes,cf_disc,,,,,,,,,856,968,796.2,1003.8,792.4,855.4,455.0,519.0
 brake_pad_rl,04 Wheels and Brakes,cf_disc,,,,,,,,,856,968,3946.2,4153.8,-822.4,-759.4,465.0,529.0
 brake_pad_rr,04 Wheels and Brakes,cf_disc,,,,,,,,,856,968,3946.2,4153.8,759.4,822.4,465.0,529.0
-caliper_fl,04 Wheels and Brakes,alu_bright,,,,,,,,,5188,4986,773.8,1026.2,-881.9,-765.9,284.5,574.0
-caliper_fr,04 Wheels and Brakes,alu_bright,,,,,,,,,5188,4986,773.8,1026.2,765.9,881.9,284.5,574.0
-caliper_rl,04 Wheels and Brakes,alu_bright,,,,,,,,,5452,5250,3923.8,4176.2,-848.9,-732.9,291.7,584.0
-caliper_rr,04 Wheels and Brakes,alu_bright,,,,,,,,,5452,5250,3923.8,4176.2,732.9,848.9,291.7,584.0
-disc_fl,04 Wheels and Brakes,cf_disc,900.0,-830.0,335.0,0.0,1.0,0.0,1.0,spin,8952,8016,720.0,1080.0,-839.9,-807.9,155.0,515.0
-disc_fr,04 Wheels and Brakes,cf_disc,900.0,830.0,335.0,0.0,1.0,0.0,1.0,spin,8952,8016,720.0,1080.0,807.9,839.9,155.0,515.0
-disc_rl,04 Wheels and Brakes,cf_disc,4050.0,-799.0,345.0,0.0,1.0,0.0,1.0,spin,8952,8016,3870.0,4230.0,-806.9,-774.9,165.0,525.0
-disc_rr,04 Wheels and Brakes,cf_disc,4050.0,799.0,345.0,0.0,1.0,0.0,1.0,spin,8952,8016,3870.0,4230.0,774.9,806.9,165.0,525.0
+caliper_fl,04 Wheels and Brakes,alu_bright,,,,,,,,,5188,4986,788.3,1011.7,-881.9,-765.9,284.5,521.0
+caliper_fr,04 Wheels and Brakes,alu_bright,,,,,,,,,5188,4986,788.3,1011.7,765.9,881.9,284.5,521.0
+caliper_rl,04 Wheels and Brakes,alu_bright,,,,,,,,,5452,5250,3938.3,4161.7,-848.9,-732.9,291.7,531.0
+caliper_rr,04 Wheels and Brakes,alu_bright,,,,,,,,,5452,5250,3938.3,4161.7,732.9,848.9,291.7,531.0
+disc_fl,04 Wheels and Brakes,cf_disc,900.0,-830.0,335.0,0.0,1.0,0.0,1.0,spin,8952,8016,742.0,1058.0,-839.9,-807.9,177.0,493.0
+disc_fr,04 Wheels and Brakes,cf_disc,900.0,830.0,335.0,0.0,1.0,0.0,1.0,spin,8952,8016,742.0,1058.0,807.9,839.9,177.0,493.0
+disc_rl,04 Wheels and Brakes,cf_disc,4050.0,-799.0,345.0,0.0,1.0,0.0,1.0,spin,8952,8016,3892.0,4208.0,-806.9,-774.9,187.0,503.0
+disc_rr,04 Wheels and Brakes,cf_disc,4050.0,799.0,345.0,0.0,1.0,0.0,1.0,spin,8952,8016,3892.0,4208.0,774.9,806.9,187.0,503.0
 hub_fl,04 Wheels and Brakes,alu_dark,900.0,-830.0,335.0,0.0,1.0,0.0,1.0,spin,3624,3804,838.0,962.0,-875.8,-695.8,273.0,397.0
 hub_fr,04 Wheels and Brakes,alu_dark,900.0,830.0,335.0,0.0,1.0,0.0,1.0,spin,3624,3804,838.0,962.0,695.8,875.8,273.0,397.0
 hub_rl,04 Wheels and Brakes,alu_dark,4050.0,-799.0,345.0,0.0,1.0,0.0,1.0,spin,3624,3804,3988.0,4112.0,-840.8,-660.8,283.0,407.0
@@ -181,7 +181,7 @@ bargeboard_r2,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1226.0,1739.7,382.8,50
 bargeboard_r3,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1272.0,1716.4,345.2,478.8,172.0,308.0
 bargeboard_r4,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1318.0,1693.1,319.9,455.7,198.0,262.0
 beam_wing,03 Wings,carbon_gloss,,,,,,,,,1008,868,4281.1,4615.1,-550.0,550.0,669.6,789.4
-cameras,09 Aero Detail,carbon_matte,,,,,,,,,588,510,635.0,2145.0,-145.0,145.0,407.0,846.0
+cameras,09 Aero Detail,carbon_matte,,,,,,,,,588,510,635.0,2525.0,-145.0,145.0,407.0,1029.5
 cooling_louvres,09 Aero Detail,carbon_matte,,,,,,,,,2352,2040,3145.0,3695.0,-168.3,168.3,582.4,701.3
 exhaust,09 Aero Detail,steel,,,,,,,,,1564,1534,3476.9,4530.0,-166.0,166.0,494.0,667.9
 fan_fairing_l,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,-657.9,-234.0,240.0,664.0
@@ -233,7 +233,7 @@ bduct_vanes_fl,09 Aero Detail,carbon_matte,,,,,,,,,980,850,732.6,1038.8,-773.6,-
 bduct_vanes_fr,09 Aero Detail,carbon_matte,,,,,,,,,980,850,732.6,1038.8,754.1,773.6,411.1,505.4
 bduct_vanes_rl,09 Aero Detail,carbon_matte,,,,,,,,,980,850,3868.9,4200.0,-712.6,-693.1,429.3,530.7
 bduct_vanes_rr,09 Aero Detail,carbon_matte,,,,,,,,,980,850,3868.9,4200.0,693.1,712.6,429.3,530.7
-brake_lines,11 Structure and Service,steel,,,,,,,,,31964,31784,771.3,4081.7,-790.7,790.7,189.8,545.6
+brake_lines,11 Structure and Service,steel,,,,,,,,,31964,31784,771.3,4081.7,-790.7,790.7,189.8,545.8
 bulkhead_dash,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,1156.0,1191.0,-240.0,240.0,95.9,637.9
 bulkhead_engine,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,2826.0,2861.0,-214.0,214.0,64.0,540.0
 bulkhead_front,11 Structure and Service,carbon_matte,,,,,,,,,2496,2496,596.0,631.0,-197.5,197.5,115.0,456.1

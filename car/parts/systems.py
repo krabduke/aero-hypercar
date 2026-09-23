@@ -228,7 +228,7 @@ def _hydraulics():
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
         front = tag.startswith("f")
-        z_cal = od / 2 + W["caliper_r"] * 0.8
+        z_cal = od / 2 + 157.0     # into the caliper's upper shoe
         y_union = y * 0.62
         z_union = od / 2 + 40.0
         # out of the master cylinder's union, over the steering rack and

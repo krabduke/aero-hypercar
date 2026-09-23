@@ -145,8 +145,11 @@ WHEEL = {
     "front_w": 305.0, "front_od": 670.0,
     "rear_w": 405.0,  "rear_od": 690.0,
     "spokes": 7,
-    "disc_r": 180.0, "disc_t": 32.0,
-    "caliper_r": 196.0,
+    # Sized to fit the wheel: the rim's drop well is 193 mm inside, and a
+    # 360 mm disc put the caliper 16 mm into it. 316 mm is about what an
+    # 18-inch F1 front runs.
+    "disc_r": 158.0, "disc_t": 32.0,
+    "caliper_r": 168.0,
     # rim: flange, drop centre, spoke and centre-lock geometry
     "flange_r": 240.0,         # outer lip, just proud of the bead seat
     "bead_r": 228.6,
@@ -665,8 +668,6 @@ ROLL_HOOP = {
     "brace_z": 640.0,        # where the forward braces meet the headrest
 }
 
-# Shaft and bevel gears taking fan drive off the gearbox case. The fans can
-# be driven mechanically as well as electrically; this is the mechanical path.
 # DRS: the actuator is a body, a rod and a clevis on the flap underside just
 # ahead of its trailing edge. It stands under the mainplane's lower surface,
 # which it touches, and reaches up-aft to the flap, which it moves.
@@ -779,7 +780,6 @@ MATERIAL_MAP = {
     "brake_pad": "cf_disc",
     "tether": "strap",
     "roll_hoop": "titanium",
-    "fan_drive": "steel",
     "drs_": "alu_bright",
     "steering_arm": "alu_bright",
     "spring": "strap",

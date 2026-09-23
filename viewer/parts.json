@@ -872,36 +872,36 @@
   "caliper_fl": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
-   "x0": 773.8,
-   "x1": 1026.2,
+   "x0": 788.3,
+   "x1": 1011.7,
    "f": 4986
   },
   "caliper_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
-   "x0": 773.8,
-   "x1": 1026.2,
+   "x0": 788.3,
+   "x1": 1011.7,
    "f": 4986
   },
   "caliper_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
-   "x0": 3923.8,
-   "x1": 4176.2,
+   "x0": 3938.3,
+   "x1": 4161.7,
    "f": 5250
   },
   "caliper_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "alu_bright",
-   "x0": 3923.8,
-   "x1": 4176.2,
+   "x0": 3938.3,
+   "x1": 4161.7,
    "f": 5250
   },
   "disc_fl": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
-   "x0": 720.0,
-   "x1": 1080.0,
+   "x0": 742.0,
+   "x1": 1058.0,
    "f": 8016,
    "pivot": {
     "p": [
@@ -921,8 +921,8 @@
   "disc_fr": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
-   "x0": 720.0,
-   "x1": 1080.0,
+   "x0": 742.0,
+   "x1": 1058.0,
    "f": 8016,
    "pivot": {
     "p": [
@@ -942,8 +942,8 @@
   "disc_rl": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
-   "x0": 3870.0,
-   "x1": 4230.0,
+   "x0": 3892.0,
+   "x1": 4208.0,
    "f": 8016,
    "pivot": {
     "p": [
@@ -963,8 +963,8 @@
   "disc_rr": {
    "g": "04 Wheels and Brakes",
    "mat": "cf_disc",
-   "x0": 3870.0,
-   "x1": 4230.0,
+   "x0": 3892.0,
+   "x1": 4208.0,
    "f": 8016,
    "pivot": {
     "p": [
@@ -2098,7 +2098,7 @@
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
    "x0": 635.0,
-   "x1": 2145.0,
+   "x1": 2525.0,
    "f": 510
   },
   "cooling_louvres": {
