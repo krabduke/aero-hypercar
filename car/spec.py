@@ -603,8 +603,15 @@ POWERTRAIN = {
     # The gearbox hangs off the back of the engine on the crank centreline.
     # Without this it was built about z = 0 -- half of it under the track.
     "gearbox_z": 330.0,
-    "radiator": (600.0, 96.0, 330.0),
-    "rad_x": 2320.0, "rad_y": 336.0, "rad_z": 320.0,
+    # A U-flow crossflow core: tanks at the fore and aft ends, both hoses
+    # on the aft tank. It was 600 x 330 with tanks top and bottom, a stack
+    # 428 tall in a sidepod with 312 inside it where the core had to go --
+    # it came out through the pod's floor and, at y 288, 46 mm into the
+    # body. Outboard at y 480, where the pod's floor is lowest, and aft of
+    # the side-impact tubes, a 400 x 280 core fits inside the skin with its
+    # tanks, and it is thicker to keep the heat it rejects.
+    "radiator": (400.0, 120.0, 280.0),
+    "rad_x": 2336.0, "rad_y": 480.0, "rad_z": 358.0,
     "battery": (760.0, 300.0, 110.0),
     "battery_x": 2420.0, "battery_z": 150.0,
     "fuel_x": 2380.0, "fuel": (560.0, 420.0, 320.0),

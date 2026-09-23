@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import spec
 import mesh
 import shapes
+from parts import chassis, common
 
 PT = spec.POWERTRAIN
 
@@ -126,34 +127,60 @@ def build():
     out["gearbox"] = _gearbox(x_rear)
     # A radiator drawn as a solid block is the laziest part on a car. These
     # are cores: tubes with fin packs between them, in a frame, with header
-    # tanks top and bottom and the hoses that feed them.
+    # tanks at each end and the hoses that feed them.
     for sgn, tag in ((-1.0, "l"), (1.0, "r")):
         x, y, z = PT["rad_x"], sgn * PT["rad_y"], PT["rad_z"]
         sx, sy, sz = PT["radiator"]
-        out[f"radiator_{tag}"] = shapes.core(x, y, z, sx, sy, sz,
-                                             n_tubes=16, n_fins=30)
+        # Baffles from the core's top and bottom edges to the pod's skin, so
+        # the air in the pod goes through the core and not round it -- the
+        # seal every ducted radiator has, and the only thing joining the
+        # core to the duct it sits in.
+        baffles = []
+        for roof in (False, True):
+            rings = []
+            for i in range(9):
+                bx = x - sx / 2 + sx * i / 8
+                zs = chassis.sidepod_floor(bx, y, roof)
+                zs += -0.5 if roof else 0.5
+                ze = z + (sz / 2 - 2.0 if roof else -sz / 2 + 2.0)
+                lo, hi = (ze, zs) if roof else (zs, ze)
+                rings.append([(bx, y - 2.0, lo), (bx, y + 2.0, lo),
+                              (bx, y + 2.0, hi), (bx, y - 2.0, hi)])
+            baffles.append(common.loft(rings))
+        out[f"radiator_{tag}"] = mesh.join(
+            shapes.core(x, y, z, sx, sy, sz, n_tubes=16, n_fins=30),
+            *baffles)
         tanks = []
-        for dz in (-sz / 2 - 26.0, sz / 2 + 26.0):
-            tanks.append(shapes.rounded_box(x, y, z + dz, sx * 0.98,
-                                            sy * 1.25, 46.0, 18.0))
+        for dx in (-sx / 2 - 26.0, sx / 2 + 26.0):
+            tanks.append(shapes.rounded_box(x + dx, y, z, 46.0,
+                                            sy * 1.25, sz * 0.98, 18.0))
+            # and a foot under each tank, down to the pod's floor: the core
+            # was held in the pod by nothing but its own hoses
+            z_tank = z - sz * 0.49
+            z_floor = chassis.sidepod_floor(x + dx, y) + 0.5
+            if z_tank - z_floor > 1.0:
+                tanks.append(shapes.rounded_box(
+                    x + dx, y, (z_tank + z_floor) / 2 + 2.0, 40.0, 70.0,
+                    z_tank - z_floor + 4.0, 6.0))
         out[f"rad_tanks_{tag}"] = mesh.join(*tanks)
         hoses = []
-        # Both hoses leave the aft end of their tank. The core is downflow,
-        # top tank to bottom, so neither end is the "wrong" one -- and the
-        # bottom hose leaving the front made a hairpin 800 mm long back past
-        # the whole radiator to the engine, pinched to an eighth of its bore
-        # at the turn.
-        for dz, xe in ((-sz / 2 - 26.0, 1.0), (sz / 2 + 26.0, 1.0)):
-            # The hose stays OUTBOARD of the fuel cell and the battery
-            # until it is past both of them, then comes in to the engine.
-            # Cutting the corner took it through the bladder and through
-            # the battery modules.
-            path = [(x + sx * 0.42 * xe, y, z + dz),
-                    (x + sx * 0.58 * xe, y * 0.97, z + dz * 0.92),
-                    (2760.0, y * 0.88, z + dz * 0.80),
-                    (2990.0, y * 0.58,
-                     (z + dz * 0.7 + PT["engine_z"] + dz * 0.5) / 2),
-                    (PT["engine_x"], y * 0.28, PT["engine_z"] + dz * 0.5)]
+        # Both hoses leave the aft tank, which is divided: in at the top,
+        # across the core, back through its lower half, out at the bottom.
+        x_t = x + sx / 2 + 26.0
+        # The hose stays OUTBOARD of the fuel cell and the battery until it
+        # is past both of them, then comes in to the engine. Cutting the
+        # corner took it through the bladder and through the battery
+        # modules. The upper one runs high over the pod's inboard wall; the
+        # lower one ducks under the brake line that runs aft along y 320,
+        # z 250, and both land on the engine's stubs 95 mm either side of
+        # the crank.
+        for s_ in (1.0, -1.0):
+            zs = [z + s_ * sz * 0.30] + [PT["engine_z"] + v for v in (
+                (126.0, 156.0, 117.0, 95.0) if s_ > 0 else
+                (-74.0, -139.0, -112.0, -95.0))]
+            ys = (abs(y), 470.0, 296.0, 195.0, 94.0)
+            xs = (x_t, x_t + 100.0, 2760.0, 2990.0, PT["engine_x"])
+            path = [(px, sgn * py, pz) for px, py, pz in zip(xs, ys, zs)]
             # a moulded hose swells where it is unsupported and necks down
             # into each stub
             hoses.append(mesh.pipe(

@@ -113,10 +113,12 @@ def _body():
             "cut:tub": mesh.join(common.loft(inner), common.loft(opening))}
 
 
-def _sidepod_section(x, segments=40):
+def _sidepod_section(x, segments=40, inset=0.0):
     """Sidepod section: rounded outboard, flat inboard against the body, and
     an undercut lower surface that climbs aft to feed the tunnel."""
     y_in, y_out, z_bot, z_top, n = _sample(spec.SIDEPOD_TABLE, x)
+    y_in, y_out = y_in + inset, max(y_out - inset, y_in + inset + 1.0)
+    z_bot, z_top = z_bot + inset, max(z_top - inset, z_bot + inset + 1.0)
     yc = (y_in + y_out) / 2
     hy = (y_out - y_in) / 2
     zc = (z_bot + z_top) / 2
@@ -132,6 +134,15 @@ def _sidepod_section(x, segments=40):
     return ring
 
 
+def sidepod_floor(x, y, roof=False):
+    """Height of the inside of the sidepod's floor skin at (x, |y|), or of
+    its roof."""
+    ring = _sidepod_section(x, segments=160, inset=SKIN)
+    zc = sum(q[2] for q in ring) / len(ring)
+    side = [p for p in ring if (p[2] > zc) == roof]
+    return min(side, key=lambda p: abs(p[1] - abs(y)))[2]
+
+
 def _sidepods():
     out = {}
     xs = _stations(spec.SIDEPOD_TABLE, 30)
@@ -141,6 +152,14 @@ def _sidepods():
             r = _sidepod_section(x)
             rings.append([(px, sgn * py, pz) for (px, py, pz) in r])
         out[f"sidepod_{side}"] = common.loft(rings)
+        # A sidepod is a duct: air in at the mouth, through the radiator,
+        # out of the louvres. It was a solid with the radiator buried in it.
+        # The bore runs out through the front face, which is the mouth.
+        inner = []
+        for x in [xs[0] - 10.0] + xs[1:-2]:
+            r = _sidepod_section(max(x, xs[0]), inset=SKIN)
+            inner.append([(x, sgn * py, pz) for (_px, py, pz) in r])
+        out[f"cut:sidepod_{side}"] = common.loft(inner)
 
     # The inlet mouth.
     #

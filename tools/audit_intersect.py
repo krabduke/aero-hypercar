@@ -72,9 +72,9 @@ EXPECTED = [
     ("fan_drive_", "fan_motors"), ("fan_drive_", "fan_rotor_"),
 
     # power unit and cooling: hoses clamp to what they feed
-    ("rad_hoses_", "engine"), ("rad_hoses_", "radiator_"),
+    ("rad_hoses_", "engine"),
     ("rad_hoses_", "rad_tanks_"),
-    ("radiator_", "sidepod_"), ("engine", "gearbox"), ("engine", "tub"),
+    ("engine", "gearbox"), ("engine", "tub"),
     ("exhaust", "engine"), ("fuel_fittings", "fuel_cell"),
     ("battery_modules", "battery"),
     ("gearbox", "tub"),
@@ -120,8 +120,8 @@ EXPECTED = [
     # A second round, all of them structure rooted into structure at the rear
     # and along the floor, where everything on this car is packed together.
     ("rim_", "caliper_"), ("rim_", "bduct_"),
-    ("sidepod_", "side_impact"), ("sidepod_", "radiator_"),
-    ("tub", "radiator_"), ("tub", "side_impact"),
+    ("sidepod_", "side_impact"),
+    ("tub", "side_impact"),
     ("nose_pylons", "front_wing_main"),
     # the bargeboards are a nested cascade sharing one root, like the wing
     ("bargeboard_", "bargeboard_"),
@@ -191,7 +191,6 @@ EXPECTED = [
     # the loom plugs into the boxes it feeds
     ("wiring_loom", "gearbox"),
     ("wiring_loom", "fuel_cell"), ("brake_lines", "side_impact"),
-    ("brake_lines", "radiator_"),
 
     # the floor edge fences bolt to the floor edge, the strakes stand in
     # the tunnel, and the tunnel is formed in the floor: all three share
@@ -204,7 +203,7 @@ EXPECTED = [
     # is a 6 mm skin now, and these are the things that pass through it:
     # hoses and driveshafts out to the sidepods and wheels, the tanks where
     # the sidepods meet it, louvres and the filler set into it.
-    ("rad_hoses_", "tub"), ("rad_tanks_", "tub"),
+    ("rad_hoses_", "tub"),
     ("cooling_louvres", "tub"), ("driveshaft_", "tub"),
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it
@@ -341,8 +340,6 @@ KNOWN = {
     ("harness", "steering"): 41.3,   # at (1490.0, -95.0, 555.5)
     ("fanduct", "tether_rl"): 36.3,   # at (4120.3, -300.0, 310.0)
     ("fanduct", "tether_rr"): 36.3,   # at (4120.3, 300.0, 310.0)
-    ("rad_tanks_l", "sidepod_l"): 31.7,   # at (2062.0, -378.0, 488.0)
-    ("rad_tanks_r", "sidepod_r"): 31.7,   # at (2062.0, 378.0, 488.0)
     ("diffuser_kick", "fan_nozzle_l"): 30.8,   # at (4560.0, -398.0, 248.5)
     ("diffuser_kick", "fan_nozzle_r"): 30.8,   # at (4560.0, 398.0, 248.5)
     ("antiroll_f", "heave_f"): 30.7,   # at (977.8, -41.9, 504.2)
@@ -421,7 +418,6 @@ KNOWN = {
     ("driveshaft_rr", "wishbone_rr_lower_aft"): 11.3,   # at (4050.0, 191.7, 345.0)
     ("brake_lines", "wishbone_rl_upper_fwd"): 11.1,   # at (4079.1, -581.6, 462.1)
     ("brake_lines", "wishbone_rr_upper_fwd"): 11.1,   # at (4079.1, 581.6, 462.1)
-    ("fuel_coupling", "rad_tanks_r"): 11.1,   # at (2045.2, 292.7, 538.8)
     ("fan_nozzle_r", "fan_stators"): 11.0,   # at (4522.1, 520.6, 441.0)
     ("brake_lines", "wishbone_fl_upper_aft"): 10.7,   # at (929.0, -603.0, 452.3)
     ("diffuser_fences", "floor_fan_throat_l"): 10.4,   # at (4210.0, -288.5, 94.4)

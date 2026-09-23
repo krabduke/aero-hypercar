@@ -270,7 +270,7 @@
    "label": "Bodywork",
    "color": "#5A6066",
    "parts": 20,
-   "faces": 30141
+   "faces": 31260
   },
   {
    "key": "02 Floor and Diffuser",
@@ -319,7 +319,7 @@
    "label": "Cooling",
    "color": "#4E6E7A",
    "parts": 11,
-   "faces": 30122
+   "faces": 37474
   },
   {
    "key": "09 Aero Detail",
@@ -405,14 +405,14 @@
    "mat": "carbon_gloss",
    "x0": 1700.0,
    "x1": 3700.0,
-   "f": 1162
+   "f": 1206
   },
   "sidepod_r": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
    "x0": 1700.0,
    "x1": 3700.0,
-   "f": 1162
+   "f": 2237
   },
   "steering": {
    "g": "10 Cockpit",
@@ -1985,44 +1985,44 @@
   "rad_hoses_l": {
    "g": "08 Cooling and Energy",
    "mat": "hose",
-   "x0": 2566.4,
-   "x1": 3251.4,
-   "f": 4132
+   "x0": 2552.0,
+   "x1": 3251.5,
+   "f": 7400
   },
   "rad_hoses_r": {
    "g": "08 Cooling and Energy",
    "mat": "hose",
-   "x0": 2566.4,
-   "x1": 3251.4,
-   "f": 4132
+   "x0": 2552.0,
+   "x1": 3251.5,
+   "f": 7400
   },
   "rad_tanks_l": {
    "g": "08 Cooling and Energy",
    "mat": "alu_bright",
-   "x0": 2026.0,
-   "x1": 2614.0,
-   "f": 340
+   "x0": 2087.0,
+   "x1": 2585.0,
+   "f": 680
   },
   "rad_tanks_r": {
    "g": "08 Cooling and Energy",
    "mat": "alu_bright",
-   "x0": 2026.0,
-   "x1": 2614.0,
-   "f": 340
+   "x0": 2087.0,
+   "x1": 2585.0,
+   "f": 680
   },
   "radiator_l": {
    "g": "08 Cooling and Energy",
    "mat": "rad_core",
-   "x0": 2017.0,
-   "x1": 2623.0,
-   "f": 7990
+   "x0": 2134.0,
+   "x1": 2538.0,
+   "f": 8058
   },
   "radiator_r": {
    "g": "08 Cooling and Energy",
    "mat": "rad_core",
-   "x0": 2017.0,
-   "x1": 2623.0,
-   "f": 7990
+   "x0": 2134.0,
+   "x1": 2538.0,
+   "f": 8058
   },
   "bargeboard_l1": {
    "g": "09 Aero Detail",

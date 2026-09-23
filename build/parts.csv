@@ -7,8 +7,8 @@ headrest,10 Cockpit,carbon_matte,,,,,,,,,196,170,1830.0,2050.0,-150.0,150.0,555.
 seat,10 Cockpit,carbon_matte,,,,,,,,,3922,3772,1370.0,2010.0,-231.3,231.3,57.7,483.0
 sharkfin,01 Bodywork,carbon_gloss,,,,,,,,,528,497,3100.0,4180.0,-5.6,5.6,413.7,758.3
 sidepod_inlets,01 Bodywork,carbon_gloss,,,,,,,,,872,820,1721.0,1910.0,-518.0,518.0,196.6,407.4
-sidepod_l,01 Bodywork,carbon_gloss,,,,,,,,,1200,1162,1700.0,3700.0,-772.0,-162.0,145.8,540.6
-sidepod_r,01 Bodywork,carbon_gloss,,,,,,,,,1200,1162,1700.0,3700.0,162.0,772.0,145.8,540.6
+sidepod_l,01 Bodywork,carbon_gloss,,,,,,,,,1391,1206,1700.0,3700.0,-772.0,-162.0,145.8,540.6
+sidepod_r,01 Bodywork,carbon_gloss,,,,,,,,,2415,2237,1700.0,3700.0,162.0,772.0,145.8,540.6
 steering,10 Cockpit,carbon_matte,,,,,,,,,3072,2792,1291.0,1376.5,-129.0,129.0,469.0,671.0
 tub,01 Bodywork,carbon_gloss,,,,,,,,,6890,6712,0.0,4560.0,-301.1,301.1,45.7,763.4
 diffuser_fences,01 Bodywork,carbon_matte,,,,,,,,,240,128,3860.0,4560.0,-294.8,294.8,8.0,266.0
@@ -165,12 +165,12 @@ engine_head_r,07 Power Unit,alu_cast,,,,,,,,,2357,2014,3021.7,3477.3,47.4,215.1,
 fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,112.0,538.0
 fuel_fittings,08 Cooling and Energy,alu_bright,,,,,,,,,340,298,2157.0,2969.1,-55.0,55.0,404.2,550.3
 gearbox,07 Power Unit,magnesium,,,,,,,,,6695,6427,3550.5,4078.5,-206.5,206.5,123.5,536.5
-rad_hoses_l,08 Cooling and Energy,hose,,,,,,,,,4214,4132,2566.4,3251.4,-371.4,-65.0,94.7,545.3
-rad_hoses_r,08 Cooling and Energy,hose,,,,,,,,,4214,4132,2566.4,3251.4,65.0,371.3,94.7,545.3
-rad_tanks_l,08 Cooling and Energy,alu_bright,,,,,,,,,392,340,2026.0,2614.0,-396.0,-276.0,106.0,534.0
-rad_tanks_r,08 Cooling and Energy,alu_bright,,,,,,,,,392,340,2026.0,2614.0,276.0,396.0,106.0,534.0
-radiator_l,08 Cooling and Energy,rad_core,,,,,,,,,9212,7990,2017.0,2623.0,-384.0,-288.0,155.0,485.0
-radiator_r,08 Cooling and Energy,rad_core,,,,,,,,,9212,7990,2017.0,2623.0,288.0,384.0,155.0,485.0
+rad_hoses_l,08 Cooling and Energy,hose,,,,,,,,,7482,7400,2552.0,3251.5,-515.5,-64.9,140.1,505.1
+rad_hoses_r,08 Cooling and Energy,hose,,,,,,,,,7482,7400,2552.0,3251.5,64.9,515.5,140.2,505.2
+rad_tanks_l,08 Cooling and Energy,alu_bright,,,,,,,,,784,680,2087.0,2585.0,-555.0,-405.0,158.3,495.2
+rad_tanks_r,08 Cooling and Energy,alu_bright,,,,,,,,,784,680,2087.0,2585.0,405.0,555.0,158.3,495.2
+radiator_l,08 Cooling and Energy,rad_core,,,,,,,,,9284,8058,2134.0,2538.0,-540.0,-420.0,160.1,533.8
+radiator_r,08 Cooling and Energy,rad_core,,,,,,,,,9284,8058,2134.0,2538.0,420.0,540.0,160.1,533.8
 bargeboard_l1,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1180.0,1763.3,-525.0,-432.4,120.0,400.0
 bargeboard_l2,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1226.0,1739.7,-501.9,-382.6,146.0,354.0
 bargeboard_l3,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1272.0,1716.3,-478.8,-345.1,172.0,308.0
