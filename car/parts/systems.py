@@ -129,12 +129,23 @@ def _brake_ducts():
             bow=lambda fx, fz, sgn=sgn: -sgn * 26.0 * max(0.0, fx - 0.45) ** 2
                 / 0.30)
         # cooling exits on the outboard face
+        #
+        # Each stands on the scroll's outboard face where the scroll is. They
+        # were all set at the scroll's widest section and at a radius and
+        # angle measured the other way round from the scroll's own, so the
+        # first one, where the scroll is still narrow, hung in the air.
         vanes = []
         for k in range(5):
             a = math.pi * (0.2 + 0.6 * k / 4)
+            # the scroll's own angle for this point, and its section there
+            f = ((math.pi / 2 - a) % (2 * math.pi)) / (2 * math.pi)
+            R = r * (0.60 + 0.20 * f)
+            rt = dw * (0.16 + 0.14 * f)
+            rho = R + rt * 0.5                 # on its outer half
+            face = rt * math.sqrt(0.75)        # its outboard face there
             vanes.append(shapes.rounded_box(
-                x + r * 0.82 * math.cos(a), inb + sgn * dw * 0.30,
-                z + r * 0.82 * math.sin(a), 46.0, 6.0, 16.0, 2.5))
+                x + rho * math.cos(a), inb + sgn * (face + 2.0),
+                z + rho * math.sin(a), 46.0, 6.0, 16.0, 2.5))
         out[f"bduct_vanes_{tag}"] = mesh.join(*vanes)
     return out
 

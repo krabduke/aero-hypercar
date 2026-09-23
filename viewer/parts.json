@@ -291,7 +291,7 @@
    "label": "Wheels",
    "color": "#3E4246",
    "parts": 45,
-   "faces": 137616
+   "faces": 138880
   },
   {
    "key": "05 Suspension",
@@ -312,7 +312,7 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 9,
-   "faces": 2302589
+   "faces": 2303351
   },
   {
    "key": "08 Cooling and Energy",
@@ -1063,7 +1063,7 @@
    "mat": "alu_dark",
    "x0": 660.0,
    "x1": 1140.0,
-   "f": 2654,
+   "f": 2970,
    "pivot": {
     "p": [
      900.0,
@@ -1084,7 +1084,7 @@
    "mat": "alu_dark",
    "x0": 660.0,
    "x1": 1140.0,
-   "f": 2654,
+   "f": 2970,
    "pivot": {
     "p": [
      900.0,
@@ -1105,7 +1105,7 @@
    "mat": "alu_dark",
    "x0": 3810.0,
    "x1": 4290.0,
-   "f": 2654,
+   "f": 2970,
    "pivot": {
     "p": [
      4050.0,
@@ -1126,7 +1126,7 @@
    "mat": "alu_dark",
    "x0": 3810.0,
    "x1": 4290.0,
-   "f": 2654,
+   "f": 2970,
    "pivot": {
     "p": [
      4050.0,
@@ -1924,7 +1924,7 @@
    "mat": "alu_cast",
    "x0": 2868.5,
    "x1": 3597.9,
-   "f": 2266223
+   "f": 2266985
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -2440,29 +2440,29 @@
   "bduct_vanes_fl": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 737.7,
-   "x1": 1062.3,
+   "x0": 732.6,
+   "x1": 1038.8,
    "f": 850
   },
   "bduct_vanes_fr": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 737.7,
-   "x1": 1062.3,
+   "x0": 732.6,
+   "x1": 1038.8,
    "f": 850
   },
   "bduct_vanes_rl": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 3873.1,
-   "x1": 4226.9,
+   "x0": 3868.9,
+   "x1": 4200.0,
    "f": 850
   },
   "bduct_vanes_rr": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 3873.1,
-   "x1": 4226.9,
+   "x0": 3868.9,
+   "x1": 4200.0,
    "f": 850
   },
   "brake_lines": {

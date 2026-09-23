@@ -87,6 +87,14 @@ def _clutch():
          (x + 15.0, R), (x + 18.0, R),
          (x + 18.0, R - 6.0), (x + 11.0, R - 12.0),
          (x + 11.0, 42.0), (x, 42.0)], SEG))
+    # and the drum skirt from that flange forward to the flywheel's face,
+    # which is what the cover bolts to. The flange stood 12 mm aft of the
+    # flywheel, fastened to nothing.
+    # (its friction face, which is recessed 3 mm under the clutch)
+    fly_face = spec.FLYWHEEL_X + A["flywheel_t"] - 3.0
+    parts.append(mesh.revolve_closed(
+        [(fly_face, R - 4.0), (x + 16.0, R - 4.0),
+         (x + 16.0, R), (fly_face, R)], SEG))
     # diaphragm fingers -- the thing you actually push on
     for i in range(18):
         a = 2 * math.pi * i / 18
@@ -100,10 +108,12 @@ def _clutch():
                pz * (1.0 + 0.9 * max(0.0, (x + 2.0 - px) / 11.0)))
               for (px, py, pz) in fv]
         parts.append((fv, ff))
-    # plate pack: four carbon plates with drive lugs, on a splined hub
+    # plate pack: four carbon plates with drive lugs, on a splined hub --
+    # clamped face to face, which is what an engaged clutch is. With a gap
+    # between each the last plate touched nothing at all.
     for k in range(4):
-        px0 = x - 16.0 + k * 3.6
-        parts.append(mesh.tube(px0, px0 + 2.2, 30.0, R - 14.0, SEG))
+        px0 = x - 16.0 + k * 2.4
+        parts.append(mesh.tube(px0, px0 + 2.4, 30.0, R - 14.0, SEG))
     parts.append(mesh.revolve_closed(
         [(x - 22.0, 22.0), (x - 2.0, 22.0), (x - 2.0, 30.0),
          (x - 22.0, 30.0)], SM))

@@ -139,17 +139,26 @@ def _tyre(x, y, z, w, od):
     return mesh.join(tyre, band)
 
 
+BARREL_T = 5.0     # mm, the rim barrel's wall
+
+
 def _rim(x, y, z, w):
     """Barrel with a drop centre, an outer flange and `spokes` spokes."""
     hw = w / 2
     parts = []
+    # A shell BARREL_T thick under the tyre-side surface: flanges, bead
+    # seats and the drop well. The inside used to be one straight line at
+    # bead_r - 10, which the drop well dipped 20 mm below -- a profile that
+    # crossed itself, with the well a separate lobe hanging under the rim.
+    t = BARREL_T
     barrel = _lathe(x, y, z, [
-        (-hw * 0.96, W["bead_r"]), (-hw * 0.96, W["flange_r"]),
-        (-hw * 0.90, W["flange_r"]), (-hw * 0.90, W["bead_r"]),
-        (-hw * 0.55, W["drop_r"]), (hw * 0.30, W["drop_r"]),
-        (hw * 0.90, W["bead_r"]), (hw * 0.90, W["flange_r"]),
-        (hw * 0.96, W["flange_r"]), (hw * 0.96, W["bead_r"]),
-        (hw * 0.94, W["bead_r"] - 10.0), (-hw * 0.94, W["bead_r"] - 10.0),
+        (-hw * 0.96, W["flange_r"]), (-hw * 0.90, W["flange_r"]),
+        (-hw * 0.90, W["bead_r"]), (-hw * 0.55, W["drop_r"]),
+        (hw * 0.30, W["drop_r"]), (hw * 0.90, W["bead_r"]),
+        (hw * 0.90, W["flange_r"]), (hw * 0.96, W["flange_r"]),
+        (hw * 0.96, W["bead_r"] - t), (hw * 0.90, W["bead_r"] - t),
+        (hw * 0.30, W["drop_r"] - t), (-hw * 0.55, W["drop_r"] - t),
+        (-hw * 0.90, W["bead_r"] - t), (-hw * 0.96, W["bead_r"] - t),
     ])
     parts.append(barrel)
 
@@ -160,15 +169,21 @@ def _rim(x, y, z, w):
         (face_y + s * 16.0, W["hub_r"]), (face_y + s * 16.0, 0.0)])
     parts.append(hub)
 
+    # the spokes run from inside the hub to inside the barrel, which they
+    # join; they started 12 mm off the hub and stopped 13 mm short of the
+    # barrel, seven blades in the air per wheel
+    f_face = abs(face_y) / hw
+    r_barrel = (W["drop_r"] - t) + (W["bead_r"] - W["drop_r"]) * (
+        (f_face - 0.30) / 0.60)
     for k in range(W["spokes"]):
         a = 2 * math.pi * k / W["spokes"]
-        parts.append(_spoke(x, y, z, a, face_y, s))
+        parts.append(_spoke(x, y, z, a, face_y, s,
+                            r0=W["hub_r"] - 4.0, r1=r_barrel + 3.0))
     return mesh.join(*parts)
 
 
-def _spoke(x, y, z, a, face_y, s):
+def _spoke(x, y, z, a, face_y, s, r0, r1):
     """One tapered spoke blade, twisted so it also acts as a fan."""
-    r0, r1 = W["spoke_root_r"], W["drop_r"] - 2.0
     w0, w1 = W["spoke_w_root"] / 2, W["spoke_w_tip"] / 2
     t = W["spoke_t"] / 2
     rings = []

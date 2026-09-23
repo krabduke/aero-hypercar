@@ -255,6 +255,9 @@ def _stud(x, y, z):
     return v, f
 
 
+SUMP_FLANGE = 8.0      # mm, the sump's bolting flange
+
+
 def _sump():
     """A dry-sump pan: a shallow tray with a deep local well, not a tank.
 
@@ -265,10 +268,19 @@ def _sump():
     a = spec.ANCILLARY
     z = -spec.BLOCK["skirt_depth"] - 22.0
     out = {}
-    out["sump"] = shapes.tapered_pan(
+    # The pan hangs from a flange that bolts flat to the bedplate's underside,
+    # which is the full width of the bedplate. The pan alone crowned up to a
+    # single line at z_top and narrowed to 66 mm aft, so the sump touched the
+    # engine along that line and its bolts stood outboard of it all round,
+    # attached to nothing.
+    pan = shapes.tapered_pan(
         -a["sump_len"] / 2, a["sump_len"] / 2,
         a["sump_w"] / 2 * 0.98, a["sump_w"] / 2 * 0.70,
         z, a["sump_depth"], a["sump_len"] * 0.26, a["sump_len"] * 0.18)
+    flange = shapes.rounded_box(0.0, 0.0, z - SUMP_FLANGE / 2,
+                                a["sump_len"] + 8.0, a["sump_w"],
+                                SUMP_FLANGE, 3.0)
+    out["sump"] = mesh.join(pan, flange)
     dv, df = mesh.revolve_open(
         [(0.0, 0.0), (0.0, 11.0), (7.0, 13.0), (13.0, 11.0), (13.0, 0.0)],
         SM, cap_start=True, cap_end=True)

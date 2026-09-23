@@ -25,17 +25,7 @@ TOL = 0.3            # mm, full size: further off than this is not touching
 
 # --- DETACHED: rewritten by --shrink, never by hand to add ---
 DETACHED = {
-    "bduct_vanes_fl": 1,
-    "bduct_vanes_fr": 1,
-    "bduct_vanes_rl": 1,
     "exhaust": 2,
-    "floor_edge_wings": 2,
-    "front_endplate_l": 4,
-    "front_endplate_r": 4,
-    "rim_fl": 7,
-    "rim_fr": 7,
-    "rim_rl": 7,
-    "rim_rr": 7,
 }
 # --- end DETACHED ---
 

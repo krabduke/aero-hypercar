@@ -431,8 +431,11 @@ def _fasteners():
         f = k / 17
         x = -a["sump_len"] / 2 + a["sump_len"] * f
         for sgn in (-1, 1):
-            bv, bf = mesh.cylinder(0.0, 14.0, 4.4, SM)
-            bv = [(pz + x, py + sgn * a["sump_w"] / 2, px + z - 14.0)
+            # up through the sump's flange into the bedplate, inside the
+            # bedplate's edge; at the sump's half-width they stood clear of
+            # the pan and 4 mm over the bedplate's side
+            bv, bf = mesh.cylinder(0.0, 30.0, 4.4, SM)
+            bv = [(pz + x, py + sgn * (a["sump_w"] / 2 - 7.0), px + z - 14.0)
                   for (px, py, pz) in bv]
             sump.append((bv, bf))
     return {"head_studs": mesh.join(*parts), "sump_bolts": mesh.join(*sump)}

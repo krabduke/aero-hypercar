@@ -219,11 +219,24 @@ def _front_endplates():
                 row.append((x, y + sweep + dy * (0.65 + 0.35 * f), z))
             rows.append(row)
         plate = _skin(rows, t, sgn, rim=2)
-        # gills in the upper rear panel, bleeding the tyre wake outboard
-        plate = mesh.join(plate, shapes.louvre_bank(
-            x0 + (x1 - x0) * 0.52, x0 + (x1 - x0) * 0.94,
-            y + sgn * (t / 2 + 5.0), z0 + fh + 96.0, z0 + FW["endplate_h"] - 30.0,
-            4, 44.0, 13.0, t=3.0, cant=20.0))
+        # Gills in the upper rear panel, bleeding the tyre wake outboard,
+        # each standing on the plate's outer face where the plate is. The
+        # plate sweeps outboard 19-55 mm over this panel, and the bank was
+        # placed on its unswept root line, so all four hung inside it.
+        gills = []
+        for k in range(4):
+            f = 0.52 + 0.42 * (k + 0.5) / 4
+            xg = x0 + (x1 - x0) * f
+            zg = (z0 + fh + 96.0) + (FW["endplate_h"] - 30.0 - fh - 96.0) \
+                * (k + 0.5) / 4
+            yg = y + sgn * (8.0 * f + 54.0 * f * f) + sgn * (t / 2 + 1.0)
+            yaw = math.atan(sgn * (8.0 + 108.0 * f) / (x1 - x0))
+            v, fc = shapes.louvre_bank(0.0, 0.0, 0.0, 0.0, 0.0, 1, 44.0,
+                                       13.0, t=3.0, cant=20.0)
+            cy_, sy_ = math.cos(yaw), math.sin(yaw)
+            gills.append(([(px * cy_ - py * sy_ + xg, px * sy_ + py * cy_ + yg,
+                            pz + zg) for (px, py, pz) in v], fc))
+        plate = mesh.join(plate, *gills)
         plates.append(plate)
 
         for k in range(FW["diveplanes"]):

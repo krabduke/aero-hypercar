@@ -90,12 +90,18 @@ def finned_case(cx, cy, cz, sx, sy, sz, n_fins=9, fin_h=7.0, fin_t=3.0,
     """
     parts = [rounded_box(cx, cy, cz, sx, sy, sz, r, draft=1.5)]
     span = sx if axis == "x" else sy
+    # over the flat of the top only: the end fins used to stand over the
+    # case's rounded, drafted ends, where the top has already fallen away
+    edge = r + fin_t / 2 + math.tan(math.radians(1.5)) * sz
     for i in range(n_fins):
-        f = (i + 0.5) / n_fins
+        f = (edge + (span - 2 * edge) * (i + 0.5) / n_fins) / span
         # `side` puts the fin stack on the face that actually sees air: a
         # battery slung under the engine rejects heat downwards, and fins
         # pointing up into the crankcase are just a hidden slab
-        zf = cz + side * (sz / 2 + fin_h / 2)
+        # a tenth of the fin into the case: the case is drafted and its
+        # edges rounded, so its top is below sz / 2 and fins standing on
+        # sz / 2 hovered over it, attached to nothing
+        zf = cz + side * (sz / 2 + fin_h / 2 - fin_h * 0.1)
         if axis == "x":
             parts.append(rounded_box(cx - sx / 2 + span * f, cy, zf,
                                      fin_t, sy * 0.92, fin_h, 1.2))

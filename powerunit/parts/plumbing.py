@@ -189,11 +189,13 @@ def _fuel():
                 [(-9.0, 0.0), (-9.0, 19.0), (9.0, 19.0), (9.0, 0.0)], SM)
             rail.append(([(px + x2, py + p0[1], pz + p0[2])
                           for (px, py, pz) in bv], bf))
-        for end, xx in ((p0, p0[0] - 12.0), (p1, p1[0] + 12.0)):
+        # the end fittings screw into the rail's ends; they started 12 mm
+        # off them, and the front one was fastened to nothing
+        for end, xx in ((p0, p0[0] + 2.0), (p1, p1[0] - 2.0)):
             ev, ef = mesh.revolve_open(
                 [(0.0, 0.0), (0.0, 11.0), (14.0, 11.0), (18.0, 8.0),
                  (18.0, 0.0)], SM, cap_start=True, cap_end=True)
-            sgn = -1.0 if xx < p0[0] else 1.0
+            sgn = -1.0 if end is p0 else 1.0
             rail.append(([(sgn * px + xx, py + p0[1], pz + p0[2])
                           for (px, py, pz) in ev], ef))
         out[f"fuel_rail_di_{'lr'[bank]}"] = mesh.join(*rail)

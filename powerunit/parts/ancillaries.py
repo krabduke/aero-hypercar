@@ -108,7 +108,8 @@ def _oil_system():
         parts.append(_lathe(
             [(0.0, 0.0), (30.0, 0.0), (30.0, 17.0), (22.0, 17.0),
              (22.0, 13.0), (0.0, 13.0)],
-            cx + dx, cy + 34.0, cz, axis="y", seg=14))
+            # from 2 mm into the core's face, not 5 mm off it
+            cx + dx, cy + 27.0, cz, axis="y", seg=14))
     # the bracket tying it back to the block
     parts.append(shapes.rounded_box(cx, cy + 42.0, cz + 22.0,
                                     150.0, 34.0, 14.0, 4.0))

@@ -419,7 +419,9 @@ FLOOR_EDGE = {
     # across the section -- inboard root to outboard tip -- and `rise` is how
     # far it climbs over that chord
     "edge_chord": 132.0, "edge_rise": 0.82, "edge_t": 7.0,
-    "edge_root_dy": -18.0, "edge_root_z": 58.0,
+    # the root sits on the floor's top face, z 53.9 along the edge: at 58
+    # its underside was 3.8 mm above it and the wing was attached to nothing
+    "edge_root_dy": -18.0, "edge_root_z": 53.0,
 }
 
 BEAM_WING = {
