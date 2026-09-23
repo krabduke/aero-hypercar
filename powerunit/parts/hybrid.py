@@ -92,9 +92,17 @@ def _hv_loom():
     drop_x = 336.0
     under = -196.0
     out = {}
+    # Both connectors on the inverter's aft face, side by side. One was on
+    # its front face, so the two cables from it -- to the pack and to the
+    # MGU-K -- left forward and turned straight back over the unit to reach
+    # the drop at its aft face: a hairpin loop standing above the engine.
+    ax = ix + iw / 2 + 12.0
+
+    def plug(sgn):
+        return (ax, iy + sgn * 40.0, iz + ih * 0.1)
+
     out["inverter_connectors"] = mesh.join(*[
-        shapes.connector(ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1,
-                         28.0, 22.0, 16.0, 8)
+        shapes.connector(*plug(sgn), 28.0, 22.0, 16.0, 8)
         for sgn in (-1.0, 1.0)])
     out["battery_terminals"] = mesh.join(*[
         shapes.connector(bx - sgn * bw * 0.3, by + sgn * bd * 0.38,
@@ -103,11 +111,11 @@ def _hv_loom():
 
     # inverter down the flank to the pack under the sump
     for sgn, tag in ((-1.0, "1"), (1.0, "2")):
-        src = (ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1)
+        src = plug(sgn)
         term = (bx - sgn * bw * 0.3, by + sgn * bd * 0.38, bz + bh / 2 + 7.0)
         fl = flank_l if sgn < 0 else flank_r
         path = [src,
-                (ix + iw * 0.36, sgn * 74.0, iz + ih * 0.02),
+                (ax + 4.0, sgn * 74.0, iz - ih * 0.10),
                 (drop_x, sgn * 118.0, iz - ih * 0.70),
                 (drop_x + 4.0, sgn * fl, 10.0),
                 (drop_x, sgn * fl, -130.0),
@@ -126,9 +134,9 @@ def _hv_loom():
     # forward of the timing cover, which spans x -284..-266: a terminal you
     # cannot get a spanner to is not a terminal
     motor = (Y["mguk_x"] - 14.0, -Y["mguk_r"], 0.0)
-    src = (ix - iw / 2 - 12.0, iy, iz + ih * 0.1)
+    src = plug(-1.0)
     path = [src,
-            (ix + iw * 0.30, -66.0, iz - ih * 0.10),
+            (ax + 4.0, -66.0, iz - ih * 0.20),
             (drop_x - 6.0, -124.0, iz - ih * 0.80),
             (drop_x - 2.0, -(flank_l + 14.0), -20.0),
             (drop_x - 16.0, -(flank_l + 14.0), -150.0),
@@ -155,17 +163,25 @@ def _hv_loom():
     for index, x in enumerate(spec.TURBO["x"]):
         sgn = -1.0 if index % 2 == 0 else 1.0
         term = (x, sgn * Y["mguh_r"], spec.TURBO["z"])
-        src = (ix + sgn * (iw / 2 + 12.0), iy, iz + ih * 0.1)
+        # from the inverter's aft plugs, running aft-to-fore without doubling
+        # back over the unit
+        src = plug(sgn)
         top = spec.TURBO["z"] + Y["mguh_r"] + 86.0
+        # Both leads come forward from the inverter at the back, so both
+        # reach their turbo from behind it. The approach was offset by the
+        # side's sign, which sent the front lead 112 mm past its turbo and
+        # the rear one past its own before each turned back: a loop over
+        # each turbo.
         path = [src,
-                (ix + iw * 0.10, sgn * 88.0, iz + ih * 0.44),
-                (spec.BLOCK["x_rear"] + 10.0, sgn * 170.0, 250.0),
-                (spec.BLOCK["x_rear"] * 0.60, sgn * 196.0, 274.0),
-                (x + sgn * 112.0, sgn * 182.0, top - 4.0),
-                (x + sgn * 40.0, sgn * 120.0, top + 24.0),
-                # over the primaries, which peak at z 368, before dropping in
-                (x, sgn * 50.0, top + 18.0),
-                term]
+                (ax + 4.0, sgn * 88.0, iz + ih * 0.30),
+                (spec.BLOCK["x_rear"] + 10.0, sgn * 170.0, 250.0)]
+        if spec.BLOCK["x_rear"] * 0.60 > x + 70.0:
+            path.append((spec.BLOCK["x_rear"] * 0.60, sgn * 196.0, 274.0))
+        path += [(x + 60.0, sgn * 182.0, top - 4.0),
+                 (x + 24.0, sgn * 120.0, top + 24.0),
+                 # over the primaries, which peak at z 368, before dropping in
+                 (x, sgn * 50.0, top + 18.0),
+                 term]
         out[f"hv_motor_h_{index}"] = mesh.pipe(
             mesh.smooth_path(path, 3), 4.0, SM, subdiv=2)
         out[f"hv_motor_h_connector_{index}"] = shapes.connector(

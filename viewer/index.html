@@ -40,8 +40,12 @@
   #spec b{color:var(--panel); font-weight:600}
 
   /* the argument of the whole car, drawn: grip against speed, versus F1 */
+  /* backed like the other panels: the car's nose sits behind this corner in
+     the default view, and the curves were drawn straight across the wing */
   #grip{position:fixed; left:24px; bottom:calc(var(--rail-h) + 18px); z-index:5;
-        width:330px; pointer-events:none}
+        width:330px; pointer-events:none; padding:12px 14px 10px;
+        background:rgba(14,17,19,.86); backdrop-filter:blur(8px);
+        border:1px solid #2A3238; border-radius:3px; box-sizing:content-box}
   #grip .cap{font-size:11px; color:#98A0A6; margin-bottom:7px}
   #grip svg{display:block; width:100%; height:132px; overflow:visible}
   #grip .leg{display:flex; gap:16px; margin-top:6px; font-size:11px}
