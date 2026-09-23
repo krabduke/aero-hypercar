@@ -155,7 +155,8 @@ def check(slack=6.0):
     x1 = spec.BODY[-1][0]
     worst = []
     for name, (verts, faces) in sorted(built.items()):
-        if any(name.startswith(k) for k in OUTSIDE):
+        # a cutter is a volume taken out of a part, not a part
+        if name.startswith("cut:") or any(name.startswith(k) for k in OUTSIDE):
             continue
         over, at = 0.0, None
         for (x, y, z) in verts:
