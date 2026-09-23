@@ -29,6 +29,9 @@ import _intersect
 # hose clamps onto the engine it feeds. Each entry says the overlap IS the
 # joint. Anything not listed is a part in another part's way.
 EXPECTED = [
+    # the engine's castings and the rest of the engine meet as the engine
+    # repository's own audit says they may; this one audits the car
+    ("engine", "engine_"),
     # the lines come out of the cylinders, and the loom runs past everything
     # the tub carries on its way from the battery to the dash
     ("master_cylinders", "brake_lines"), ("wiring_loom", "steering"),
@@ -37,14 +40,14 @@ EXPECTED = [
     # a jack point is part of the structure it lifts the car by
     ("jack_points", "crash_structure"), ("jack_points", "heave_"),
 
-    # running gear: the hub turns inside the upright, the disc bolts to the
-    # hub, the caliper wraps the disc, the pads sit in the caliper
-    ("hub_", "upright_"),
+    # running gear: the studs are in the hub, the caliper wraps the disc and
+    # the pads sit in the caliper. The hub runs in the upright's bearing bore
+    # and touches it nowhere else.
     ("wheel_stud", "hub_"), ("wheel_stud", "rim_"),
     ("brake_pad", "caliper_"),
     ("caliper_", "disc_"), ("rim_", "tyre_"),
     ("upright_", "wishbone_"), ("upright_", "trackrod_"),
-    ("upright_", "pushrod_"), ("upright_", "driveshaft_"),
+    ("upright_", "pushrod_"),
     ("upright_", "steering_arm_"), ("upright_", "bduct_"),
     ("tether_", "upright_"), ("tether_", "tub"),
     ("bduct_", "caliper_"), ("bduct_", "upright_"),
@@ -109,6 +112,8 @@ EXPECTED = [
     ("seat", "tub"), ("headrest", "tub"),
     ("driver", "seat"), ("driver", "harness"),
     ("driver", "steering"), ("helmet", "driver"), ("dash", "tub"),
+    # the column passes through the dash panel on its way down to the rack
+    ("dash", "steering_column"),
     ("steering", "steering_column"), ("pedal_box", "tub"),
     ("master_cylinders", "pedal_box"), ("master_cylinders", "tub"),
     ("extinguisher", "tub"), ("drink_bottle", "tub"), ("control_boxes", "tub"),
@@ -116,7 +121,6 @@ EXPECTED = [
     ("jack_points", "tub"), ("tow_hooks", "tub"),
     ("tow_hooks", "crash_structure"),   # the rear hook bolts to it
     ("fuel_coupling", "tub"), ("brake_lines", "tub"), ("wiring_loom", "tub"),
-    ("brake_lines", "upright_"),
 
     # A second round, all of them structure rooted into structure at the rear
     # and along the floor, where everything on this car is packed together.
@@ -336,18 +340,18 @@ KNOWN = {
     ("antiroll_blade_r", "fanduct"): 110.6,   # at (3924.5, -241.0, 242.9)
     ("diffuser_fences", "floor_surface"): 99.5,   # at (4210.0, 254.0, 94.4)
     ("fanduct", "torsion_bars_r"): 97.6,   # at (3886.6, -180.9, 176.9)
-    ("fanduct", "wiring_loom"): 93.8,   # at (4030.4, 212.7, 323.6)
+    ("fanduct", "wiring_loom"): 93.8,   # at (4030.2, 212.7, 323.6)
     ("driveshaft_rl", "fanduct"): 93.3,   # at (4034.9, -223.9, 326.8)
     ("driveshaft_rr", "fanduct"): 92.7,   # at (4033.6, 223.9, 328.0)
     ("fanduct", "rocker_rr"): 84.3,   # at (3974.3, 270.0, 293.7)
     ("fanduct", "rocker_rl"): 84.1,   # at (3976.8, -270.0, 295.4)
     ("floor_fan_throat_l", "tunnel_l"): 77.3,   # at (4220.0, -397.5, 91.7)
     ("floor_fan_throat_r", "tunnel_r"): 77.3,   # at (4220.0, 397.5, 91.7)
-    ("fanduct", "pushrod_rr"): 67.8,   # at (3907.8, 280.7, 248.3)
+    ("fanduct", "pushrod_rr"): 67.8,   # at (3905.7, 280.0, 250.7)
     ("fanduct", "pushrod_rl"): 67.5,   # at (3907.8, -280.7, 248.3)
     ("airbox", "cameras"): 56.1,   # at (2133.0, 24.0, 794.0)
-    ("brake_lines", "sidepod_l"): 50.2,   # at (1678.4, -249.7, 259.8)
-    ("brake_lines", "sidepod_r"): 50.2,   # at (1678.4, 249.7, 259.8)
+    ("brake_lines", "sidepod_l"): 50.2,   # at (1678.4, -249.5, 260.0)
+    ("brake_lines", "sidepod_r"): 50.2,   # at (1678.4, 249.5, 260.0)
     ("headrest", "helmet"): 49.1,   # at (1879.6, 0.0, 634.2)
     ("diffuser_kick", "fan_scroll_l"): 46.3,   # at (4446.0, -398.0, 240.8)
     ("diffuser_kick", "fan_scroll_r"): 46.3,   # at (4446.0, 398.0, 240.8)
@@ -356,8 +360,8 @@ KNOWN = {
     ("harness", "steering"): 41.3,   # at (1490.0, -95.0, 555.5)
     ("fan_nozzle_l", "tub"): 38.3,   # at (4521.7, -59.1, 260.1)
     ("fan_nozzle_r", "tub"): 38.3,   # at (4521.7, 59.1, 260.1)
-    ("fanduct", "tether_rl"): 36.4,   # at (4120.3, -300.0, 310.0)
-    ("fanduct", "tether_rr"): 36.4,   # at (4120.3, 300.0, 310.0)
+    ("fanduct", "tether_rl"): 36.3,   # at (4120.3, -300.0, 310.0)
+    ("fanduct", "tether_rr"): 36.3,   # at (4120.3, 300.0, 310.0)
     ("rad_tanks_l", "sidepod_l"): 31.7,   # at (2062.0, -378.0, 488.0)
     ("rad_tanks_r", "sidepod_r"): 31.7,   # at (2062.0, 378.0, 488.0)
     ("diffuser_kick", "fan_nozzle_l"): 30.8,   # at (4560.0, -398.0, 248.5)
@@ -374,18 +378,13 @@ KNOWN = {
     ("diffuser_kick", "fanduct"): 24.9,   # at (4542.0, 398.0, 252.8)
     ("diffuser_fences", "fan_scroll_l"): 24.4,   # at (4210.0, -254.0, 94.4)
     ("diffuser_fences", "fan_scroll_r"): 24.4,   # at (4210.0, 254.0, 94.4)
-    ("caliper_rl", "upright_rl"): 24.0,   # at (3994.1, -788.6, 358.0)
-    ("caliper_rr", "upright_rr"): 24.0,   # at (4105.9, 788.6, 358.0)
     ("diffuser_kick", "fan_fairing_l"): 24.0,   # at (4530.0, -398.0, 253.4)
     ("diffuser_kick", "fan_fairing_r"): 24.0,   # at (4530.0, 398.0, 253.4)
     ("caliper_fl", "tyre_fl"): 23.3,   # at (972.0, -780.9, 573.2)
-    ("caliper_fl", "upright_fl"): 23.3,   # at (844.1, -817.5, 347.9)
     ("caliper_fr", "tyre_fr"): 23.3,   # at (828.0, 866.9, 573.2)
-    ("caliper_fr", "upright_fr"): 23.3,   # at (844.1, 817.5, 347.9)
     ("caliper_rl", "tyre_rl"): 23.3,   # at (3978.0, -833.9, 583.2)
     ("caliper_rr", "tyre_rr"): 23.3,   # at (4122.0, 833.9, 583.2)
-    ("cockpit_coaming", "dash"): 23.0,   # at (1245.4, 138.1, 607.1)
-    ("engine", "fuel_fittings"): 22.6,   # at (2929.1, -1.1, 439.2)
+    ("engine", "fuel_fittings"): 22.6,   # at (2934.0, 0.0, 437.0)
     ("fan_scroll_l", "floor_strake_l3"): 21.2,   # at (4429.3, -462.4, 202.8)
     ("pushrod_fl", "tether_fl"): 21.0,   # at (923.7, -612.5, 167.4)
     ("pushrod_fr", "tether_fr"): 21.0,   # at (923.7, 612.5, 167.4)
@@ -400,8 +399,6 @@ KNOWN = {
     ("diffuser_fences", "diffuser_kick"): 19.9,   # at (4210.0, 294.8, 94.4)
     ("fan_fairing_l", "tunnel_l"): 18.6,   # at (4561.4, -528.7, 310.0)
     ("fan_fairing_r", "tunnel_r"): 18.6,   # at (4561.4, 528.7, 310.0)
-    ("disc_fl", "upright_fl"): 17.9,   # at (900.0, -839.9, 401.0)
-    ("disc_fr", "upright_fr"): 17.9,   # at (900.0, 839.9, 401.0)
     ("fan_fairing_l", "rainlight"): 17.5,   # at (4449.4, -24.5, 310.0)
     ("fan_fairing_r", "rainlight"): 17.5,   # at (4449.4, 24.5, 310.0)
     ("fan_stators", "rear_pylon_l"): 17.4,   # at (4301.3, -169.6, 425.9)
@@ -411,8 +408,6 @@ KNOWN = {
     ("floor_plenum_edge_r", "tunnel_r"): 17.0,   # at (1376.4, 635.4, 65.0)
     ("control_boxes", "fuel_cell"): 16.0,   # at (2523.4, -100.8, 528.0)
     ("fan_rotor_l", "fan_scroll_l"): 16.0,   # at (4378.3, -66.3, 316.1)
-    ("disc_rl", "upright_rl"): 15.9,   # at (4050.0, -806.9, 411.0)
-    ("disc_rr", "upright_rr"): 15.9,   # at (4050.0, 806.9, 411.0)
     ("fan_scroll_r", "floor_strake_r1"): 15.8,   # at (4381.1, 300.3, 213.1)
     ("fan_scroll_l", "floor_strake_l1"): 15.6,   # at (4381.1, -300.3, 213.1)
     ("fan_scroll_r", "floor_strake_r2"): 15.6,   # at (4374.5, 400.2, 220.0)
@@ -421,50 +416,52 @@ KNOWN = {
     ("fan_scroll_l", "floor_strake_l2"): 15.3,   # at (4374.5, -400.2, 220.0)
     ("fanduct", "floor_plenum_edge_l"): 15.2,   # at (4445.2, -564.9, 230.0)
     ("fanduct", "floor_plenum_edge_r"): 15.2,   # at (4445.2, 564.9, 230.0)
-    ("brake_lines", "wishbone_fr_upper_aft"): 14.0,   # at (927.9, 600.8, 452.7)
+    ("caliper_rl", "upright_rl"): 14.0,   # at (4108.1, -772.9, 362.9)
+    ("caliper_rr", "upright_rr"): 14.0,   # at (3991.9, 772.9, 362.9)
     ("fan_scroll_r", "wishbone_rr_upper_aft"): 14.0,   # at (4176.2, 393.6, 516.3)
+    ("brake_lines", "wishbone_fr_upper_aft"): 13.9,   # at (928.0, 600.9, 452.6)
     ("diffuser_lip", "fan_fairing_l"): 13.7,   # at (4556.5, -534.7, 268.7)
     ("diffuser_lip", "fan_fairing_r"): 13.7,   # at (4555.4, 534.7, 265.6)
     ("fan_scroll_l", "floor_fan_throat_l"): 13.7,   # at (4289.7, -448.1, 314.8)
     ("fan_scroll_l", "wishbone_rl_upper_aft"): 13.7,   # at (4218.2, -480.5, 458.9)
     ("seat", "side_intrusion"): 13.7,   # at (1610.0, 226.6, 285.1)
     ("fan_nozzle_r", "fan_rotor_r"): 13.5,   # at (4518.8, 514.7, 341.7)
-    ("brake_lines", "wishbone_fr_upper_fwd"): 13.4,   # at (923.5, 599.9, 452.6)
+    ("caliper_fl", "upright_fl"): 13.3,   # at (956.5, -805.9, 357.4)
+    ("caliper_fr", "upright_fr"): 13.3,   # at (843.5, 805.9, 357.4)
     ("fan_scroll_r", "floor_fan_throat_r"): 13.2,   # at (4306.6, 156.6, 296.6)
+    ("brake_lines", "wishbone_fr_upper_fwd"): 13.1,   # at (923.6, 599.8, 452.5)
     ("fan_nozzle_l", "floor_strake_l3"): 13.1,   # at (4459.1, -467.6, 187.0)
     ("fan_nozzle_r", "floor_strake_r3"): 13.1,   # at (4459.1, 467.6, 187.0)
     ("fan_nozzle_l", "fan_rotor_l"): 13.0,   # at (4518.8, -514.7, 341.7)
     ("bulkhead_rear", "extinguisher"): 12.6,   # at (1956.0, 195.1, 286.5)
-    ("brake_lines", "wishbone_fl_upper_fwd"): 11.9,   # at (921.0, -602.2, 452.0)
-    ("floor_strake_l4", "upright_rl"): 11.7,   # at (3385.1, -547.8, 107.1)
-    ("floor_strake_r4", "upright_rr"): 11.7,   # at (3385.1, 547.8, 107.1)
+    ("brake_lines", "wishbone_fl_upper_fwd"): 11.8,   # at (921.1, -602.1, 452.0)
     ("side_impact", "side_intrusion"): 11.6,   # at (1740.0, 281.1, 420.0)
     ("driveshaft_rl", "wishbone_rl_lower_aft"): 11.3,   # at (4050.0, -191.7, 345.0)
     ("driveshaft_rr", "wishbone_rr_lower_aft"): 11.3,   # at (4050.0, 191.7, 345.0)
-    ("brake_lines", "wishbone_rl_upper_fwd"): 11.2,   # at (4079.1, -581.4, 462.2)
-    ("brake_lines", "wishbone_rr_upper_fwd"): 11.2,   # at (4079.1, 581.4, 462.2)
-    ("fuel_coupling", "rad_tanks_r"): 11.1,   # at (2046.4, 292.4, 538.5)
+    ("brake_lines", "wishbone_rl_upper_fwd"): 11.1,   # at (4079.1, -581.6, 462.1)
+    ("brake_lines", "wishbone_rr_upper_fwd"): 11.1,   # at (4079.1, 581.6, 462.1)
+    ("fuel_coupling", "rad_tanks_r"): 11.1,   # at (2045.2, 292.7, 538.8)
     ("fan_nozzle_r", "fan_stators"): 11.0,   # at (4522.1, 520.6, 441.0)
-    ("brake_lines", "wishbone_fl_upper_aft"): 10.8,   # at (929.0, -602.9, 452.4)
+    ("brake_lines", "wishbone_fl_upper_aft"): 10.7,   # at (929.0, -603.0, 452.3)
     ("diffuser_fences", "floor_fan_throat_l"): 10.4,   # at (4210.0, -288.5, 94.4)
     ("diffuser_fences", "floor_fan_throat_r"): 10.4,   # at (4210.0, 288.5, 94.4)
     ("floor_inlet_lip", "turning_vane_l1"): 10.2,   # at (1311.0, -331.6, 102.5)
     ("floor_inlet_lip", "turning_vane_r1"): 10.2,   # at (1311.0, 331.6, 102.5)
-    ("brake_lines", "wishbone_rl_upper_aft"): 10.1,   # at (4070.9, -582.0, 461.6)
-    ("brake_lines", "wishbone_rr_upper_aft"): 10.1,   # at (4070.9, 582.0, 461.6)
+    ("brake_lines", "wishbone_rl_upper_aft"): 10.1,   # at (4070.9, -581.9, 461.5)
+    ("brake_lines", "wishbone_rr_upper_aft"): 10.1,   # at (4070.9, 581.9, 461.5)
     ("fan_stators", "rear_pylon_r"): 10.1,   # at (4282.3, 187.3, 430.1)
     ("floor_plenum_edge_l", "floor_strake_l4"): 9.9,   # at (4432.7, -568.2, 126.9)
-    ("bduct_drum_rl", "brake_lines"): 9.7,   # at (4057.0, -648.7, 504.8)
-    ("bduct_drum_rr", "brake_lines"): 9.7,   # at (4057.0, 648.7, 504.8)
     ("fan_fairing_l", "floor_plenum_edge_l"): 9.7,   # at (4466.5, -581.1, 249.0)
     ("fan_fairing_r", "floor_plenum_edge_r"): 9.7,   # at (4466.5, 581.1, 249.0)
     ("floor_plenum_edge_r", "floor_strake_r4"): 9.7,   # at (4432.7, 568.2, 126.9)
+    ("bduct_drum_rl", "brake_lines"): 9.3,   # at (4057.0, -648.7, 504.8)
+    ("bduct_drum_rr", "brake_lines"): 9.3,   # at (4057.0, 648.7, 504.8)
     ("bargeboard_l4", "turning_vane_l1"): 9.1,   # at (1505.0, -387.0, 254.6)
     ("bargeboard_r4", "turning_vane_r1"): 9.1,   # at (1505.0, 387.0, 254.6)
-    ("brake_lines", "pushrod_rl"): 9.0,   # at (4077.5, -584.4, 461.5)
-    ("brake_lines", "pushrod_rr"): 9.0,   # at (4077.5, 584.4, 461.5)
-    ("brake_lines", "driveshaft_rl"): 8.9,   # at (4061.1, -534.0, 352.1)
-    ("brake_lines", "driveshaft_rr"): 8.9,   # at (4061.1, 534.0, 352.1)
+    ("brake_lines", "pushrod_rl"): 9.0,   # at (4078.2, -583.7, 461.7)
+    ("brake_lines", "pushrod_rr"): 9.0,   # at (4078.2, 583.7, 461.7)
+    ("brake_lines", "driveshaft_rl"): 8.9,   # at (4060.7, -533.4, 352.5)
+    ("brake_lines", "driveshaft_rr"): 8.9,   # at (4060.7, 533.4, 352.5)
     ("trackrod_fl", "tyre_sensors"): 8.7,   # at (827.0, -671.0, 229.6)
     ("trackrod_fr", "tyre_sensors"): 8.7,   # at (827.0, 671.0, 229.6)
     ("beam_wing", "floor_fan_throat_l"): 8.5,   # at (4328.0, -458.3, 411.1)
@@ -479,26 +476,24 @@ KNOWN = {
     ("fan_fairing_l", "floor_fan_throat_l"): 7.0,   # at (4168.3, -458.8, 230.0)
     ("fan_fairing_r", "floor_fan_throat_r"): 7.0,   # at (4168.3, 141.2, 230.0)
     ("fan_nozzle_l", "floor_strake_l2"): 7.0,   # at (4464.5, -405.2, 182.8)
-    ("bduct_drum_fl", "brake_lines"): 6.8,   # at (906.3, -709.7, 479.6)
-    ("bduct_drum_fr", "brake_lines"): 6.8,   # at (906.3, 709.7, 479.6)
+    ("bduct_drum_fl", "brake_lines"): 6.7,   # at (906.3, -709.7, 479.6)
+    ("bduct_drum_fr", "brake_lines"): 6.7,   # at (906.3, 709.7, 479.6)
     ("trackrod_rl", "tyre_sensors"): 6.5,   # at (4045.3, -528.2, 205.5)
     ("trackrod_rr", "tyre_sensors"): 6.5,   # at (4045.3, 528.2, 205.5)
     ("brake_lines", "caliper_fl"): 6.3,   # at (888.0, -779.6, 491.9)
     ("brake_lines", "caliper_fr"): 6.3,   # at (887.5, 779.1, 490.6)
     ("brake_lines", "caliper_rl"): 5.8,   # at (4038.5, -761.1, 500.3)
-    ("seat", "side_impact"): 5.6,   # at (1822.6, -229.2, 422.9)
     ("brake_lines", "caliper_rr"): 5.5,   # at (4039.2, 746.1, 500.4)
     ("floor_fan_throat_l", "tether_rl"): 5.5,   # at (4165.0, -246.3, 358.4)
     ("floor_fan_throat_r", "tether_rr"): 5.5,   # at (4165.0, 246.3, 358.4)
-    ("bduct_fence_rl", "brake_lines"): 5.3,   # at (4073.5, -578.0, 424.3)
-    ("bduct_fence_rr", "brake_lines"): 5.3,   # at (4073.5, 578.0, 424.3)
     ("fan_fairing_l", "fan_scroll_l"): 5.3,   # at (4548.7, -62.9, 310.0)
     ("fan_fairing_r", "fan_scroll_r"): 5.3,   # at (4548.7, 62.9, 310.0)
+    ("bduct_fence_rl", "brake_lines"): 5.2,   # at (4073.5, -578.0, 424.3)
+    ("bduct_fence_rr", "brake_lines"): 5.2,   # at (4073.5, 578.0, 424.3)
     ("diffuser_fences", "fan_rotor_l"): 5.2,   # at (4210.0, -294.8, 94.4)
     ("diffuser_fences", "fan_rotor_r"): 5.2,   # at (4210.0, 294.8, 94.4)
     ("bduct_fence_fl", "tyre_sensors"): 4.9,   # at (800.9, -665.4, 238.6)
     ("bduct_fence_fr", "tyre_sensors"): 4.9,   # at (800.9, 665.4, 238.6)
-    ("cockpit_coaming", "helmet"): 3.9,   # at (1903.3, 39.3, 735.2)
     ("floor_skirts", "tunnel_l"): 3.9,   # at (1481.6, -725.4, 33.1)
     ("diffuser_kick", "tunnel_l"): 3.6,   # at (4554.0, -398.0, 246.7)
     ("diffuser_kick", "tunnel_r"): 3.6,   # at (4554.0, 398.0, 246.7)
@@ -510,10 +505,10 @@ KNOWN = {
     ("diffuser_kick", "fan_rotor_l"): 2.9,   # at (4440.0, -398.0, 242.0)
     ("diffuser_kick", "fan_rotor_r"): 2.9,   # at (4440.0, 398.0, 242.0)
     ("bulkhead_engine", "fuel_cell"): 2.8,   # at (2336.0, 212.9, 296.4)
-    ("brake_lines", "brake_pad_rr"): 2.5,   # at (4042.3, 757.1, 502.2)
+    ("brake_lines", "brake_pad_rr"): 2.5,   # at (4045.0, 757.1, 501.1)
     ("brake_lines", "brake_pad_rl"): 2.4,   # at (4046.0, -756.9, 500.0)
     ("torsion_bars_f", "wishbone_fl_upper_aft"): 2.2,   # at (1080.5, -177.1, 416.2)
-    ("fanduct", "tow_hooks"): 1.9,   # at (3995.6, -65.2, 249.9)
+    ("fanduct", "tow_hooks"): 1.9,   # at (4153.4, -104.6, 293.1)
     ("hub_fl", "steering_arm_fl"): 0.8,   # at (903.6, -768.8, 274.4)
     ("hub_fr", "steering_arm_fr"): 0.8,   # at (903.6, 768.8, 274.4)
     ("diffuser_lip", "tunnel_l"): 0.7,   # at (4560.0, -486.4, 249.6)

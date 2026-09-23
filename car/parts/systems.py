@@ -289,14 +289,16 @@ def _electrical():
     # bulkhead instead. The one lane through a cockpit this tight is low and
     # inboard: under the seat pan, which bottoms at z 214, and inboard of it,
     # which begins at y 132.
+    # It leaves the battery forward. It used to go 180 mm aft first and
+    # double back, a hairpin a 32 mm bundle folded through itself on.
     spine = [(spec.POWERTRAIN["battery_x"], 60.0, 210.0),
-             (2600.0, 90.0, 260.0), (2200.0, 120.0, 200.0),
-             (T["cockpit_x0"], 120.0, 190.0),
+             (2200.0, 112.0, 200.0),
+             (T["cockpit_x0"], 112.0, 190.0),
              (T["x_front"] + 40.0, 60.0, 300.0)]
     # A loom is a taped bundle, so it is fattest where the most circuits are
     # still in it -- at the battery -- and thins as branches leave. Drawing it
     # at one diameter end to end says every circuit runs the whole length.
-    grow = [1.00, 0.94, 0.86, 0.72, 0.52]
+    grow = [1.00, 0.86, 0.72, 0.52]
     for sy in (1.0, -1.0):
         path = [(px, sy * py, pz) for (px, py, pz) in spine]
         dense = mesh.smooth_path(path, 8)
@@ -365,8 +367,14 @@ def _cockpit():
     # The surviving wheel is `chassis._wheel`, which carries its own display,
     # rotaries and paddles because they are all part of the wheel.
 
-    out["dash"] = shapes.rounded_box(T["cockpit_x0"] + 30.0, 0.0, 600.0,
-                                     70.0, 300.0, 120.0, 18.0, draft=4.0)
+    # Under the front of the cockpit opening, not through it. At z 540-660
+    # the dash stood 42 mm proud of the body top where the opening is still
+    # closing to its point, with the coaming lip running 23 mm into it; the
+    # opening's rim is at z 596-624 over the dash's length, so the dash
+    # tops out at 578, and the driver reads it through the opening under
+    # the wheel.
+    out["dash"] = shapes.rounded_box(T["cockpit_x0"] + 30.0, 0.0, 528.0,
+                                     70.0, 300.0, 100.0, 18.0, draft=4.0)
     # A bottle with domed ends, a valve head, the discharge union and the
     # two straps holding it into the tub.
     ext = [mesh.revolve_closed(

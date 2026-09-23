@@ -120,6 +120,7 @@ def apply_cutters(obj, cv, cf):
     m = obj.modifiers.new("cut", "BOOLEAN")
     m.operation = "DIFFERENCE"
     m.solver = "EXACT"
+    m.use_self = True           # a cutter is often several solids joined
     m.object = cutter
     bpy.context.view_layer.objects.active = obj
     ok = True
@@ -202,10 +203,22 @@ def main():
         cols[c] = col
 
     rows, n_sharp = [], 0
+    # "cut:<part>" entries are solids to take out of a part -- the engine's
+    # bores and chambers out of its block and heads. They are pooled across
+    # every module first so a cutter reaches its part wherever that is built.
+    # `apply_cutters` was here and nothing called it: a cutter handed back by
+    # a module would have been built as an object called "cut:...".
+    built_all, cutters = [], {}
     for modname, module in MODULES:
-        t1 = time.time()
         built = module.build()
-        objects = built
+        for key, geom in built.items():
+            if key.startswith("cut:"):
+                cutters.setdefault(key[4:], []).append(geom)
+        built_all.append((modname, module, built))
+    n_cut = n_cut_ok = 0
+    for modname, module, built in built_all:
+        t1 = time.time()
+        objects = {k: v for k, v in built.items() if not k.startswith("cut:")}
         piv = module.pivots() if hasattr(module, "pivots") else {}
 
         for name, (v, f) in sorted(objects.items()):
@@ -213,6 +226,9 @@ def main():
             spec_p = piv.get(name)
             ob = make_object(name, v, f, cols[cname],
                              pivot=spec_p[0] if spec_p else None)
+            for cv, cf in cutters.get(name, ()):
+                n_cut += 1
+                n_cut_ok += bool(apply_cutters(ob, cv, cf))
             if name != "engine":
                 recalc_normals(ob)
             mname = material_for(name)
@@ -254,7 +270,9 @@ def main():
     tv = sum(r["verts"] for r in rows)
     tf = sum(r["faces"] for r in rows)
     print(f"\n{len(rows)} objects | {tv:,} verts | {tf:,} faces")
-    print(f"sharp edges: {n_sharp:,}")
+    print(f"sharp edges: {n_sharp:,}  cuts {n_cut_ok}/{n_cut}")
+    if n_cut_ok < n_cut:
+        raise SystemExit(f"{n_cut - n_cut_ok} cuts failed")
     print(f"parts.csv -> {p}")
     blend = os.path.join(ROOT, "build", "car.blend")
     bpy.ops.wm.save_as_mainfile(filepath=blend)

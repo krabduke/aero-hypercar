@@ -345,3 +345,54 @@ def volute(x_c, r_start, r_end, sect_r0, sect_r1, seg=48, sect=14, axis="x"):
                 ring.append((rr * ca, rr * sa, x_c + ax))
         rings.append(ring)
     return _loft_ring_pairs(rings, closed=True)
+
+
+def bearing_cap(r_bore, half_w, height, length, arc_seg=16):
+    """A split-bearing cap: a block with a half-bore on its underside.
+
+    Built about the bore's centre, which is at the origin, in the frame
+    `common.along_bank` places things in: px up from the bore centre, py
+    across it, pz along the shaft. The cap spans px 0 to `height`, py
+    +/- `half_w` and pz +/- `length`/2, and the half-bore of radius `r_bore`
+    is taken out of its underside, so it clamps the top half of a journal
+    rather than sitting in it.
+
+    The end faces are split into convex pieces -- a strip from the arc to the
+    top edge and a triangle at each foot -- because a concave face fanned
+    from one corner comes out with triangles outside the outline.
+    """
+    k = arc_seg
+    arc = [(r_bore * math.sin(math.pi * i / k),            # px: up
+            -r_bore * math.cos(math.pi * i / k))            # py: -r .. +r
+           for i in range(k + 1)]
+    top = [(height, -half_w + 2.0 * half_w * i / k) for i in range(k + 1)]
+    foot_l, foot_r = (0.0, -half_w), (0.0, half_w)
+    sect = [foot_l] + arc + [foot_r] + list(reversed(top))
+    n = len(sect)
+    verts, faces = [], []
+    for w in (-length / 2.0, length / 2.0):
+        verts.extend((px, py, w) for (px, py) in sect)
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append((i, j, n + j, n + i))
+    # end faces: foot triangles and the arc-to-top strip, on both ends
+    ia = 1                                  # first arc point
+    it = n - 1 - k                          # top point above the first arc point
+    ends = [(0, ia, n - 1)]                 # left foot: foot_l, arc0, top0
+    ends.append((ia + k, ia + k + 1, it))   # right foot: arcK, foot_r, topK
+    for i in range(k):
+        ends.append((ia + i, ia + i + 1, n - 2 - i, n - 1 - i))
+    for e in ends:
+        faces.append(tuple(reversed(e)))
+        faces.append(tuple(n + i for i in e))
+    # wind outward whichever way the section runs
+    vol = 0.0
+    for f in faces:
+        a = verts[f[0]]
+        for t in range(1, len(f) - 1):
+            b, c = verts[f[t]], verts[f[t + 1]]
+            vol += (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+                    + a[2] * (b[0] * c[1] - b[1] * c[0]))
+    if vol < 0:
+        faces = [tuple(reversed(f)) for f in faces]
+    return verts, faces

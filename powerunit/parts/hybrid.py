@@ -281,9 +281,12 @@ def _electronics():
     # bolts to its front face instead of sitting inside it, which is also
     # what the joint audit means by engine management being bolted to the
     # engine: at x 0 it was clear of the bracket and 30 mm from anything.
-    ex, ey, ez = 31.0, 196.0, -50.0
+    # And forward to x 24.5 when the mounts moved to x -95: its front face on
+    # the aft face of the right mount's foot, bolted to it.
+    ex, ey, ez = -59.5 + sx / 2, 196.0, -50.0
     out["ecu"] = shapes.finned_case(ex, ey, ez, sx, sy, sz,
                                     n_fins=9, fin_h=5.0, fin_t=2.6, r=5.0)
-    out["ecu_connector"] = shapes.connector(ex - sx * 0.5 - 10.0, ey, ez,
+    # the loom plugs into the aft face; the front face is on the bracket
+    out["ecu_connector"] = shapes.connector(ex + sx * 0.5 + 10.0, ey, ez,
                                             22.0, sy * 0.6, sz * 0.5, 10)
     return out

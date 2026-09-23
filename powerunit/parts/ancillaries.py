@@ -66,10 +66,14 @@ def _oil_system():
     A dry sump with no filter is a pump circulating its own debris.
     """
     out = {}
-    y = -(B["half_width"] + 34.0)
+    # The pedestal's inboard face is 1 mm into the crankcase wall, which is
+    # 0.86 of the block's half width. Placed off the full half width it stood
+    # 10.5 mm off the wall, on the gallery it is meant to feed, bolted to
+    # nothing.
+    y = -(B["half_width"] * 0.86 + 39.0)
     # below the fuel rail, which runs this flank at z 31..69
     zc = -70.0
-    x = 26.0        # clear of the engine mounts, which are at x = +/-150
+    x = 26.0        # aft of the engine mount at x -95
     parts = []
     # the pedestal casting on the block, with the two galleries through it
     parts.append(shapes.rounded_box(x, y + 18.0, zc, 108.0, 44.0, 86.0, 8.0))
@@ -277,8 +281,10 @@ def _mounts():
     for bank, tag in ((0, "l"), (1, "r")):
         s = -1.0 if bank == 0 else 1.0
         parts = []
-        y = s * (B["half_width"] - 4.0)
-        for x in (-150.0, 150.0):
+        # on the face of the block's mount boss (spec.MOUNTS)
+        M = spec.MOUNTS
+        y = s * (M["boss_face"] - 1.0)
+        for x in M["x"]:
             # the bracket: a machined foot with a rubber bush in its eye
             # z 30 put the bracket up the side of the head; the mount bolts
             # to the block, which is below it
@@ -287,19 +293,25 @@ def _mounts():
             # and so was in both.
             # below the fuel rail, which runs the length of the block's
             # outboard flank at z 26..64
-            parts.append(shapes.rounded_box(x, y + s * 30.0, -30.0,
-                                            72.0, 60.0, 38.0, 6.0))
+            parts.append(shapes.rounded_box(x, y + s * 15.0, M["z"],
+                                            72.0, 30.0, 38.0, 6.0))
             fl = s < 0
+            # the bush's eye is let 2 mm into the foot; at +62 it stood 2 mm
+            # off it, a rubber bush held on by nothing
             parts.append(_lathe(
-                [(0.0, 0.0), (0.0, 44.0), (34.0, 44.0), (34.0, 0.0)],
-                x, y + s * 62.0, -30.0, axis="y", seg=22, flip=fl))
+                [(0.0, 0.0), (0.0, 22.0), (24.0, 22.0), (24.0, 0.0)],
+                x, y + s * 28.0, M["z"], axis="y", seg=22, flip=fl))
             parts.append(_lathe(
-                [(2.0, 0.0), (32.0, 0.0), (32.0, 26.0), (2.0, 26.0)],
-                x, y + s * 62.0, -30.0, axis="y", seg=18, flip=fl))
+                [(1.0, 0.0), (23.0, 0.0), (23.0, 13.0), (1.0, 13.0)],
+                x, y + s * 28.0, M["z"], axis="y", seg=18, flip=fl))
+            # Two bolts through the foot into the block. They were at z 12,
+            # above the foot and 17 mm off the block, fastening nothing.
             for dx in (-24.0, 24.0):
                 parts.append(_lathe(
-                    [(0.0, 0.0), (18.0, 0.0), (18.0, 9.0), (0.0, 9.0)],
-                    x + dx, y + s * 4.0, 12.0, axis="y", seg=10, flip=fl))
+                    [(0.0, 0.0), (0.0, 9.0), (6.0, 9.0), (6.0, 5.0),
+                     (44.0, 5.0), (44.0, 0.0)],
+                    x + dx, y + s * 36.0, M["z"], axis="y", seg=12,
+                    flip=not fl))
         out[f"engine_mount_{tag}"] = mesh.join(*parts)
     return out
 

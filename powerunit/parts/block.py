@@ -13,6 +13,8 @@ from parts import common
 
 B = spec.BLOCK
 SEG = spec.RES["revolve"]
+LINER_WALL = 5.5          # a wet liner's wall: the block's bore is its outside
+MAIN_SHELL_WALL = 3.4     # the main shells' back is the webs' bore
 
 
 def build():
@@ -27,9 +29,32 @@ def build():
     return out
 
 
+def _r_bay():
+    """The crank's swept radius, with room: counterweights reach
+    throw * 0.62 + web_r, the big ends throw + big_end_r, and the rod bolts'
+    heads a little further again."""
+    return spec.CRANK["throw"] + spec.ROD["big_end_r"] + 9.0
+
+
+def _bores(bank, along0):
+    """Solid cylinders the size of the liners' outside, one per bore on a
+    bank, from `along0` up through the deck: cutters for the castings the
+    bores pass through."""
+    r = spec.BORE / 2 + LINER_WALL
+    return mesh.join(*[
+        common.cylinder_along(x, along0, spec.DECK_HEIGHT + 30.0, r, bank)
+        for (n, pair, b2, x, a) in spec.cylinders() if b2 == bank])
+
+
 def _banks():
     """Each bank is a slab standing on the crankcase at the bank angle, with
-    the deck face at the top. Bores are cut through it by the liners."""
+    the deck face at the top, and a bore through it for every cylinder, which
+    the wet liner sits in.
+
+    The docstring used to say the bores were "cut through it by the liners".
+    Nothing cut anything: the liners were separate parts and the slab was
+    solid, so every piston, ring, pin and rod in the engine was 40-odd mm
+    inside cast aluminium, and a list of permissions called that intended."""
     out = {}
     for bank in (0, 1):
         along0 = spec.DECK_HEIGHT - B["vee_depth"]
@@ -86,6 +111,11 @@ def _banks():
                 feats.append((common.along_bank(sv, x2 + dx,
                                                 spec.DECK_HEIGHT, bank, lat), sf))
         out[f"block_bank_{'lr'[bank]}"] = mesh.join((v, f), *feats)
+        # both banks' bores, and the crank's swept space: the two slabs meet
+        # low in the vee, so the other bank's rods swing through this one
+        out[f"cut:block_bank_{'lr'[bank]}"] = mesh.join(
+            _bores(0, 0.0), _bores(1, 0.0),
+            mesh.cylinder(B["x_front"] - 1.0, B["x_rear"] + 1.0, _r_bay(), SEG))
     return out
 
 
@@ -99,13 +129,19 @@ def _liners():
         # 58 mm circle, so the bores passed through the crankshaft.
         along0 = max(spec.DECK_HEIGHT - B["vee_depth"] + 8.0,
                      spec.CRANK["web_r"] + 20.0)
-        v, f = common.bore_tube(x, along0, spec.DECK_HEIGHT, r, r + 5.5, bank)
+        v, f = common.bore_tube(x, along0, spec.DECK_HEIGHT, r, r + LINER_WALL, bank)
         parts.append((v, f))
     return {"block_liners": mesh.join(*parts)}
 
 
 def _crankcase():
-    """The crankcase skirt below the vee, carrying the main bearing webs."""
+    """The crankcase skirt below the vee, carrying the main bearing webs.
+
+    It is hollow: a bay between each pair of main webs for the crank's
+    counterweights and the rods' big ends to swing in, a bore through every
+    web for the main shells, and the bank bores continued down into it so
+    each rod has a way up to its piston. It was a solid box, with the crank
+    inside it."""
     parts = []
     x0, x1 = B["x_front"], B["x_rear"]
     hw = B["half_width"] * 0.86
@@ -114,12 +150,24 @@ def _crankcase():
                                     x1 - x0, hw * 2, B["skirt_depth"] + 28.0,
                                     r=16.0, seg=5, draft=1.5))
     span = (spec.CRANK["n_mains"] - 1)
-    for i in range(spec.CRANK["n_mains"]):
-        x = x0 + 26.0 + (x1 - x0 - 52.0) * i / span
+    webs = [x0 + 26.0 + (x1 - x0 - 52.0) * i / span
+            for i in range(spec.CRANK["n_mains"])]
+    for x in webs:
         parts.append(shapes.rounded_box(
             x, 0.0, -B["skirt_depth"] * 0.30,
             B["main_web_t"], hw * 1.9, B["skirt_depth"] * 1.1, r=7.0))
-    return {"block_crankcase": mesh.join(*parts)}
+
+    C = spec.CRANK
+    r_bay = _r_bay()
+    r_main = C["main_r"] + MAIN_SHELL_WALL
+    wt = B["main_web_t"] / 2.0
+    cav = [mesh.cylinder(a + wt, b - wt, r_bay, SEG)
+           for a, b in zip(webs, webs[1:])]
+    # the end walls and every web are bored for the crank to pass
+    cav.append(mesh.cylinder(x0 - 1.0, x1 + 1.0, r_main, SEG))
+    cav += [_bores(bank, 0.0) for bank in (0, 1)]
+    return {"block_crankcase": mesh.join(*parts),
+            "cut:block_crankcase": mesh.join(*cav)}
 
 
 def _block_detail():
@@ -133,64 +181,51 @@ def _block_detail():
     # half width the outlet bosses were inside the cylinders
     hw = B["half_width"] + 4.0
 
+    # Head water outlets: one out of each head's rear outboard corner, down
+    # into the end of the rail that carries the water forward (detail.py).
     ports = []
-    for i in range(4):
-        f = (i + 0.5) / 4
-        x = x0 + (x1 - x0) * f
-        for sgn in (-1.0, 1.0):
-            # 34 long from z 40, not 18 from z 22. They stopped 19 mm short
-            # of the head they are supposed to drain: a water outlet on the
-            # block's flank with the joint it crosses nowhere near it.
-            ol = spec.COOLANT["outlet_len"]
-            v, fc = mesh.revolve_open(
-                [(0.0, 0.0), (0.0, 15.0), (ol - 8.0, 16.5), (ol, 14.0),
-                 (ol, 0.0)], SM, cap_start=True, cap_end=True)
-            v = [(pz + x, sgn * (hw + py), px + spec.COOLANT["outlet_z"] - 18.0)
-                 for (px, py, pz) in v]
-            ports.append((v, fc))
+    K = spec.COOLANT
+    for bank in (0, 1):
+        xr = spec.head_rear_x(bank)
+        ports.append(mesh.pipe(mesh.smooth_path([
+            common.bank_point(xr - 6.0, K["outlet_along"], K["outlet_lat"], bank),
+            common.bank_point(xr + 10.0, K["outlet_along"], K["outlet_lat"] - 30.0, bank),
+            common.bank_point(xr + 10.0, K["rail_along"], K["rail_lat"], bank)], 2),
+            K["rail_r"] * 0.85, SM))
     out["water_outlets"] = mesh.join(*ports)
 
+    # Oil gallery plugs, screwed into the crankcase wall with their axes
+    # through it. They were upright discs 20 mm off the wall.
     plugs = []
+    wall_y = B["half_width"] * 0.86
     for i in range(6):
         f = (i + 0.5) / 6
         x = x0 + (x1 - x0) * f
         for sgn in (-1.0, 1.0):
-            v, fc = mesh.revolve_open(
-                [(0.0, 0.0), (0.0, 8.0), (5.0, 8.0), (5.0, 0.0)], 8,
-                cap_start=True, cap_end=True)
-            v = [(pz + x, sgn * (hw + py), px - 42.0) for (px, py, pz) in v]
-            plugs.append((v, fc))
+            v, fc = mesh.cylinder(wall_y - 3.0, wall_y + 4.0, 8.0, 10)
+            v = [(-ly, lx, lz) for (lx, ly, lz) in v]        # axis along +y
+            if sgn < 0:
+                v = [(-px, -py, pz) for (px, py, pz) in v]   # half turn
+            plugs.append(([(px + x, py, pz - 42.0) for (px, py, pz) in v], fc))
     out["gallery_plugs"] = mesh.join(*plugs)
 
-    # Four at the mount stations, not two on opposite banks 70 mm from
-    # either of them. ancillaries.py hangs a bracket at x = -150 and +150 on
-    # BOTH banks; the only two bosses down at mount height were at x -80 on
-    # one bank and +80 on the other, so not one of the four brackets that
-    # carry the engine had anything to bolt to.
-    #
-    # The other four were at x +/-172, z 60 and the note here said they were
-    # "the upper brackets". There are no upper brackets: ancillaries builds
-    # one bracket per side per station and nothing at z 60. What is at
-    # x +/-172, z 22-64 is a water outlet -- the bosses were inside all four
-    # of them, 60 voxels of 60.
-    #
-    # z 40, not 4: the bank's flank is what they bolt to, and at 4 they were
-    # 20 mm below it, hanging off the crankcase joint with nothing under
-    # them.
-    #
-    # There is one gap on this flank at mount height and it is 34 mm wide.
-    # The knock sensors sit at x -102, 0 and 102 and reach out to 124; the
-    # water outlets start at 158. The upper bosses go at x +/-141 between
-    # them, low enough that the outlet above them is not in the way either.
+    # Engine-mount pads, one each side at each station in spec.MOUNTS, from
+    # 1 mm inside the crankcase wall out to the face the bracket bolts to.
+    # There used to be a second set higher up the bank flanks, for "upper
+    # brackets" that were never built; bolted to nothing, they cut into the
+    # head gaskets, the head studs and the liners, and they are gone.
     bosses = []
-    for (x, y, z) in ((-141.0, hw, 40.0), (-141.0, -hw, 40.0),
-                      (141.0, hw, 40.0), (141.0, -hw, 40.0),
-                      (-150.0, hw, -30.0), (-150.0, -hw, -30.0),
-                      (150.0, hw, -30.0), (150.0, -hw, -30.0)):
-        bv, bf = shapes.bolt_boss(0, 0, 0, 12.0, 12.0)
-        sgn = 1.0 if y > 0 else -1.0
-        bosses.append(([(px * 0 + pz + x, y + sgn * py, px + z)
-                        for (px, py, pz) in bv], bf))
+    M = spec.MOUNTS
+    wall = B["half_width"] * 0.86 - 1.0
+    for sgn in (-1.0, 1.0):
+        for x in M["x"]:
+            cv, cf = mesh.cylinder(wall, M["boss_face"], M["boss_r"], 20)
+            # the cylinder's axis is its +x; turn it a quarter about z so it
+            # runs along +y, then mirror by rotating a half turn for the left
+            cv = [(-ly, lx, lz) for (lx, ly, lz) in cv]
+            if sgn < 0:
+                cv = [(-px, -py, pz) for (px, py, pz) in cv]
+            bosses.append(([(px + x, py, pz + M["z"]) for (px, py, pz) in cv], cf))
     out["mount_bosses"] = mesh.join(*bosses)
     return out
 

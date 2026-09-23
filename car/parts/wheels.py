@@ -88,6 +88,20 @@ def _sgn(y):
     return 1.0 if y > 0 else -1.0
 
 
+def ball_joints(x, y):
+    """The upright's upper and lower ball joints: where the wishbones'
+    outboard ends are, and so where the upright's arms have to reach.
+
+    One definition, used by the wishbones and the upright. They had one
+    each: the upright's arms went to the front axle's lower height on all
+    four corners and to a different lateral station, so the rear uprights
+    ended 90 mm below their lower wishbones, in the floor strake, carrying
+    nothing."""
+    front = abs(x - S["front_x"]) < abs(x - S["rear_x"])
+    low = S["lower_z"] if front else S["lower_z_rear"]
+    return (x, y * 0.77, S["upper_z"]), (x, y * 0.77, low)
+
+
 # --------------------------------------------------------------------------
 
 def _tyre(x, y, z, w, od):
@@ -462,18 +476,38 @@ def _upright(x, y, z, w):
     s = _sgn(y)
     parts = []
     y0 = -s * w * 0.04
-    parts.append(_lathe(x, y, z, [(y0 - s * 90.0, 30.0),
+    # The barrel stops 2 mm inboard of the brake disc. It ran 28 mm outboard
+    # of the wheel's centre line, which is through the disc -- 16 mm of a
+    # turning disc and its bell inside the part that carries it. The hub
+    # passes out through the barrel's bore to the disc and the wheel.
+    #
+    # Its bore is the hub's bearings' outer race. At 30 mm it was solid
+    # metal round a hub whose bearings run at 49 to 61, so the wheel turned
+    # inside the casting that is meant to hold its bearings.
+    end = -s * w * 0.02 - s * (W["disc_t"] / 2 + 2.0)
+    bore = W["hub_r"] * 0.98
+    parts.append(_lathe(x, y, z, [(y0 - s * 90.0, bore),
                                   (y0 - s * 90.0, 72.0),
-                                  (y0 + s * 40.0, 86.0),
-                                  (y0 + s * 40.0, 30.0)]))
+                                  (end, 86.0),
+                                  (end, bore)]))
     inboard = y - s * (w / 2 + 30.0)
-    for zz in (S["upper_z"], S["lower_z"]):
-        parts.append(mesh.pipe([(x, y + y0, z),
-                                (x, (y + inboard) / 2, (z + zz) / 2),
-                                (x, inboard, zz)], 34.0, 10))
+    # The arms leave the barrel's outside wall, inboard of the brake disc,
+    # and run straight to their pickups. They were pipes from the axle's
+    # centre on the disc's own plane, via a midpoint that for the upper arm
+    # was below where it started: through the hub, its bearings and the disc.
+    # An arm's start is a whole pipe radius outside the bearings, because it
+    # runs mostly inboard and its section hangs back toward the axle.
+    y_arm = y - s * (w * 0.02 + W["disc_t"] / 2 + 36.0)
+    for joint in ball_joints(x, y):
+        up = 1.0 if joint[2] > z else -1.0
+        parts.append(mesh.pipe([(x, y_arm, z + up * (bore + 38.0)), joint],
+                               34.0, 10))
     # steering / toe-link arm, trailing the axle
-    parts.append(mesh.pipe([(x, y + y0, z), (x + 150.0, inboard, z - 40.0)],
-                           26.0, 8))
+    dx, dz = 150.0, -40.0
+    ln = math.hypot(dx, dz)
+    r_st = bore + 30.0
+    parts.append(mesh.pipe([(x + dx / ln * r_st, y_arm, z + dz / ln * r_st),
+                            (x + dx, inboard, z + dz)], 26.0, 8))
     return mesh.join(*parts)
 
 

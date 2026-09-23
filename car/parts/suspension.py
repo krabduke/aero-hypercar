@@ -90,14 +90,15 @@ def build():
         # the front-wing upwash: the flow there is already turned upward.
         rake = math.radians(AERO_LINK["anti_dive_deg"]) if front else 0.0
         low_z = S["lower_z"] if front else S["lower_z_rear"]
-        for (z_out, z_in) in ((S["upper_z"], S["upper_z"] + 40.0),
-                              (low_z, low_z + 10.0)):
+        up_j, low_j = wheels.ball_joints(x, y)
+        for (outb, z_in) in ((up_j, S["upper_z"] + 40.0),
+                             (low_j, low_z + 10.0)):
+            z_out = outb[2]
             # 0.77 of the wheel's own y, not 0.74. The uprights' inner faces
             # are at 623 front and 545 rear; at 0.74 the outboard rod ends
             # finished 10 mm inboard of the casting they pick up on, so the
             # upper wishbone and the rear pullrod were carrying load into
             # thin air.
-            outb = (x, y * 0.77, z_out)
             # Both legs go on the gearbox. The note here used to say only
             # the forward one was moved because the aft one "would land at
             # x 4170, which is inside the fan rotor" -- but the code moved

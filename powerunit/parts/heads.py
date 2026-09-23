@@ -93,15 +93,6 @@ def _head_features(bank):
     for (n, pair, b2, x, a) in spec.cylinders():
         if b2 != bank:
             continue
-        # pent-roof chamber: a shallow dome recessed into the deck face
-        prof = []
-        for i in range(9):
-            f = i / 8
-            prof.append((-8.0 * math.sin(math.pi * f * 0.5),
-                         spec.BORE * 0.5 * (1 - f * 0.06)))
-        cv, cf = mesh.revolve_open(prof, SM, cap_start=True, cap_end=True)
-        parts.append((common.along_bank(cv, x, spec.DECK_HEIGHT + 4.0, bank), cf))
-
         # plug well
         wv, wf = mesh.revolve_ring(
             [(0.0, 9.0), (0.0, 15.0), (30.0, 15.0), (30.0, 9.0)], SM)
@@ -161,7 +152,38 @@ def _heads():
         v = [(x, y * lat[1] + z * d[1], y * lat[2] + z * d[2])
              for (x, y, z) in v]
         out[f"head_{'lr'[bank]}"] = mesh.join((v, f), _head_features(bank))
+        out[f"cut:head_{'lr'[bank]}"] = mesh.join(*[
+            _chamber(x, bank) for (n, pair, b2, x, a) in spec.cylinders()
+            if b2 == bank])
     return out
+
+
+def _chamber(x, bank, segments=48):
+    """The combustion chamber over one bore, as a cutter: the bore's circle,
+    capped by a pent roof -- two planes leaning at half the valves' included
+    angle, meeting on a ridge along the crank direction -- and running 1 mm
+    below the deck so the cut is clean."""
+    r = spec.BORE / 2
+    ridge = H["chamber_ridge"]
+    slope = math.tan(math.radians(spec.VALVE["included_angle"] / 2))
+    ring_lo, ring_hi = [], []
+    for i in range(segments):
+        a = 2.0 * math.pi * i / segments
+        lat, ax = r * math.cos(a), r * math.sin(a)
+        ring_lo.append((-1.0, lat, ax))
+        ring_hi.append((ridge - abs(lat) * slope, lat, ax))
+    n = segments
+    verts = ring_lo + ring_hi + [(-1.0, 0.0, 0.0), (ridge, 0.0, 0.0)]
+    c_lo, c_hi = 2 * n, 2 * n + 1
+    faces = []
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append((n + i, n + j, j, i))
+        faces.append((c_lo, i, j))
+        faces.append((c_hi, n + j, n + i))
+    # local: px along the bore, py across it, pz along the crank
+    return common.along_bank([(px, py, pz) for (px, py, pz) in verts],
+                             x, spec.DECK_HEIGHT, bank), faces
 
 
 def valve_seats():
@@ -268,8 +290,8 @@ def _valves():
         t = s["tilt"]
         vv = [(px * math.cos(t) - py * math.sin(t),
                px * math.sin(t) + py * math.cos(t), pz) for (px, py, pz) in vv]
-        vv = common.along_bank(vv, s["x"], spec.DECK_HEIGHT - 1.0,
-                               s["bank"], s["lat"])
+        vv = common.along_bank(vv, s["x"], spec.DECK_HEIGHT + V["face_along"],
+                               s["bank"], s["lat"] + V["face_along"] * math.tan(t))
         kind = "in" if s["is_in"] else "ex"
         tag = f"{s['n']}_{s['k'] % 2 + 1}"
         out[f"valve_{kind}_{tag}"] = (vv, vf)
@@ -288,8 +310,8 @@ def _valves():
         cv = [(-px + V["length"] - 6.0, py, pz) for (px, py, pz) in cv]
         cv = [(px * math.cos(t) - py * math.sin(t),
                px * math.sin(t) + py * math.cos(t), pz) for (px, py, pz) in cv]
-        cv = common.along_bank(cv, s["x"], spec.DECK_HEIGHT - 1.0,
-                               s["bank"], s["lat"])
+        cv = common.along_bank(cv, s["x"], spec.DECK_HEIGHT + V["face_along"],
+                               s["bank"], s["lat"] + V["face_along"] * math.tan(t))
         out[f"collets_{kind}_{tag}"] = (cv, cf)
     return out
 
@@ -482,7 +504,10 @@ def _covers():
                 continue
             for sgn in (-1.0, 1.0):
                 bv, bf = shapes.bolt_boss(0, 0, 0, 7.0, 9.0)
-                bv = [(pz + x, py + 8.0 + sgn * H["half_width"] * 0.88,
+                # on the cover's own centre line, +2 like the cover: the
+                # cover was moved in from +8 and its bolts were not, so one
+                # row stood 6 mm off its edge and the other 6 mm inside it
+                bv = [(pz + x, py + 2.0 + sgn * H["half_width"] * 0.88,
                        px + z - 4.0) for (px, py, pz) in bv]
                 bolts.append((bv, bf))
         out[f"camcover_bolts_{'lr'[bank]}"] = (rot(mesh.join(*bolts)[0]),

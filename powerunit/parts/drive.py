@@ -38,14 +38,14 @@ def _flywheel():
     of it, because every gram at 96 mm radius is inertia the engine has to
     accelerate twice per gearchange.
     """
-    # On the crank's flywheel flange, whose rear face is at x1 + flange_t.
+    # On the crank's flywheel flange, whose rear face is spec.FLYWHEEL_X.
     # It was 26 mm behind it, bolted to nothing: `audit_intersect` has
     # ("crankshaft", "flywheel") on its list of parts that share material on
     # purpose, but that entry is a permission and not a requirement, so when
     # the flywheel drifted off the flange the entry simply stopped applying
     # and no test had anything to say. The flywheel and the clutch were a
     # two-part assembly floating inside the bellhousing.
-    x = spec.BLOCK["x_rear"] - 20.0 + spec.CRANK["flange_t"]
+    x = spec.FLYWHEEL_X
     t = A["flywheel_t"]
     R = A["flywheel_r"]
     # meridian, counter-clockwise in (x, r): hub, relieved back, rim
@@ -75,10 +75,9 @@ def _flywheel():
 def _clutch():
     """A carbon multiplate clutch: a cover, a diaphragm with fingers cut into
     it, the pressure plate and the pack of plates it squeezes."""
-    # 24 mm behind the flywheel's front face, which is where it was before
-    # the flywheel was moved back onto the crank flange -- the cover bolts to
-    # the flywheel rim, so the two move together.
-    x = spec.BLOCK["x_rear"] - 20.0 + spec.CRANK["flange_t"] + 24.0
+    # 24 mm behind the flywheel's front face: the cover bolts to the
+    # flywheel rim, so the two move together.
+    x = spec.FLYWHEEL_X + 24.0
     R = A["flywheel_r"] * 0.86
     parts = []
     # cover: a pressing with a bolt flange at the rim

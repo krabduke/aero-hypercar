@@ -451,9 +451,12 @@ def _bored_duct(path, r_out, wall, seg, subdiv):
     the flange, and it read in every render as a blank white circle stuck on
     the front of the engine rather than as the mouth of an intake.
     """
-    ov, of = mesh.pipe(path, r_out, seg, caps=False, subdiv=subdiv)
+    # both tubes turn their corners on the same arc, or their rings no
+    # longer pair up one for one
+    bend = 1.5 * (max(r_out) if isinstance(r_out, (list, tuple)) else r_out)
+    ov, of = mesh.pipe(path, r_out, seg, caps=False, subdiv=subdiv, bend=bend)
     iv, if_ = mesh.pipe(path, [r - wall for r in r_out], seg,
-                        caps=False, subdiv=subdiv)
+                        caps=False, subdiv=subdiv, bend=bend)
     n = len(ov)
     ns = mesh._T(seg)
     rings = n // ns

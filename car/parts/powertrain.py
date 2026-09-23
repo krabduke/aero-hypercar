@@ -90,12 +90,23 @@ def build():
     CAR_PROVIDES = ("battery", "battery_modules", "battery_terminals",
                     "inverter", "inverter_connectors", "mguk", "mguh",
                     "hv_store", "hv_motor")
+    # The castings the engine cuts -- its bores out of the block, its
+    # chambers out of the heads -- are carried as parts of their own with
+    # their cutters. Joined into the one "engine" mesh, a cutter would either
+    # have gone in as solid geometry, rods filling every bore, or taken the
+    # pistons out along with the metal round them.
+    def place(verts):
+        return [(x + PT["engine_x"], y, z + PT["engine_z"]) for (x, y, z) in verts]
+    cut = {k[4:]: v for k, v in built.items() if k.startswith("cut:")}
     parts = []
     for name, (verts, faces) in built.items():
-        if name.startswith(CAR_PROVIDES):
+        if name.startswith("cut:") or name.startswith(CAR_PROVIDES):
             continue
-        parts.append(([(x + PT["engine_x"], y, z + PT["engine_z"])
-                       for (x, y, z) in verts], faces))
+        if name in cut:
+            out[f"engine_{name}"] = (place(verts), faces)
+            out[f"cut:engine_{name}"] = (place(cut[name][0]), cut[name][1])
+            continue
+        parts.append((place(verts), faces))
     out["engine"] = mesh.join(*parts)
 
     # The gearbox bolts to the back of the engine: it is a fully stressed
@@ -127,7 +138,12 @@ def build():
                                             sy * 1.25, 46.0, 18.0))
         out[f"rad_tanks_{tag}"] = mesh.join(*tanks)
         hoses = []
-        for dz, xe in ((-sz / 2 - 26.0, -1.0), (sz / 2 + 26.0, 1.0)):
+        # Both hoses leave the aft end of their tank. The core is downflow,
+        # top tank to bottom, so neither end is the "wrong" one -- and the
+        # bottom hose leaving the front made a hairpin 800 mm long back past
+        # the whole radiator to the engine, pinched to an eighth of its bore
+        # at the turn.
+        for dz, xe in ((-sz / 2 - 26.0, 1.0), (sz / 2 + 26.0, 1.0)):
             # The hose stays OUTBOARD of the fuel cell and the battery
             # until it is past both of them, then comes in to the engine.
             # Cutting the corner took it through the bladder and through

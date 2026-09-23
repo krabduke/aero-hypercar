@@ -62,9 +62,15 @@ def runner_path(bank, x):
     sgn = -1.0 if bank == 0 else 1.0
     y_pl = sgn * (spec.INTAKE["plenum_y"] - spec.INTAKE["plenum_r"] * 0.35)
     z_pl = spec.INTAKE["plenum_z"]
+    # A smooth run from the bellmouth to the port. The second point used to
+    # drop 30 mm below the plenum and the third climb 62 mm back up, so every
+    # runner was a 144-degree hairpin in 60 mm of length, pinched to a third
+    # of its bore at the turn -- the worst thing to do to a charge on its way
+    # into the cylinder, and the one thing a runner is for not doing.
+    dy, dz = port[1] - y_pl, port[2] - z_pl
     return [(x, y_pl, z_pl),
-            (x, y_pl + (port[1] - y_pl) * 0.16, z_pl - 30.0),
-            (x, y_pl + (port[1] - y_pl) * 0.55, port[2] + 10.0),
+            (x, y_pl + dy * 0.34, z_pl + dz * 0.10),
+            (x, y_pl + dy * 0.70, z_pl + dz * 0.55),
             port]
 
 
@@ -87,17 +93,25 @@ def collector_path(bank_pair):
     # either -- the car this engine goes in has cooling louvres in its engine
     # cover 700 mm off the ground, and the collector is the tallest thing
     # here.
+    #
+    # Mouth to flange is 46 mm across and 29 down for a duct 54 mm through,
+    # so there is room for one gentle bend and no more: the route used to
+    # dive to 34 mm below the flange and climb back up to it, a 100-degree
+    # kink with 11 mm legs that folded the duct 16 mm through itself. It
+    # now runs straight down to a point on the flange's own axis and turns
+    # 22 degrees onto it.
+    end = (inlet[0] - ib * 2.0, 0.0, inlet[2])
+    ax, az = -ib * 10.0, -3.4
+    axis = (ax / math.hypot(ax, az), 0.0, az / math.hypot(ax, az))
     return [(tx + ib * 16.0, 0.0, T["z"] + 92.0),
-            (tx + ib * 4.0, 0.0, T["z"] + 78.0),
-            (tx - ib * 12.0, 0.0, T["z"] + 58.0),
-            (inlet[0] + ib * 8.0, 0.0, inlet[2] + 3.4),
-            (inlet[0] - ib * 2.0, 0.0, inlet[2])]
+            tuple(end[k] - axis[k] * 22.0 for k in range(3)),
+            end]
 
 
 # Four 25 mm primaries merging: 1,960 mm2, which is a 25 mm radius. The
 # mouth is 30 so the four pipes land on its rim with room between them,
 # and it necks to the turbine inlet from there.
-COLLECTOR_RADII = [30.0, 29.0, 27.0, 25.0, 24.0]
+COLLECTOR_RADII = [30.0, 27.0, 24.0]
 
 
 def primary_path(pair, bank, x):

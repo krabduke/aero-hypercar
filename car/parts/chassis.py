@@ -195,10 +195,16 @@ def _cockpit_surround():
         f = i / (n - 1)
         x = x0 + (x1 - x0) * f
         hw, z_bot, z_top, ex, bias = _sample(spec.BODY, x)
-        w = min(T["cockpit_half_w"], hw * 0.80) * math.sin(math.pi * min(f * 1.1, 1.0)) ** 0.35
+        # the opening closes just short of x1; at f * 1.1 it closed 50 mm
+        # sooner, on the back of the driver's helmet
+        w = min(T["cockpit_half_w"], hw * 0.80) * math.sin(math.pi * min(f * 1.04, 1.0)) ** 0.35
         z = z_top - 22.0
         path_l.append((x, -w, z))
         path_r.append((x, w, z))
+        # the opening closes a little ahead of x1; past that the lip used to
+        # carry on down the centreline as a tail behind the driver's head
+        if f > 0.5 and w == 0.0:
+            break
     parts.append(mesh.pipe(path_l, 15.0, 10))
     parts.append(mesh.pipe(path_r, 15.0, 10))
     return {"cockpit_coaming": mesh.join(*parts)}
@@ -360,6 +366,12 @@ def sidepod_point(x, f_y, f_z, standoff=0.0):
     return (x, sgn * (y + standoff * abs(f_y)), z)
 
 
+def _seat_floor(cx, x):
+    """Underside of the seat's bucket at station x: it rises 40 mm aft."""
+    f = (x - (cx - 320.0)) / 640.0
+    return 300.0 - 96.0 + 40.0 * (1.0 - math.cos(math.pi * f)) / 2
+
+
 def _seat(cx):
     """The seat is moulded to the driver, which is the whole point of it.
 
@@ -378,7 +390,7 @@ def _seat(cx):
         # the bucket deepens towards the back of the seat and the bolsters
         # rise with it
         hw = 150.0 + 60.0 * math.sin(math.pi * min(1.0, f * 1.15))
-        floor_z = 300.0 - 96.0 + 40.0 * (1.0 - math.cos(math.pi * f)) / 2
+        floor_z = _seat_floor(cx, x)
         bol = 60.0 + 130.0 * f ** 1.4
         sect = [(-hw, floor_z), (hw, floor_z),
                 (hw + 22.0, floor_z + bol * 0.55),
@@ -396,11 +408,30 @@ def _seat(cx):
     for sgn in (-1.0, 1.0):
         parts.append(shapes.rounded_box(cx + 296.0, sgn * 92.0, 470.0,
                                         30.0, 76.0, 26.0, 8.0, seg=5))
-    # lifting handles, because the seat leaves the car with the driver in it
+    # The seat base: two cross-car pedestals it sits on, bonded to the tub
+    # floor. The bucket is 130-180 mm above the floor -- the loom and the
+    # extinguisher run under it -- and nothing held it there: its only
+    # contact with the tub was the tips of its lifting handles brushing the
+    # side walls. The pedestals stand inside y +/-60, clear of the loom's
+    # lane at y 120, and each corner comes down to the floor where the floor
+    # is, since it falls away aft and dishes towards the centreline.
+    for (xa, xb), floor in (((1460.0, 1520.0), (76.4, 76.4, 73.6, 73.6)),
+                            ((1830.0, 1890.0), (60.1, 60.1, 57.7, 57.7))):
+        top = [_seat_floor(cx, x) + 4.0 for x in (xa, xb)]
+        # corners in mesh.box's order, so its face winding holds
+        v = [(xa, -60.0, floor[0]), (xb, -60.0, floor[2]),
+             (xb, 60.0, floor[3]), (xa, 60.0, floor[1]),
+             (xa, -60.0, top[0]), (xb, -60.0, top[1]),
+             (xb, 60.0, top[1]), (xa, 60.0, top[0])]
+        parts.append((v, [(0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4),
+                          (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)]))
+    # lifting handles, because the seat leaves the car with the driver in it.
+    # They loop up, not out: out to y 245 they were 5 mm into the side
+    # impact tubes, which pass the bolsters 20 mm outboard.
     for sgn in (-1.0, 1.0):
         parts.append(mesh.pipe(
             [(cx + 120.0, sgn * 210.0, 400.0),
-             (cx + 160.0, sgn * 245.0, 430.0),
+             (cx + 160.0, sgn * 216.0, 452.0),
              (cx + 200.0, sgn * 210.0, 400.0)], 11.0, 16, subdiv=3))
     return mesh.join(*parts)
 

@@ -86,7 +86,9 @@ def _crankshaft():
 
     # nose and flywheel flange
     parts.append(mesh.tube(x0 - C["nose_len"], x0, 0.0, C["nose_r"], SEG))
-    parts.append(mesh.tube(x1, x1 + C["flange_t"], 0.0, C["flange_r"], SEG))
+    # the tail through the rear main seal, then the flywheel flange outside
+    parts.append(mesh.tube(x1, spec.FLANGE_X, 0.0, C["main_r"], SEG))
+    parts.append(mesh.tube(spec.FLANGE_X, spec.FLYWHEEL_X, 0.0, C["flange_r"], SEG))
     return {"crankshaft": mesh.join(*parts),
             # between the damper and the timing case, not under the damper
             "crank_trigger": _crank_trigger(x0 - C["nose_len"] + 40.0)}
@@ -134,10 +136,16 @@ def _pistons_and_rods():
     """Each piston, gudgeon pin and rod is its own object. They are separate
     components on the real engine and they move relative to each other, so
     merging them into one mesh loses information."""
+    bolts = []
     out = {}
     r = spec.BORE / 2 - 0.35
     for (n, pair, bank, x, a) in spec.cylinders():
-        along = _piston_along(pair, bank)
+        # `_piston_along` is the gudgeon pin's distance from the crank; the
+        # crown is a compression height above it. It used to be taken as the
+        # crown, so every piston sat 18.5 mm down its bore, the rods came out
+        # 67.6 to 68.2 mm long instead of 86, and the two at bottom dead
+        # centre ran 6 mm into the counterweights.
+        along = _piston_along(pair, bank) + spec.compression_height()
 
         # piston: crown, ring land grooves, skirt
         pv, pf = mesh.revolve_closed(
@@ -180,40 +188,81 @@ def _pistons_and_rods():
              (11.0, pr), (11.8, pr), (13.0, pr - 1.0), (13.0, pr * 0.52)],
             SM)
         gv = [(z, y, px) for (px, y, z) in gv]      # axis +x -> engine +x
-        gv = common.along_bank(gv, x, along - P["crown_t"] - 12.0, bank)
+        gv = common.along_bank(gv, x, along - spec.compression_height(), bank)
         out[f"gudgeon_pin_{n}"] = (gv, gf)
 
         # rod: small end at the gudgeon pin, big end on the crankpin
         py, pz = _pin_centre(pair)
-        small = common.bank_point(x, along - P["crown_t"] - 12.0, 0.0, bank)
+        small = common.bank_point(x, along - spec.compression_height(), 0.0, bank)
         big = (x, py, pz)
         out[f"conrod_{n}"] = _rod(small, big)
-        out[f"rod_cap_{n}"] = _rod_cap(big)
+        out[f"rod_cap_{n}"] = _rod_cap(small, big)
+        bolts.extend(_rod_bolts(small, big))
+        # The shells go on the crankpin, split where the rod and cap split.
+        # They were built round the crank's own axis -- a pair of half-rings
+        # 22.5 mm off the pin, inside the webs, carrying no rod at all.
+        theta = math.atan2(small[2] - big[2], small[1] - big[1])
+        for half, sgn in (("upper", 1.0), ("lower", -1.0)):
+            sv, sf = shapes.bearing_shell(x, C["pin_r"], R["shell_wall"],
+                                          spec.BANK_OFFSET - 2.0,
+                                          arc_seg=36, sgn=sgn)
+            sv = mesh.translate(mesh.rot_x(sv, theta - math.pi / 2),
+                                0.0, big[1], big[2])
+            out[f"rod_shell_{n}_{half}"] = (sv, sf)
+    out["rod_bolts"] = mesh.join(*bolts)
     return out
 
 
-def _rod_cap(big):
-    """Big-end cap and its two bolts."""
-    parts = []
-    v, f = mesh.tube(-9.5, 9.5, C["pin_r"] + 1.2, R["big_end_r"], SM)
-    parts.append(([(px + big[0], py + big[1], pz + big[2]) for (px, py, pz) in v], f))
-    for sgn in (-1, 1):
-        bv, bf = mesh.cylinder(0.0, 34.0, 4.2, 10)
-        bv = [(pz + big[0], py + big[1] + sgn * (R["big_end_r"] - 5.0),
-               px + big[2] - 17.0) for (px, py, pz) in bv]
-        parts.append((bv, bf))
-    return mesh.join(*parts)
+def _big_end_half(small, big, rod_side):
+    """One half of the big-end eye: the rod's half faces the small end, the
+    cap's the other way, and they meet on the split line across the rod.
+
+    The rod's eye and the cap were both whole rings on the same crankpin, one
+    inside the other, which is why their overlap had to be declared."""
+    theta = math.atan2(small[2] - big[2], small[1] - big[1])
+    phase = theta - math.pi / 2 if rod_side else theta + math.pi / 2
+    v, f = mesh.revolve_closed(
+        [(-9.5, C["pin_r"] + R["shell_wall"]), (9.5, C["pin_r"] + R["shell_wall"]),
+         (9.5, R["big_end_r"]), (-9.5, R["big_end_r"])],
+        SM // 2, phase=phase, sweep=math.pi)
+    return [(px + big[0], py + big[1], pz + big[2]) for (px, py, pz) in v], f
+
+
+def _rod_cap(small, big):
+    """The big-end cap: the half of the eye away from the rod."""
+    return _big_end_half(small, big, rod_side=False)
+
+
+def _rod_bolts(small, big):
+    """The two bolts that hold a cap on: along the rod's axis, either side of
+    the pin, from a head under the cap up across the split into the rod.
+
+    They were vertical in the engine's frame whatever the rod was doing, so
+    on a V with the rods leaning 45 degrees they stood out of the big end
+    sideways and swept through the crank webs."""
+    dy, dz = small[1] - big[1], small[2] - big[2]
+    ln = math.hypot(dy, dz)
+    d = (0.0, dy / ln, dz / ln)                  # along the rod
+    l = (0.0, -d[2], d[1])                       # across it, in its plane
+    # far enough out to clear the shells' locating tangs at the split
+    off = R["big_end_r"] - 0.4
+    out = []
+    for s in (-1.0, 1.0):
+        c = tuple(big[k] + l[k] * s * off for k in range(3))
+        at = lambda t: tuple(c[k] + d[k] * t for k in range(3))
+        out.append(mesh.pipe([at(-16.0), at(12.0)], 3.4, 10))          # shank
+        out.append(mesh.pipe([at(-20.5), at(-16.0)], 5.8, 12))         # head
+    return out
 
 
 def _rod(small, big):
     """I-beam rod between two eyes."""
     parts = []
     parts.append(mesh.pipe([small, big], R["beam_t"] * 0.62, 10))
-    for (c, r_out, r_in, w) in ((small, R["small_end_r"], P["pin_r"] + 1.0, 15.0),
-                                (big, R["big_end_r"], C["pin_r"] + 1.2, 19.0)):
-        v, f = mesh.tube(-w / 2, w / 2, r_in, r_out, SM)
-        v = [(px + c[0], py + c[1], pz + c[2]) for (px, py, pz) in v]
-        parts.append((v, f))
+    v, f = mesh.tube(-7.5, 7.5, P["pin_r"] + 1.0, R["small_end_r"], SM)
+    parts.append(([(px + small[0], py + small[1], pz + small[2])
+                   for (px, py, pz) in v], f))
+    parts.append(_big_end_half(small, big, rod_side=True))
     return mesh.join(*parts)
 
 

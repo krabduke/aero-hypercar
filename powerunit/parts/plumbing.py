@@ -295,14 +295,7 @@ def _bearings():
                 groove=(half == "upper"), sgn=sgn)
         out[f"main_cap_{i + 1}"] = _main_cap(x)
 
-    # Two rods share every crankpin, and they sit side by side on it. Their
-    # shells go where their rods are -- which is the bank's own station, not
-    # the pin's.
-    for (n, pair, bank, x, a) in spec.cylinders():
-        for half, sgn in (("upper", 1.0), ("lower", -1.0)):
-            out[f"rod_shell_{n}_{half}"] = shapes.bearing_shell(
-                x, C["pin_r"], 3.0, spec.BANK_OFFSET - 2.0,
-                arc_seg=36, sgn=sgn)
+    # The rod shells are built with the rods, in bottomend.py.
     return out
 
 
@@ -331,19 +324,13 @@ def _main_cap(x):
 
 
 def _fasteners():
-    """Rod bolts, main studs, cam cap bolts. An engine is held together by
+    """Main studs, cam cap bolts. An engine is held together by
     fasteners and they are the parts most likely to be replaced."""
+    # The rod bolts are built with the rods, in bottomend.py, because they
+    # lie along each rod's own axis. Here they were sixteen 9 mm pucks fixed
+    # under the crank as if every rod were at bottom dead centre, 42 mm inside
+    # the crankcase casting, attached to no rod.
     out = {}
-    bolts = []
-    for (n, pair, bank, x, a) in spec.cylinders():
-        for sgn in (-1.0, 1.0):
-            v, f = mesh.revolve_open(
-                [(0.0, 0.0), (0.0, 5.4), (7.0, 6.6), (9.0, 6.6), (9.0, 0.0)],
-                SM // 2, cap_start=True, cap_end=True)
-            v = [(pz + x, py + sgn * 19.0, -px - 24.0)
-                 for (px, py, pz) in v]
-            bolts.append((v, f))
-    out["rod_bolts"] = mesh.join(*bolts)
 
     caps = []
     for bank in (0, 1):
@@ -352,10 +339,18 @@ def _fasteners():
             for (n, pair, b2, x, a) in spec.cylinders():
                 if b2 != bank:
                     continue
-                cv, cf = shapes.rounded_box(0.0, 0.0, 0.0, 24.0, 46.0, 20.0, 5.0)
+                # A cap is the top half of a split bearing: a block with a
+                # half-bore that clamps the journal. It was a solid box
+                # standing 4 mm above the cam's centreline, which put its
+                # underside 11 mm down into a journal that turns inside it.
+                # As wide as the journal it clamps: at 20 mm it overhung
+                # the cam lobes either side, which turn.
+                cv, cf = shapes.bearing_cap(spec.CAM["journal_r"] + 0.3,
+                                            23.0, 26.0,
+                                            spec.CAM["lobe_w"] * 0.7)
                 cv = common.along_bank(
                     cv, x - spec.CAM["lobe_w"] * 2.05,
-                    spec.DECK_HEIGHT + H["cam_height"] + 14.0, bank, lat)
+                    spec.DECK_HEIGHT + H["cam_height"], bank, lat)
                 caps.append((cv, cf))
     out["cam_caps"] = mesh.join(*caps)
     return out
@@ -495,9 +490,17 @@ def _breathers():
          (vent[0] - 26.0, -146.0, vent[2] - 8.0), vent], 10.0, SM, subdiv=3))
     out["breathers"] = mesh.join(*pipes)
     out["catch_tank"] = _catch_tank()
-    out["dipstick"] = mesh.pipe(
-        [(B["x_rear"] - 60.0, 120.0, 60.0),
-         (B["x_rear"] - 40.0, 130.0, -160.0)], 4.0, 6)
+    # The dipstick is in the tank's filler cap, because this is a dry-sump
+    # engine: the oil lives in the tank, and the sump is scavenged dry. It
+    # was a rod from inside the right bank, through the engine mount and a
+    # cylinder bore, ending 38 mm outside the sump -- measuring nothing.
+    O = spec.OIL
+    tx, ty, tz, L = O["tank_x"], O["tank_y"], O["tank_z"], O["tank_len"]
+    # into the oil but short of the scavenge line that enters the lid end
+    rod = mesh.pipe([(tx + L + 36.0, ty, tz), (tx + L - 18.0, ty, tz)], 2.2, 8)
+    # a finger loop round the rod's end, touching it
+    lv, lf = mesh.ring_torus(tx + L + 34.0, 4.0, 2.0, 24, 8)
+    out["dipstick"] = mesh.join(rod, (mesh.translate(lv, 0.0, ty, tz), lf))
     return out
 
 

@@ -93,6 +93,34 @@ CRANK = {
     "counterweights": 8,
 }
 
+# Engine mounts: a cast boss standing off each side of the crankcase at each
+# station, and a bracket with a rubber bush bolted to its face. The bosses
+# were 20 mm off the crankcase wall with nothing joining them to it, and the
+# brackets held the bosses up and the bosses the brackets.
+#
+# One each side, forward. This is a stressed-member engine: its back end is
+# carried by the gearbox through the bellhousing, and there is no room for a
+# rear pair anyway -- a search of every station along both flanks, at every
+# mounting height, found none clear aft of x -90 on the right, where the
+# starter lies along the crankcase on its way to the ring gear, with the ECU
+# and the water pump beside it. The rear right bracket used to be through
+# the starter, and the front pair through the oil and water pumps. x -95 is
+# clear on both sides.
+MOUNTS = {
+    "x": (-95.0,),
+    "z": -30.0,
+    "boss_r": 12.0,
+    "boss_face": BLOCK["half_width"] + 16.0,     # y of the face they bolt to
+}
+
+# Where the flywheel's front face is: on the crank's flange, and the flange is
+# outside the block. It used to be the last 20 mm of the crank inside the
+# block, so the flywheel started 6 mm INSIDE the block's rear face and turned
+# in the crankcase, bedplate and both banks; a crank leaves the block through
+# its rear main seal and carries the flange out behind it.
+FLANGE_X = BLOCK["x_rear"] + 2.0
+FLYWHEEL_X = FLANGE_X + CRANK["flange_t"]
+
 PISTON = {
     "crown_t": 6.5,
     "skirt_len": 18.0,   # short: at BDC the skirt has to clear the counterweights
@@ -102,7 +130,10 @@ PISTON = {
 }
 
 ROD = {
-    "big_end_r": 31.0,
+    # 33: the eye's bore is the shell's back (pin + 3 mm), and a big end
+    # needs a real wall round that
+    "big_end_r": 33.0,
+    "shell_wall": 3.0,
     "small_end_r": 14.0,
     "beam_w": 17.0,
     "beam_t": 9.5,
@@ -126,6 +157,11 @@ HEAD = {
     "x_rear": 228.0,
     "cam_centres": 78.0,       # between intake and exhaust cam axes
     "cam_height": 108.0,       # above the deck face
+    # The combustion chamber is a pent roof recessed into the deck face: two
+    # planes at half the valves' included angle meeting on a ridge this high
+    # above the deck. It used to be a dome ADDED to the casting, standing
+    # 4 mm down into every bore, so the pistons ran into the head.
+    "chamber_ridge": 9.0,
 }
 
 VALVE = {
@@ -137,7 +173,12 @@ VALVE = {
     "intake_head_r": 17.0,
     "exhaust_head_r": 14.5,
     "stem_r": 2.6,
-    "length": 92.0,
+    # The face sits in the chamber roof, `face_along` above the deck, and the
+    # valve is shorter by the same amount so its tip -- and the collets,
+    # retainer, spring and bucket stacked on it -- are where they were. The
+    # faces used to be 1 mm BELOW the deck, standing into the bore.
+    "face_along": 5.0,
+    "length": 86.0,
     "included_angle": 22.0,    # narrow, for a compact pent-roof chamber
     "lift": 12.5,
 }
@@ -341,8 +382,25 @@ COOLANT = {
     "stat_y": 0.0,
     "stat_z": 110.0,
     # the outlets stand up out of the block's flanks into the heads
-    "outlet_z": 40.0,
-    "outlet_len": 42.0,
+    # The head outlets and the rail that gathers them run along each head's
+    # outboard face, in the bank's frame: `rail_along` up the bore axis and
+    # `rail_lat` across it (inboard positive). They were placed as if this
+    # were an inline engine -- on the "block flank" at y +/-118, z 22 to 64,
+    # which on a 90-degree V is inside the cylinder bores, with the pistons
+    # and rings running through them, and the rails 45 mm inside the heads.
+    # The rail's lane is the clearest one between the intake runners above,
+    # the direct-injection rail beside the head and the engine mounts below,
+    # found by searching it: about 10 mm from anything, so a 16 mm rail.
+    # Each head drains from its rear outboard corner: the intake side is
+    # covered by the runner flanges and the injection rail, the front by the
+    # cam drive, and behind the last cylinder there is room.
+    "rail_along": 150.0,
+    "rail_lat": -110.0,
+    "rail_r": 8.0,
+    "outlet_along": 190.0,       # above the injection crossover at ~172
+    "outlet_lat": -48.0,         # 3 mm into the head's outboard face, which
+                                 # at the rear end is at -51, not the -75 of
+                                 # the port bosses along its middle
 }
 
 
@@ -619,6 +677,14 @@ def cylinder_x(i, bank=None):
     if bank is None:
         return x                      # the crankpin, centred between the two
     return x + (-1.0 if bank == 0 else 1.0) * BANK_OFFSET / 2.0
+
+
+def head_rear_x(bank):
+    """The rear face of a bank's head: the nominal x_rear, moved by the
+    bank's own stagger along the crank."""
+    xs = [x for (n, pair, b, x, a) in cylinders() if b == bank]
+    pair_x = cylinder_x(len(xs) - 1)
+    return HEAD["x_rear"] + (max(xs) - pair_x)
 
 
 def cylinders():

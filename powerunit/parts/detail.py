@@ -224,26 +224,27 @@ def _pumps():
     wp.append(mesh.pipe([pump_out, (xo - 4.0, 120.0, 20.0),
                          (spec.BLOCK["x_front"] + 8.0, 112.0, 12.0)],
                         16.0, SM, subdiv=3))
-    # the two head outlet rails, gathered forward onto the thermostat
-    for sgn in (-1.0, 1.0):
-        y_rail = sgn * (spec.BLOCK["half_width"] + 8.0)
-        z_top = spec.COOLANT["outlet_z"] + spec.COOLANT["outlet_len"] - 20.0
-        # The forward run is at x -242, not x_fwd = -250. The accessory
-        # belt's tensioner occupies x -334 to -246 from y -172 to -66, and
-        # the left rail crossed it on its way in to the thermostat. The pipe
-        # is 14 mm in the radius, so clearing the tensioner means the
-        # centreline sits 6 mm BEHIND the block's front face, not 10 in
-        # front of it -- at -242 the pipe's own wall still reached -256.
-        #
-        # It also starts 8 mm further out. At y_rail - 12 the first bend
-        # clipped number one cylinder's intake valve, which stands at
-        # y -103 to -112 at this height.
+    # The two head outlet rails, gathered forward onto the thermostat. Each
+    # starts at its head's outlet, behind the last cylinder, and runs the
+    # length of the head's outboard side under the intake runners and over
+    # the engine mounts, then turns up across the front to the thermostat.
+    # They ran along y +/-126 at z 62, which on this engine is inside the
+    # heads, and started at x -190, clear of the outlets they were for.
+    K = spec.COOLANT
+    for bank, sgn in ((0, -1.0), (1, 1.0)):
+        rear = common.bank_point(spec.head_rear_x(bank) + 10.0,
+                                 K["rail_along"], K["rail_lat"], bank)
+        front = common.bank_point(spec.BLOCK["x_front"] + 10.0, K["rail_along"],
+                                  K["rail_lat"], bank)
+        # The forward run is at x_front + 6. The accessory belt's tensioner
+        # occupies x -334 to -246 from y -172 to -66, and a rail forward of
+        # the block face crosses it on its way in to the thermostat.
         x_rail = spec.BLOCK["x_front"] + 6.0
-        wp.append(mesh.pipe(
-            [(-190.0, y_rail, z_top), (-208.0, y_rail - sgn * 4.0, z_top + 6.0),
-             (x_rail, y_rail - sgn * 4.0, z_top + 26.0),
-             (x_rail, sgn * 56.0, stat[2] - 6.0), (stat[0] + 30.0, sgn * 22.0,
-                                                   stat[2])], 14.0, SM, subdiv=3))
+        path = [rear, front,
+                (x_rail, front[1] * 0.92, front[2] + 30.0),
+                (x_rail, sgn * 56.0, stat[2] - 6.0),
+                (stat[0] + 30.0, sgn * 22.0, stat[2])]
+        wp.append(mesh.pipe(mesh.smooth_path(path, 2), K["rail_r"], SM))
     # thermostat back to the pump's eye
     wp.append(mesh.pipe(
         [(stat[0] + 26.0, 26.0, stat[2] - 10.0), (x_fwd, 90.0, stat[2] - 40.0),
@@ -438,18 +439,38 @@ def _fasteners():
 
 
 def _sensors():
-    """Crank and cam position sensors, knock sensors, oil and coolant pickups."""
+    """Crank and cam position sensors, knock sensors, oil and coolant pickups.
+
+    Each is a threaded body screwed 4 mm into the crankcase wall with its
+    axis through it, and its connector on the outer end. They were placed at
+    y +/-122, which is 20 mm off a wall at 101.5, all pointing +y -- so the
+    ones on the left grew into the engine -- with their connectors standing
+    3.6 mm off their own bodies.
+    """
     parts = []
-    spots = [(spec.BLOCK["x_front"] + 20.0, 122.0, -40.0),
-             (spec.BLOCK["x_rear"] - 40.0, -122.0, -30.0),
-             (0.0, 122.0, 20.0), (-90.0, -122.0, 20.0),
-             (120.0, 0.0, -spec.BLOCK["skirt_depth"] - 30.0)]
-    for (x, y, z) in spots:
-        v, f = mesh.cylinder(0.0, 46.0, 9.0, SM)
-        v = [(pz + x, px + y, py + z) for (px, py, pz) in v]
-        parts.append((v, f))
-        cv, cf = shapes.rounded_box(x, y * 1.12, z + 26.0, 26.0, 22.0, 20.0, 4.0)
+    wall = spec.BLOCK["half_width"] * 0.86
+    spots = [(spec.BLOCK["x_front"] + 20.0, 1.0, -40.0),
+             (spec.BLOCK["x_rear"] - 40.0, -1.0, -30.0),
+             (0.0, 1.0, 20.0), (-90.0, -1.0, 20.0)]
+    for (x, side, z) in spots:
+        v, f = mesh.cylinder(wall - 4.0, wall + 36.0, 9.0, SM)
+        v = [(-ly, lx, lz) for (lx, ly, lz) in v]            # axis along +y
+        if side < 0:
+            v = [(-px, -py, pz) for (px, py, pz) in v]       # half turn
+        parts.append(([(px + x, py, pz + z) for (px, py, pz) in v], f))
+        cv, cf = shapes.rounded_box(x, side * (wall + 44.0), z, 26.0, 20.0,
+                                    22.0, 4.0)
         parts.append((cv, cf))
+    # and the oil temperature sensor, up through the floor of the pan's well,
+    # just forward of the drain plug
+    a = spec.ANCILLARY
+    floor = -spec.BLOCK["skirt_depth"] - 22.0 - a["sump_depth"]
+    xs = a["sump_len"] * 0.18 - 32.0
+    v, f = mesh.cylinder(-4.0, 36.0, 9.0, SM)
+    v = [(lz + xs, ly, -lx + floor) for (lx, ly, lz) in v]   # axis down
+    parts.append((v, f))
+    cv, cf = shapes.rounded_box(xs, 0.0, floor - 44.0, 26.0, 22.0, 20.0, 4.0)
+    parts.append((cv, cf))
     return {"sensors": mesh.join(*parts)}
 
 

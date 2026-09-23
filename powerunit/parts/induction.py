@@ -70,7 +70,12 @@ def _injection():
         port = gaspath.intake_port(bank, x)
         runner = gaspath.runner_path(bank, x)[-2]
         d, lat = common.bank_dir(bank), common.bank_lat(bank)
-        tip = tuple((port[k] + runner[k]) / 2 for k in range(3))
+        # The nozzle is in the runner's crown half way along it, 10 mm above
+        # the centreline. On the centreline the body leant out across the
+        # trumpet flares and grazed them; the runner no longer arches up to
+        # meet it the way the old hairpin did.
+        tip = tuple((port[k] + runner[k]) / 2 + (10.0 if k == 2 else 0.0)
+                    for k in range(3))
         # The rail, and then the injector aimed at it.
         #
         # The whole system used to run straight out along -lat from the tip:
@@ -137,14 +142,18 @@ def _injection():
     # `audit_intersect` allowed it, because ("fuel_rail_", "block_") and the
     # crank are both on its list of overlaps that are meant to be there.
     #
-    # x 226 is aft of the block banks (222), the heads (218) and the water
-    # outlets, and forward of the bellhousing flange (235). 110 mm up clears
-    # the crankcase, which stops at z 28, and stays under the inverter at 153.
-    rear = spec.BLOCK["x_rear"] - 6.0
-    over = 110.0
+    # x 231.5 is aft of the block banks (222), the heads (218), the water
+    # outlets, the intake camshafts' tails (228) and the direct-injection
+    # crossover and supply line at 224, and forward of the bellhousing flange
+    # (235) -- a 7 mm slot, which a 6 mm low-pressure line fits. It crosses at z 145, over the
+    # direct-injection crossover at 132 and under the inverter at 153. It
+    # used to dip to 110 on the way, down through the vee between the banks
+    # and across the other crossover's riser, 11 mm into each.
+    rear = spec.BLOCK["x_rear"] - 0.5
+    over = 145.0
     out["fuel_rail_pfi_crossover"] = mesh.pipe(
         [ends[0], (rear, *ends[0][1:]), (rear, ends[0][1], over),
-         (rear, ends[1][1], over), (rear, *ends[1][1:]), ends[1]], 4.0, SM,
+         (rear, ends[1][1], over), (rear, *ends[1][1:]), ends[1]], 3.0, SM,
         subdiv=3)
     return out
 
