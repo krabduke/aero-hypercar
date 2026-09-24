@@ -29,6 +29,8 @@ import _intersect
 # hose clamps onto the engine it feeds. Each entry says the overlap IS the
 # joint. Anything not listed is a part in another part's way.
 EXPECTED = [
+    # the nose camera pods' feet are bolted through the skin
+    ("cameras", "tub"),
     # the brake hard line is P-clipped along the top of each upper wishbone's
     # forward leg, the clips' bolts into the leg; the flexible hose enters
     # the brake cooling drum through its grommet to reach the caliper

@@ -335,7 +335,7 @@
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 53,
-   "faces": 46632
+   "faces": 47442
   },
   {
    "key": "10 Cockpit",
@@ -2113,9 +2113,9 @@
   "cameras": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 635.0,
+   "x0": 633.4,
    "x1": 2525.0,
-   "f": 510
+   "f": 1320
   },
   "cooling_louvres": {
    "g": "09 Aero Detail",

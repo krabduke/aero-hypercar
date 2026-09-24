@@ -182,7 +182,7 @@ bargeboard_r2,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1226.0,1739.7,382.8,50
 bargeboard_r3,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1272.0,1716.4,345.2,478.8,172.0,308.0
 bargeboard_r4,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1318.0,1693.1,319.9,455.7,198.0,262.0
 beam_wing,03 Wings,carbon_gloss,,,,,,,,,1008,868,4281.1,4615.1,-550.0,550.0,669.6,789.4
-cameras,09 Aero Detail,carbon_matte,,,,,,,,,588,510,635.0,2525.0,-145.0,145.0,407.0,1029.5
+cameras,09 Aero Detail,carbon_matte,,,,,,,,,1260,1320,633.4,2525.0,-148.9,148.9,506.0,1029.5
 cooling_louvres,09 Aero Detail,carbon_matte,,,,,,,,,1656,1608,3190.0,3650.2,-170.3,170.3,626.4,705.9
 exhaust,09 Aero Detail,steel,,,,,,,,,7316,7256,2885.6,4530.0,-209.9,132.8,486.0,649.4
 fan_fairing_l,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,-657.9,-234.0,240.0,664.0

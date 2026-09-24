@@ -196,9 +196,28 @@ def _details():
     out["mirrors"] = mesh.join(*mirrors)
 
     cams = []
+    # The two on the nose are small streamlined pods standing on the skin,
+    # set from the skin as meshed. They were boxes at a fixed height that
+    # the nose had grown over, and only a dark sliver of each showed.
     for sgn in (-1.0, 1.0):
-        cv, cf = shapes.rounded_box(D["camera_x"], sgn * 122.0, D["camera_z"], 130.0, 46.0, 46.0)
-        cams.append((cv, cf))
+        best = min(range(20, 90), key=lambda a: abs(
+            abs(chassis.skin_point(D["camera_x"], a)[1]) - 122.0))
+        ang = best if sgn > 0 else 180 - best
+        # laid along the skin, which climbs steeply here, its underside
+        # on it
+        p0 = chassis.skin_point(D["camera_x"] - 55.0, ang, 20.9)
+        p1 = chassis.skin_point(D["camera_x"] + 55.0, ang, 20.9)
+        pv, pf = mesh.revolve_closed(
+            [(110.0, 0.0), (104.0, 14.0), (80.0, 19.0), (40.0, 20.0),
+             (14.0, 17.0), (3.0, 11.0), (0.0, 0.0)], 28)
+        d = tuple(p1[k] - p0[k] for k in range(3))
+        cams.append((shapes.orient(pv, p0, d), pf))
+        # and the foot it is bolted through the skin by
+        top = chassis.skin_point(D["camera_x"], ang, 20.0)
+        bot = chassis.skin_point(D["camera_x"], ang, -3.0)
+        fv, ff = mesh.cylinder(0.0, math.dist(top, bot), 7.0, 14)
+        cams.append((shapes.orient(fv, bot, tuple(top[k] - bot[k]
+                                                   for k in range(3))), ff))
     # The T-camera sits on top of the roll hoop, where it looks down the
     # car. Just aft of the cockpit at z 820 it was 56 mm inside the airbox.
     RH = spec.ROLL_HOOP
