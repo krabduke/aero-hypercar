@@ -1,7 +1,6 @@
 """Flywheel, clutch, bellhousing, oil and water pumps.
 
-These were five tubes. A flywheel with no ring gear cannot be started, a
-clutch with no diaphragm cannot be released, and a water pump that is a
+These were five tubes. A clutch with no diaphragm cannot be released, and a water pump that is a
 cylinder is a tin can -- a real one is a spiral scroll, because the passage
 has to gain area as flow joins it or the impeller just churns.
 """
@@ -32,7 +31,8 @@ def build():
 
 
 def _flywheel():
-    """A stepped disc with a starter ring gear shrunk onto it.
+    """A stepped disc. It carries no starter ring gear: the MGU-K starts
+    the engine.
 
     The friction face is flat and the back is relieved to get the weight out
     of it, because every gram at 96 mm radius is inertia the engine has to
@@ -58,7 +58,6 @@ def _flywheel():
          (x, R - 12.0), (x + 5.0, R - 16.0),         # relieved back
          (x + 5.0, 34.0), (x, 28.0)], SEG)
     parts = [(v, f)]
-    parts.append(shapes.gear_ring(x - 1.0, x + 9.0, R, R + 7.5, 104, R - 2.0))
     # crank flange bolts and the lightening pockets between them
     parts.append(mesh.bolt_ring(x + t, 30.0, 8, head_r=7.0, head_h=5.0))
     for i in range(8):
@@ -141,12 +140,14 @@ def _bellhousing():
     # gearbox's bolt circle, and that cone IS the joint. Without it the
     # gearbox and clutch hung off the back of the engine touching nothing.
     #
-    # The cone starts at r 104, which is 1 mm outside the starter ring gear,
+    # The cone starts at r 104, clear of the flywheel's rim,
     # and lands 2 mm inside the block's rear face. The crankcase is a box
     # 202 mm across and 124 deep, so its rear face reaches r 139 at the
     # bottom corners and r 105 at the top ones -- that corner is what the
     # bell bolts to, and a circular flange at r 140 sailed past all of it.
-    xb = spec.BLOCK["x_rear"] - 2.0
+    # On the bedplate's rear face, which stands 0.2 mm proud of the block's:
+    # at 2 mm inside it the cone was 3 mm into the bedplate.
+    xb = spec.BLOCK["x_rear"]
     parts = [mesh.revolve_closed(
         [(xb, 104.0), (xb, 116.0),
          (x + 6.0, R - 2.0), (x + 6.0, R - 13.0)], SEG)]
@@ -163,14 +164,6 @@ def _bellhousing():
         parts.append(([(px + x + L / 2, py + math.cos(a) * (R + 3.0),
                         pz + math.sin(a) * (R + 3.0))
                        for (px, py, pz) in rv], rf))
-    # starter aperture: a boss on the barrel with the pinion poking through
-    a = math.radians(215.0)
-    cy, cz = math.cos(a) * (R - 4.0), math.sin(a) * (R - 4.0)
-    bv, bf = mesh.revolve_open(
-        [(0.0, 0.0), (0.0, 30.0), (16.0, 27.0), (16.0, 0.0)], SM,
-        cap_start=True, cap_end=True)
-    parts.append(([(px + x + 10.0, py + cy, pz + cz)
-                   for (px, py, pz) in bv], bf))
     return {"bellhousing": mesh.join(*parts)}
 
 
@@ -241,9 +234,7 @@ def _oil_pump():
 def _water_pump():
     """A centrifugal pump: a spiral scroll, a vaned impeller inside it, an
     axial inlet eye and a tangential outlet."""
-    # Aft of the MGU-K rotor, which occupies x -340..-232 on the crank
-    # nose. The pump's outlet scroll swings inboard to 62 mm from the
-    # centreline, so it cannot share a station with an 84 mm rotor.
+    # Low on the right beside the timing case, well outboard of the MGU-K.
     C = spec.COOLANT
     x0 = C["pump_x"]
     # Outboard of the MGU-K, which is a 84.5 mm radius rotor on the crank
@@ -260,13 +251,12 @@ def _water_pump():
     parts.append(mesh.revolve_closed(
         [(-40.0, 0.0), (-16.0, 0.0), (-16.0, 20.0), (-24.0, 17.0),
          (-24.0, 13.0), (-40.0, 13.0)], SM))
-    # the nose and its belt pulley. The pump is belt driven and stopped 33 mm
-    # short of the accessory drive, so the one thing that makes it turn was
-    # not connected to it.
-    parts.append(mesh.tube(-80.0, -38.0, 0.0, 12.0, SM))
-    parts.append(mesh.revolve_closed(
-        [(-80.0, 13.0), (-80.0, 44.0), (-76.0, 46.0), (-66.0, 46.0),
-         (-62.0, 44.0), (-62.0, 13.0)], SEG))
+    # the nose and its belt pulley
+    # The pulley is on the accessory belt's plane, spec.FRONT["belt_x"].
+    from parts.plumbing import pulley
+    xp = spec.FRONT["belt_x"] - x0
+    parts.append(mesh.tube(xp - 8.0, -38.0, 0.0, 12.0, SM))
+    parts.append(pulley(xp, 46.0, bore=11.0))
     # impeller: a hub with six curved vanes
     parts.append(mesh.revolve_closed(
         [(-3.0, 0.0), (10.0, 0.0), (10.0, 9.0), (-1.0, 13.0),
@@ -290,8 +280,10 @@ def _water_pump():
     parts.append(mesh.revolve_closed(
         [(10.0, 13.0), (30.0, 13.0), (30.0, 19.0), (33.0, 19.0),
          (33.0, 23.0), (10.0, 23.0)], SM))
-    ov, of = mesh.pipe([(0.0, -R * 1.18, 0.0), (0.0, -R * 1.6, 26.0),
-                        (0.0, -R * 1.7, 62.0)], [20.0, 18.5, 17.0], SM,
+    # the outlet runs inboard and down, toward the crankcase's front face
+    # under the timing case, which is where the water goes in
+    ov, of = mesh.pipe([(0.0, -R * 1.18, 0.0), (0.0, -R * 1.55, -8.0),
+                        (6.0, -R * 1.9, -14.0)], [20.0, 18.5, 17.0], SM,
                        subdiv=3)
     parts.append((ov, of))
     parts.append(mesh.flange(0.0, 0.0, 0.0, 0.0, 0) if False else

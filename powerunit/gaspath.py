@@ -156,6 +156,19 @@ def primary_path(pair, bank, x):
     # 60 mm across and has to get from the middle of the vee to the outside
     # of the engine through the plane these two climb in.
     lean = -0.18 if abs(x) > abs(tx) else 0.14
+    # The two pipes that climb past their turbine's volute swing wider round
+    # it: at 1.07 of the port's station they ran 8 to 12 mm into the scroll.
+    _i, _tx, _s, ib = turbo_side(pair)
+    xv = tx - ib * T["housing_w"] * 0.6
+    if abs(x - xv) < 40.0:
+        # ...and stay out until they are over the scroll's inlet neck, which
+        # stands to y 95 and z 338 on the collector side
+        return [start,
+                (x + (tx - x) * lean * 0.6, start[1] * 1.26, T["z"] - 22.0),
+                (x + (tx - x) * lean, start[1] * 1.37, T["z"] + 46.0),
+                (x + (tx - x) * lean * 0.5, start[1] * 1.34, T["z"] + 86.0),
+                (x + (tx - x) * 0.58, start[1] * 1.00, T["z"] + 102.0),
+                end]
     return [start,
             (x + (tx - x) * lean, start[1] * 1.07, T["z"] + 46.0),
             (x + (tx - x) * 0.58, start[1] * 1.00, T["z"] + 96.0),

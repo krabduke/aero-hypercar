@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import spec
 import mesh
+import gaspath
 
 SM = spec.RES["small_revolve"]
 import shapes
@@ -94,7 +95,7 @@ def _hv_loom():
     # bolts on: across the flywheel in every render of the engine, and
     # through the gearbox in the car.
     flank_l, flank_r = 252.0, 176.0
-    drop_x = 300.0
+    drop_x = 280.0
     under = -196.0
     out = {}
     # Both connectors on the inverter's aft face, side by side. One was on
@@ -117,96 +118,92 @@ def _hv_loom():
                          bz + bh / 2 + 7.0, 34.0, 20.0, 14.0, 2)
         for sgn in (1.0, -1.0)])
 
-    # inverter down the flank to the pack under the sump
+    # Inverter down the bellhousing's flank and under the sump to the pack.
+    #
+    # The sump's floor is at z -180 and the pack's lid at -218, the whole
+    # length of the engine, and that gap is where these run -- tight to the
+    # bell on the way down and between the pan and the pack on the way
+    # along. They used to drop at y 176 and 252 and run forward at -196
+    # outboard of everything: with the MGU-K lead they framed the engine in
+    # orange, the widest and lowest things on it.
+    gap = -199.0
     for sgn, tag in ((-1.0, "1"), (1.0, "2")):
         src = plug(sgn)
         term = (bx - sgn * bw * 0.3, by + sgn * bd * 0.38, bz + bh / 2 + 7.0)
-        fl = flank_l if sgn < 0 else flank_r
         path = [src,
                 (drop_x, sgn * 118.0, iz - ih * 0.40),
-                (drop_x, sgn * fl, 10.0),
-                (drop_x, sgn * fl, -130.0),
-                (spec.BLOCK["x_rear"] * 0.70, sgn * fl, under),
-                (term[0] + sgn * 40.0, term[1] * 1.34, under + 6.0),
+                (drop_x, sgn * 168.0, 40.0),
+                (drop_x, sgn * 169.0, -40.0),
+                (drop_x - 26.0, sgn * 146.0, -150.0),
+                (term[0] + sgn * 60.0 + 30.0, sgn * 128.0, gap),
+                (term[0] + 30.0, term[1], gap),
                 term]
-        # subdiv 16, not 4. A high-voltage run is a bundle in a conduit
-        # clipped to the engine; at four subdivisions between waypoints that
-        # are 100 to 300 mm apart it came out as a polygon in space, and the
-        # three orange runs together read as a roll cage round the engine
-        # rather than as its loom.
         out[f"hv_store_{tag}"] = mesh.pipe(
             mesh.smooth_path(path, 3), 5.0, SM, subdiv=2)
 
-    # inverter forward along the flank to the MGU-K on the crank nose
-    # forward of the timing cover, which spans x -284..-266: a terminal you
-    # cannot get a spanner to is not a terminal
-    motor = (Y["mguk_x"] - 14.0, -Y["mguk_r"], 0.0)
+    # and forward under the sump to the MGU-K on the crank nose, coming in
+    # to its connector from outboard, round the underside of the timing case
+    motor = (Y["mguk_x"] - 4.0, -Y["mguk_r"], 0.0)
     src = plug(-1.0)
     path = [src,
-            (drop_x - 6.0, -124.0, iz - ih * 0.60),
-            (drop_x - 2.0, -(flank_l + 14.0), -20.0),
-            (drop_x - 16.0, -(flank_l + 14.0), -150.0),
-            (spec.BLOCK["x_rear"] * 0.55, -(flank_l + 14.0), under - 8.0),
-            (spec.BLOCK["x_front"] * 0.55, -(flank_l + 14.0), under - 8.0),
-            # Round the OUTSIDE of the timing cover, which is a 152 mm disc
-            # on the crank from x -284 to -266. The MGU-K is forward of it,
-            # so a cable that comes inboard before it is past the cover goes
-            # through the cover -- and rounding the corners of this run, which
-            # is what stopped it reading as a cage, pulled it in far enough
-            # to do exactly that.
-            (spec.BLOCK["x_front"] - 26.0, -222.0, -148.0),
-            (spec.BLOCK["x_front"] - 62.0, -196.0, -92.0),
-            (Y["mguk_x"] - 8.0, -132.0, -40.0),
+            (drop_x - 4.0, -120.0, iz - ih * 0.55),
+            (drop_x - 2.0, -178.0, 30.0),
+            (drop_x - 4.0, -179.0, -50.0),
+            (drop_x - 30.0, -120.0, -160.0),
+            (spec.BLOCK["x_rear"] - 60.0, -60.0, gap),
+            (spec.BLOCK["x_front"] + 40.0, -60.0, gap),
+            (spec.FRONT["case_front"] - 10.0, -80.0, -172.0),
+            (motor[0], -126.0, -70.0),
+            (motor[0], -118.0, 0.0),
             motor]
     out["hv_motor_k"] = mesh.pipe(
         mesh.smooth_path(path, 3), 6.0, SM, subdiv=2)
     out["hv_motor_k_connector"] = shapes.connector(*motor, 24.0, 20.0, 18.0, 3)
 
-    # and up over the cam cover into the vee for each MGU-H. The vee itself is
-    # full of turbocharger, so the run goes along the top of the cover -- clear
-    # of the plenum below it and the collector inboard of it -- and drops in
-    # at the turbo's own station.
+    # And one to each MGU-H. The turbos' bearing housings are roofed over
+    # completely -- the primaries arch over them on one side, the collector
+    # and its heat blanket sit on top, the compressor inlet on the other --
+    # so the lead cannot reach the machine itself. It lands on a bulkhead
+    # connector on top of the collector's blanket, over the turbine, and the
+    # link down to the stator runs inside the wrap.
+    #
+    # They used to be dropped in between the primaries from a loop 390 mm up
+    # over the left bank: the front one through primary 1, the rear one
+    # through primary 7, and both hairpinning back over the vee.
+    #
+    # From each connector the lead runs aft along the top of the engine,
+    # outboard of the two compressor inlets, which stand up the middle of
+    # the vee to z 391, and over the primaries, which peak at 365; then down
+    # behind the rear turbine, outboard of the inverter, into its plug.
+    src = plug(-1.0)
+    D = gaspath.COLLECTOR_DRUM
     for index, x in enumerate(spec.TURBO["x"]):
-        # Both on the -y side of their turbo: the collector drops onto the
-        # volute's inlet on the +y side, so that side is taken.
-        src = plug(-1.0 if index % 2 == 0 else 1.0)
-        sgn = -1.0
-        term = (x, sgn * Y["mguh_r"], spec.TURBO["z"])
-        top = spec.TURBO["z"] + Y["mguh_r"] + 86.0
-        # Both leads come forward from the inverter at the back, so both
-        # reach their turbo from behind it. The approach was offset by the
-        # side's sign, which sent the front lead 112 mm past its turbo and
-        # the rear one past its own before each turned back: a loop over
-        # each turbo.
-        path = [src,
-                (spec.BLOCK["x_rear"] + 10.0, sgn * 170.0, 250.0)]
-        if spec.BLOCK["x_rear"] * 0.60 > x + 70.0:
-            path.append((spec.BLOCK["x_rear"] * 0.60, sgn * 196.0, 274.0))
-        if index % 2 == 0:
-            path += [(x + 60.0, sgn * 182.0, top - 4.0),
-                     (x + 24.0, sgn * 120.0, top + 24.0),
-                     # over the primaries, which peak at z 368, before
-                     # dropping in
-                     (x, sgn * 50.0, top + 18.0),
-                     term]
-        else:
-            # The aft turbo's wastegate fills this side above the shaft from
-            # z 284, and its collector the other: in underneath the wastegate
-            path += [(x + 60.0, sgn * 182.0, top - 4.0),
-                     (x + 12.0, sgn * 112.0, spec.TURBO["z"] + 14.0),
-                     (x, sgn * 60.0, spec.TURBO["z"] + 4.0),
-                     term]
+        c = gaspath.collector_path(0 if x < 0 else 2)[0]
+        top = c[2] + D["r"] + 4.0
+        term = (c[0] + 9.0, c[1], top + 7.0)
+        out[f"hv_motor_h_connector_{index}"] = shapes.connector(
+            c[0], c[1], top + 7.0, 18.0, 16.0, 14.0, 3)
+        lane = -90.0 - 8.0 * index         # two leads side by side
+        path = [term, (term[0] + 18.0, -26.0, top + 8.0)]
+        if x < 0:
+            path += [(-104.0, lane, top + 6.0), (104.0, lane, top + 6.0)]
+        path += [(214.0, lane - 4.0, top - 2.0),
+                 (248.0, lane - 8.0, top - 28.0),
+                 (274.0, lane - 12.0, top - 76.0),
+                 (src[0] + 14.0, lane - 14.0, src[2] + 40.0),
+                 (src[0] + 4.0, -116.0 + 2.0 * index, src[2] + 12.0 - 8.0 * index),
+                 (src[0], src[1], src[2] + 4.0 - 8.0 * index)]
         out[f"hv_motor_h_{index}"] = mesh.pipe(
             mesh.smooth_path(path, 3), 4.0, SM, subdiv=2)
-        out[f"hv_motor_h_connector_{index}"] = shapes.connector(
-            *term, 18.0, 16.0, 14.0, 3)
     return out
 
 
 def _mguk():
     """Crankshaft motor-generator packaging envelope."""
+    # bored to the nose it is keyed to: at nose_r + 4 it was a ring hanging
+    # round the shaft that drives it
     v, f = mesh.tube(Y["mguk_x"] - Y["mguk_len"] / 2, Y["mguk_x"] + Y["mguk_len"] / 2,
-                     spec.CRANK["nose_r"] + 4.0, Y["mguk_r"], SEG)
+                     spec.CRANK["nose_r"], Y["mguk_r"], SEG)
     fins = []
     for k in range(28):
         a = 2 * math.pi * k / 28
@@ -225,7 +222,7 @@ def _mguh():
         # on a 9 mm shaft it was a sleeve hanging in the bearing housing with
         # a 13 mm annulus between it and the thing it is supposed to drive.
         v, f = mesh.tube(x - Y["mguh_len"] / 2, x + Y["mguh_len"] / 2,
-                         spec.TURBO["shaft_r"] * 0.86, Y["mguh_r"], SM)
+                         spec.TURBO["shaft_r"], Y["mguh_r"], SM)
         v = [(px, py, pz + spec.TURBO["z"]) for (px, py, pz) in v]
         parts.append((v, f))
     return {"mguh": mesh.join(*parts)}
@@ -237,7 +234,7 @@ def _electronics():
     ix, iy, iz = Y["inverter_pos"]
     sx, sy, sz = Y["inverter"]
     out["inverter"] = shapes.finned_case(ix, iy, iz, sx, sy, sz,
-                                         n_fins=11, fin_h=9.0, fin_t=3.4,
+                                         n_fins=11, fin_h=7.0, fin_t=3.4,
                                          r=7.0, axis="x")
     out["inverter_connectors"] = mesh.join(
         shapes.connector(ix - sx * 0.5 - 12.0, iy, iz + sz * 0.1, 28.0, 22.0, 16.0, 8),

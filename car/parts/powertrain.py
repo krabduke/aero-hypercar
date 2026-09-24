@@ -90,8 +90,12 @@ def build():
     # cable runs 51 mm past the bellhousing flange. With it installed the
     # gearbox was hung off the end of a wire instead of bolted to the bell,
     # and the two structural halves of the car stopped touching.
+    #
+    # The motor-generators stay: they are the engine's own machines, not
+    # power electronics. The MGU-K is on the crank nose and carries the
+    # crank sensor's bracket, and it is what starts the engine.
     CAR_PROVIDES = ("battery", "battery_modules", "battery_terminals",
-                    "inverter", "inverter_connectors", "mguk", "mguh",
+                    "inverter", "inverter_connectors",
                     "hv_store", "hv_motor")
     # The castings the engine cuts -- its bores out of the block, its
     # chambers out of the heads -- are carried as parts of their own with
@@ -222,12 +226,31 @@ def build():
     out["fuel_cell"] = _bladder(fx, fy, fz, sx, sy, sz)
     # ...and the line carries on to the engine. It used to stop at x 2716
     # with the engine's front face at 2868, so the cell fed nothing.
+    #
+    # It feeds the engine's low-pressure side, the port-injection rail, whose
+    # front end is on the right flank. Through the bulkhead the hose becomes
+    # a 16 mm line that climbs the bulkhead's aft face -- forward of the
+    # crank damper and the belt, which are the front of the engine -- and
+    # crosses to the right over the top radiator hose, then runs aft outboard
+    # of the timing case to the rail. It used to end in the middle of the
+    # timing case, which is hollow.
+    bh_aft = T_REAR + 11.0             # the engine bulkhead's aft eyelets
+    ex, ez = PT["engine_x"], PT["engine_z"]
+    rail = (ex - 161.5, 244.9, ez + 136.0)     # the rail's front end
+    lane_x = bh_aft + 9.0
+    z_run = ez + 134.0
+    z_top = ez + 188.0                          # over the top hose
     out["fuel_fittings"] = mesh.join(
         mesh.pipe([(fx + sx * 0.3, 0.0, fz + sz * 0.5),
                    (fx + sx * 0.6, 0.0, fz + sz * 0.62),
                    # down through the engine bulkhead's aperture
                    (T_REAR - 50.0, 0.0, fz + sz * 0.25),
-                   (PT["engine_x"] - 280.0, 0.0, fz + sz * 0.30)], 24.0, 10),
+                   (bh_aft - 6.0, 0.0, z_run)], 24.0, 10),
+        mesh.pipe([(bh_aft - 20.0, 0.0, z_run), (lane_x, 0.0, z_run),
+                   (lane_x, 0.0, z_top), (lane_x, 252.0, z_top),
+                   (rail[0] - 70.0, 252.0, z_top),
+                   (rail[0] - 24.0, rail[1], rail[2]), rail], 8.0, 12,
+                  bend=18.0),
         shapes.rounded_box(fx - sx * 0.3, 0.0, fz + sz * 0.5 + 18.0,
                            110.0, 110.0, 36.0, 12.0))
     return out

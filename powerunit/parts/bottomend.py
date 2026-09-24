@@ -90,8 +90,8 @@ def _crankshaft():
     parts.append(mesh.tube(x1, spec.FLANGE_X, 0.0, C["main_r"], SEG))
     parts.append(mesh.tube(spec.FLANGE_X, spec.FLYWHEEL_X, 0.0, C["flange_r"], SEG))
     return {"crankshaft": mesh.join(*parts),
-            # between the damper and the timing case, not under the damper
-            "crank_trigger": _crank_trigger(x0 - C["nose_len"] + 40.0)}
+            # between the damper and the MGU-K
+            "crank_trigger": _crank_trigger(spec.FRONT["trigger_x"])}
 
 
 def _crank_trigger(x):
@@ -121,10 +121,12 @@ def _crank_trigger(x):
                         - math.sin(a) * pz,
                         math.sin(a) * (rw - 3.0) + math.cos(a) * pz)
                        for (px, py, pz) in tv], tf))
-    # the sensor on its bracket, looking at the teeth across an air gap
+    # the sensor on its bracket, looking at the teeth across an air gap. The
+    # bracket bolts to the MGU-K's front face, which is 5 mm behind the
+    # wheel, so the sensor is slim enough to sit in that gap.
     sv, sf = mesh.revolve_closed(
-        [(0.0, 0.0), (34.0, 0.0), (34.0, 7.0), (30.0, 9.5),
-         (10.0, 9.5), (8.0, 13.0), (0.0, 13.0)], SM)
+        [(0.0, 0.0), (34.0, 0.0), (34.0, 3.6), (30.0, 4.4),
+         (10.0, 4.4), (8.0, 5.0), (0.0, 5.0)], SM)
     parts.append(([(pz + x, py + 0.0, -px + rw + 35.0)
                    for (px, py, pz) in sv], sf))
     parts.append(shapes.rounded_box(x, 0.0, rw + 44.0, 10.0, 34.0, 22.0,
@@ -340,11 +342,10 @@ def _damper():
     the front of it at all.
     """
     C = spec.CRANK
-    # ahead of the timing cover, which closes at x = -266 with its front face
-    # at -284. The damper was at -300..-260 and so was buried in it; the crank
-    # nose is 128 mm long now, which is what lets a damper mount in front of
-    # the case the way it does on a real engine.
-    x0 = -352.0
+    # at the front of the stack in spec.FRONT, ahead of the trigger wheel,
+    # the MGU-K and the timing case. Its inertia ring is also the crank
+    # pulley: the accessory belt runs in the grooves cut round it.
+    x0 = spec.FRONT["damper_x0"]
     parts = []
 
     def lathe(profile, seg=36):
@@ -352,8 +353,9 @@ def _damper():
         return ([(px, py, pz) for (px, py, pz) in v], f)
 
     # hub, clamped on the nose
-    parts.append(lathe([(x0 + 4.0, 0.0), (x0 + 4.0, C["nose_r"] + 3.0),
-                        (x0 + 40.0, C["nose_r"] + 3.0), (x0 + 40.0, 0.0)], 28))
+    parts.append(lathe([(x0 + 4.0, C["nose_r"]), (x0 + 4.0, C["nose_r"] + 3.0),
+                        (x0 + 40.0, C["nose_r"] + 3.0), (x0 + 40.0, C["nose_r"])],
+                       28))
     # the web out to the inertia ring
     parts.append(lathe([(x0 + 10.0, C["nose_r"] + 3.0),
                         (x0 + 10.0, 74.0), (x0 + 22.0, 74.0),

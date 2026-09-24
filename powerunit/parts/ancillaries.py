@@ -86,13 +86,19 @@ def _oil_system():
     # screwed itself inboard: 140 mm of canister through the block wall,
     # across the crankcase and into the crankshaft, with the cooling fins
     # left outside on their own.
+    #
+    # 82 mm long, not 140: the cooler stands outboard of it, and the
+    # canister's end lands on the cooler's inboard face -- the oil goes
+    # straight from one into the other. At 140 the canister ran 52 mm on
+    # through the cooler's plate pack.
+    L = 82.7
     parts.append(_lathe(
-        [(-140.0, 0.0), (-140.0, 46.0), (-132.0, 54.0), (-24.0, 54.0),
+        [(-L, 0.0), (-L, 46.0), (-L + 8.0, 54.0), (-24.0, 54.0),
          (-18.0, 58.0), (-8.0, 58.0), (0.0, 52.0), (0.0, 0.0)],
         x, y - 6.0, zc, axis="y", seg=28))
     for k in range(16):
         a = 2 * math.pi * k / 16
-        fv, ff = mesh.cylinder(0.0, 104.0, 3.4, 6)
+        fv, ff = mesh.cylinder(0.0, L - 36.0, 3.4, 6)
         fv = [(56.0 * math.cos(a) + pz, -px, 56.0 * math.sin(a) + py)
               for (px, py, pz) in fv]
         parts.append(([(px + x, py + y - 26.0, pz + zc)
@@ -104,56 +110,60 @@ def _oil_system():
     # under the sump. At 58 mm off the block the cooler was inside it.
     cx, cy, cz = -10.0, -(B["half_width"] + 140.0), -74.0
     parts = [shapes.core(cx, cy, cz, 190.0, 58.0, 76.0, n_plates=14)]
-    for dx in (-84.0, 84.0):
+    # the inlet union at the forward end; the outlet is the face the filter
+    # stands on
+    for dx in (-84.0,):
         parts.append(_lathe(
             [(0.0, 0.0), (30.0, 0.0), (30.0, 17.0), (22.0, 17.0),
              (22.0, 13.0), (0.0, 13.0)],
             # from 2 mm into the core's face, not 5 mm off it
             cx + dx, cy + 27.0, cz, axis="y", seg=14))
-    # the bracket tying it back to the block
-    parts.append(shapes.rounded_box(cx, cy + 42.0, cz + 22.0,
-                                    150.0, 34.0, 14.0, 4.0))
+    # the bracket tying its forward end back towards the block, forward of
+    # the filter
+    parts.append(shapes.rounded_box(cx - 62.0, cy + 42.0, cz + 22.0,
+                                    66.0, 34.0, 14.0, 4.0))
     out["oil_cooler"] = mesh.join(*parts)
     return out
 
 
 def _cooling():
-    """Thermostat and its housing, on the engine's front face.
+    """Thermostat and its housing, on the timing case's front face.
 
-    Up at z = 104, not 31: the crank nose runs down the centreline at the
-    front of the engine and the housing was sitting on top of it.
+    The heads' water comes forward through the case and out of the boss in
+    its vee, which is where the housing bolts on. The housing carries the
+    stub the radiator hose clamps to, on its left, and the bypass port back
+    to the pump on its right; detail.py plumbs both.
 
-    Then back down to 110 from 190, because 190 is in the vee. At that height
-    the housing was resting on the left bank's exhaust flange and touching
-    the tailpipes, and 148 mm from the water outlets it is supposed to be
-    fed by -- a coolant part living in the exhaust, connected to no part of
-    the cooling system. The station comes from spec.COOLANT now, which is
-    also what detail.py routes the hoses to.
+    It used to stand behind the case on the block's front face, 104 mm
+    across in a gap between the two banks' gear trains that is 30 mm wide at
+    that height -- and the train had to be left not meshing to make room.
     """
     out = {}
     C = spec.COOLANT
-    x = C["stat_x"]
+    x0 = C["stat_x"]
+    x1 = spec.FRONT["case_front"]
     zc = C["stat_z"]
     parts = []
     parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 46.0), (12.0, 52.0), (44.0, 52.0),
-         (52.0, 44.0), (52.0, 0.0)], x, 0.0, zc, axis="x", seg=24))
-    # the outlet stub the top hose clamps onto, with its bead
+        [(0.0, 0.0), (0.0, 30.0), (4.0, 34.0), (x1 - x0 - 6.0, 34.0),
+         (x1 - x0 - 6.0, 42.0), (x1 - x0, 42.0), (x1 - x0, 0.0)],
+        x0, 0.0, zc, axis="x", seg=28))
+    xm = x0 + 11.0
+    # the radiator hose stub, with its bead
     parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 27.0), (34.0, 27.0), (38.0, 31.0),
-         (44.0, 31.0), (48.0, 27.0), (62.0, 27.0), (62.0, 0.0)],
-        # x - 32, not - 50: the stub's mouth was at -298 and the crank
-        # trigger wheel occupies -313 to -287 at this height, so the top
-        # hose connection was inside the trigger
-        x - 32.0, 0.0, zc, axis="x", seg=20))
-    # the thermostat itself, inside: wax capsule, frame and jiggle pin
+        [(0.0, 0.0), (0.0, 14.0), (34.0, 14.0), (38.0, 17.0),
+         (42.0, 17.0), (46.0, 14.0), (52.0, 14.0), (52.0, 0.0)],
+        xm, -28.0, zc, axis="y", seg=18, flip=True))
+    # the bypass port
     parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 34.0), (6.0, 36.0), (12.0, 34.0), (12.0, 20.0),
-         (30.0, 16.0), (30.0, 0.0)], x + 6.0, 0.0, zc, axis="x", seg=18))
-    for k in range(6):
-        a = 2 * math.pi * k / 6
-        bv, bf = mesh.cylinder(0.0, 16.0, 5.0, 8)
-        bv = [(px + x, 42.0 * math.cos(a) + py, 42.0 * math.sin(a) + pz + zc)
+        [(0.0, 0.0), (0.0, 13.0), (18.0, 13.0), (18.0, 0.0)],
+        xm, 28.0, zc, axis="y", seg=18))
+    # four bolts through the flange into the case, clear of the two ports
+    # and the header tank on top
+    for k in range(4):
+        a = 2 * math.pi * (k + 0.5) / 4
+        bv, bf = mesh.cylinder(x1 - 10.0, x1 - 4.0, 4.5, 8)
+        bv = [(px, 38.0 * math.cos(a) + py, 38.0 * math.sin(a) + pz + zc)
               for (px, py, pz) in bv]
         parts.append((bv, bf))
     out["thermostat"] = mesh.join(*parts)
@@ -259,16 +269,19 @@ def _charge():
     # of the vee, which is neither on that pipe nor on any other -- it was a
     # valve bolted to the air.
     parts = []
-    bx, by, bz = -120.4, -272.0, 228.0
+    # y -280: at -272 its body was 4 mm into the cam cover's ribs
+    bx, by, bz = -120.4, -280.0, 228.0
     # hanging under the pipe, not standing on top of it: the exhaust runs
     # over the cam cover directly above this
     parts.append(_lathe(
         [(0.0, 0.0), (0.0, 30.0), (-10.0, 34.0), (-52.0, 34.0),
          (-58.0, 30.0), (-58.0, 22.0), (-70.0, 22.0), (-70.0, 0.0)],
         bx, by, bz, axis="z", seg=20))
+    # its vent, straight down out of the bottom of the valve. It used to
+    # leave the side facing the engine and ran 40 mm into the cam cover.
     parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 17.0), (40.0, 17.0), (40.0, 0.0)],
-        bx, by + 34.0, bz - 30.0, axis="y", seg=14))
+        [(0.0, 0.0), (0.0, 13.0), (26.0, 13.0), (26.0, 0.0)],
+        bx, by, bz - 66.0, axis="z", seg=14, flip=True))
     out["blowoff"] = mesh.join(*parts)
     return out
 
@@ -320,38 +333,48 @@ def _mounts():
 def _belt():
     """Tensioner and idler on the accessory belt run.
 
-    A belt with no tensioner is a loop of rubber lying on some pulleys.
+    Both hang off the timing case's front plate, where its legs run up to
+    the cam gears, on the belt's plane in spec.FRONT. The idler is a pulley
+    on a stand-off post. The tensioner is a sprung arm: a pivot post on the
+    case, an arm swinging out from it, and the pulley on the arm's end
+    pressing the belt tight.
     """
+    from parts.plumbing import pulley
     out = {}
-    # In the belt's own plane, which is at x -259..-245, and forward of
-    # the cylinder head -- whose front flange is at x -237. At -224 the
-    # tensioner pulley was inside the head casting.
-    x = -272.0
-    parts = []
-    # tensioner: sprung arm carrying a smooth pulley
-    parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 30.0), (26.0, 30.0), (26.0, 0.0)],
-        x, -104.0, 74.0, axis="x", seg=20))
-    parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 34.0), (6.0, 38.0), (30.0, 38.0),
-         (36.0, 34.0), (36.0, 0.0)], x - 10.0, -104.0, 74.0, axis="x", seg=24))
-    # clear of the MGU-K, which is an 84 mm radius rotor on the crank
-    # nose -- the tensioner arm used to reach 58 mm from the centreline
-    av, af = shapes.rounded_box(x, -120.0, 92.0, 26.0, 66.0, 30.0, 5.0)
-    parts.append((av, af))
-    parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 22.0), (40.0, 22.0), (40.0, 0.0)],
-        x - 62.0, -150.0, 130.0, axis="x", seg=16))
-    out["belt_tensioner"] = mesh.join(*parts)
+    F = spec.FRONT
+    bx = F["belt_x"]
+    x_post = bx + F["pulley_w"] / 2.0            # behind the pulley
+    x_case = F["case_front"]
 
-    parts = []
-    parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 36.0), (6.0, 40.0), (28.0, 40.0),
-         (34.0, 36.0), (34.0, 0.0)], x - 8.0, 168.0, -40.0, axis="x", seg=24))
-    parts.append(_lathe(
-        [(0.0, 0.0), (34.0, 0.0), (34.0, 14.0), (0.0, 14.0)],
-        x + 26.0, 168.0, -40.0, axis="x", seg=14))
-    out["belt_idler"] = mesh.join(*parts)
+    y, z, r = F["idler"]
+    pv, pf = pulley(bx, r)
+    post = mesh.cylinder(x_post - 0.5, x_case, 14.0, 20)
+    boss = mesh.cylinder(x_case - 6.0, x_case, 22.0, 24)
+    out["belt_idler"] = mesh.join(
+        *[([(px, py + y, pz + z) for (px, py, pz) in v], f)
+          for (v, f) in ((pv, pf), post, boss)])
+
+    y, z, r = F["tensioner"]
+    # the pivot is inboard and above the pulley, on the leg
+    qy, qz = y - 30.0, z + 30.0
+    pv, pf = pulley(bx, r)
+    parts = [([(px, py + y, pz + z) for (px, py, pz) in pv], pf)]
+    # pulley axle back to the arm
+    av, af = mesh.cylinder(x_post - 0.5, x_post + 8.0, 9.0, 16)
+    parts.append(([(px, py + y, pz + z) for (px, py, pz) in av], af))
+    # the arm, pulley to pivot
+    L = math.hypot(qy - y, qz - z)
+    ang = math.atan2(qz - z, qy - y)
+    armv, armf = shapes.rounded_box(x_post + 7.0, L / 2.0, 0.0,
+                                    10.0, L + 30.0, 26.0, 6.0)
+    armv = mesh.rot_x(armv, ang)
+    parts.append(([(px, py + y, pz + z) for (px, py, pz) in armv], armf))
+    # the pivot post and its spring housing, on the case
+    for (x0, x1, rr) in ((x_post + 11.5, x_case, 15.0),
+                         (x_post + 16.0, x_case - 10.0, 24.0)):
+        cv, cf = mesh.cylinder(x0, x1, rr, 22)
+        parts.append(([(px, py + qy, pz + qz) for (px, py, pz) in cv], cf))
+    out["belt_tensioner"] = mesh.join(*parts)
     return out
 
 

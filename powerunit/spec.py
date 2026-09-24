@@ -86,7 +86,8 @@ CRANK = {
                      #        needs little counterweight, and the skirts have to clear it
     "web_t": 13.0,
     "n_mains": 5,
-    "nose_len": 128.0,
+    "nose_len": 154.0,           # through the case, MGU-K and trigger to
+                                 # the front of the damper hub
     "nose_r": 20.0,
     "flange_r": 62.0,
     "flange_t": 14.0,
@@ -102,9 +103,8 @@ CRANK = {
 # carried by the gearbox through the bellhousing, and there is no room for a
 # rear pair anyway -- a search of every station along both flanks, at every
 # mounting height, found none clear aft of x -90 on the right, where the
-# starter lies along the crankcase on its way to the ring gear, with the ECU
-# and the water pump beside it. The rear right bracket used to be through
-# the starter, and the front pair through the oil and water pumps. x -95 is
+# ECU and the water pump are. The rear right bracket used to be through the
+# starter, and the front pair through the oil and water pumps. x -95 is
 # clear on both sides.
 MOUNTS = {
     "x": (-95.0,),
@@ -279,8 +279,11 @@ EXHAUST = {
 
 HYBRID = {
     "mguk_r": 74.0,
-    "mguk_len": 108.0,
-    "mguk_x": -286.0,          # on the crank nose
+    # On the crank nose between the trigger wheel and the timing case, and
+    # bolted to the case's front face. At 108 mm long it ran from x -340 to
+    # -232, through the case, the crank gear and the belt.
+    "mguk_len": 32.0,
+    "mguk_x": -306.0,
     # The rotor rides on the turbo shaft, so it lives inside the bearing
     # housing's waist -- 72 mm long at 40 mm radius put it through both
     # wheels and out of both ends of the housing it is supposed to be in.
@@ -293,18 +296,24 @@ HYBRID = {
     # 120 mm along the crank, not 196: the exhaust primaries converge on
     # the turbochargers at x = +/-118 and climb over them, and a box that
     # long in the vee is in the way of four of them.
-    "inverter": (100.0, 158.0, 74.0),
+    # 50 x 158 x 56, between the bellhousing's two flanges, on its ribs at
+    # z 154 and under the rear turbine's housing, which comes down to 221.
+    # At 100 x 158 x 74 it was 12 mm into the bell's front flange, 6.5 mm
+    # into the turbine and 6 mm into the back of the right head.
+    "inverter": (50.0, 158.0, 56.0),
     # On the bellhousing at the back, where there is room for it. In the
     # vee it was the tallest thing on the engine and in the exhaust's way;
     # outboard it made the engine wider than the car.
-    "inverter_pos": (276.0, 0.0, 190.0),
+    "inverter_pos": (276.0, 0.0, 182.0),
     "battery": (392.0, 300.0, 56.0),   # overall; built as two lobes
     # Two lobes either side of the sump keel: clear of the pan, clear of the
     # drain plug hanging out of it, and high enough that the engine still
     # fits the car's engine bay when it is installed.
     # Below the sump, which reaches z -180. At -132 the pack was inside it,
     # inside the oil pickup and inside the scavenge lines.
-    "battery_pos": (0.0, 0.0, -244.0),   # tight under the sump
+    # 2 mm lower than it was: the dry-sump tank's feed union hangs over the
+    # left lobe and its pipe was 1.7 mm into the lid
+    "battery_pos": (0.0, 0.0, -246.0),   # tight under the sump
 }
 
 # --------------------------------------------------------------------------
@@ -370,17 +379,15 @@ OIL = {
 # thermostat to plumbing 52 mm. Nothing in the circuit touched anything else
 # in it, and the thermostat was up in the vee resting on an exhaust flange.
 COOLANT = {
-    # the pump hangs off the front of the block on the right, aft of the
-    # MGU-K rotor on the crank nose
-    "pump_x": BLOCK["x_front"] + 14.0,
-    "pump_y": 200.0,
-    "pump_z": -34.0,
-    # the thermostat housing sits on the engine's front face on the
-    # centreline. 110, not 190: at 190 it was in the vee with the exhaust
-    # flanges, and at anything under about 90 it is on the crank nose.
-    "stat_x": BLOCK["x_front"] - 16.0,
-    "stat_y": 0.0,
-    "stat_z": 110.0,
+    # the pump hangs off the front of the engine low on the right, beside
+    # the timing case, far enough forward that its pulley is in the belt's
+    # plane on a short nose (see FRONT)
+    "pump_x": -280.0,
+    "pump_y": 215.0,             # outlet clear of the timing case's edge
+    "pump_z": -60.0,
+    "stat_x": -318.0,            # the housing's front face; it stands on the
+    "stat_y": 0.0,               # boss in the vee of the timing case, which
+    "stat_z": 136.0,             # is where the heads' water comes out
     # the outlets stand up out of the block's flanks into the heads
     # The head outlets and the rail that gathers them run along each head's
     # outboard face, in the bank's frame: `rail_along` up the bore axis and
@@ -408,13 +415,13 @@ def coolant_node(which):
     """World point at one of the circuit's connections."""
     C = COOLANT
     if which == "pump_out":
-        return (C["pump_x"], C["pump_y"] - 68.0, C["pump_z"] + 62.0)
+        return (C["pump_x"] + 6.0, C["pump_y"] - 76.0, C["pump_z"] - 14.0)
     if which == "pump_in":
         return (C["pump_x"] + 32.0, C["pump_y"], C["pump_z"])
-    if which == "stat_top":
-        return (C["stat_x"], C["stat_y"], C["stat_z"])
+    if which == "stat_top":        # the bypass port, back to the pump
+        return (C["stat_x"] + 11.0, C["stat_y"] + 46.0, C["stat_z"])
     if which == "stat_hose":       # the stub the radiator hose clamps to
-        return (C["stat_x"] - 50.0, C["stat_y"], C["stat_z"])
+        return (C["stat_x"] + 11.0, C["stat_y"] - 80.0, C["stat_z"])
     raise KeyError(which)
 
 
@@ -700,3 +707,169 @@ def cylinders():
                         bank_angle_rad(bank)))
             n += 1
     return out
+
+
+# --------------------------------------------------------------------------
+# The front of the engine
+# --------------------------------------------------------------------------
+#
+# Six modules build pieces of the front: the gear train and its case, the
+# MGU-K, the crank trigger, the damper, the accessory belt and everything it
+# drives, and the coolant that passes through the case. Each used to keep its
+# own idea of where the others were, and the result was a stack of parts
+# inside each other that the intersect audit only passed because every pair
+# had been declared "expected": the MGU-K 52 mm into the timing cover, the
+# belt 19 mm into the MGU-K, the tensioner inside the alternator, the idler
+# inside the water pump, and a timing "cover" that was a 152 mm disc on the
+# crank with the cam gears standing out in the open beyond it. The idlers
+# never met each other or the cam gears, so the camshafts were not driven.
+#
+# One axial stack, front to back:
+#     damper, whose grooved inertia ring is the crank pulley   -368 .. -330
+#     crank trigger wheel                                      -330 .. -324
+#     MGU-K, on the nose and bolted to the case                -322 .. -290
+#     timing case front plate                                  -290 .. -284
+#     gear train                                               -269 .. -250
+#     block front face                                         -231
+FRONT = {
+    "gear_x": BLOCK["x_front"] - 30.0,
+    "case_front": -290.0,
+    "case_plate": 6.0,
+    "case_wall": 4.0,
+    "case_margin": 10.0,         # outline clearance round the gear tips
+    "mguk_front": -322.0,
+    "trigger_x": -327.0,
+    # The damper spans x0 + 2 .. x0 + 40. Its face is the front of the
+    # engine, and in the hypercar the tub's engine bulkhead is 11 mm ahead
+    # of it: the stack was 12 mm longer and the damper touched it.
+    "damper_x0": -370.0,
+    "belt_x": -349.7,            # on the damper's five grooves
+    "belt_w": 20.0,
+    "belt_t": 4.5,
+    "pulley_w": 22.0,
+    "crank_pulley_r": 99.5,      # the tips of the damper's grooves
+    # (y, z, r) of the pulleys the belt wraps besides the crank and the
+    # water pump. Each one has metal behind it to hang from: the idler and
+    # the tensioner are on the case's legs, the alternator is on the
+    # left, its body bolted to the case plate's edge clear of the MGU-K.
+    "alternator": (-160.0, 40.0, 34.0),
+    "idler": (-122.0, 152.0, 30.0),
+    "tensioner": (128.0, 150.0, 30.0),
+    # the thermostat sits on a boss on the case's front face, in the vee
+    "thermostat": (0.0, 136.0),
+}
+
+
+def timing_train(bank):
+    """[(y, z, r)] of one bank's gears: crank, two idlers, two cam gears.
+
+    Every pair that is supposed to mesh is spaced by the sum of its pitch
+    radii, which for these gears is 0.94 of the tip radius. The cam gears are
+    36 mm so the intake and exhaust gears, 78 mm apart, clear each other and
+    are both driven off the upper idler; the upper idler is placed on the
+    bore axis where it meets both, and the lower idler is sized to fill the
+    gap between it and the crank gear.
+    """
+    a = bank_angle_rad(bank)
+    d = (math.sin(a), math.cos(a))
+    s = 1.0 if bank == 0 else -1.0
+    lat = (s * math.cos(a), -s * math.sin(a))
+
+    def at(along, lateral=0.0):
+        return (d[0] * along + lat[0] * lateral, d[1] * along + lat[1] * lateral)
+
+    p = 0.94
+    r_crank, r_upper, r_cam = 54.0, 40.0, 36.0
+    cam_along = DECK_HEIGHT + HEAD["cam_height"]
+    half = HEAD["cam_centres"] / 2.0
+    upper = cam_along - math.sqrt((p * (r_upper + r_cam)) ** 2 - half ** 2)
+    r_lower = (upper - p * r_crank - p * r_upper) / (2.0 * p)
+    lower = p * (r_crank + r_lower)
+    return [(0.0, 0.0, r_crank),
+            at(lower) + (r_lower,),
+            at(upper) + (r_upper,),
+            at(cam_along, -half) + (r_cam,),
+            at(cam_along, half) + (r_cam,)]
+
+
+def case_outline(margin, n=240):
+    """The timing case's outline in the y-z plane, as a closed polygon.
+
+    The union of three convex lobes -- each bank's gear train, and a boss in
+    the vee that carries the thermostat -- each grown by `margin`. Each lobe
+    contains the crank gear, so the union is star-shaped about the crank and
+    its boundary is the furthest of the three along each ray.
+    """
+    th_y, th_z = FRONT["thermostat"]
+    lobes = [[(y, z, r + margin) for (y, z, r) in timing_train(b)]
+             for b in (0, 1)]
+    lobes.append([(0.0, 0.0, 54.0 + margin), (th_y, th_z, 40.0 + margin)])
+    normals = [(math.cos(2 * math.pi * k / 720), math.sin(2 * math.pi * k / 720))
+               for k in range(720)]
+    heights = [[max(n_[0] * y + n_[1] * z + r for (y, z, r) in lobe)
+                for n_ in normals] for lobe in lobes]
+    pts = []
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        u = (math.cos(t), math.sin(t))
+        reach = 0.0
+        for h in heights:
+            best = 1e9
+            for n_, hk in zip(normals, h):
+                nu = n_[0] * u[0] + n_[1] * u[1]
+                if nu > 1e-3:
+                    best = min(best, hk / nu)
+            reach = max(reach, best)
+        pts.append((reach * u[0], reach * u[1]))
+    return pts
+
+
+def belt_path(circles):
+    """The accessory belt's inner face, as [((y, z), (ny, nz))] points with
+    their outward normals, round `circles` = [(y, z, r)] in running order
+    (counter-clockwise, seen from the front).
+
+    A belt is straight between pulleys and wraps each one on an arc, so the
+    path is the common tangent between each consecutive pair joined by the
+    arc round the pulley between them. The first belt here was the polar
+    reach of the pulleys sampled at 48 angles, which is not a belt shape at
+    all: it bulged and waved between pulleys like a rubber band.
+    """
+    n = len(circles)
+    tangents = []
+    for i in range(n):
+        (y0, z0, r0), (y1, z1, r1) = circles[i], circles[(i + 1) % n]
+        dy, dz = y1 - y0, z1 - z0
+        L = math.hypot(dy, dz)
+        uy, uz = dy / L, dz / L
+        vy, vz = -uz, uy
+        al = (r0 - r1) / L
+        be = math.sqrt(max(0.0, 1.0 - al * al))
+        for sgn in (1.0, -1.0):
+            ny, nz = al * uy + sgn * be * vy, al * uz + sgn * be * vz
+            ddy = dy + (r1 - r0) * ny
+            ddz = dz + (r1 - r0) * nz
+            if ddy * nz - ddz * ny < 0.0:      # n is to the right of travel
+                break
+        tangents.append((ny, nz))
+    out = []
+    for i in range(n):
+        y, z, r = circles[i]
+        a_in = math.atan2(tangents[i - 1][1], tangents[i - 1][0])
+        a_out = math.atan2(tangents[i][1], tangents[i][0])
+        sweep = (a_out - a_in) % (2 * math.pi)
+        k = max(2, int(math.degrees(sweep) / 4.0) + 1)
+        for j in range(k + 1):
+            a = a_in + sweep * j / k
+            out.append(((y + r * math.cos(a), z + r * math.sin(a)),
+                        (math.cos(a), math.sin(a))))
+    return out
+
+
+def belt_circles():
+    """The pulleys the belt wraps, in running order: crank, water pump,
+    tensioner, idler, alternator."""
+    F = FRONT
+    return [(0.0, 0.0, F["crank_pulley_r"]),
+            (COOLANT["pump_y"], COOLANT["pump_z"], 46.0),
+            F["tensioner"], F["idler"], F["alternator"]]

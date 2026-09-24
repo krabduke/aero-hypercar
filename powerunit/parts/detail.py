@@ -144,28 +144,98 @@ def _valve_gear():
 
 
 def _timing():
-    """Gear train off the crank nose driving all four camshafts. A gear train
-    rather than a belt or chain: at 16,000 rpm valve timing has to be exact."""
+    """Gear train off the crank nose driving all four camshafts, and the case
+    that encloses it. A gear train rather than a belt or chain: at 16,000 rpm
+    valve timing has to be exact.
+
+    Each bank's train is crank gear, lower idler, upper idler, and the two cam
+    gears both driven off the upper idler -- spaced by their pitch radii in
+    spec.timing_train so every pair that should mesh does. The idlers turn on
+    stub axles carried by the case's front plate.
+
+    The case is a front plate on the outline of the whole train and a wall
+    round its edge back to the block's front face, so the gears run in an
+    enclosure the way they do on a real engine. On the left bank the head
+    stands 6 mm proud of the block, and the wall stops on the head's face
+    there instead of running into it.
+    """
+    F = spec.FRONT
+    x = F["gear_x"]
     parts = []
-    x = spec.BLOCK["x_front"] - 30.0
-    # crank gear
-    parts.append(_gear(x, 0.0, 0.0, 54.0, 28))
-    # idlers up each side of the vee
+    seen = set()
     for bank in (0, 1):
-        for k, (along, r) in enumerate(((70.0, 40.0), (140.0, 40.0))):
-            p = common.bank_point(x, along, 0.0, bank)
-            parts.append(_gear(x, p[1], p[2], r, 20))
-        # cam gears
-        for lat in (-H["cam_centres"] / 2, H["cam_centres"] / 2):
-            p = common.bank_point(x, spec.DECK_HEIGHT + H["cam_height"],
-                                  lat, bank)
-            parts.append(_gear(x, p[1], p[2], 46.0, 24))
-    # covers the gear train without swallowing the whole front of the engine
-    cover = mesh.tube(x - 22.0, x - 4.0, 0.0, 152.0, 40)
-    return {"timing_gears": mesh.join(*parts), "timing_cover": cover}
+        for k, (y, z, r) in enumerate(spec.timing_train(bank)):
+            if (round(y, 3), round(z, 3)) in seen:
+                continue                  # the crank gear, shared
+            seen.add((round(y, 3), round(z, 3)))
+            # bored to what it turns on: the crank nose, a camshaft nose,
+            # or its own axle
+            bore = (spec.CRANK["nose_r"] if k == 0 else
+                    7.0 if k >= 3 else r * 0.18)
+            parts.append(_gear(x, y, z, r, max(18, int(round(r * 0.5))),
+                               bore))
+            if k in (1, 2):
+                # the idler's axle, from its bore forward to the case plate
+                av, af = mesh.cylinder(F["case_front"] + F["case_plate"],
+                                       x + 12.0, r * 0.18, 16)
+                parts.append(([(px, py + y, pz + z) for (px, py, pz) in av],
+                              af))
+
+    # the case
+    x0 = F["case_front"]
+    x1 = x0 + F["case_plate"]
+    outer = spec.case_outline(F["case_margin"])
+    inner = spec.case_outline(F["case_margin"] - F["case_wall"])
+    n = len(outer)
+    head_l_face = spec.HEAD["x_front"] - spec.BANK_OFFSET / 2.0
+
+    def x_back(y, z):
+        # stop on whatever face the wall meets: the left head, which stands
+        # proud of the block, or the block itself
+        if y < 0.0 and z > 0.0 and (-y + z) / math.sqrt(2.0) > spec.DECK_HEIGHT:
+            return head_l_face + 0.1
+        return spec.BLOCK["x_front"] + 0.1
+
+    verts, faces = [], []
+    # front plate: a closed slab x0..x1 on the outer outline
+    for (y, z) in outer:
+        verts.append((x0, y, z))
+    for (y, z) in outer:
+        verts.append((x1, y, z))
+    verts.append((x0, 0.0, 0.0))
+    verts.append((x1, 0.0, 0.0))
+    c0, c1 = 2 * n, 2 * n + 1
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append((c0, j, i))
+        faces.append((c1, n + i, n + j))
+        faces.append((i, j, n + j, n + i))
+    plate = (verts, faces)
+    # the wall: an annular band between the outlines, from the plate back
+    wv, wf = [], []
+    for (y, z), (yi, zi) in zip(outer, inner):
+        xb = x_back(y, z)
+        wv += [(x1 - 0.5, y, z), (x1 - 0.5, yi, zi), (xb, yi, zi), (xb, y, z)]
+    for i in range(n):
+        j = (i + 1) % n
+        a, b = 4 * i, 4 * j
+        wf.append((a, b, b + 3, a + 3))           # outside
+        wf.append((a + 1, a + 2, b + 2, b + 1))   # inside
+        wf.append((a, a + 1, b + 1, b))           # front
+        wf.append((a + 3, b + 3, b + 2, a + 2))   # back
+    # the crank nose passes out through the plate, on its seal
+    hole = mesh.cylinder(x0 - 1.0, x1 + 1.0, spec.CRANK["nose_r"] + 1.0, 32)
+    # and the fuel pump's drive tang passes through it to the right bank's
+    # intake cam gear
+    cy, cz, _r = spec.timing_train(1)[3]
+    dv, df = mesh.cylinder(x0 - 1.0, x1 + 1.0, 8.0, 16)
+    hole = mesh.join(hole, ([(px, py + cy, pz + cz) for (px, py, pz) in dv], df))
+    return {"timing_gears": mesh.join(*parts),
+            "timing_cover": mesh.join(plate, (wv, wf)),
+            "cut:timing_cover": hole}
 
 
-def _gear(x, y, z, r, teeth):
+def _gear(x, y, z, r, teeth, bore=None):
     """A gear: a bored hub with teeth round it, on the shaft at (y, z).
 
     Two things were wrong here. The hub was built once at the origin and
@@ -178,7 +248,8 @@ def _gear(x, y, z, r, teeth):
     The hub also runs 19 mm rather than 14, all of it aft, because the gears
     are at x -262 and the camshaft noses start at -254.
     """
-    parts = [mesh.tube(x - 7.0, x + 12.0, r * 0.18, r * 0.88, 26)]
+    parts = [mesh.tube(x - 7.0, x + 12.0, r * 0.18 if bore is None else bore,
+                       r * 0.88, 26)]
     for k in range(teeth):
         a = 2 * math.pi * k / teeth
         tv, tf = shapes.rounded_box(x, r * 0.94, 0.0, 13.0, r * 0.16, 5.2, 0.7)
@@ -218,59 +289,49 @@ def _pumps():
     pump_out = spec.coolant_node("pump_out")
     pump_in = spec.coolant_node("pump_in")
     stat = spec.coolant_node("stat_top")
-    x_fwd = spec.BLOCK["x_front"] - 18.0
+    F = spec.FRONT
+    xb = spec.BLOCK["x_front"]
 
-    # pump discharge into the block's front face
-    wp.append(mesh.pipe([pump_out, (xo - 4.0, 120.0, 20.0),
-                         (spec.BLOCK["x_front"] + 8.0, 112.0, 12.0)],
+    # pump discharge into the crankcase's front face, under the timing
+    # case: everywhere else on the right the case covers the block's face
+    wp.append(mesh.pipe([pump_out, (pump_out[0] + 20.0, 110.0, -46.0),
+                         (xb - 22.0, 90.0, -30.0), (xb + 6.0, 90.0, -30.0)],
                         16.0, SM, subdiv=3))
-    # The two head outlet rails, gathered forward onto the thermostat. Each
-    # starts at its head's outlet, behind the last cylinder, and runs the
-    # length of the head's outboard side under the intake runners and over
-    # the engine mounts, then turns up across the front to the thermostat.
-    # They ran along y +/-126 at z 62, which on this engine is inside the
-    # heads, and started at x -190, clear of the outlets they were for.
+    # The two head outlet rails. Each starts at its head's outlet, behind the
+    # last cylinder, runs the length of the head's outboard side under the
+    # intake runners and over the engine mounts, and at the front turns in
+    # to the timing case, whose casting carries the water on to the
+    # thermostat. They used to run on across the front of the block to a
+    # thermostat behind the case -- through the block, the head and the
+    # idler gears.
+    outline = spec.case_outline(F["case_margin"], 360)
     K = spec.COOLANT
     for bank, sgn in ((0, -1.0), (1, 1.0)):
         rear = common.bank_point(spec.head_rear_x(bank) + 10.0,
                                  K["rail_along"], K["rail_lat"], bank)
-        front = common.bank_point(spec.BLOCK["x_front"] + 10.0, K["rail_along"],
+        front = common.bank_point(xb + 10.0, K["rail_along"],
                                   K["rail_lat"], bank)
-        # The forward run is at x_front + 6. The accessory belt's tensioner
-        # occupies x -334 to -246 from y -172 to -66, and a rail forward of
-        # the block face crosses it on its way in to the thermostat.
-        x_rail = spec.BLOCK["x_front"] + 6.0
-        path = [rear, front,
-                (x_rail, front[1] * 0.92, front[2] + 30.0),
-                (x_rail, sgn * 56.0, stat[2] - 6.0),
-                (stat[0] + 30.0, sgn * 22.0, stat[2])]
+        # the case's edge along the ray through the rail's front end
+        ang = math.atan2(front[2], front[1]) % (2 * math.pi)
+        edge = math.hypot(*outline[int(round(ang / (2 * math.pi) * 360)) % 360])
+        k = (edge - 2.0) / math.hypot(front[1], front[2])
+        x_in = xb - 22.0
+        path = [rear, front, (x_in, front[1] * 0.97, front[2] * 0.97 + 8.0),
+                (x_in, front[1] * k, front[2] * k)]
         wp.append(mesh.pipe(mesh.smooth_path(path, 2), K["rail_r"], SM))
-    # thermostat back to the pump's eye
+    # the thermostat's bypass back to the pump's eye, which faces aft: down
+    # the right of the case, behind the pump and in from behind
     wp.append(mesh.pipe(
-        [(stat[0] + 26.0, 26.0, stat[2] - 10.0), (x_fwd, 90.0, stat[2] - 40.0),
-         (x_fwd, 170.0, 10.0), (pump_in[0] - 40.0, pump_in[1], pump_in[2]),
-         pump_in], 15.0, SM, subdiv=3))
-    # The header tank on the front face, above the thermostat.
-    #
-    # At y 130, z 150 it was a 44 mm barrel spanning y 86-174 and z 106-194,
-    # and the right bank's exhaust camshaft noses forward to x -254 at
-    # y 124-153, z 180-208. The tank and the camshaft were the same metal;
-    # rerouting the head rails, which is what I tried first, moved a pipe
-    # that was never the problem and put it through an intake valve instead.
-    # The right bank's two camshafts box it in: the exhaust cam is at
-    # y 124-153, z 180-208 and the intake cam at y 180-208, z 124-153, and a
-    # 44 mm barrel is too fat to sit in the corner between them. At y 132,
-    # z 100 on a 38 mm radius it passes under both -- 10 mm clear of the
-    # intake cam -- and stays clear of the thermostat inboard of it at
-    # y +/-52 and of the water pump below it, which tops out at z 30.
-    tv, tf = mesh.tube(x_fwd - 32.0, x_fwd + 8.0, 0.0, 38.0, 22)
-    tv = [(px, py + 132.0, pz + 100.0) for (px, py, pz) in tv]
+        [stat, (stat[0], stat[1] + 26.0, stat[2] - 8.0),
+         (stat[0] + 10.0, pump_in[1] + 25.0, 50.0),
+         (pump_in[0] + 10.0, pump_in[1] + 25.0, 50.0),
+         (pump_in[0] + 40.0, pump_in[1], 20.0),
+         (pump_in[0] + 40.0, pump_in[1], pump_in[2]), pump_in],
+        13.0, SM, subdiv=3))
+    # the header tank, sitting on top of the thermostat housing
+    tv, tf = mesh.tube(K["stat_x"] - 6.0, F["case_front"] - 7.0, 0.0, 20.0, 22)
+    tv = [(px, py, pz + K["stat_z"] + 34.0 + 20.0) for (px, py, pz) in tv]
     wp.append((tv, tf))
-    wp.append(mesh.pipe([(x_fwd - 12.0, 132.0, 100.0),
-                         (x_fwd - 12.0, 60.0, 118.0),
-                         (stat[0] - 6.0, 18.0, stat[2] + 30.0),
-                         (stat[0] - 6.0, 0.0, stat[2] + 34.0)], 8.0, SM,
-                        subdiv=3))
     out["coolant_plumbing"] = mesh.join(*wp)
     return out
 

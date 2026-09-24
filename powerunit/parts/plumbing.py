@@ -64,6 +64,8 @@ def _primaries():
         # port size, is stepped out at the head flange, and tapers down into
         # the collector so the pulse arrives with some velocity behind it.
         radii = [16.5, 15.5, 14.0, 12.5]
+        if len(path) == 6:            # the pipes that swing round a volute
+            radii = [16.5, 15.8, 15.2, 14.6, 14.0, 12.5]
         tube = mesh.pipe(path, radii, spec.RES["pipe"], subdiv=7)
         flange = mesh.revolve_ring(
             [(-4.0, 16.5), (-4.0, 26.0), (5.0, 26.0), (5.0, 16.5)], SM)
@@ -221,58 +223,60 @@ def _fuel():
                                     inj], 4.5, SM))
         out[f"fuel_feeds_di_{'lr'[bank]}"] = mesh.join(*feeds)
 
-    # On the head's OUTBOARD face, driven off the exhaust cam's tail. At
-    # 92 mm from the centreline and below the deck it was inside the block,
-    # the number two bore, its rings and an intake valve.
-    out["hp_fuel_pump"] = shapes.finned_case(
-        # driven off the rear of the exhaust cam, on the cover's outer
-        # face -- the plenum's throttle is on that end now
-        # Between two cylinders, on the cover's outer face. The coil wells
-        # reach y 188 and the car's bodywork closes to 248 at this height,
-        # so this is the 60 mm of flank there is.
-        #
-        # x 8 and 60 long, not x 0 and 72. At 0 the case spanned -36 to 36
-        # and cylinder 4's port injector, whose body is 9 mm across at
-        # x -41.5, reached -32.5; moving it aft alone put the far end into
-        # cylinder 6's connector at 43.5. The gap between those two is
-        # 76 mm and the case is sized to sit inside it.
-        8.0, 218.0, 165.0,
-        60.0, 54.0, 84.0, n_fins=6, fin_h=5.0, fin_t=3.0, r=12.0)
+    # The pump is on the timing case's front plate, coaxial with the right
+    # bank's intake cam gear and driven straight off it -- which is how a
+    # direct-injection pump is driven: off a camshaft.
+    #
+    # It used to stand on the right cam cover's outboard flank, 21 mm into
+    # the cover and 24 mm into the head, with the port fuel rail running
+    # through it, and its supply line leaving from inside it and running
+    # through the cover's edge and the port rail's crossover on the way to
+    # the rail.
+    F = spec.FRONT
+    cy, cz, _r = spec.timing_train(1)[3]
+    x1 = F["case_front"]
+    parts = [mesh.revolve_closed(
+        [(x1 - 44.0, 0.0), (x1 - 44.0, 20.0), (x1 - 40.0, 24.0),
+         (x1 - 12.0, 24.0), (x1 - 12.0, 28.0), (x1 - 6.0, 28.0),
+         (x1 - 6.0, 34.0), (x1, 34.0), (x1, 0.0)], SM)]
+    # cooling fins round the barrel
+    for k in range(4):
+        xk = x1 - 38.0 + k * 6.5
+        parts.append(mesh.tube(xk, xk + 2.5, 20.0, 29.0, SM))
+    # the drive tang through the plate to the cam gear's hub
+    parts.append(mesh.cylinder(x1 - 1.0, F["gear_x"] - 7.0, 7.0, 16))
+    # three bolts through the flange
+    for k in range(3):
+        a = 2 * math.pi * (k + 0.25) / 3
+        bv, bf = mesh.cylinder(x1 - 10.0, x1 - 6.0, 4.0, 10)
+        parts.append((mesh.translate(bv, 0.0, 30.0 * math.cos(a),
+                                     30.0 * math.sin(a)), bf))
+    # the outlet union, on the barrel's outboard side
+    ua = math.radians(-35.0)
+    uv, uf = mesh.revolve_closed(
+        [(18.0, 0.0), (18.0, 8.0), (30.0, 8.0), (30.0, 6.0), (36.0, 6.0),
+         (36.0, 0.0)], SM)
+    # the profile runs along x; turn it to point out along (cos ua, sin ua)
+    uv = [(pz + x1 - 26.0, px * math.cos(ua) - py * math.sin(ua),
+           px * math.sin(ua) + py * math.cos(ua)) for (px, py, pz) in uv]
+    parts.append((uv, uf))
+    pv, pf = mesh.join(*parts)
+    out["hp_fuel_pump"] = ([(px, py + cy, pz + cz) for (px, py, pz) in pv], pf)
+    union = (x1 - 26.0, cy + 36.0 * math.cos(ua), cz + 36.0 * math.sin(ua))
 
-    # The pipe that makes it a fuel system rather than three fuel parts.
-    #
-    # The pump was 345 mm from the nearest rail and the two rails were joined
-    # to nothing, so a chain that should read pump-rail-feed-injector stopped
-    # at the first link. Nothing complained: every audit here asks whether
-    # parts overlap, and three parts that do not touch each other cannot.
-    #
-    # There is one route down. The plenum stands on the head's outboard face
-    # from z 30 to 110 and closes right onto it, so the line cannot drop
-    # straight off the pump; it runs aft along the top of the cam cover to
-    # x 224, which is past the head's rear face at 218 and forward of the
-    # bellhousing flange at 235, and comes down the back of the engine to the
-    # rail's rear fitting.
+    # The supply line: from the pump's union out past the edge of the case,
+    # back along the flank under the plenum's nose and into the front
+    # fitting of the right-hand rail.
     x_back = spec.BLOCK["x_rear"] - 8.0
     p0r, p1r = rail_ends[1]
     p0l, _p1l = rail_ends[0]
-    # Outboard of the cam cover, and above the port rail.
-    #
-    # At y 226 the line ran along the top of the cover in the middle of the
-    # bolt row, which spans y 145 to 234 and z 134 to 223: 48 of its
-    # vertices inside them. At 243 it is in the port fuel rail instead,
-    # which runs the length of this flank at y 238-252. Outboard of the
-    # cover's own edge at 245 there is a band, and it is 8 mm wide: the
-    # hypercar's bodywork closes to 253 at this height, and a 10 mm pipe put
-    # 4.3 mm of itself through the car. Going over the cover instead is not
-    # available -- its crown is at z 242 and the pump sits against its
-    # flank, so a line leaving the pump is inside the cover until it climbs
-    # out, and it meets the breather gallery, the intake camshaft's tail and
-    # the charge pipes doing it. A direct-injection supply line is a 7 mm
-    # pipe on a real engine, which is what fits.
     out["fuel_hp_line"] = mesh.pipe(
-        [(24.0, 218.0, 180.0), (120.0, 249.0, 176.0),
-         (x_back, 249.0, 150.0), (x_back, 190.0, 72.0),
-         (p1r[0] + 12.0, p1r[1], p1r[2])], 3.5, SM, subdiv=3)
+        [union,
+         (union[0], union[1] + 16.0 * math.cos(ua),
+          union[2] + 16.0 * math.sin(ua)),
+         (x1 - 10.0, 245.0, 95.0), (-250.0, 245.0, 70.0),
+         (-222.0, 190.0, 46.0), (p0r[0] - 12.0, p0r[1], p0r[2])],
+        3.5, SM, subdiv=3)
 
     # and the same station, 22 mm higher, carries the pressure across to the
     # other bank. Above the crankcase, which stops at z 28, and below the
@@ -367,63 +371,70 @@ def _fasteners():
 
 
 def _accessories():
-    """Alternator, starter, the belt that drives them and its pulleys."""
+    """Alternator, the belt that drives the alternator and water pump, and
+    the alternator's pulley.
+
+    The drive is one serpentine belt in one plane, spec.FRONT["belt_x"]: off
+    the grooves of the crank damper, round the water pump, over the
+    tensioner and the idler on the timing case's legs, and down round the
+    alternator. It is a flat band -- 20 mm wide, 4.5 mm thick -- straight
+    between pulleys and wrapped on each, from spec.belt_path.
+    """
     out = {}
-    # The accessory drive sits on the front face of the block and the units
-    # hang off its sides, bolted to the crankcase -- not floating in front of
-    # the engine, which is where these were.
-    # In front of the timing cover, which ends at x -266. Behind it the
-    # belt was inside the cover it is supposed to run on the outside of.
-    xf = B["x_front"] - 70.0
-    # far enough out that its case clears the MGU-K rotor, which is 84 mm
-    # in radius and shares this station on the crank nose
-    out["alternator"] = shapes.finned_case(xf - 32.0, -150.0, 86.0,
-                                           76.0, 80.0, 80.0,
-                                           n_fins=9, fin_h=5.0, fin_t=3.0,
+    F = spec.FRONT
+    bx = F["belt_x"]
+    ay, az, ar = F["alternator"]
+    # the alternator's body stands behind its pulley and bolts to the case
+    # plate's edge; its front face carries the pulley's shaft
+    x_back = F["case_front"]
+    x_front = bx + F["pulley_w"] / 2 + 3.0
+    out["alternator"] = shapes.finned_case((x_front + x_back) / 2, ay, az,
+                                           x_back - x_front, 80.0, 80.0,
+                                           n_fins=7, fin_h=5.0, fin_t=3.0,
                                            r=18.0, axis="x")
-    sv, sf = mesh.revolve_open(
-        [(0.0, 0.0), (0.0, 40.0), (104.0, 40.0), (112.0, 28.0), (112.0, 0.0)],
-        SM, cap_start=True, cap_end=True)
-    # axis along x, lying against the crankcase flank
-    out["starter"] = ([(px + B["x_rear"] - 150.0, pz + 104.0, py - 46.0)
-                       for (px, py, pz) in sv], sf)
+    # There is no starter motor. The MGU-K on the crank nose turns the
+    # engine over, as it does on a hybrid race engine. The starter this
+    # engine had lay 29 mm inside the crankcase and 38 mm through its
+    # gallery plugs: every station where its pinion could reach the
+    # flywheel's ring gear is inside the block.
 
-    pulls = []
-    for (y, z, r) in ((0.0, 0.0, 62.0), (-150.0, 86.0, 32.0),
-                      (92.0, 44.0, 30.0), (0.0, 104.0, 26.0)):
-        v, f = mesh.revolve_closed(
-            [(-11.0, r * 0.42), (11.0, r * 0.42), (11.0, r), (-11.0, r)], 20)
-        pulls.append(([(px + xf, py + y, pz + z) for (px, py, pz) in v], f))
-    out["accessory_pulleys"] = mesh.join(*pulls)
+    pv, pf = pulley(bx, ar)
+    shaft = mesh.cylinder(bx, x_front + 0.5, 8.0, 14)
+    out["accessory_pulleys"] = mesh.join(
+        ([(px, py + ay, pz + az) for (px, py, pz) in pv], pf),
+        ([(px, py + ay, pz + az) for (px, py, pz) in shaft[0]], shaft[1]))
 
-    # The belt. Without it the accessories read as detached lumps floating
-    # off the nose of the engine, which is exactly how they read before.
-    #
-    # A belt wraps the outside of every pulley, so its path is the convex hull
-    # of the pulley circles: at each angle round the drive, take the furthest
-    # any pulley reaches in that direction.
-    # (radius, y, z) of every pulley the belt has to wrap. These have to be
-    # the same circles `pulls` above puts metal on, and the alternator's was
-    # not: the hull was computed round (-96, 52) while the pulley is at
-    # (-150, 86), so the belt ran 65 mm inboard of the pulley it drives. The
-    # water pump's nose pulley is the fourth -- it is at y 200 on the other
-    # side of the engine and the belt did not reach within 69 mm of it, so
-    # the one thing that makes the pump turn was not connected to it.
-    ring = [(62.0, 0.0, 0.0), (32.0, -150.0, 86.0),
-            (26.0, 0.0, 104.0), (30.0, 92.0, 44.0),
-            (46.0, spec.COOLANT["pump_y"], spec.COOLANT["pump_z"])]
-    path = []
-    for i in range(49):
-        t = 2 * math.pi * i / 48
-        cy, cz = math.cos(t), math.sin(t)
-        reach = max(py * cy + pz * cz + r for (r, py, pz) in ring)
-        path.append((xf - 4.0, reach * cy, reach * cz))
-    path.append(path[0])
-    # capped: the path is a closed loop, so with caps off the two ends of the
-    # sweep sat on top of each other with nothing joining them and the belt
-    # was an open tube
-    out["accessory_belt"] = mesh.pipe(path, 7.0, 6, caps=True)
+    out["accessory_belt"] = belt(spec.belt_path(spec.belt_circles()),
+                                 bx, F["belt_w"], F["belt_t"])
     return out
+
+
+def pulley(x, r, w=None, bore=None):
+    """A flat-belt pulley on the x axis: a crowned rim between two low
+    flanges that keep the belt on, a web and a hub."""
+    w = spec.FRONT["pulley_w"] if w is None else w
+    h = w / 2.0
+    bore = 0.0 if bore is None else bore
+    return mesh.revolve_closed(
+        [(x - h, bore), (x - h, r + 3.0), (x - h + 1.0, r + 3.0),
+         (x - h + 1.0, r), (x + h - 1.0, r), (x + h - 1.0, r + 3.0),
+         (x + h, r + 3.0), (x + h, bore)], 40)
+
+
+def belt(path, x, w, t):
+    """Sweep a flat w-by-t section round a closed belt path of
+    ((y, z), (ny, nz)) points, inner face on the path."""
+    verts, faces = [], []
+    for (y, z), (ny, nz) in path:
+        for (dx, dn) in ((-w / 2, 0.0), (w / 2, 0.0), (w / 2, t), (-w / 2, t)):
+            verts.append((x + dx, y + ny * dn, z + nz * dn))
+    n = len(path)
+    for i in range(n):
+        j = (i + 1) % n
+        for k in range(4):
+            k2 = (k + 1) % 4
+            faces.append((4 * i + k, 4 * j + k, 4 * j + k2, 4 * i + k2))
+    return verts, faces
 
 
 def _breathers():
@@ -453,7 +464,9 @@ def _breathers():
     # +58, not +40: the high-pressure fuel pump stands on the right cover to
     # z 212 and the gallery was running straight through it at 211.7.
     along = spec.DECK_HEIGHT + H["height"] + 58.0
-    junction = (B["x_front"] - 58.0, -132.0, 214.0)
+    # forward of the timing case's plate, which is at x -290
+    xc = spec.FRONT["case_front"] - 16.0
+    junction = (xc, -150.0, 222.0)
     for bank in (0, 1):
         d = common.bank_dir(bank)
         way = [(H["x_rear"] - 90.0, d[1] * along, d[2] * along),
@@ -470,9 +483,10 @@ def _breathers():
                (H["x_front"] + 16.0, d[1] * along * 1.02, d[2] * along * 1.02),
                (B["x_front"] - 14.0, d[1] * 268.0, 240.0),
                (B["x_front"] - 50.0, d[1] * 268.0, 236.0),
-               (B["x_front"] - 58.0, d[1] * 228.0, 226.0)]
+               (xc, d[1] * 250.0, 230.0),
+               (xc, d[1] * 212.0, 224.0)]
         if bank == 1:                      # the right bank crosses the front
-            way.append((B["x_front"] - 58.0, 40.0, 216.0))
+            way.append((xc, 40.0, 222.0))
         way.append(junction)
         pipes.append(mesh.pipe(way, 11.0, SM, subdiv=3))
     # and down the front-left corner into the tank's lid.
@@ -494,9 +508,9 @@ def _breathers():
     # own union sits at y -155, z -60. At z -86 the vent passes under both
     # and arrives at the tank's lid from underneath its own union.
     pipes.append(mesh.pipe(
-        [junction, (B["x_front"] - 60.0, -186.0, 168.0),
-         (B["x_front"] - 60.0, -242.0, 60.0), (B["x_front"] - 56.0, -252.0, -74.0),
-         (vent[0] - 26.0, -252.0, vent[2] - 4.0),
+        [junction, (xc, -196.0, 168.0),
+         (xc, -250.0, 60.0), (xc + 8.0, -258.0, -74.0),
+         (vent[0] - 26.0, -258.0, vent[2] - 4.0),
          (vent[0] - 26.0, -146.0, vent[2] - 8.0), vent], 10.0, SM, subdiv=3))
     out["breathers"] = mesh.join(*pipes)
     out["catch_tank"] = _catch_tank()

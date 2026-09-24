@@ -73,7 +73,7 @@ EXPECTED = [
     # bonded along the tunnel's outer wall; the diffuser fences are bonded
     # to the tunnel roof; the fan fairings sit on the diffuser's trailing
     # edge and kick
-    ("engine", "fuel_fittings"), ("floor_plenum_edge_", "tunnel_"),
+    ("floor_plenum_edge_", "tunnel_"),
     ("diffuser_fences", "tunnel_"), ("diffuser_kick", "fan_fairing_"),
     ("diffuser_lip", "fan_fairing_"),
     # the caliper is bolted to the upright by its two lugs, and the brake
