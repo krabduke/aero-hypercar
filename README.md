@@ -7,7 +7,7 @@ a Formula 1 car on a Formula 1 circuit?**
 The power unit is the [RX-8V V8 hybrid](https://github.com/krabduke/car-engine-v8-hybrid)
 from the sibling project, imported and installed — not re-modelled.
 
-**220 assemblies · 4,930 × 2,001 mm · 700 kg · 1,254 hp · 650 kg of fan downforce**
+**263 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 650 kg of fan downforce, 10.7 s a lap faster than F1**
 
 ![hero](renders/01_hero.png)
 
@@ -37,32 +37,35 @@ roughly 750 kW.
 
 | | VX-1 | F1 reference | |
 |---|---|---|---|
-| Lateral g at 80 km/h | **3.59** | 2.05 | +75 % |
-| Lateral g at 150 km/h | **4.51** | 2.78 | +62 % |
-| Lateral g at 250 km/h | **6.72** | 4.50 | +49 % |
-| R25 m hairpin | **112 km/h** | 81 km/h | +31 |
-| R60 m corner | **208 km/h** | 143 km/h | +65 |
-| R120 m corner | **327 km/h** | 281 km/h | +46 |
+| Lateral g at 80 km/h | **3.34** | 2.03 | +65 % |
+| Lateral g at 150 km/h | **3.98** | 2.69 | +48 % |
+| Lateral g at 250 km/h | **5.48** | 4.22 | +30 % |
+| R25 m hairpin | **106 km/h** | 80 km/h | +26 |
+| R60 m corner | **183 km/h** | 140 km/h | +43 |
+| R120 m corner | **327 km/h** | 258 km/h | +69 |
 | Power to weight | **1.34 kW/kg** | 0.94 | +42 % |
-| Top speed | **388 km/h** | ~340 | |
+| Top speed | **439 km/h** | ~340 | |
+| Lap, worst case | **10.7 s faster** | 91.9 s | |
 
 The advantage is **largest at low speed and shrinks as speed rises** — which is
 exactly the signature of a fan car, and the reason this layout was chosen over
 simply adding more wing.
 
-Note the last row of the grip table: at 250 km/h the car is already at 6.7 g,
-and the model caps it at 7 g because **the driver becomes the limiting
-component before the tyres do.**
+The lap figure is the worst case the lap simulation finds: the pessimistic end
+of the tyre load-sensitivity band, with 30 % of the fan's suction lost every
+time the car rides a kerb and the skirts lift. The simulation also caps the
+car at 7 g, because **the driver becomes the limiting component before the
+tyres do.**
 
 ## Specification
 
 | | |
 |---|---|
-| Length × width × height | 4,980 × 1,980 × 1,015 mm |
+| Length × width × height | 5,101 × 1,999 × 1,147 mm |
 | Wheelbase / track | 3,150 / 1,660 front, 1,600 rear |
 | Mass | 700 kg, 56.5 % rear, CG 258 mm |
-| ClA / CdA | 5.90 / 1.62 (4.65 with active aero shed) |
-| Fan system | 2 × 560 mm, 13 blades, 7,200 rpm, 62 kW, 650 kg |
+| ClA / CdA | 4.55 / 1.28 (ClA 3.30 with the active aero shed) |
+| Fan system | 2 × 340 mm ducted fans at the tail, blowing aft; 11 blades, 7,200 rpm, 38 kW each; 650 kg of suction, eased back on the straights |
 | Engine | RX-8V 2.0 L V8 twin-turbo hybrid, 935 kW |
 | Tyres | 305/670 front, 405/690 rear on 18-inch rims |
 | Ride height | 22 mm front, 58 mm rear (rake feeds the tunnels) |
