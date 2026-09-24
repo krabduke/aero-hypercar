@@ -461,11 +461,10 @@ def _breathers():
     # drive gears are at x -269 to -250 and stand 241 tall. Forward of the
     # gears and above the accessory drive there is a clear band, and that is
     # where a real engine would run it too.
-    # +58, not +40: the high-pressure fuel pump stands on the right cover to
-    # z 212 and the gallery was running straight through it at 211.7.
-    along = spec.DECK_HEIGHT + H["height"] + 58.0
+    # On the covers' crowns: at this height the 7 mm hose lies on them.
+    along = spec.DECK_HEIGHT + H["height"] + 54.0
     # forward of the timing case's plate, which is at x -290
-    xc = spec.FRONT["case_front"] - 16.0
+    xc = spec.FRONT["case_front"] - 9.0
     junction = (xc, -150.0, 222.0)
     for bank in (0, 1):
         d = common.bank_dir(bank)
@@ -488,7 +487,9 @@ def _breathers():
         if bank == 1:                      # the right bank crosses the front
             way.append((xc, 40.0, 222.0))
         way.append(junction)
-        pipes.append(mesh.pipe(way, 11.0, SM, subdiv=3))
+        # 7 mm, not 11: a breather is a light hose, and at 11 the crossover
+        # and its drop read as a roll bar across the front of the engine
+        pipes.append(mesh.pipe(way, 7.0, SM, subdiv=3))
     # and down the front-left corner into the tank's lid.
     #
     # The two bank pipes met over the vee and stopped there, 300 mm from the
@@ -511,7 +512,7 @@ def _breathers():
         [junction, (xc, -196.0, 168.0),
          (xc, -250.0, 60.0), (xc + 8.0, -258.0, -74.0),
          (vent[0] - 26.0, -258.0, vent[2] - 4.0),
-         (vent[0] - 26.0, -146.0, vent[2] - 8.0), vent], 10.0, SM, subdiv=3))
+         (vent[0] - 26.0, -146.0, vent[2] - 8.0), vent], 7.0, SM, subdiv=3))
     out["breathers"] = mesh.join(*pipes)
     out["catch_tank"] = _catch_tank()
     # The dipstick is in the tank's filler cap, because this is a dry-sump

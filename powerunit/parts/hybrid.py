@@ -171,11 +171,18 @@ def _hv_loom():
     # over the left bank: the front one through primary 1, the rear one
     # through primary 7, and both hairpinning back over the vee.
     #
-    # From each connector the lead runs aft along the top of the engine,
-    # outboard of the two compressor inlets, which stand up the middle of
-    # the vee to z 391, and over the primaries, which peak at 365; then down
-    # behind the rear turbine, outboard of the inverter, into its plug.
-    src = plug(-1.0)
+    # From each connector the lead runs aft down the middle of the engine,
+    # over the two compressor inlets, which stand up the centre of the vee
+    # to z 391, then drops straight down behind the rear turbine into a plug
+    # on the inverter's lid. They used to swing out over the left bank's
+    # primaries and down the back corner to a plug on the inverter's side,
+    # which read as a loop of orange hoop round the top of the engine.
+    ix, iy, iz = Y["inverter_pos"]
+    lid = iz + Y["inverter"][2] / 2 + 7.6            # the tops of the fins
+    top_plug = (ix, -35.0, lid + 5.0)
+    out["inverter_connectors"] = mesh.join(
+        out["inverter_connectors"],
+        shapes.connector(*top_plug, 22.0, 40.0, 10.0, 6))
     D = gaspath.COLLECTOR_DRUM
     for index, x in enumerate(spec.TURBO["x"]):
         c = gaspath.collector_path(0 if x < 0 else 2)[0]
@@ -183,18 +190,22 @@ def _hv_loom():
         term = (c[0] + 9.0, c[1], top + 7.0)
         out[f"hv_motor_h_connector_{index}"] = shapes.connector(
             c[0], c[1], top + 7.0, 18.0, 16.0, 14.0, 3)
-        lane = -90.0 - 8.0 * index         # two leads side by side
-        path = [term, (term[0] + 18.0, -26.0, top + 8.0)]
+        lane = -44.0 if x < 0 else -28.0     # side by side down the middle
+        path = [term]
         if x < 0:
-            path += [(-104.0, lane, top + 6.0), (104.0, lane, top + 6.0)]
-        path += [(214.0, lane - 4.0, top - 2.0),
-                 (248.0, lane - 8.0, top - 28.0),
-                 (274.0, lane - 12.0, top - 76.0),
-                 (src[0] + 14.0, lane - 14.0, src[2] + 40.0),
-                 (src[0] + 4.0, -116.0 + 2.0 * index, src[2] + 12.0 - 8.0 * index),
-                 (src[0], src[1], src[2] + 4.0 - 8.0 * index)]
+            path += [(term[0] + 20.0, -12.0, top + 22.0),
+                     (-96.0, lane, top + 26.0), (96.0, lane, top + 26.0),
+                     (130.0, lane, top + 22.0)]
+        else:
+            path += [(term[0] + 24.0, lane * 0.5, top + 10.0)]
+        path += [(200.0, lane, top + 16.0),
+                 (264.0, lane, top + 2.0),
+                 (ix + 18.0, lane, top - 44.0),
+                 (ix + 18.0, lane, lid + 40.0),
+                 (ix + 4.0, lane, lid + 12.0),
+                 (ix, lane, top_plug[2])]
         out[f"hv_motor_h_{index}"] = mesh.pipe(
-            mesh.smooth_path(path, 3), 4.0, SM, subdiv=2)
+            mesh.smooth_path(path, 3), 3.6, SM, subdiv=2)
     return out
 
 
@@ -204,13 +215,26 @@ def _mguk():
     # round the shaft that drives it
     v, f = mesh.tube(Y["mguk_x"] - Y["mguk_len"] / 2, Y["mguk_x"] + Y["mguk_len"] / 2,
                      spec.CRANK["nose_r"], Y["mguk_r"], SEG)
-    fins = []
-    for k in range(28):
-        a = 2 * math.pi * k / 28
-        fv, ff = shapes.rounded_box(Y["mguk_x"], Y["mguk_r"] + 5.0, 0.0,
-                                    Y["mguk_len"] * 0.86, 11.0, 3.0, 1.2)
-        fins.append((mesh.rot_x(fv, a), ff))
-    return {"mguk": mesh.join((v, f), *fins)}
+    # A motor, not a gear: the stator housing is a smooth drum with a
+    # rolled lip at each end and three shallow cooling bands round it.
+    # Twenty-eight radial fins round its rim read, behind the belt, as a
+    # second toothed wheel on the crank.
+    x0 = Y["mguk_x"] - Y["mguk_len"] / 2
+    x1 = Y["mguk_x"] + Y["mguk_len"] / 2
+    R = Y["mguk_r"]
+    parts = [(v, f)]
+    parts.append(mesh.revolve_closed(
+        [(x0, R - 2.0), (x0, R + 5.0), (x0 + 3.0, R + 7.0),
+         (x0 + 6.0, R + 7.0), (x0 + 6.0, R - 2.0)], SEG))
+    parts.append(mesh.revolve_closed(
+        [(x1 - 6.0, R - 2.0), (x1 - 6.0, R + 7.0), (x1 - 3.0, R + 7.0),
+         (x1, R + 5.0), (x1, R - 2.0)], SEG))
+    for k in range(3):
+        xb = x0 + 10.0 + k * (x1 - x0 - 20.0) / 2.0
+        parts.append(mesh.revolve_closed(
+            [(xb - 2.0, R - 1.0), (xb - 2.0, R + 4.0), (xb + 2.0, R + 4.0),
+             (xb + 2.0, R - 1.0)], SEG))
+    return {"mguk": mesh.join(*parts)}
 
 
 def _mguh():
