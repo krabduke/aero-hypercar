@@ -50,7 +50,10 @@ def _gills():
             for k in range(n):
                 f = k / max(n - 1, 1)
                 x = x0 + (x1 - x0) * f
-                px, py, pz = chassis.surface_point(x, a, -4.0)
+                # rooted 4 mm proud of the skin rather than 4 mm under it:
+                # buried, each blade reached 15 mm into the cover, into the
+                # lane the front turbo's downpipe runs along under it
+                px, py, pz = chassis.surface_point(x, a, 4.0)
                 v, fc = shapes.rounded_box(0.0, 0.0, 0.0, length, 10.0, h)
                 # cant each blade so it stands off the skin at its trailing edge
                 t = math.radians(22.0)

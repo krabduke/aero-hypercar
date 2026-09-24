@@ -230,6 +230,23 @@ def _details():
          (3640.0, 64.0, 604.0), (3760.0, 10.0, 598.0),
          (4180.0, 0.0, 556.0), (D["exhaust_x"] + 10.0, 0.0, D["exhaust_z"])],
         [30.0, 34.0, 42.0, 52.0, 52.0, 52.0], 18, subdiv=3))
+    # The front turbo's downpipe. Its outlet flange is at the front of the
+    # vee facing forward and out to port, and it used to be connected to
+    # nothing: the engine ends at its flanges and the car only ever plumbed
+    # the rear one. From the flange it turns back on itself and runs aft
+    # along the inside of the engine cover, over the port cam cover -- the
+    # one clear lane down the engine, 60-100 mm between the cam cover's top
+    # and the cover's skin -- then in behind the engine to join the tailpipe.
+    f0 = (ex_x - 320.0, -92.0, ex_z + 282.0)
+    ex.append(mesh.pipe(
+        [f0, (f0[0] - 8.0, -112.0, f0[2] + 4.0),
+         (f0[0] - 2.0, -150.0, f0[2] + 7.0),
+         (f0[0] + 40.0, -176.0, 600.0), (3040.0, -180.0, 596.0),
+         (3300.0, -164.0, 592.0), (3420.0, -148.0, 586.0),
+         (3540.0, -128.0, 580.0),
+         (3640.0, -84.0, 588.0), (3760.0, -18.0, 598.0)],
+        [27.0, 28.0, 29.0, 30.0, 30.0, 30.0, 30.0, 32.0, 34.0, 36.0],
+        18, subdiv=4))
     out["exhaust"] = mesh.join(*ex)
 
     # Engine cover cooling louvres, ON the cover.

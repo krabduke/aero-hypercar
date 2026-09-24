@@ -183,7 +183,7 @@ bargeboard_r4,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1318.0,1693.1,319.9,45
 beam_wing,03 Wings,carbon_gloss,,,,,,,,,1008,868,4281.1,4615.1,-550.0,550.0,669.6,789.4
 cameras,09 Aero Detail,carbon_matte,,,,,,,,,588,510,635.0,2525.0,-145.0,145.0,407.0,1029.5
 cooling_louvres,09 Aero Detail,carbon_matte,,,,,,,,,2352,2040,3145.0,3695.0,-168.3,168.3,612.4,700.8
-exhaust,09 Aero Detail,steel,,,,,,,,,2676,2646,3536.5,4530.0,-62.0,132.8,486.0,649.4
+exhaust,09 Aero Detail,steel,,,,,,,,,7316,7256,2885.6,4530.0,-209.9,132.8,486.0,649.4
 fan_fairing_l,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,-657.9,-234.0,240.0,664.0
 fan_fairing_r,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,234.1,658.0,240.0,664.0
 floor_edge_wings,03 Wings,carbon_matte,,,,,,,,,3400,3304,1900.0,3640.0,-989.4,989.4,53.0,161.7
@@ -206,7 +206,7 @@ turning_vane_r2,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1380.0,1641.1,288.1,
 airbox,11 Structure and Service,carbon_gloss,,,,,,,,,374,342,2020.0,3100.0,-174.7,174.7,550.8,907.1
 crash_structure,11 Structure and Service,carbon_matte,,,,,,,,,3920,3973,4066.0,4485.0,-146.0,146.0,184.0,476.0
 driver,10 Cockpit,suit,,,,,,,,,4448,3768,914.0,1913.5,-220.1,220.1,222.5,673.5
-gills,09 Aero Detail,carbon_matte,,,,,,,,,5096,4420,3001.8,3653.2,-261.1,261.1,483.0,686.7
+gills,09 Aero Detail,carbon_matte,,,,,,,,,5096,4420,3001.8,3653.2,-268.7,268.7,487.0,693.5
 helmet,10 Cockpit,helmet,,,,,,,,,5056,4946,1614.8,1896.0,-118.8,124.1,578.0,842.0
 jack_points,11 Structure and Service,alu_bright,,,,,,,,,3876,3936,350.1,4129.9,-70.0,70.0,127.1,241.8
 nose_cape,09 Aero Detail,carbon_gloss,,,,,,,,,572,568,340.0,760.0,-300.0,300.0,76.0,158.7

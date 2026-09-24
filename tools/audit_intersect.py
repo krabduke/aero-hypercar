@@ -292,7 +292,6 @@ EXPECTED = [
     ("trackrod_", "wishbone_"),
     # the loom is clipped along the top wishbone on its way to the corner
     ("wiring_loom", "wishbone_"),
-    ("engine", "gills"),   # the louvres are cut in the cover over it
     # An exhaust runs inside the engine cover and exits through the tail --
     # the bodywork it passes through is the bodywork it is routed inside.
     ("exhaust", "tub"),

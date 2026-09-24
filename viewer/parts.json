@@ -326,7 +326,7 @@
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 53,
-   "faces": 44766
+   "faces": 49376
   },
   {
    "key": "10 Cockpit",
@@ -2111,9 +2111,9 @@
   "exhaust": {
    "g": "09 Aero Detail",
    "mat": "steel",
-   "x0": 3536.5,
+   "x0": 2885.6,
    "x1": 4530.0,
-   "f": 2646
+   "f": 7256
   },
   "fan_fairing_l": {
    "g": "06 Fan System",
