@@ -10,7 +10,7 @@
   "parts/block.py": "f8e24d697e31",
   "parts/bottomend.py": "7654d3bf5225",
   "parts/heads.py": "2490f1b08816",
-  "parts/plumbing.py": "6b077f60d1a2",
+  "parts/plumbing.py": "b15492a1193a",
   "parts/induction.py": "6d6fead73b53",
   "parts/turbo.py": "717463100e20",
   "parts/hybrid.py": "963e88c7ad97",
@@ -18,5 +18,5 @@
   "parts/detail.py": "6a8c33cf9cc2",
   "parts/ancillaries.py": "b42f17a611bb"
  },
- "commit": "a12b0d8"
+ "commit": "5e973e5"
 }

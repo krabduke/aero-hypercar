@@ -470,9 +470,13 @@ def _breathers():
         d = common.bank_dir(bank)
         # out of a union let into the cover's crown: the gallery used to
         # start in the air above the cover, bore open
-        way = [(H["x_rear"] - 72.0, d[1] * (along - 20.0), d[2] * (along - 20.0)),
-               (H["x_rear"] - 90.0, d[1] * along, d[2] * along),
-               (H["x_front"] + 120.0, d[1] * along, d[2] * along),
+        #
+        # The union is at the FRONT of the cover, not the back: from the back
+        # the hose ran the whole length of the cover's crown and read, from
+        # every angle, as a handrail round the heads.
+        way = [(H["x_front"] + 92.0, d[1] * (along - 20.0), d[2] * (along - 20.0)),
+               (H["x_front"] + 74.0, d[1] * along, d[2] * along),
+               (H["x_front"] + 48.0, d[1] * along, d[2] * along),
                # Outboard of the cam drive gears, which are 241 of half
                # width and stand to z 241, rather than over the top of them
                # -- and the whole transit across their station has to be
