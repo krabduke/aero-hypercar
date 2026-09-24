@@ -116,7 +116,6 @@ EXPECTED = [
 
     # bodywork: everything lofted or louvred into it
     ("sidepod_", "tub"), ("sidepod_inlets", "sidepod_"),
-    ("exit_louvres_", "sidepod_"), ("gills", "tub"),
     ("sharkfin", "tub"),         # rooted in the engine cover
     ("airbox", "tub"), ("cockpit_coaming", "tub"), ("nose_cape", "tub"),
     ("nose_pylons", "tub"), ("nose_pylons", "front_wing_main"),
@@ -248,7 +247,7 @@ EXPECTED = [
     # hoses and driveshafts out to the sidepods and wheels, the tanks where
     # the sidepods meet it, louvres and the filler set into it.
     ("rad_hoses_", "tub"),
-    ("cooling_louvres", "tub"), ("driveshaft_", "tub"),
+    ("driveshaft_", "tub"),
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it
 

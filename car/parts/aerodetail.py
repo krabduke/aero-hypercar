@@ -182,9 +182,17 @@ def _details():
                            (D["mirror_x"], sgn * D["mirror_y"], D["mirror_z"])],
                           13.0, 10)
         mirrors.append(stalk)
-        mv, mf = shapes.rounded_box(D["mirror_x"] + 24.0, sgn * (D["mirror_y"] + 18.0),
-                          D["mirror_z"] + 8.0, 62.0, 30.0, 86.0)
-        mirrors.append((mv, mf))
+        # The housing is a streamlined pod with the glass on its flat back
+        # face, not a box: round-nosed, deepest a third of the way along,
+        # cut off square behind where the mirror is.
+        pv, pf = mesh.revolve_closed(
+            [(66.0, 0.0), (64.0, 16.0), (52.0, 18.5), (30.0, 20.5),
+             (14.0, 20.0), (4.0, 17.0), (0.0, 13.0), (0.0, 0.0)], 32)
+        cx, cy, cz = (D["mirror_x"] - 9.0, sgn * (D["mirror_y"] + 16.5),
+                      D["mirror_z"] + 8.0)
+        # flip so the round nose leads and the flat glass face is aft
+        mirrors.append(([(cx + 66.0 - px, cy + py * 0.80, cz + pz * 2.1)
+                         for (px, py, pz) in pv], pf))
     out["mirrors"] = mesh.join(*mirrors)
 
     cams = []
@@ -256,12 +264,10 @@ def _details():
     # inside it. A louvre is a slot cut in a surface, so it is set from the
     # surface -- like every other skin detail on the car.
     lv2 = []
-    for k in range(6):
-        x = 3180.0 + k * 96.0
-        for ang in (62.0, 118.0):
-            p = chassis.surface_point(x, ang, 3.0)
-            lv2.append(shapes.rounded_box(p[0], p[1], p[2],
-                                          70.0, 10.0, 34.0, 3.0))
+    for ang in (66.0, 114.0):
+        lv2.append(shapes.louvre_panel(
+            chassis.skin_point, 3200.0, 3640.0, ang - 5.0, ang + 5.0,
+            11, h=10.0, lean=24.0, t=3.0, m=8, base=1.3))
     out["cooling_louvres"] = mesh.join(*lv2)
     return out
 

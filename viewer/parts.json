@@ -218,6 +218,15 @@
    "metal": 0.05,
    "rough": 0.16
   },
+  "visor": {
+   "rgb": [
+    0.02,
+    0.024,
+    0.03
+   ],
+   "metal": 0.3,
+   "rough": 0.04
+  },
   "suit": {
    "rgb": [
     0.052,
@@ -270,7 +279,7 @@
    "label": "Bodywork",
    "color": "#5A6066",
    "parts": 21,
-   "faces": 32631
+   "faces": 44513
   },
   {
    "key": "02 Floor and Diffuser",
@@ -326,14 +335,14 @@
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 53,
-   "faces": 49376
+   "faces": 46632
   },
   {
    "key": "10 Cockpit",
    "label": "Cockpit",
    "color": "#9A5A52",
-   "parts": 11,
-   "faces": 20750
+   "parts": 12,
+   "faces": 17762
   },
   {
    "key": "11 Structure and Service",
@@ -347,16 +356,16 @@
   "cockpit_coaming": {
    "g": "01 Bodywork",
    "mat": "carbon_matte",
-   "x0": 1166.2,
-   "x1": 1992.9,
-   "f": 1912
+   "x0": 1166.0,
+   "x1": 1993.1,
+   "f": 11778
   },
   "halo": {
    "g": "01 Bodywork",
    "mat": "titanium",
-   "x0": 1119.1,
-   "x1": 2032.9,
-   "f": 866
+   "x0": 1121.2,
+   "x1": 2034.1,
+   "f": 2882
   },
   "halo_mounts": {
    "g": "01 Bodywork",
@@ -2111,9 +2120,9 @@
   "cooling_louvres": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 3145.0,
-   "x1": 3695.0,
-   "f": 2040
+   "x0": 3190.0,
+   "x1": 3650.2,
+   "f": 1608
   },
   "exhaust": {
    "g": "09 Aero Detail",
@@ -2217,8 +2226,8 @@
    "g": "09 Aero Detail",
    "mat": "carbon_gloss",
    "x0": 1548.0,
-   "x1": 1675.0,
-   "f": 524
+   "x1": 1677.0,
+   "f": 1112
   },
   "rainlight": {
    "g": "09 Aero Detail",
@@ -2279,16 +2288,23 @@
   "gills": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 3001.8,
-   "x1": 3653.2,
-   "f": 4420
+   "x0": 3049.9,
+   "x1": 3510.4,
+   "f": 2652
   },
   "helmet": {
    "g": "10 Cockpit",
    "mat": "helmet",
-   "x0": 1614.8,
-   "x1": 1896.0,
-   "f": 4946
+   "x0": 1630.6,
+   "x1": 1885.4,
+   "f": 1438
+  },
+  "helmet_visor": {
+   "g": "10 Cockpit",
+   "mat": "helmet",
+   "x0": 1627.7,
+   "x1": 1722.3,
+   "f": 520
   },
   "jack_points": {
    "g": "11 Structure and Service",
@@ -2517,16 +2533,16 @@
   "exit_louvres_l": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 2682.9,
-   "x1": 3217.1,
-   "f": 1530
+   "x0": 2750.1,
+   "x1": 3152.1,
+   "f": 964
   },
   "exit_louvres_r": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 2682.9,
-   "x1": 3217.1,
-   "f": 1530
+   "x0": 2750.1,
+   "x1": 3152.1,
+   "f": 964
   },
   "extinguisher": {
    "g": "10 Cockpit",

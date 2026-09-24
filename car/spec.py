@@ -562,9 +562,10 @@ BODY_DETAIL = {
     # mirrored to both flanks. Angles are measured from +y, so 36 and -36 are
     # both on the same side; the mirror is applied in code, not by sign here.
     # engine-cover louvres, on the central body: (x0, x1, angle, n, len, h)
+    # (x0, x1, clock angle, slats, angular span, slat height)
     "gills": [
-        (3060.0, 3520.0,  52.0, 7, 120.0, 22.0),
-        (3160.0, 3600.0,  22.0, 6, 110.0, 20.0),
+        (3060.0, 3500.0,  49.0, 12, 11.0, 11.0),
+        (3160.0, 3400.0,  22.0, 7, 11.0, 10.0),
     ],
     "nose_pylon_x": 300.0, "nose_pylon_y": 96.0, "nose_pylon_t": 34.0,
     "cape_x0": 340.0, "cape_x1": 760.0, "cape_y": 300.0,
@@ -855,6 +856,7 @@ MATERIAL_MAP = {
     "nose_cape": "carbon_gloss", "susp_fairing": "carbon_gloss",
     "crash_structure": "carbon_matte", "jack_point": "alu_bright",
     "helmet": "helmet", "driver": "suit", "airbox": "carbon_gloss",
+    "visor": "visor",
     "tow_hook": "alu_bright", "floor_plank": "wood",
     "cooling_louvre": "carbon_matte", "sharkfin": "carbon_gloss",
     "coaming": "carbon_matte", "headrest": "carbon_matte",
@@ -878,6 +880,7 @@ PALETTE = {
     "hose":         ((0.055, 0.056, 0.060), 0.00, 0.78),
     "cf_disc":      ((0.090, 0.086, 0.082), 0.10, 0.66),
     "helmet":       ((0.480, 0.086, 0.062), 0.05, 0.16),
+    "visor":        ((0.020, 0.024, 0.030), 0.30, 0.04),
     "suit":         ((0.052, 0.056, 0.070), 0.00, 0.72),
     "wood":         ((0.300, 0.232, 0.140), 0.00, 0.80),
     "rad_core":     ((0.180, 0.130, 0.080), 0.90, 0.52),

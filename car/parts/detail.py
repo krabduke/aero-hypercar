@@ -43,25 +43,17 @@ def _gills():
     exit is a bank of louvres, and it is one of the most recognisable pieces
     of surface detail there is.
     """
+    # Each bank is a louvred panel on the cover: slats across the flow,
+    # leaning aft, over a dark recess. They were 120 mm blocks laid along
+    # the flow and canted off the skin, and from any distance a row of them
+    # read as a line of thorns.
     parts = []
-    for (x0, x1, ang, n, length, h) in BD["gills"]:
+    for (x0, x1, ang, n, span, h) in BD["gills"]:
         for mirror in (1.0, -1.0):
             a = ang if mirror > 0 else 180.0 - ang
-            for k in range(n):
-                f = k / max(n - 1, 1)
-                x = x0 + (x1 - x0) * f
-                # rooted 4 mm proud of the skin rather than 4 mm under it:
-                # buried, each blade reached 15 mm into the cover, into the
-                # lane the front turbo's downpipe runs along under it
-                px, py, pz = chassis.surface_point(x, a, 4.0)
-                v, fc = shapes.rounded_box(0.0, 0.0, 0.0, length, 10.0, h)
-                # cant each blade so it stands off the skin at its trailing edge
-                t = math.radians(22.0)
-                ct, st = math.cos(t), math.sin(t)
-                rot = [(vx * ct - vz * st, vy, vx * st + vz * ct)
-                       for (vx, vy, vz) in v]
-                parts.append(([(px + vx, py + vy, pz + vz)
-                               for (vx, vy, vz) in rot], fc))
+            parts.append(shapes.louvre_panel(
+                chassis.skin_point, x0, x1, a - span / 2, a + span / 2,
+                n, h=h, lean=24.0, t=3.0, m=8, base=1.3))
 
     # The sidepod's exits are exit_louvres_l/r (systems.py). A second set was
     # built here on the same flanks at nearly the same stations, so every
@@ -291,39 +283,83 @@ def _driver():
     R = D["helmet_r"]
     hx, hz = D["helmet_x"], D["helmet_z"]
 
-    # ---- helmet: shell, visor aperture, chin bar, aero tail, top vents ----
+    # ---- helmet: a smooth shell, a visor let into its face, a spoiler ----
+    #
+    # The shell was a revolve with a visor made of a bent pipe laid across
+    # the front and a second pipe for the chin: the pipes' ends stood off the
+    # sides like ears, and it read as a toy. A helmet is one smooth shell,
+    # a little longer behind than in front and narrower than it is tall, with
+    # the visor a tinted panel following its face.
+    # the back no longer than it was: the headrest is right behind it
+    ax_f, ax_b, by, cz = R * 0.98, R * 0.95, R * 0.90, R * 1.0
+
+    def shell(d, off=0.0):
+        dx, dy, dz = d
+        a = ax_f if dx < 0 else ax_b
+        t = 1.0 / math.sqrt((dx / a) ** 2 + (dy / by) ** 2 + (dz / cz) ** 2)
+        return (hx + dx * (t + off), dy * (t + off), hz + dz * (t + off))
+
     parts = []
-    hv, hf = mesh.revolve_closed(
-        [(-R * 0.90, 0.0), (-R * 0.88, R * 0.44), (-R * 0.80, R * 0.66),
-         (-R * 0.58, R * 0.86), (-R * 0.30, R * 0.97), (0.0, R),
-         (R * 0.32, R * 0.96), (R * 0.60, R * 0.86), (R * 0.80, R * 0.62),
-         (R * 0.90, R * 0.30), (R * 0.94, 0.0)], 40)
-    parts.append(([(pz + hx, px, py + hz) for (px, py, pz) in hv], hf))
-    # the visor aperture: a band let into the front of the shell
-    band = []
-    for i in range(19):
-        f = i / 18.0
-        a_ = math.radians(-62.0 + 124.0 * f)
-        band.append((hx - R * 0.72 - math.cos(a_) * R * 0.22,
-                     math.sin(a_) * R * 0.94, hz + R * 0.12))
-    vv, vf = mesh.pipe(band, [R * 0.16] * 19, 12, subdiv=2)
-    parts.append((vv, vf))
-    # chin bar
-    chin = []
-    for i in range(13):
-        f = i / 12.0
-        a_ = math.radians(-58.0 + 116.0 * f)
-        chin.append((hx - R * 0.60, math.sin(a_) * R * 0.80,
-                     hz - R * 0.52 - math.cos(a_) * R * 0.10))
-    parts.append(mesh.pipe(chin, [R * 0.15] * 13, 12, subdiv=2))
-    # aero tail at the back, and the two intake vents on the crown
-    parts.append(shapes.rounded_box(hx + R * 0.86, 0.0, hz + R * 0.26,
-                                    R * 0.34, R * 1.10, R * 0.34,
-                                    R * 0.12, seg=6))
+    n_lat, n_lon = 26, 44
+    verts, faces = [shell((0.0, 0.0, -1.0))], []
+    for i in range(1, n_lat):
+        el = -math.pi / 2 + math.pi * i / n_lat
+        for j in range(n_lon):
+            az = 2 * math.pi * j / n_lon
+            verts.append(shell((math.cos(el) * math.cos(az),
+                                math.cos(el) * math.sin(az), math.sin(el))))
+    verts.append(shell((0.0, 0.0, 1.0)))
+    top = len(verts) - 1
+    for j in range(n_lon):
+        j2 = (j + 1) % n_lon
+        faces.append((0, 1 + j2, 1 + j))
+        faces.append((top, 1 + (n_lat - 2) * n_lon + j,
+                      1 + (n_lat - 2) * n_lon + j2))
+    for i in range(n_lat - 2):
+        for j in range(n_lon):
+            j2 = (j + 1) % n_lon
+            a0, a1 = 1 + i * n_lon, 1 + (i + 1) * n_lon
+            faces.append((a0 + j, a0 + j2, a1 + j2, a1 + j))
+    parts.append((verts, faces))
+    # the spoiler on the back of the crown, and two intake vents on top,
+    # each let 1 mm into the shell they sit on
+    parts.append(shapes.rounded_box(hx + R * 0.74, 0.0, hz + R * 0.60,
+                                    R * 0.42, R * 0.86, R * 0.07,
+                                    R * 0.03, seg=5))
     for sgn in (-1.0, 1.0):
-        parts.append(shapes.rounded_box(hx - R * 0.20, sgn * R * 0.34,
-                                        hz + R * 0.90, R * 0.44, R * 0.24,
-                                        R * 0.16, R * 0.06, seg=5))
+        vx, vy, vz = shell((-0.2, sgn * 0.30, 0.93))
+        parts.append(shapes.rounded_box(vx, vy, vz, R * 0.40, R * 0.20,
+                                        R * 0.12, R * 0.05, seg=5))
+    # the visor: a tinted panel standing a millimetre proud of the face,
+    # 140 degrees wide and from just below eye level to the brow, as a grid
+    # over the shell so it follows the face
+    n_a, n_e = 28, 8
+    vv, vf = [], []
+    for k in range(n_a + 1):
+        az = math.radians(180.0 - 70.0 + 140.0 * k / n_a)
+        for off in (0.8, 3.0):
+            for m_ in range(n_e + 1):
+                e = math.radians(-10.0 + 36.0 * m_ / n_e)
+                vv.append(shell((math.cos(e) * math.cos(az),
+                                 math.cos(e) * math.sin(az), math.sin(e)), off))
+    L = 2 * (n_e + 1)
+
+    def vid(k, layer, m_):
+        return k * L + layer * (n_e + 1) + m_
+    for k in range(n_a):
+        for m_ in range(n_e):
+            vf.append((vid(k, 1, m_), vid(k + 1, 1, m_), vid(k + 1, 1, m_ + 1),
+                       vid(k, 1, m_ + 1)))
+            vf.append((vid(k, 0, m_ + 1), vid(k + 1, 0, m_ + 1),
+                       vid(k + 1, 0, m_), vid(k, 0, m_)))
+        for m_ in (0, n_e):
+            vf.append((vid(k, 0, m_), vid(k + 1, 0, m_), vid(k + 1, 1, m_),
+                       vid(k, 1, m_)))
+    for k in (0, n_a):
+        for m_ in range(n_e):
+            vf.append((vid(k, 0, m_), vid(k, 0, m_ + 1), vid(k, 1, m_ + 1),
+                       vid(k, 1, m_)))
+    out["helmet_visor"] = (vv, vf)
     out["helmet"] = mesh.join(*parts)
 
     # ---- body ----

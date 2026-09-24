@@ -791,17 +791,15 @@ def _cooling_exits():
         # in a row along it -- the way a louvre bank is built. They were
         # 120 mm blocks laid along the flow 60 mm apart, so each row was a
         # staggered pile of overlapping bricks.
-        for (x0, x1, fz, n) in ((2700.0, 3200.0, 0.72, 9),):
-            for i in range(n):
-                f = (i + 0.5) / n
-                x = x0 + (x1 - x0) * f
-                p = chassis.sidepod_point(x, sgn * 1.0, fz, 2.0)
-                v, fc = shapes.rounded_box(0.0, 0.0, 0.0, 7.0, 16.0, 150.0,
-                                           2.5)
-                t = math.radians(-35.0)
-                ct, st = math.cos(t), math.sin(t)
-                banks.append(([(p[0] + vx * ct - vz * st, p[1] + vy,
-                                p[2] + vx * st + vz * ct)
-                               for (vx, vy, vz) in v], fc))
+        #
+        # Now on a recess panel, so the bank reads as a vent cut in the
+        # flank rather than as blades standing off it.
+        # On the top of the pod, over the radiator's exit, where the air
+        # comes out into the low pressure over the car.
+        def at(x, u, off, s=sgn):
+            return chassis.sidepod_skin_point(x, s, u, off)
+        banks.append(shapes.louvre_panel(at, 2760.0, 3140.0, 40.0, 72.0, 12,
+                                         h=12.0, lean=24.0, t=3.0, m=10,
+                                         base=1.3))
         out[f"exit_louvres_{tag}"] = mesh.join(*banks)
     return out

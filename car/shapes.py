@@ -723,3 +723,80 @@ def volute(x_c, r_start, r_end, sect_r0, sect_r1, seg=48, sect=14, axis="x",
                 ring.append((rr * ca, rr * sa, x_c + ax))
         rings.append(ring)
     return _loft_ring_pairs(rings, closed=True)
+
+
+def louvre_panel(at, x0, x1, u0, u1, n, h=12.0, lean=22.0, t=3.0, m=10,
+                 base=1.0, skin=1.2, margin=10.0):
+    """A louvred vent laid on a surface: a dark recess panel and a row of
+    slats across the flow, each leaning aft, standing on it.
+
+    `at(x, u, offset)` is a point on the surface at station x and cross
+    parameter u (a clock angle, a height fraction -- whatever the surface
+    is parameterised by), `offset` mm out from it. The slats span u0..u1 and
+    stand at n stations from x0 to x1; the panel runs `margin` beyond them
+    fore and aft.
+
+    A louvre is a slot in a surface with a blade over it. The ones on this
+    car were small bricks stuck on the skin along the flow, and from any
+    distance they read as a scatter of thorns.
+    """
+    def slab(rows):
+        # rows: [[outer..], [inner..]] per station -> a closed loft of
+        # 4-point sections along u
+        verts, faces = [], []
+        k = len(rows[0])
+        for ring in rows:
+            verts.extend(ring)
+        for i in range(len(rows) - 1):
+            a, b = i * k, (i + 1) * k
+            for j in range(k):
+                j2 = (j + 1) % k
+                faces.append((a + j, a + j2, b + j2, b + j))
+        last = (len(rows) - 1) * k
+        faces.append(tuple(range(k - 1, -1, -1)))
+        faces.append(tuple(last + j for j in range(k)))
+        return verts, faces
+
+    parts = []
+    xa, xb = x0 - margin, x1 + margin
+    # the recess panel: a grid over the surface, not straight lines from end
+    # to end, which on a curved cover sink into it in the middle
+    nx = max(2, int((xb - xa) / 20.0))
+    us = [u0 + (u1 - u0) * j / m for j in range(m + 1)]
+    xs = [xa + (xb - xa) * i / nx for i in range(nx + 1)]
+    lo = [[at(x, u, base) for u in us] for x in xs]
+    hi = [[at(x, u, base + skin) for u in us] for x in xs]
+    verts, faces = [], []
+    W = m + 1
+
+    def vid(layer, i, j):
+        return layer * (nx + 1) * W + i * W + j
+    for grid in (lo, hi):
+        for row in grid:
+            verts.extend(row)
+    for i in range(nx):
+        for j in range(m):
+            faces.append((vid(1, i, j), vid(1, i + 1, j), vid(1, i + 1, j + 1),
+                          vid(1, i, j + 1)))
+            faces.append((vid(0, i, j + 1), vid(0, i + 1, j + 1),
+                          vid(0, i + 1, j), vid(0, i, j)))
+    for i in range(nx):                         # the two long edges
+        for j in (0, m):
+            faces.append((vid(0, i, j), vid(0, i + 1, j), vid(1, i + 1, j),
+                          vid(1, i, j)))
+    for j in range(m):                          # the two short ends
+        for i in (0, nx):
+            faces.append((vid(0, i, j), vid(0, i, j + 1), vid(1, i, j + 1),
+                          vid(1, i, j)))
+    parts.append((verts, faces))
+    lx = h * math.tan(math.radians(lean))
+    top = base + skin
+    for i in range(n):
+        x = x0 + (x1 - x0) * i / max(n - 1, 1)
+        rows = []
+        for j in range(m + 1):
+            u = u0 + (u1 - u0) * j / m
+            rows.append([at(x, u, top - 0.4), at(x + t, u, top - 0.4),
+                         at(x + t + lx, u, top + h), at(x + lx, u, top + h)])
+        parts.append(slab(rows))
+    return mesh.join(*parts)

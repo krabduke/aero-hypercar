@@ -244,7 +244,8 @@ def cockpit_outline(n=18):
 def _cockpit_surround():
     """Cockpit opening coaming, sunk into the body top."""
     rim = cockpit_outline()
-    parts = [mesh.pipe([(x, sgn * w, z) for (x, w, z) in rim], 15.0, 10)
+    parts = [mesh.pipe(mesh.smooth_path([(x, sgn * w, z) for (x, w, z) in rim],
+                                        4), 15.0, 16)
              for sgn in (-1.0, 1.0)]
     return {"cockpit_coaming": mesh.join(*parts)}
 
@@ -344,8 +345,11 @@ def _halo():
     # The hoop is a teardrop in section too, deeper than it is wide, for the
     # same reason as the pillar: it has to pass a 125 kN load and be as small
     # as possible in the driver's sightline.
+    #
+    # Through a spline, not straight between the thirteen waypoints: swept
+    # straight it came out as a polygon, a hoop with visible corners.
     out["halo"] = shapes.swept_profile(
-        path, shapes.teardrop_section(r * 1.9, r * 2.6, 24), subdiv=3)
+        mesh.smooth_path(path, 10), shapes.teardrop_section(r * 1.9, r * 2.6, 24))
 
     # the pillar: it carries the load straight down into the tub's front
     # bulkhead, and it is the only thing in a driver's forward view, which is
@@ -444,6 +448,68 @@ def surface_point(x, angle_deg, standoff=0.0):
     return (x,
             (hw + standoff) * math.copysign(abs(ca) ** p, ca),
             zc + (hz + standoff) * math.copysign(abs(sa) ** p, sa))
+
+
+def _meshed_point(xs, section, segs, centre, x, angle_deg, standoff):
+    """The point at (x, angle) on a skin lofted through `section(x)` rings at
+    stations `xs`, AS MESHED -- flat between stations and between segments --
+    and `standoff` mm out along its normal."""
+    i = 0
+    while i < len(xs) - 2 and xs[i + 1] < x:
+        i += 1
+    tx = (x - xs[i]) / ((xs[i + 1] - xs[i]) or 1.0)
+    a = math.radians(angle_deg) % (2 * math.pi)
+    f = a / (2 * math.pi) * segs
+    j = int(f) % segs
+    ta = f - int(f)
+    r0, r1 = section(xs[i]), section(xs[i + 1])
+    j2 = (j + 1) % segs
+
+    def lerp(p, q, t):
+        return tuple(p[k] + (q[k] - p[k]) * t for k in range(3))
+    a0 = lerp(r0[j], r0[j2], ta)
+    a1 = lerp(r1[j], r1[j2], ta)
+    p = lerp(a0, a1, tx)
+    du = tuple(lerp(r0[j2], r1[j2], tx)[k] - lerp(r0[j], r1[j], tx)[k]
+               for k in range(3))
+    dx = tuple(a1[k] - a0[k] for k in range(3))
+    n = (dx[1] * du[2] - dx[2] * du[1], dx[2] * du[0] - dx[0] * du[2],
+         dx[0] * du[1] - dx[1] * du[0])
+    m = math.sqrt(sum(c * c for c in n)) or 1.0
+    n = tuple(c / m for c in n)
+    cy, cz = centre(x)
+    if n[1] * (p[1] - cy) + n[2] * (p[2] - cz) < 0.0:
+        n = tuple(-c for c in n)
+    return tuple(p[k] + n[k] * standoff for k in range(3))
+
+
+def skin_point(x, angle_deg, standoff=0.0):
+    """A point on the body skin AS MESHED, and `standoff` mm out along its
+    normal.
+
+    `surface_point` follows the smooth spline through the station table, but
+    the skin is lofted through 68 stations of 52 segments each and is flat
+    between them -- up to 10 mm inside the spline where the spine climbs over
+    the exhaust. A panel laid on the spline there sank into the skin.
+    """
+    def centre(x):
+        hw, z_bot, z_top, nn, bias = _sample(spec.BODY, x)
+        return 0.0, (z_bot + z_top) / 2 + bias * (z_top - z_bot) * 0.5
+    return _meshed_point(_stations(spec.BODY, 68),
+                         lambda x: body_section(x, 0.0, SEG), SEG, centre,
+                         x, angle_deg, standoff)
+
+
+def sidepod_skin_point(x, sgn, angle_deg, standoff=0.0):
+    """The same for a sidepod's outer skin: angle 0 is its outboard face,
+    90 its top."""
+    def centre(x):
+        y_in, y_out, z_bot, z_top, n = _sample(spec.SIDEPOD_TABLE, x)
+        return (y_in + y_out) / 2, (z_bot + z_top) / 2
+    p = _meshed_point(_stations(spec.SIDEPOD_TABLE, 30),
+                      lambda x: _sidepod_section(x), 40, centre,
+                      x, angle_deg, standoff)
+    return (p[0], sgn * p[1], p[2])
 
 
 def sidepod_point(x, f_y, f_z, standoff=0.0):
