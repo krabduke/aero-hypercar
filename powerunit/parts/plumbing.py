@@ -468,7 +468,10 @@ def _breathers():
     junction = (xc, -150.0, 222.0)
     for bank in (0, 1):
         d = common.bank_dir(bank)
-        way = [(H["x_rear"] - 90.0, d[1] * along, d[2] * along),
+        # out of a union let into the cover's crown: the gallery used to
+        # start in the air above the cover, bore open
+        way = [(H["x_rear"] - 72.0, d[1] * (along - 20.0), d[2] * (along - 20.0)),
+               (H["x_rear"] - 90.0, d[1] * along, d[2] * along),
                (H["x_front"] + 120.0, d[1] * along, d[2] * along),
                # Outboard of the cam drive gears, which are 241 of half
                # width and stand to z 241, rather than over the top of them

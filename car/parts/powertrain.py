@@ -94,9 +94,11 @@ def build():
     # The motor-generators stay: they are the engine's own machines, not
     # power electronics. The MGU-K is on the crank nose and carries the
     # crank sensor's bracket, and it is what starts the engine.
+    # (and the port covers are the engine's shipping plugs: in the car the
+    # airbox and the exhaust are on those flanges instead)
     CAR_PROVIDES = ("battery", "battery_modules", "battery_terminals",
                     "inverter", "inverter_connectors",
-                    "hv_store", "hv_motor")
+                    "hv_store", "hv_motor", "port_covers")
     # The castings the engine cuts -- its bores out of the block, its
     # chambers out of the heads -- are carried as parts of their own with
     # their cutters. Joined into the one "engine" mesh, a cutter would either
@@ -249,7 +251,9 @@ def build():
         mesh.pipe([(bh_aft - 20.0, 0.0, z_run), (lane_x, 0.0, z_run),
                    (lane_x, 0.0, z_top), (lane_x, 252.0, z_top),
                    (rail[0] - 70.0, 252.0, z_top),
-                   (rail[0] - 24.0, rail[1], rail[2]), rail], 8.0, 12,
+                   # the hose pushes on over the rail's 22 mm inlet nipple
+                   (rail[0] - 44.0, rail[1], rail[2]),
+                   (rail[0] - 10.0, rail[1], rail[2])], 8.0, 12,
                   bend=18.0),
         shapes.rounded_box(fx - sx * 0.3, 0.0, fz + sz * 0.5 + 18.0,
                            110.0, 110.0, 36.0, 12.0))

@@ -60,7 +60,30 @@ def build():
     # `gaspath.primary_path` declares, so the viewer's flow animation runs
     # down the pipe that is actually there.
     out.update(_tailpipes())
+    # Blanking covers on the four open flanges -- the two compressor
+    # intakes and the two turbine outlets -- bolted on the way a shipping
+    # cover is on an engine that is not in its car. Without them the ports
+    # were open holes in every view of the engine. The car leaves them off:
+    # it connects its airbox and its exhaust there.
+    out["port_covers"] = mesh.join(*COVERS)
+    COVERS.clear()
     return out
+
+
+COVERS = []
+
+
+def _cover(place, r, face):
+    """A blanking cover over a flange whose face is `face` mm along the
+    duct's axis from `place`'s origin: a plate, a raised centre and a pull
+    tab, and a ring of bolts."""
+    v, f = mesh.revolve_closed(
+        [(face, 0.0), (face, r), (face + 3.0, r), (face + 4.0, r - 2.0),
+         (face + 4.0, r * 0.45), (face + 7.0, r * 0.40), (face + 7.0, 0.0)], SM)
+    parts = [(place(v), f)]
+    tv, tf = mesh.box(face + 14.0, 0.0, 0.0, 16.0, 6.0, r * 0.5)
+    parts.append((place(tv), tf))
+    return mesh.join(*parts)
 
 
 # --------------------------------------------------------------------------
@@ -442,7 +465,7 @@ def _oil():
     return out
 
 
-def _bored_duct(path, r_out, wall, seg, subdiv):
+def _bored_duct(path, r_out, wall, seg, subdiv, bend=None):
     """A duct with a hole down it, as one watertight surface.
 
     Two swept tubes, the inner one turned inside out, stitched to each other
@@ -458,7 +481,8 @@ def _bored_duct(path, r_out, wall, seg, subdiv):
     """
     # both tubes turn their corners on the same arc, or their rings no
     # longer pair up one for one
-    bend = 1.5 * (max(r_out) if isinstance(r_out, (list, tuple)) else r_out)
+    if bend is None:
+        bend = 1.5 * (max(r_out) if isinstance(r_out, (list, tuple)) else r_out)
     ov, of = mesh.pipe(path, r_out, seg, caps=False, subdiv=subdiv, bend=bend)
     iv, if_ = mesh.pipe(path, [r - wall for r in r_out], seg,
                         caps=False, subdiv=subdiv, bend=bend)
@@ -478,83 +502,73 @@ def _bored_duct(path, r_out, wall, seg, subdiv):
 
 
 def _inlets():
-    """What each compressor breathes through.
+    """What the compressors breathe through: one T-piece feeding both.
 
-    There was nothing here: the compressors drew from a sealed vee. The engine
-    ends at a flange -- the car supplies the airbox behind it -- so this is the
-    bellmouth, a short trunk turning up out of the vee, and the flange the
-    car's ducting bolts to.
+    There was nothing here once: the compressors drew from a sealed vee. The
+    engine ends at a flange -- the car supplies the airbox behind it -- so
+    this is the inlet from that flange down to the two compressor eyes.
+
+    The eyes face each other across the middle of the vee, their snouts'
+    mouths 81 mm apart, and each snout is 84 mm across. Two separate ducts
+    cannot leave two mouths that close square: whichever way they turn, the
+    elbows run into each other. They were made to turn INSIDE the snouts
+    instead, so each duct came out through the side of its snout with its
+    end ring skewed across the mouth -- the crescent and the gap behind it
+    that showed in every close-up. Hot-vee engines solve this the same way
+    real ones do: a straight cross tube from one eye to the other, clamped
+    square onto both, and a single trunk up out of its middle to the airbox,
+    which is also what the car's single central airbox wants to meet.
+
+    Built solid and bored by its cutter, because a T is not a swept tube.
     """
     out = {}
-    for pair, tag in SIDES:
-        _, tx, sgn, ib = gaspath.turbo_side(pair)
-        eye = gaspath.compressor_path(pair)[0]
-        # up and out to its own side. The two eyes face each other across the
-        # middle of the vee 41 mm apart, so a duct that carried straight on
-        # would run into the other one.
-        # near enough vertical: the two banks' primaries climb the vee at
-        # y = +-85, so a duct that leans out at all lands in one of them
-        # An axial stub off the eye, then up.
-        #
-        # This used to start already turning, because it had to: the two
-        # compressor eyes faced each other 29 mm apart and there was nowhere
-        # to run. Its first ring therefore stood at about 70 degrees to the
-        # shaft and reached out over the wheel's inducer, whose blade tips
-        # are 2.2 mm from the eye plane. Sizing the bore to the eye it bolts
-        # to made the two ducts thread through each other instead, over the
-        # whole run from z 243 to 380, and belling only the mouth left them
-        # touching at 42%. The fault was never in this function -- it was the
-        # turbos' spacing, and `spec.TURBO["x"]` now gives each duct its own
-        # side of the vee.
-        r_eye = T["comp_r"] * T["comp_wheel_frac"] + T["wheel_tip_clear"]
-        # `compressor_path[0]` is 60 mm off the housing centre and the eye
-        # snout's mouth is 76.6, so that point is INSIDE the snout -- the
-        # stub runs out from it along +ib, away from the turbo, not back
-        # into it over the wheel and the shaft.
-        # ...and then back outboard as it climbs, so the two ducts diverge
-        # instead of meeting over the middle of the vee
-        path = [(eye[0] + ib * 2.0, 0.0, T["z"]),
-                (eye[0] + ib * 22.0, sgn * 20.0, T["z"] + 10.0),
-                (eye[0] + ib * 16.0, sgn * 36.0, T["z"] + 48.0),
-                (eye[0] + ib * 2.0, sgn * 38.0, T["z"] + 82.0),
-                (eye[0] - ib * 10.0, sgn * 34.0, T["z"] + 106.0)]
-        # A duct with a bore, not a capped rod.
-        #
-        # mesh.pipe caps both ends, so this finished in a flat disc 60 mm
-        # across sitting in the middle of the flange -- a blank white circle
-        # in every render, reading as a sticker rather than the mouth of an
-        # intake. Two walls with a bore between them, closed by a ring at the
-        # compressor end and by the flange at the other, so the part is still
-        # watertight and you can see down it.
-        wall = 4.0
-        # ...and it necks down from the eye's own bore to the duct's within
-        # the first two stations, because the two ducts leave eyes that are
-        # 81 mm apart and each is 88 mm across at the eye
-        r_out = [r_eye + 4.0, 34.0, 30.0, 29.0, 30.0]
-        parts = [_bored_duct(path, r_out, wall, spec.RES["pipe"], 5)]
-        r_in = [r - wall for r in r_out]
-        end = (path[-1][0] + (path[-1][0] - path[-2][0]),
-               path[-1][1] + (path[-1][1] - path[-2][1]),
-               path[-1][2] + (path[-1][2] - path[-2][2]))
-        parts.append(_flange_at(path[-1], end, r_in[-1], 8.0,
-                                r_out[-1] - r_in[-1] + 11.0))
-        # the radius round the mouth, and the bolts the car's ducting picks up
-        place = _duct_frame(path[-1], end)
-        tv, tf = mesh.ring_torus(0.0, r_in[-1] + 2.2, 2.2, SM, 10)
-        # _duct_frame maps (axial, y, z) onto the duct, and everything the
-        # lathe makes already has its axis along x -- so the offset goes on
-        # px. Putting it on pz stood the ring on edge, as a blade across the
-        # mouth of the pipe.
-        parts.append((place([(px + 8.0, py, pz) for (px, py, pz) in tv]), tf))
-        n_bolt = 8
-        for k in range(n_bolt):
-            a = 2.0 * math.pi * k / n_bolt
-            rb = r_out[-1] + 5.5
-            bv, bf = mesh.cylinder(0.0, 5.0, 4.2, 12)
-            parts.append((place([(px + 8.0, py + rb * math.cos(a),
-                                  pz + rb * math.sin(a))
-                                 for (px, py, pz) in bv]), bf))
-        out[f"compressor_inlet_{tag}"] = mesh.join(*parts)
+    r_eye = T["comp_r"] * T["comp_wheel_frac"] + T["wheel_tip_clear"]
+    eye = gaspath.compressor_path(SIDES[0][0])[0]
+    _, _, _, ib = gaspath.turbo_side(SIDES[0][0])
+    # the snout's mouth: the housing's eye is a wheel's length and a lip
+    # outboard of the path's first point, and the snout runs 37 mm from it
+    mouth = abs(eye[0] + ib * 16.0)
+    zc = T["z"]
+    r_x = r_eye + 4.0               # the cross tube: the snouts' own OD
+    r_t = 41.0                      # the trunk: both ducts' bore in one
+    wall = 4.0
+    z_top = zc + 108.0
+    parts = [mesh.pipe([(-mouth, 0.0, zc), (mouth, 0.0, zc)], r_x,
+                       spec.RES["pipe"]),
+             mesh.pipe([(0.0, 0.0, zc), (0.0, 0.0, z_top)], r_t,
+                       spec.RES["pipe"])]
+    # a V-band clamp over each joint on a snout, and a hose bead inboard
+    for sx in (-1.0, 1.0):
+        for (x, rr, tt) in ((mouth - 1.0, r_x + 1.5, 3.6),
+                            (mouth - 13.0, r_x + 0.8, 2.0)):
+            cv, cf = mesh.ring_torus(sx * x, rr, tt, SM, 10)
+            parts.append(([(px, py, pz + zc) for (px, py, pz) in cv], cf))
+    top = (0.0, 0.0, z_top)
+    end = (0.0, 0.0, z_top + 20.0)
+    r_in = r_t - wall
+    parts.append(_flange_at(top, end, r_in, 8.0, wall + 11.0))
+    place = _duct_frame(top, end)
+    tv, tf = mesh.ring_torus(0.0, r_in + 2.2, 2.2, SM, 10)
+    parts.append((place([(px + 8.0, py, pz) for (px, py, pz) in tv]), tf))
+    for k in range(8):
+        a = 2.0 * math.pi * k / 8
+        rb = r_t + 5.5
+        bv, bf = mesh.cylinder(0.0, 5.0, 4.2, 12)
+        parts.append((place([(px + 8.0, py + rb * math.cos(a),
+                              pz + rb * math.sin(a))
+                             for (px, py, pz) in bv]), bf))
+    out["compressor_inlet"] = mesh.join(*parts)
+    # the bore: through the cross tube from mouth to mouth at the eyes' own
+    # bore, and up the trunk
+    out["cut:compressor_inlet"] = mesh.join(
+        mesh.pipe([(-mouth - 2.0, 0.0, zc), (mouth + 2.0, 0.0, zc)], r_eye,
+                  spec.RES["pipe"]),
+        # 0.6 mm inside the flange's own bore and clear of the lip's torus:
+        # a cutter whose wall coincides with the part's is what the exact
+        # boolean solver stalls on
+        mesh.pipe([(0.0, 0.0, zc), (0.0, 0.0, z_top + 30.0)], r_in - 0.6,
+                  spec.RES["pipe"]))
+    COVERS.append(_cover(place, r_t + 11.0, 8.0))
     return out
 
 
@@ -583,16 +597,24 @@ def _tailpipes():
         d = -ib                         # away from the middle of the engine
         # out and very slightly up: the crankcase breathers stand to z = 247
         # under the front of it and the cam sensor to 248 under the back
+        #
+        # Straight out of the turbine on its axis before it bends, so it
+        # meets the outlet square: it turned at once, and a skewed end on a
+        # round outlet left a wedge-shaped gap between them.
         path = [out_pt,
-                (out_pt[0] + d * 26.0, sgn * 26.0, T["z"] + 8.0),
-                (out_pt[0] + d * 46.0, sgn * 62.0, T["z"] + 18.0),
+                (out_pt[0] + d * 22.0, out_pt[1], out_pt[2]),
+                (out_pt[0] + d * 40.0, sgn * 42.0, T["z"] + 12.0),
                 (out_pt[0] + d * 58.0, sgn * 88.0, T["z"] + 26.0)]
         # bored, not capped: this is the end of the exhaust and you have to be
         # able to see down it
         wall = 3.0
         r_out = E["collector_r"]
         parts.append(_bored_duct(path, [r_out] * len(path), wall,
-                                 spec.RES["pipe"], 5))
+                                 spec.RES["pipe"], 5, bend=16.0))
+        # and a V-band clamp over the joint
+        cv, cf = mesh.ring_torus(out_pt[0] + d * 4.0, r_out + 3.0, 3.4, SM, 10)
+        parts.append(([(px, py + out_pt[1], pz + out_pt[2])
+                       for (px, py, pz) in cv], cf))
         end = (path[-1][0] + (path[-1][0] - path[-2][0]),
                path[-1][1] + (path[-1][1] - path[-2][1]),
                path[-1][2] + (path[-1][2] - path[-2][2]))
@@ -600,4 +622,5 @@ def _tailpipes():
         # cam sensor under the back of the bank and a band big enough to go
         # over the flange lands on it; the flange is the feature anyway.
         parts.append(_flange_at(path[-1], end, r_out - wall, 9.0, 13.0 + wall))
+        COVERS.append(_cover(_duct_frame(path[-1], end), r_out + 13.0, 9.0))
     return {"tailpipes": mesh.join(*parts)}

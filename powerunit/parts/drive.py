@@ -158,12 +158,16 @@ def _bellhousing():
     parts.append(mesh.flange(x, R - 12.0, R + 14.0, 9.0, 12, bolt_r=6.5))
     parts.append(mesh.flange(x + L - 9.0, R - 12.0, R + 12.0, 9.0, 12,
                              bolt_r=6.5))
-    for i in range(10):                        # stiffening ribs
-        a = 2 * math.pi * i / 10
-        rv, rf = shapes.rounded_box(0.0, 0.0, 0.0, L - 22.0, 9.0, 12.0, 3.0)
-        parts.append(([(px + x + L / 2, py + math.cos(a) * (R + 3.0),
-                        pz + math.sin(a) * (R + 3.0))
-                       for (px, py, pz) in rv], rf))
+    # Stiffening ribs, standing radially on the barrel between the flanges.
+    # They were boxes put round a circle without being turned to it, so at
+    # most stations one corner stood out of the barrel like a pin.
+    for i in range(10):
+        if i == 2:                      # straight up: the inverter sits there
+            continue
+        a = 2 * math.pi * (i + 0.5) / 10
+        rv, rf = shapes.rounded_box(x + L / 2, R - 1.0, 0.0,
+                                    L - 22.0, 12.0, 9.0, 3.0)
+        parts.append((mesh.rot_x(rv, a), rf))
     return {"bellhousing": mesh.join(*parts)}
 
 

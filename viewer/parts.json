@@ -320,15 +320,15 @@
    "key": "07 Power Unit",
    "label": "Power unit",
    "color": "#A8763E",
-   "parts": 10,
-   "faces": 2347640
+   "parts": 11,
+   "faces": 2348955
   },
   {
    "key": "08 Cooling and Energy",
    "label": "Cooling",
    "color": "#4E6E7A",
    "parts": 11,
-   "faces": 38960
+   "faces": 39048
   },
   {
    "key": "09 Aero Detail",
@@ -1925,8 +1925,8 @@
    "g": "07 Power Unit",
    "mat": "alu_cast",
    "x0": 2872.0,
-   "x1": 3597.9,
-   "f": 2288436
+   "x1": 3598.3,
+   "f": 2275595
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -1963,6 +1963,13 @@
    "x1": 3461.0,
    "f": 1718
   },
+  "engine_compressor_inlet": {
+   "g": "07 Power Unit",
+   "mat": "alu_cast",
+   "x0": 3188.0,
+   "x1": 3291.9,
+   "f": 14156
+  },
   "engine_head_l": {
    "g": "07 Power Unit",
    "mat": "alu_cast",
@@ -1995,8 +2002,8 @@
    "g": "08 Cooling and Energy",
    "mat": "alu_bright",
    "x0": 2157.0,
-   "x1": 3078.5,
-   "f": 1784
+   "x1": 3068.5,
+   "f": 1872
   },
   "gearbox": {
    "g": "07 Power Unit",

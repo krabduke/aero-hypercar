@@ -245,7 +245,10 @@ def _charge():
                 (out_x, s_ * 322.0, 176.0),
                 (out_x * 0.4, s_ * 350.0, 104.0),
                 (0.0, s_ * 352.0, cz),
-                (0.0, thr_y + 8.0, cz)]
+                # 1 mm into the throttle's mouth, on both sides: "+ 8" put
+                # the right-hand pipe 8 mm short of its throttle, bore open
+                # to the air, and the left-hand one 8 mm inside its throttle
+                (0.0, thr_y + s_ * 1.0, cz)]
         r = 30.0
         pipe_parts = [mesh.pipe(path, r, segments=18, subdiv=3)]
         # a coupling bead at each end, which is where a clamp lands

@@ -20,6 +20,9 @@ I = spec.INTAKE
 SEG = spec.RES["revolve"]
 
 
+PFI_NIPPLE = 22.0      # the port rails' front inlet nipple
+
+
 def build():
     out = {}
     out.update(_plenum())
@@ -132,8 +135,15 @@ def _injection():
         # 24 segments, not 6. At 6 this was a 32-vertex hexagonal stub, well
         # under the 120-vertex floor the geometry audit sets -- invisible
         # until the build was current enough for the audit to see it.
-        out[f"fuel_rail_pfi_union_{tag}"] = mesh.pipe(
-            [(end[0] - 6.0, *end[1:]), (end[0] + 6.0, *end[1:])], 10.0, 24)
+        # ...and the inlet union on the front end, with its nipple forward
+        # for the feed hose: the rail's front end was an open tube.
+        out[f"fuel_rail_pfi_union_{tag}"] = mesh.join(
+            mesh.pipe([(end[0] - 6.0, *end[1:]), (end[0] + 6.0, *end[1:])],
+                      10.0, 24),
+            mesh.pipe([(start[0] + 6.0, *start[1:]),
+                       (start[0] - 6.0, *start[1:])], 10.0, 24),
+            mesh.pipe([(start[0] - 5.0, *start[1:]),
+                       (start[0] - PFI_NIPPLE, *start[1:])], 5.0, 20))
     # Behind the block, not through it.
     #
     # This ran straight across the engine at the rails' own height, z 49,

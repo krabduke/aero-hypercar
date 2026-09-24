@@ -566,9 +566,10 @@ MATERIAL_MAP = {
     # sees more than about 200 degrees
     "compressor_housing": "alu_cast",
     "compressor_wheel":   "anodised",
-    "compressor_inlet":   "rubber_blk",
+    "compressor_inlet":   "alu_cast",
     "exhaust":    "inconel",
     "tailpipe":   "inconel",
+    "port_cover": "cover_red",
     "wastegate":  "inconel",
     "mguk":       "copper_wound",
     "mguh":       "copper_wound",
@@ -592,6 +593,7 @@ MATERIAL_MAP = {
 DEFAULT_MATERIAL = "alu_cast"
 
 PALETTE = {
+    "cover_red":      ((0.560, 0.050, 0.040), 0.00, 0.48),
     "alu_cast":       ((0.318, 0.326, 0.338), 1.00, 0.62),
     "alu_forged":     ((0.440, 0.450, 0.466), 1.00, 0.28),
     "magnesium":      ((0.276, 0.272, 0.258), 1.00, 0.58),

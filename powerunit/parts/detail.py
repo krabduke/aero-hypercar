@@ -695,7 +695,10 @@ def _dry_sump():
     # took the scavenge lines out to y 280 at z -206 and put 60 mm of
     # pipework through the hypercar's floor.
     z_low = -spec.BLOCK["skirt_depth"] - 54.0
-    pan_y = -spec.ANCILLARY["sump_w"] / 2.0 - 4.0
+    # in the pan's flank: the pan tapers, and at the scavenge lines' height
+    # its side is at y -71 to -77, not the -94 of its rim -- they started
+    # 20 mm out in the air beside it
+    pan_y = -73.0
     y_low = -150.0
 
     # scavenge 1 comes off the pickup itself, forward of the block where
@@ -747,5 +750,6 @@ def _dry_sump():
     p0 = spec.oil_pump_port(0)
     parts.append(mesh.pipe(
         [p0, (p0[0] - 12.0, -262.0, 0.0), (-160.0, -270.0, -30.0),
-         (-108.0, -255.0, -45.0)], 10.0, SM, subdiv=3))
+         (-116.0, -255.0, -45.0), (-102.0, -255.0, -45.0)], 10.0, SM,
+        subdiv=3))
     return {"dry_sump_lines": mesh.join(*parts)}

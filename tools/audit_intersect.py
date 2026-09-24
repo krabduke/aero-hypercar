@@ -120,6 +120,8 @@ EXPECTED = [
     ("rad_hoses_", "rad_tanks_"),
     ("engine", "gearbox"), ("engine", "tub"),
     ("exhaust", "engine"), ("fuel_fittings", "fuel_cell"),
+    # the fuel hose is pushed on over the port-injection rail's inlet nipple
+    ("fuel_fittings", "engine"),
     ("battery_modules", "battery"),
 
     # bodywork: everything lofted or louvred into it
