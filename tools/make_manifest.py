@@ -66,7 +66,15 @@ def main():
 
     out = {
         "name": spec.NAME, "class": spec.CLASS,
-        "length": spec.LENGTH, "width": spec.WIDTH, "height": spec.HEIGHT,
+        # measured off the build, as verify.py measures them: the spec's
+        # LENGTH and WIDTH are the design envelope the body was drawn to, and
+        # the page quoted them after the car had grown past them
+        "length": round(max(float(r["x_max_mm"]) for r in rows)
+                        - min(float(r["x_min_mm"]) for r in rows)),
+        "width": round(max(float(r["y_max_mm"]) for r in rows)
+                       - min(float(r["y_min_mm"]) for r in rows)),
+        "height": round(max(float(r["z_max_mm"]) for r in rows)
+                        - min(float(r["z_min_mm"]) for r in rows)),
         "wheelbase": spec.WHEELBASE, "mass": spec.MASS_KG,
         "cla": spec.cla(), "cda": spec.cda(),
         "fan_kg": spec.FAN["downforce_kg"],
