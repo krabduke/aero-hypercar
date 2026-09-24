@@ -34,7 +34,10 @@ CFG = {
         ("driveshaft_rl", "gearbox"), ("driveshaft_rr", "gearbox"),
         ("pushrod_fl", "rocker_fl"), ("pushrod_fr", "rocker_fr"),
         ("pushrod_rl", "rocker_rl"), ("pushrod_rr", "rocker_rr"),
-        ("trackrod_fl", "upright_fl"), ("trackrod_fr", "upright_fr"),
+        # the front track rods end on the steering arms, which bolt to the
+        # uprights: the arm is a part of its own
+        ("trackrod_fl", "steering_arm_fl"), ("trackrod_fr", "steering_arm_fr"),
+        ("steering_arm_fl", "upright_fl"), ("steering_arm_fr", "upright_fr"),
         ("trackrod_fl", "steering_rack"), ("trackrod_fr", "steering_rack"),
         ("steering_column", "steering_rack"),
         ("steering", "steering_column"),

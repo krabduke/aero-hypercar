@@ -29,6 +29,14 @@ import _intersect
 # hose clamps onto the engine it feeds. Each entry says the overlap IS the
 # joint. Anything not listed is a part in another part's way.
 EXPECTED = [
+    # the brake hard line is P-clipped along the top of each upper wishbone's
+    # forward leg, the clips' bolts into the leg; the flexible hose enters
+    # the brake cooling drum through its grommet to reach the caliper
+    ("brake_lines", "wishbone_fl_upper_fwd"),
+    ("brake_lines", "wishbone_fr_upper_fwd"),
+    ("brake_lines", "wishbone_rl_upper_fwd"),
+    ("brake_lines", "wishbone_rr_upper_fwd"),
+    ("brake_lines", "bduct_drum_"),
     # the engine's castings and the rest of the engine meet as the engine
     # repository's own audit says they may; this one audits the car
     ("engine", "engine_"),
@@ -79,8 +87,6 @@ EXPECTED = [
     # the caliper is bolted to the upright by its two lugs, and the brake
     # hose screws into the caliper
     ("caliper_", "upright_"), ("brake_lines", "caliper_"),
-    # the hose's banjo fitting screws into the caliper beside the pad
-    ("brake_lines", "brake_pad_"),
     # the T-camera is clamped to the top of the roll hoop
     ("cameras", "roll_hoop"),
     ("caliper_", "disc_"), ("rim_", "tyre_"),
@@ -145,7 +151,6 @@ EXPECTED = [
     ("dash", "steering_column"),
     ("steering", "steering_column"),
     ("master_cylinders", "pedal_box"),
-    ("side_intrusion", "tub"),
     ("jack_points", "tub"), ("tow_hooks", "tub"),
     ("tow_hooks", "crash_structure"),   # the rear hook bolts to it
     ("fuel_coupling", "tub"), ("brake_lines", "tub"), ("wiring_loom", "tub"),
@@ -195,7 +200,7 @@ EXPECTED = [
     ("drink_bottle", "seat"),
 
     # panels and frames bond to the bulkheads they are carried on
-    ("side_intrusion", "bulkhead_"), ("cockpit_coaming", "bulkhead_"),
+    ("cockpit_coaming", "bulkhead_"),
     ("halo_mounts", "bulkhead_"),
     ("halo", "bulkhead_"), ("halo_pillar", "bulkhead_"),
     ("nose_cape", "bulkhead_"),
@@ -208,7 +213,7 @@ EXPECTED = [
     # bodywork meets bodywork where one panel is let into another
     ("sidepod_", "bargeboard_"),
     ("sidepod_", "gearbox"), ("sidepod_", "sidepod_"),
-    ("bargeboard_", "side_impact"), ("bargeboard_", "sidepod_inlets"),
+    ("bargeboard_", "sidepod_inlets"),
 
     # the fans: the stators carry the motor and are bonded into the shroud;
     # each intake's mouth is bonded over its fan's cowl lip and runs through
@@ -233,7 +238,6 @@ EXPECTED = [
 
     # the loom plugs into the boxes it feeds
     ("wiring_loom", "gearbox"),
-    ("brake_lines", "side_impact"),
 
     # the floor edge fences bolt to the floor edge, the strakes stand in
     # the tunnel, and the tunnel is formed in the floor: all three share
@@ -331,38 +335,6 @@ TOL = 0.3            # mm, full size: deeper than this is sharing material
 # through a part that nobody meant. Fix them and --shrink; never add to it.
 # --- KNOWN: rewritten by --shrink, never by hand to add ---
 KNOWN = {
-    ("brake_lines", "wishbone_fr_upper_aft"): 13.8,   # at (928.0, 600.9, 452.5)
-    ("brake_lines", "wishbone_fr_upper_fwd"): 13.3,   # at (924.1, 599.8, 453.5)
-    ("bulkhead_rear", "extinguisher"): 12.6,   # at (1956.0, 194.2, 287.2)
-    ("brake_lines", "wishbone_fl_upper_fwd"): 11.7,   # at (921.2, -601.7, 449.8)
-    ("side_impact", "side_intrusion"): 11.6,   # at (1802.3, 238.7, 419.9)
-    ("brake_lines", "wishbone_fl_upper_aft"): 10.6,   # at (929.1, -601.9, 449.1)
-    ("brake_lines", "wishbone_rl_upper_fwd"): 9.5,   # at (4078.5, -582.9, 457.2)
-    ("brake_lines", "wishbone_rr_upper_fwd"): 9.5,   # at (4078.5, 582.9, 457.2)
-    ("bduct_drum_rl", "brake_lines"): 9.3,   # at (4064.8, -648.7, 538.4)
-    ("bduct_drum_rr", "brake_lines"): 9.3,   # at (4064.8, 648.7, 538.4)
-    ("brake_lines", "driveshaft_rl"): 9.0,   # at (4060.7, -533.4, 352.5)
-    ("brake_lines", "driveshaft_rr"): 9.0,   # at (4060.7, 533.4, 352.5)
-    ("brake_lines", "pushrod_rl"): 8.8,   # at (4074.7, -577.8, 467.2)
-    ("brake_lines", "pushrod_rr"): 8.8,   # at (4074.7, 577.8, 467.2)
-    ("brake_lines", "wishbone_rl_upper_aft"): 8.7,   # at (4078.5, -582.8, 456.6)
-    ("brake_lines", "wishbone_rr_upper_aft"): 8.7,   # at (4078.5, 582.8, 456.6)
-    ("trackrod_fl", "tyre_sensors"): 8.7,   # at (827.6, -674.9, 229.6)
-    ("trackrod_fr", "tyre_sensors"): 8.7,   # at (827.6, 674.9, 229.6)
-    ("brake_lines", "sidepod_l"): 6.9,   # at (2710.4, -321.5, 257.2)
-    ("brake_lines", "sidepod_r"): 6.9,   # at (2710.4, 321.5, 257.2)
-    ("bduct_drum_fl", "brake_lines"): 6.7,   # at (902.0, -709.7, 514.2)
-    ("bduct_drum_fr", "brake_lines"): 6.7,   # at (902.0, 709.7, 514.2)
-    ("trackrod_rl", "tyre_sensors"): 6.4,   # at (4038.0, -536.7, 207.3)
-    ("trackrod_rr", "tyre_sensors"): 6.4,   # at (4038.0, 536.7, 207.3)
-    ("seat", "side_intrusion"): 6.1,   # at (1599.4, -228.3, 479.4)
-    ("pushrod_fl", "tether_fl"): 5.8,   # at (980.2, -603.7, 170.6)
-    ("pushrod_fr", "tether_fr"): 5.8,   # at (980.2, 603.7, 170.6)
-    ("bduct_fence_rl", "brake_lines"): 5.1,   # at (4074.5, -578.9, 424.3)
-    ("bduct_fence_rr", "brake_lines"): 5.1,   # at (4074.5, 578.9, 424.3)
-    ("torsion_bars_f", "wishbone_fl_upper_aft"): 2.2,   # at (1080.5, -177.1, 416.2)
-    ("tyre_sensors", "wishbone_rl_lower_fwd"): 0.5,   # at (3998.8, -578.8, 243.7)
-    ("tyre_sensors", "wishbone_rr_lower_fwd"): 0.5,   # at (3998.8, 578.8, 243.7)
 }
 # --- end KNOWN ---
 

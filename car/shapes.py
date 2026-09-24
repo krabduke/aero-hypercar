@@ -516,8 +516,10 @@ def suspension_link(p0, p1, section, chord0, chord1=None, n_sta=9,
     rings = []
     for j in range(n_sta):
         f = j / (n_sta - 1)
-        # pull the leg in at both ends so the rod ends are proud of it
-        g = 0.06 + 0.88 * f
+        # pull the leg in at both ends so the rod ends are proud of it --
+        # but only so far that the rod end's shank still reaches into it:
+        # at 6 per cent a long slim link ended short of its own shanks
+        g = 0.035 + 0.93 * f
         p = tuple(p0[k] + d[k] * g for k in range(3))
         c = (chord0 + (chord1 - chord0) * f) * (
             waist + (1.0 - waist) * abs(2 * f - 1) ** 1.5)

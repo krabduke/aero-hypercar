@@ -128,7 +128,7 @@ CIRCUITS = [
     ('the harness anchors to the tub',
      ['tub', 'seat', 'harness', 'harness_buckle']),
     ('side impact structure',
-     ['tub', 'side_impact', 'side_intrusion']),
+     ['side_impact', 'tub', 'side_intrusion']),
     ('the airbox feeds the engine',
      ['airbox', 'engine']),
 ]

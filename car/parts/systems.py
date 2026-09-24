@@ -240,41 +240,61 @@ def _hydraulics():
     SV = spec.SERVICE
     r_hard = SV["line_r"] * 0.72
     lines = []
+    # Each hard line ends on the upper wishbone's forward leg, clipped along
+    # its top from the chassis pickup to a union near the upright, and the
+    # flexible hose drops from there through the cooling drum's grommet onto
+    # the caliper's top. The line used to end at a union between the
+    # wishbones and the hose climbed from it straight up past the upper
+    # arm: through both of its legs, the pushrod, the driveshaft and the
+    # drum's fence, at every corner.
+    from parts import suspension as SU
+    t_up = SU.AERO_LINK["wishbone_t"]
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
         front = tag.startswith("f")
         z_cal = od / 2 + 157.0     # into the caliper's upper shoe
-        y_union = y * 0.62
-        z_union = od / 2 + 40.0
-        # out of the master cylinder's union, over the steering rack and
-        # outboard of the driver's shins
+        up_j, _low_j = wheels.ball_joints(x, y)
+        inb_y = S["inboard_front_y"] if front else S["inboard_rear_y"]
+        rake = math.radians(SU.AERO_LINK["anti_dive_deg"]) if front else 0.0
+        leg_in = (x - SU.AERO_LINK["pickup_dx"], sgn * inb_y,
+                  S["upper_z"] + 40.0 - math.tan(rake) * abs(inb_y - abs(y) * 0.77))
+
+        def on_leg(f, lift=t_up / 2 + r_hard + 8.0):
+            return tuple(leg_in[k] + (up_j[k] - leg_in[k]) * f
+                         for k in range(2)) + (
+                leg_in[2] + (up_j[2] - leg_in[2]) * f + lift,)
         hard = [(MC_X + 14.0, sgn * MC_Y, MC_Z + 48.0),
                 (MC_X + 120.0, sgn * 120.0, 380.0)]
-        if front:
-            # round behind the pushrod, not across it
-            hard += [(x + 180.0, sgn * 250.0, 250.0),
-                     (x + 60.0, sgn * 330.0, 214.0)]
-        else:
-            # through the dash bulkhead's aperture, not its frame
+        if not front:
+            # through the dash bulkhead's aperture, not its frame, and back
+            # along the floor to the engine bay
             hard += [(spec.FRONT_AXLE_X + 110.0, sgn * 168.0, 292.0),
                      (1250.0, sgn * 170.0, 280.0),
                      (1360.0, sgn * 209.0, 250.0),
-                     (1500.0, sgn * 211.0, 226.0)]
-            # over the rear lower wishbone, not through it
-            hard += [(2100.0, sgn * 300.0, 250.0),
-                     (3050.0, sgn * 330.0, 262.0),
-                     (x - 260.0, sgn * 360.0, 330.0),
-                     (x - 60.0, sgn * 420.0, 352.0)]
-        hard.append((x - 10.0, y_union, z_union))
-        lines.append(_run(hard, r_hard,
-                          clips=[0.30, 0.58, 0.84] if not front else [0.42, 0.78]))
-        # the flexible loop across the travel -- slack enough to take droop
-        flex = [(x - 10.0, y_union, z_union),
-                (x + 26.0, y * 0.70, z_union - 26.0),
-                (x + 18.0, y * 0.76, z_cal + 34.0),
-                # 0.93 of the wheel's y, not 0.78: the caliper's inner face
-                # is at 766 and the flexible line stopped at 648, so the
-                # brakes were plumbed to within 120 mm of themselves.
+                     (1500.0, sgn * 211.0, 226.0),
+                     # out through the tub's lower flank and back under the
+                     # sidepod, in the gap between it and the floor, rising
+                     # with the pod's underside until the pod has ended
+                     (1620.0, sgn * 262.0, 140.0),
+                     (2100.0, sgn * 300.0, 126.0),
+                     # under the radiator's lower hose, which crosses here
+                     (2600.0, sgn * 304.0, 123.0),
+                     (2870.0, sgn * 308.0, 123.0),
+                     (3060.0, sgn * 312.0, 200.0),
+                     (3220.0, sgn * 318.0, 244.0),
+                     (3660.0, sgn * 334.0, 300.0),
+                     (leg_in[0] - 100.0, sgn * 250.0, leg_in[2] - 10.0)]
+        else:
+            hard += [(leg_in[0] + 40.0, sgn * (inb_y - 30.0),
+                      leg_in[2] + 10.0)]
+        hard += [on_leg(0.12), on_leg(0.45), on_leg(0.72)]
+        lines.append(_run(hard, r_hard, clips=[0.80, 0.90]))
+        union = on_leg(0.72)
+        # inboard of the rim's lip until it is down inside the drum
+        y_in = y * (0.80 if front else 0.75)
+        flex = [union, on_leg(0.86, t_up / 2 + SV["line_r"] + 16.0),
+                (x - 16.0, y_in, z_cal + 30.0),
+                (x - 6.0, y * 0.93, z_cal + 16.0),
                 (x - 6.0, y * 0.93, z_cal)]
         lines.append(_run(flex, SV["line_r"], per_seg=8))
     out["brake_lines"] = mesh.join(*lines)
@@ -523,7 +543,9 @@ def _cockpit():
     for px in (60.0, 190.0):
         ext.append(mesh.ring_torus(px, 55.0, 4.5, 30, 8))
     v, f = mesh.join(*ext)
-    out["extinguisher"] = ([(px + cx + 180.0, py + 150.0, pz + 260.0)
+    # y 126, not 150: it runs back through the rear bulkhead's aperture,
+    # and at 150 it was 12 mm into the aperture's return flange
+    out["extinguisher"] = ([(px + cx + 180.0, py + 126.0, pz + 260.0)
                             for (px, py, pz) in v], f)
     out["drink_bottle"] = shapes.rounded_box(cx + 260.0, -150.0, 280.0,
                                              150.0, 90.0, 90.0, 24.0)
@@ -625,13 +647,54 @@ def _survival_cell():
 
     # Set from the tub's own section at this station, so the panels are
     # inside the flank rather than 11 mm through it.
-    cx = (T["cockpit_x0"] + T["cockpit_x1"]) / 2
-    hw = max(abs(p[1]) for p in chassis.body_section(cx, segments=48))
+    #
+    # Laminated against the inside of the flank, following it: a flat board
+    # set from the section at the cockpit's middle stood 24 mm inboard of
+    # the skin there, and further in where the tub narrows at each end --
+    # into the seat's shoulder and the side impact tubes' roots.
+    x0, x1 = T["cockpit_x0"] + 20.0, T["cockpit_x1"] - 20.0
+    z0, z1 = 300.0, 540.0
     panels = []
     for sgn in (-1.0, 1.0):
-        panels.append(shapes.rounded_box(
-            cx, sgn * (hw - 24.0), 420.0,
-            T["cockpit_x1"] - T["cockpit_x0"], 18.0, 260.0, 20.0))
+        rows = []
+        for i in range(25):
+            x = x0 + (x1 - x0) * i / 24
+            ring = chassis.body_section(x, inset=chassis.SKIN + 0.4,
+                                        segments=240)
+            side = [p for p in ring if p[1] > 0]
+
+            def y_at(z):
+                q = min(side, key=lambda p: abs(p[2] - z))
+                return q[1]
+            col = []
+            for k in range(9):
+                z = z0 + (z1 - z0) * k / 8
+                yo = y_at(z)
+                col.append(((x, sgn * yo, z), (x, sgn * (yo - 5.0), z)))
+            rows.append(col)
+        verts, faces = [], []
+        for col in rows:
+            for (o, i_) in col:
+                verts.extend([o, i_])
+        K = 9
+
+        def vid(i, k, layer):
+            return (i * K + k) * 2 + layer
+        for i in range(24):
+            for k in range(8):
+                faces.append((vid(i, k, 0), vid(i + 1, k, 0),
+                              vid(i + 1, k + 1, 0), vid(i, k + 1, 0)))
+                faces.append((vid(i, k + 1, 1), vid(i + 1, k + 1, 1),
+                              vid(i + 1, k, 1), vid(i, k, 1)))
+        for i in range(24):
+            for k in (0, 8):
+                faces.append((vid(i, k, 0), vid(i, k, 1), vid(i + 1, k, 1),
+                              vid(i + 1, k, 0)))
+        for k in range(8):
+            for i in (0, 24):
+                faces.append((vid(i, k, 0), vid(i, k + 1, 0),
+                              vid(i, k + 1, 1), vid(i, k, 1)))
+        panels.append((verts, faces))
     out["side_intrusion"] = mesh.join(*panels)
     return out
 
@@ -754,7 +817,11 @@ def _pit_hardware():
         # nothing about how the car is using the tyre.
         # 0.55 of the tread width in, not 0.46: at 0.46 the array's outboard
         # face sat at the same station as the track rod's outer rod end.
-        hx, hy, hz = x - od * 0.10, y - sgn * w * 0.55, od * 0.34
+        # At the rear, further forward: 0.10 of the diameter ahead of the
+        # axle put it in the slot between the toe link and the lower
+        # wishbone, touching both.
+        hx = x - od * (0.10 if tag.startswith("f") else 0.18)
+        hy, hz = y - sgn * w * 0.55, od * 0.34
         parts = [shapes.rounded_box(hx, hy, hz, 40.0, 26.0, 20.0, 5.0)]
         for i in range(5):
             f = (i + 0.5) / 5
@@ -767,6 +834,15 @@ def _pit_hardware():
         # the bracket that holds it off the duct, and the pigtail out of it
         parts.append(shapes.rounded_box(hx, hy - sgn * 16.0, hz + 2.0,
                                         16.0, 8.0, 26.0, 2.5))
+        # and the strut up from the sensor to the brake duct above it, which
+        # is what it hangs from -- it used to be held on only by touching
+        # the track rod
+        # (on the front, at the sensor's leading end: the wheel tether runs
+        # past its middle)
+        top = hz + (41.0 if tag.startswith("f") else 30.8)
+        sx_ = hx - (14.0 if tag.startswith("f") else 0.0)
+        parts.append(shapes.rounded_box(sx_, hy, (hz + 6.0 + top) / 2,
+                                        12.0, 10.0, top - hz - 6.0, 2.5))
         parts.append(shapes.rounded_box(hx, hy - sgn * 30.0, hz + 13.0,
                                         16.0, 24.0, 5.0, 2.0))
         tail = mesh.smooth_path(

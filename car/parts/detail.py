@@ -164,36 +164,29 @@ def _crash_structures():
     """Side impact tubes and the rear crash box behind the gearbox."""
     out = {}
     sides = []
+    # Straight out from the tub's flank to the sidepod's outer wall, square
+    # to both, between the inlet duct (which ends at x 1910) and the
+    # radiator (which starts at 2134), under the fuel coupling. They ran
+    # diagonally from x 1740, so their flat inner ends swung 60 mm into the
+    # tub, and their front edges stood in the inlet duct and the bargeboards.
+    r = BD["crash_r"]
+    xs = 2000.0
+    ring = chassis.body_section(xs, segments=360)
     for sgn in (-1.0, 1.0):
-        for zz in (250.0, 420.0):
-            # inside the sidepod flank, allowing for the tube's own radius
-            #
-            # The inboard end anchors on the TUB's flank, because that is
-            # what a side impact structure loads into. It used to start at
-            # 55 percent of the sidepod's own half width, which is 60 mm
-            # inboard of the tub side -- through the survival cell, through
-            # the seat, and through the driver's hip.
-            hw = max(abs(p[1]) for p in chassis.body_section(1740.0,
-                                                             segments=64))
-            # 6 mm inside the body's surface, not 44 mm outboard of it. The
-            # tube is the load path from the sidepod into the survival cell
-            # and it was touching the bargeboards and nothing else; 34 mm in
-            # put it through the seat and the driver.
-            a = (1740.0, sgn * (hw + 24.0), 0.0)
-            b = chassis.sidepod_point(1980.0, sgn * 0.94, 0.0,
-                                      -BD["crash_r"])
-            # A side impact tube is an oval so it crushes along its length
-            # instead of buckling sideways, and it is wound thicker at the
-            # outboard end where the load comes in.
-            r = BD["crash_r"]
+        for zz in (250.0, 378.0):
+            y_in = max(p[1] for p in ring
+                       if p[1] > 0 and abs(p[2] - zz) < r * 0.78 * 0.82)
+            b = chassis.sidepod_point(xs, sgn * 0.94, 0.0, -r)
+            a = (xs, sgn * y_in, zz)
+            # an oval, so it crushes along its length instead of buckling
+            # sideways, wound thicker at the outboard end where the load
+            # comes in
             sides.append(shapes.swept_profile(
-                [(a[0], a[1], zz),
-                 (a[0] + (b[0] - a[0]) * 0.5, (a[1] + b[1]) * 0.5, zz),
-                 (b[0], b[1], zz)],
+                [a, (xs, (a[1] + b[1]) * 0.5, zz), (xs, b[1], zz)],
                 shapes.rounded_polygon(
-                    [(-r * 1.5, -r * 0.78), (r * 1.5, -r * 0.78),
-                     (r * 1.5, r * 0.78), (-r * 1.5, r * 0.78)],
-                    r * 0.70, seg=6),
+                    [(-r * 0.98, -r * 0.78), (r * 0.98, -r * 0.78),
+                     (r * 0.98, r * 0.78), (-r * 0.98, r * 0.78)],
+                    r * 0.62, seg=6),
                 scale=[(0.82, 0.82), (0.93, 0.93), (1.0, 1.0)], subdiv=5))
     out["side_impact"] = mesh.join(*sides)
 

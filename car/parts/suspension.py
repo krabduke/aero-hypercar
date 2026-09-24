@@ -40,9 +40,11 @@ AERO_LINK = {
     # At -60 it is forward of the shaft in x and above the bar in z, on the
     # casing, and 437 mm from the fan axis.
     "rear_lower_aft_dx": -60.0,
-    "wishbone_c": 130.0, "wishbone_t": 18.0,
-    "pushrod_c": 110.0, "pushrod_t": 18.0,
-    "trackrod_c": 100.0, "trackrod_t": 14.0,
+    # Chords of a real faired link: 90 mm, not 130. At 130 on a 600 mm leg
+    # every wishbone read as a sheet of plate rather than a tube in a fairing.
+    "wishbone_c": 90.0, "wishbone_t": 19.0,
+    "pushrod_c": 72.0, "pushrod_t": 18.0,
+    "trackrod_c": 64.0, "trackrod_t": 14.0,
     "incidence_deg": -3.0, "anti_dive_deg": 6.0,
     "pickup_dx": 190.0,
 }
@@ -137,8 +139,11 @@ def build():
                 if rear_low and leg == "aft":
                     ly = S["lower_inboard_rear_aft_y"]
                     lz = S["lower_inboard_rear_aft_z"]
+                # abs(y): the wheel's y is signed, and with it the left
+                # front upper legs picked up 41 mm lower than the right --
+                # the car was not symmetric
                 inb = (x + dx, sgn * ly,
-                       lz - math.tan(lift) * abs(ly - y * 0.77))
+                       lz - math.tan(lift) * abs(ly - abs(y) * 0.77))
                 # The leg is named by which one it is, not by the sign of
                 # its offset. Once the rear lower aft pickup moved forward
                 # of the axle, `"fwd" if dx < 0 else "aft"` called both legs

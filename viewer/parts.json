@@ -300,7 +300,7 @@
    "label": "Wheels",
    "color": "#3E4246",
    "parts": 45,
-   "faces": 138880
+   "faces": 139560
   },
   {
    "key": "05 Suspension",
@@ -349,7 +349,7 @@
    "label": "Structure",
    "color": "#6A6E72",
    "parts": 17,
-   "faces": 93359
+   "faces": 100295
   }
  ],
  "parts": {
@@ -1554,7 +1554,7 @@
    "g": "05 Suspension",
    "mat": "steel",
    "x0": 808.0,
-   "x1": 1135.0,
+   "x1": 1135.2,
    "f": 5730
   },
   "antiroll_r": {
@@ -1609,29 +1609,29 @@
   "pushrod_fl": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 868.8,
-   "x1": 1075.6,
+   "x0": 879.0,
+   "x1": 1056.9,
    "f": 2946
   },
   "pushrod_fr": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 868.8,
-   "x1": 1075.6,
+   "x0": 879.0,
+   "x1": 1056.9,
    "f": 2946
   },
   "pushrod_rl": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
    "x0": 3708.2,
-   "x1": 4102.1,
+   "x1": 4085.5,
    "f": 2946
   },
   "pushrod_rr": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
    "x0": 3708.2,
-   "x1": 4102.1,
+   "x1": 4085.5,
    "f": 2946
   },
   "rocker_fl": {
@@ -1693,141 +1693,141 @@
   "trackrod_fl": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 672.9,
-   "x1": 832.6,
+   "x0": 682.4,
+   "x1": 811.0,
    "f": 2802
   },
   "trackrod_fr": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 672.9,
-   "x1": 832.6,
+   "x0": 682.4,
+   "x1": 811.0,
    "f": 2802
   },
   "trackrod_rl": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 4009.1,
-   "x1": 4114.3,
+   "x0": 4020.2,
+   "x1": 4091.2,
    "f": 2802
   },
   "trackrod_rr": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 4009.1,
-   "x1": 4114.3,
+   "x0": 4020.2,
+   "x1": 4091.2,
    "f": 2802
   },
   "wishbone_fl_lower_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 866.0,
-   "x1": 1151.2,
+   "x0": 875.2,
+   "x1": 1133.6,
    "f": 2946
   },
   "wishbone_fl_lower_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 682.3,
-   "x1": 973.0,
+   "x0": 686.5,
+   "x1": 951.8,
    "f": 2946
   },
   "wishbone_fl_upper_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 866.0,
-   "x1": 1151.2,
+   "x0": 875.2,
+   "x1": 1133.6,
    "f": 2946
   },
   "wishbone_fl_upper_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 682.3,
-   "x1": 973.0,
+   "x0": 689.6,
+   "x1": 951.8,
    "f": 2946
   },
   "wishbone_fr_lower_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 866.0,
-   "x1": 1151.2,
+   "x0": 875.2,
+   "x1": 1133.6,
    "f": 2946
   },
   "wishbone_fr_lower_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 682.3,
-   "x1": 973.0,
+   "x0": 686.5,
+   "x1": 951.8,
    "f": 2946
   },
   "wishbone_fr_upper_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 866.0,
-   "x1": 1151.2,
+   "x0": 875.2,
+   "x1": 1133.6,
    "f": 2946
   },
   "wishbone_fr_upper_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 682.3,
-   "x1": 973.0,
+   "x0": 689.6,
+   "x1": 951.8,
    "f": 2946
   },
   "wishbone_rl_lower_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3954.5,
-   "x1": 4130.8,
+   "x0": 3965.0,
+   "x1": 4106.3,
    "f": 2946
   },
   "wishbone_rl_lower_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3832.3,
-   "x1": 4123.0,
+   "x0": 3836.6,
+   "x1": 4101.8,
    "f": 2946
   },
   "wishbone_rl_upper_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3982.7,
-   "x1": 4132.6,
+   "x0": 3994.0,
+   "x1": 4107.4,
    "f": 2946
   },
   "wishbone_rl_upper_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3832.3,
-   "x1": 4123.0,
+   "x0": 3839.6,
+   "x1": 4101.8,
    "f": 2946
   },
   "wishbone_rr_lower_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3954.5,
-   "x1": 4130.8,
+   "x0": 3965.0,
+   "x1": 4106.3,
    "f": 2946
   },
   "wishbone_rr_lower_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3832.3,
-   "x1": 4123.0,
+   "x0": 3836.6,
+   "x1": 4101.8,
    "f": 2946
   },
   "wishbone_rr_upper_aft": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3982.7,
-   "x1": 4132.6,
+   "x0": 3994.0,
+   "x1": 4107.4,
    "f": 2946
   },
   "wishbone_rr_upper_fwd": {
    "g": "05 Suspension",
    "mat": "carbon_matte",
-   "x0": 3832.3,
-   "x1": 4123.0,
+   "x0": 3839.6,
+   "x1": 4101.8,
    "f": 2946
   },
   "fan_motors": {
@@ -2323,8 +2323,8 @@
   "side_impact": {
    "g": "11 Structure and Service",
    "mat": "carbon_matte",
-   "x0": 1660.6,
-   "x1": 2076.8,
+   "x0": 1923.6,
+   "x1": 2076.4,
    "f": 1128
   },
   "tow_hooks": {
@@ -2477,9 +2477,9 @@
   "brake_lines": {
    "g": "11 Structure and Service",
    "mat": "steel",
-   "x0": 771.3,
-   "x1": 4081.7,
-   "f": 31784
+   "x0": 724.9,
+   "x1": 4049.1,
+   "f": 38164
   },
   "bulkhead_dash": {
    "g": "11 Structure and Service",
@@ -2596,9 +2596,9 @@
   "side_intrusion": {
    "g": "11 Structure and Service",
    "mat": "carbon_matte",
-   "x0": 1180.0,
-   "x1": 1980.0,
-   "f": 340
+   "x0": 1200.0,
+   "x1": 1960.0,
+   "f": 896
   },
   "starter_socket": {
    "g": "11 Structure and Service",
@@ -2611,8 +2611,8 @@
    "g": "04 Wheels and Brakes",
    "mat": "alu_dark",
    "x0": 813.0,
-   "x1": 4045.9,
-   "f": 8976
+   "x1": 3990.7,
+   "f": 9656
   },
   "wiring_loom": {
    "g": "11 Structure and Service",
