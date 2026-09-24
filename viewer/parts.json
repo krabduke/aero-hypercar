@@ -325,8 +325,8 @@
    "key": "09 Aero Detail",
    "label": "Aero detail",
    "color": "#8A929A",
-   "parts": 54,
-   "faces": 50274
+   "parts": 53,
+   "faces": 43134
   },
   {
    "key": "10 Cockpit",
@@ -2304,13 +2304,6 @@
    "x1": 2076.8,
    "f": 1128
   },
-  "sidepod_gills": {
-   "g": "09 Aero Detail",
-   "mat": "carbon_gloss",
-   "x0": 2546.2,
-   "x1": 3253.8,
-   "f": 5100
-  },
   "tow_hooks": {
    "g": "11 Structure and Service",
    "mat": "alu_bright",
@@ -2517,16 +2510,16 @@
   "exit_louvres_l": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 2671.3,
-   "x1": 3268.6,
-   "f": 2550
+   "x0": 2682.9,
+   "x1": 3217.1,
+   "f": 1530
   },
   "exit_louvres_r": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 2671.3,
-   "x1": 3268.6,
-   "f": 2550
+   "x0": 2682.9,
+   "x1": 3217.1,
+   "f": 1530
   },
   "extinguisher": {
    "g": "10 Cockpit",

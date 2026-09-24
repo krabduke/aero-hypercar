@@ -558,11 +558,6 @@ BODY_DETAIL = {
         (3060.0, 3520.0,  52.0, 7, 120.0, 22.0),
         (3160.0, 3600.0,  22.0, 6, 110.0, 20.0),
     ],
-    # sidepod cooling exits, on the flank: (x0, x1, f_z, n, len, h)
-    "sidepod_gills": [
-        (2620.0, 3180.0, 0.74, 8, 150.0, 30.0),
-        (2700.0, 3180.0, 0.50, 7, 130.0, 26.0),
-    ],
     "nose_pylon_x": 300.0, "nose_pylon_y": 96.0, "nose_pylon_t": 34.0,
     "cape_x0": 340.0, "cape_x1": 760.0, "cape_y": 300.0,
     "susp_fairing_c": 190.0, "susp_fairing_t": 0.30,

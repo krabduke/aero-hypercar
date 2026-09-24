@@ -52,7 +52,7 @@ def collection_for(name):
         return "04 Wheels and Brakes"
     if n.startswith(("bargeboard", "turning_vane", "floor_fence",
                      "brake_duct", "mirror", "camera", "rainlight",
-                     "exhaust", "cooling_louvre", "gills", "sidepod_gills",
+                     "exhaust", "cooling_louvre", "gills",
                      "nose_cape", "nose_pylon", "bargeboard", "turning_vane",
                      "bduct_", "exit_louvres", "aero_rake", "rear_light")):
         return "09 Aero Detail"

@@ -38,7 +38,6 @@ OUTSIDE = {
     "gills": "louvres in the bodywork",
     "cooling_louvres": "louvres in the bodywork",
     "exit_louvres": "louvres in the bodywork",
-    "sidepod_gills": "louvres in the bodywork",
     "sidepod_inlets": "the inlet mouth, open to outside",
     # safety structures that stand proud by design
     "halo": "above the cockpit, which is the point of it",

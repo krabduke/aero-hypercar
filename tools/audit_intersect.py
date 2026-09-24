@@ -95,7 +95,6 @@ EXPECTED = [
 
     # bodywork: everything lofted or louvred into it
     ("sidepod_", "tub"), ("sidepod_inlets", "sidepod_"),
-    ("sidepod_gills", "sidepod_"),
     ("exit_louvres_", "sidepod_"), ("gills", "tub"),
     ("airbox", "tub"), ("cockpit_coaming", "tub"), ("nose_cape", "tub"),
     ("nose_pylons", "tub"), ("nose_pylons", "front_wing_main"),

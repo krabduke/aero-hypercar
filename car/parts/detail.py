@@ -60,22 +60,10 @@ def _gills():
                 parts.append(([(px + vx, py + vy, pz + vz)
                                for (vx, vy, vz) in rot], fc))
 
-    pod = []
-    for (x0, x1, f_z, n, length, h) in BD["sidepod_gills"]:
-        for sgn in (-1.0, 1.0):
-            for k in range(n):
-                f = k / max(n - 1, 1)
-                x = x0 + (x1 - x0) * f
-                px, py, pz = chassis.sidepod_point(x, sgn * 1.0, f_z, -6.0)
-                v, fc = shapes.rounded_box(0.0, 0.0, 0.0, length, 12.0, h)
-                t = math.radians(20.0)
-                ct, st = math.cos(t), math.sin(t)
-                rot = [(vx * ct - vz * st, vy, vx * st + vz * ct)
-                       for (vx, vy, vz) in v]
-                pod.append(([(px + vx, py + vy, pz + vz)
-                             for (vx, vy, vz) in rot], fc))
-    return {"gills": mesh.join(*parts),
-            "sidepod_gills": mesh.join(*pod)}
+    # The sidepod's exits are exit_louvres_l/r (systems.py). A second set was
+    # built here on the same flanks at nearly the same stations, so every
+    # sidepod carried two overlapping grids of blades.
+    return {"gills": mesh.join(*parts)}
 
 
 def _nose():

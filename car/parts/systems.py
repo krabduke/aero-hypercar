@@ -787,13 +787,21 @@ def _cooling_exits():
     out = {}
     for sgn, tag in ((-1.0, "l"), (1.0, "r")):
         banks = []
-        for (x0, x1, fz, n) in ((2700.0, 3200.0, 0.78, 8),
-                                (2800.0, 3240.0, 0.52, 7)):
+        # Each blade is a slat ACROSS the flow, leaning aft, and they stand
+        # in a row along it -- the way a louvre bank is built. They were
+        # 120 mm blocks laid along the flow 60 mm apart, so each row was a
+        # staggered pile of overlapping bricks.
+        for (x0, x1, fz, n) in ((2700.0, 3200.0, 0.72, 9),):
             for i in range(n):
                 f = (i + 0.5) / n
                 x = x0 + (x1 - x0) * f
-                p = chassis.sidepod_point(x, sgn * 1.0, fz, 4.0)
-                banks.append(shapes.rounded_box(p[0], p[1], p[2],
-                                                120.0, 10.0, 26.0, 3.0))
+                p = chassis.sidepod_point(x, sgn * 1.0, fz, 2.0)
+                v, fc = shapes.rounded_box(0.0, 0.0, 0.0, 7.0, 16.0, 150.0,
+                                           2.5)
+                t = math.radians(-35.0)
+                ct, st = math.cos(t), math.sin(t)
+                banks.append(([(p[0] + vx * ct - vz * st, p[1] + vy,
+                                p[2] + vx * st + vz * ct)
+                               for (vx, vy, vz) in v], fc))
         out[f"exit_louvres_{tag}"] = mesh.join(*banks)
     return out
