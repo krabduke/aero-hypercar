@@ -133,8 +133,12 @@ def build():
                 # dragged the lower arm's pickup down to z 117 and out of the
                 # tub as soon as the sign was corrected.
                 lift = rake if z_out == S["upper_z"] else 0.0
-                inb = (x + dx, sgn * lvl_y,
-                       z_in - math.tan(lift) * abs(lvl_y - y * 0.77))
+                ly, lz = lvl_y, z_in
+                if rear_low and leg == "aft":
+                    ly = S["lower_inboard_rear_aft_y"]
+                    lz = S["lower_inboard_rear_aft_z"]
+                inb = (x + dx, sgn * ly,
+                       lz - math.tan(lift) * abs(ly - y * 0.77))
                 # The leg is named by which one it is, not by the sign of
                 # its offset. Once the rear lower aft pickup moved forward
                 # of the axle, `"fwd" if dx < 0 else "aft"` called both legs

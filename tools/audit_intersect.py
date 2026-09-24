@@ -45,6 +45,18 @@ EXPECTED = [
     # and touches it nowhere else.
     ("wheel_stud", "hub_"), ("wheel_stud", "rim_"),
     ("brake_pad", "caliper_"),
+    # Joints that sat on the known-defect list. Each overlap is the joint:
+    # the track rod's end is on the steering arm and the arm on the hub; the
+    # floor bolts to the bottom of the tub; the first turning vane is bonded
+    # to the floor's inlet lip and to the bargeboard beside it; the outer
+    # strake is bonded along the plenum edge; the fan fairings, the diffuser
+    # kick and its lip are bonded to the tunnels' trailing edge; and the rear
+    # lower wishbones pick up on the gearbox casing.
+    ("steering_arm_", "trackrod_"), ("hub_", "steering_arm_"),
+    ("floor_surface", "tub"), ("floor_inlet_lip", "turning_vane_"),
+    ("bargeboard_", "turning_vane_"), ("floor_plenum_edge_", "floor_strake_"),
+    ("fan_fairing_", "tunnel_"), ("diffuser_kick", "tunnel_"),
+    ("diffuser_lip", "tunnel_"), ("gearbox", "wishbone_r"),
     # the rear rockers pivot on the gearbox casing; the halo's front pillar
     # comes up through the cockpit rim to its mount on the tub
     ("gearbox", "rocker_r"), ("cockpit_coaming", "halo"),
@@ -325,19 +337,11 @@ KNOWN = {
     ("bulkhead_rear", "extinguisher"): 12.6,   # at (1956.0, 194.2, 287.2)
     ("brake_lines", "wishbone_fl_upper_fwd"): 11.7,   # at (921.2, -601.7, 449.8)
     ("side_impact", "side_intrusion"): 11.6,   # at (1802.3, 238.7, 419.9)
-    ("driveshaft_rl", "wishbone_rl_lower_aft"): 11.3,   # at (4067.5, -191.7, 327.3)
-    ("driveshaft_rr", "wishbone_rr_lower_aft"): 11.3,   # at (4067.5, 191.7, 327.3)
     ("brake_lines", "wishbone_fl_upper_aft"): 10.6,   # at (929.1, -601.9, 449.1)
-    ("floor_inlet_lip", "turning_vane_l1"): 10.2,   # at (1321.0, -351.1, 103.0)
-    ("floor_inlet_lip", "turning_vane_r1"): 10.2,   # at (1321.0, 351.1, 103.0)
-    ("floor_plenum_edge_l", "floor_strake_l4"): 9.7,   # at (3889.8, -548.0, 61.8)
-    ("floor_plenum_edge_r", "floor_strake_r4"): 9.7,   # at (3889.8, 548.0, 61.8)
     ("brake_lines", "wishbone_rl_upper_fwd"): 9.5,   # at (4078.5, -582.9, 457.2)
     ("brake_lines", "wishbone_rr_upper_fwd"): 9.5,   # at (4078.5, 582.9, 457.2)
     ("bduct_drum_rl", "brake_lines"): 9.3,   # at (4064.8, -648.7, 538.4)
     ("bduct_drum_rr", "brake_lines"): 9.3,   # at (4064.8, 648.7, 538.4)
-    ("bargeboard_l4", "turning_vane_l1"): 9.1,   # at (1586.5, -372.8, 250.2)
-    ("bargeboard_r4", "turning_vane_r1"): 9.1,   # at (1586.4, 372.8, 250.2)
     ("brake_lines", "driveshaft_rl"): 9.0,   # at (4060.7, -533.4, 352.5)
     ("brake_lines", "driveshaft_rr"): 9.0,   # at (4060.7, 533.4, 352.5)
     ("brake_lines", "pushrod_rl"): 8.8,   # at (4074.7, -577.8, 467.2)
@@ -346,11 +350,6 @@ KNOWN = {
     ("brake_lines", "wishbone_rr_upper_aft"): 8.7,   # at (4078.5, 582.8, 456.6)
     ("trackrod_fl", "tyre_sensors"): 8.7,   # at (827.6, -674.9, 229.6)
     ("trackrod_fr", "tyre_sensors"): 8.7,   # at (827.6, 674.9, 229.6)
-    ("floor_surface", "tub"): 8.2,   # at (2333.4, -0.0, 45.7)
-    ("pushrod_fl", "tether_fl"): 8.1,   # at (982.7, -587.5, 182.0)
-    ("pushrod_fr", "tether_fr"): 8.1,   # at (982.7, 587.5, 182.0)
-    ("steering_arm_fl", "trackrod_fl"): 7.3,   # at (793.4, -704.0, 233.5)
-    ("steering_arm_fr", "trackrod_fr"): 7.3,   # at (793.6, 704.0, 234.8)
     ("brake_lines", "sidepod_l"): 6.9,   # at (2710.4, -321.5, 257.2)
     ("brake_lines", "sidepod_r"): 6.9,   # at (2710.4, 321.5, 257.2)
     ("bduct_drum_fl", "brake_lines"): 6.7,   # at (902.0, -709.7, 514.2)
@@ -358,19 +357,11 @@ KNOWN = {
     ("trackrod_rl", "tyre_sensors"): 6.4,   # at (4038.0, -536.7, 207.3)
     ("trackrod_rr", "tyre_sensors"): 6.4,   # at (4038.0, 536.7, 207.3)
     ("seat", "side_intrusion"): 6.1,   # at (1599.4, -228.3, 479.4)
-    ("fan_fairing_l", "tunnel_l"): 5.9,   # at (4560.0, -482.8, 249.3)
+    ("pushrod_fl", "tether_fl"): 5.8,   # at (980.2, -603.7, 170.6)
+    ("pushrod_fr", "tether_fr"): 5.8,   # at (980.2, 603.7, 170.6)
     ("bduct_fence_rl", "brake_lines"): 5.1,   # at (4074.5, -578.9, 424.3)
     ("bduct_fence_rr", "brake_lines"): 5.1,   # at (4074.5, 578.9, 424.3)
-    ("fan_fairing_r", "tunnel_r"): 4.2,   # at (4560.0, 479.7, 248.8)
-    ("diffuser_kick", "tunnel_l"): 3.6,   # at (4552.5, -469.3, 246.8)
-    ("diffuser_kick", "tunnel_r"): 3.6,   # at (4552.5, 469.3, 246.8)
-    ("gearbox", "wishbone_rl_lower_aft"): 3.5,   # at (3967.8, -142.3, 342.2)
-    ("gearbox", "wishbone_rr_lower_aft"): 3.5,   # at (3967.8, 142.3, 342.2)
     ("torsion_bars_f", "wishbone_fl_upper_aft"): 2.2,   # at (1080.5, -177.1, 416.2)
-    ("hub_fl", "steering_arm_fl"): 0.8,   # at (904.6, -754.4, 274.4)
-    ("hub_fr", "steering_arm_fr"): 0.8,   # at (904.6, 754.4, 274.4)
-    ("diffuser_lip", "tunnel_l"): 0.7,   # at (4560.0, -486.4, 249.6)
-    ("diffuser_lip", "tunnel_r"): 0.7,   # at (4560.0, 486.4, 249.6)
     ("tyre_sensors", "wishbone_rl_lower_fwd"): 0.5,   # at (3998.8, -578.8, 243.7)
     ("tyre_sensors", "wishbone_rr_lower_fwd"): 0.5,   # at (3998.8, 578.8, 243.7)
 }

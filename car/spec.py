@@ -622,6 +622,9 @@ SUSP = {
     # just above the bar, where the case is still 172 wide. At (300, 250) the
     # arm picked up 116 mm clear of the car entirely.
     "lower_inboard_rear_y": 150.0, "lower_inboard_rear_z": 340.0,
+    # ...and the aft leg's pickup goes below the driveshaft, which leaves
+    # the casing right beside it: at 340 the leg was 11 mm into each shaft.
+    "lower_inboard_rear_aft_y": 160.0, "lower_inboard_rear_aft_z": 282.0,
     "upright_h": 300.0,
     "arm_r": 17.0, "rod_r": 13.0,
     "front_layout": "pushrod", "rear_layout": "pullrod",

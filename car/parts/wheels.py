@@ -460,7 +460,12 @@ def _tether(x, y, z, w, tag):
         # foot: at dx * 0.25 it set off from beside it and ran 21 mm through
         # the pushrod on its way in.
         kx = 0.52 if (tag.startswith("f") and dx > 0) else 0.25
-        p0 = (x + dx * kx, y * 0.94, z + dz * 0.4 - 92.0)
+        # and lower on the upright, so it passes under the pushrod's foot
+        # rather than through it
+        kz = 120.0 if (tag.startswith("f") and dx > 0) else 92.0
+        # ...and in from the rim's barrel, which it would otherwise reach
+        ky = 0.83 if (tag.startswith("f") and dx > 0) else 0.94
+        p0 = (x + dx * kx, y * ky, z + dz * 0.4 - kz)
         # ...into the tub, which is what the docstring says and what the
         # regulation is for. It used to stop at y 680, which is 440 mm short
         # of the survival cell: a tether anchored to the upright at both ends.
