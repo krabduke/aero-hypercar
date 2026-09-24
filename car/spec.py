@@ -223,11 +223,15 @@ BODY = [
     # why a real one bulges over the engine instead of running straight from
     # the airbox to the rear wing. It used to cut 32 mm into the plenum.
     (3240.0, 268.0, 104.0, 738.0, 2.9, -0.10),
-    (3560.0, 240.0, 122.0, 668.0, 2.8, -0.08),
-    (3860.0, 206.0, 140.0, 566.0, 2.6, -0.06),
-    (4140.0, 168.0, 158.0, 434.0, 2.4, -0.04),
-    (4380.0, 140.0, 176.0, 392.0, 2.3, -0.02),
-    (4560.0, 118.0, 194.0, 358.0, 2.2,  0.00),
+    (3560.0, 240.0, 122.0, 678.0, 2.8, -0.08),
+    # Behind the engine the cover stays up as a spine over the exhaust,
+    # which runs inside it to the exit at the tail. It used to fall away to
+    # 392 mm here, below the top of the gearbox, and the 104 mm tailpipe ran
+    # along the outside of it for 600 mm.
+    (3860.0, 206.0, 140.0, 662.0, 2.6, -0.06),
+    (4140.0, 168.0, 158.0, 628.0, 2.4, -0.04),
+    (4380.0, 140.0, 176.0, 616.0, 2.3, -0.02),
+    (4560.0, 118.0, 194.0, 612.0, 2.2,  0.00),
 ]
 
 # Sidepod: its own table, because the undercut is the whole point. The lower
@@ -547,7 +551,7 @@ DETAIL = {
     # z = 0 it sat half under the track surface
     # above the beam wing, which tops out at 489 -- the tailpipe used to
     # end inside it
-    "exhaust_z": 604.0,
+    "exhaust_z": 548.0,           # just over the crash structure, at 476
 }
 
 # Surface and hardware detail. These are the parts that separate a shape from
@@ -627,6 +631,11 @@ SUSP = {
 POWERTRAIN = {
     "engine_x": 3240.0, "engine_z": 314.0,
     "gearbox_x": 3600.0, "gearbox_len": 520.0, "gearbox_r": 175.0,
+    # where the gearbox's front face actually is: on the bellhousing, which
+    # powertrain.py places from the engine and checks against this.
+    # gearbox_x is 42 mm aft of it and is the station the rear hardware --
+    # crash structure, jacking point, tow hook -- is laid out from.
+    "gearbox_front_x": 3558.0,
     # The gearbox hangs off the back of the engine on the crank centreline.
     # Without this it was built about z = 0 -- half of it under the track.
     "gearbox_z": 330.0,

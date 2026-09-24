@@ -50,6 +50,8 @@ EXPECTED = [
     ("gearbox", "rocker_r"), ("cockpit_coaming", "halo"),
     # and the rear anti-roll bar's bearings are on the crash structure's face
     ("antiroll_r", "crash_structure"),
+    # the crash structure's struts bolt into the back of the gearbox
+    ("crash_structure", "gearbox"),
     # the rear rocker sits on the casing, so the pullrod's clevis on it is
     # in the casing's flank; and each damper's eye is on its rocker
     ("gearbox", "pushrod_r"), ("dampers_", "rocker_"),
@@ -99,14 +101,14 @@ EXPECTED = [
     ("engine", "gearbox"), ("engine", "tub"),
     ("exhaust", "engine"), ("fuel_fittings", "fuel_cell"),
     ("battery_modules", "battery"),
-    ("gearbox", "tub"),
 
     # bodywork: everything lofted or louvred into it
     ("sidepod_", "tub"), ("sidepod_inlets", "sidepod_"),
     ("exit_louvres_", "sidepod_"), ("gills", "tub"),
+    ("sharkfin", "tub"),         # rooted in the engine cover
     ("airbox", "tub"), ("cockpit_coaming", "tub"), ("nose_cape", "tub"),
     ("nose_pylons", "tub"), ("nose_pylons", "front_wing_main"),
-    ("crash_structure", "tub"), ("side_impact", "tub"),
+    ("side_impact", "tub"),
     ("roll_hoop", "tub"), ("halo", "tub"),
     ("halo_mounts", "tub"), ("halo_pillar", "halo"), ("halo_mounts", "halo"),
     ("mirrors", "tub"),
@@ -208,8 +210,7 @@ EXPECTED = [
     # post on the crash structure's spine
     ("rear_frame", "fan_fairing_"), ("rear_frame", "rear_pylon_"),
     ("rear_frame", "crash_structure"), ("rear_frame", "tub"),
-    ("rainlight", "rear_light_panel"), ("rear_light_panel", "tub"),
-    ("sharkfin", "tow_hooks"),
+    ("rainlight", "rear_light_panel"),
     ("starter_socket", "tow_hooks"), ("nose_pylons", "tow_hooks"),
 
     # service hardware roots into whatever carries the load
@@ -259,8 +260,6 @@ EXPECTED = [
     # the front tow hook comes down through the wing it is mounted above --
     # the flap stack is already declared for the same reason
     ("front_wing_main", "tow_hooks"),
-    # the fin is the back of the engine cover and ends on the rear structure
-    ("sharkfin", "crash_structure"),
     # the tether anchors on the corner: upright, wishbone and driveshaft are
     # already listed, and the hub is the same assembly
     ("tether_", "hub_"),
@@ -296,7 +295,7 @@ EXPECTED = [
     ("engine", "gills"),   # the louvres are cut in the cover over it
     # An exhaust runs inside the engine cover and exits through the tail --
     # the bodywork it passes through is the bodywork it is routed inside.
-    ("exhaust", "tub"), ("exhaust", "sharkfin"),
+    ("exhaust", "tub"),
     # Joints made while closing the assembly. Each of these overlaps IS the
     # joint: the airbox plenum into the engine's intake, the floor's leading
     # edge onto the floor, the wing elements onto the endplate where the dive
@@ -368,8 +367,6 @@ KNOWN = {
     ("diffuser_kick", "tunnel_r"): 3.6,   # at (4552.5, 469.3, 246.8)
     ("gearbox", "wishbone_rl_lower_aft"): 3.5,   # at (3967.8, -142.3, 342.2)
     ("gearbox", "wishbone_rr_lower_aft"): 3.5,   # at (3967.8, 142.3, 342.2)
-    ("tether_rl", "tow_hooks"): 3.5,   # at (4168.7, -97.6, 372.4)
-    ("tether_rr", "tow_hooks"): 3.5,   # at (4168.7, 97.6, 372.4)
     ("torsion_bars_f", "wishbone_fl_upper_aft"): 2.2,   # at (1080.5, -177.1, 416.2)
     ("hub_fl", "steering_arm_fl"): 0.8,   # at (904.6, -754.4, 274.4)
     ("hub_fr", "steering_arm_fr"): 0.8,   # at (904.6, 754.4, 274.4)

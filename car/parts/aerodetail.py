@@ -215,10 +215,21 @@ def _details():
     # behind the engine with nothing between them, so the exhaust left from
     # nowhere. It runs over the gearbox, which tops out at z 536, and in
     # between the rear wing pylons, which is where a tailpipe exits.
+    #
+    # It starts ON the rear turbo's outlet flange, which faces outboard to
+    # starboard at the back of the vee, and opens out from the flange's bore
+    # to the tailpipe's. It used to start 60-120 mm away on the centreline
+    # and join the turbo's elbow through its side.
+    PT = spec.POWERTRAIN
+    ex_x, ex_z = PT["engine_x"], PT["engine_z"]
+    flange = (ex_x + 320.0, 92.0, ex_z + 282.0)
     ex.append(mesh.pipe(
-        [(3480.0, 0.0, 616.0), (3820.0, 0.0, 596.0),
-         (4180.0, 0.0, 572.0), (D["exhaust_x"] + 10.0, 0.0, D["exhaust_z"])],
-        52.0, 18, subdiv=3))
+        # then straight back in to the centreline, where the engine cover
+        # is tall enough for it: outboard at y 128 the cover is down at z 585
+        [flange, (flange[0] + 10.0, 104.0, flange[2] + 4.0),
+         (3640.0, 64.0, 604.0), (3760.0, 10.0, 598.0),
+         (4180.0, 0.0, 556.0), (D["exhaust_x"] + 10.0, 0.0, D["exhaust_z"])],
+        [30.0, 34.0, 42.0, 52.0, 52.0, 52.0], 18, subdiv=3))
     out["exhaust"] = mesh.join(*ex)
 
     # Engine cover cooling louvres, ON the cover.

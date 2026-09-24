@@ -218,6 +218,15 @@ def _crash_structures():
     cv, cf = mesh.revolve_closed(loop, 34)
     parts.append((cv, cf))
     parts.append(mesh.flange(x, 100.0, 146.0, 14.0, 8, bolt_r=7.0))
+    # Three struts from the flange forward to the gearbox's tail, across the
+    # 42 mm between them that the rear anti-roll bar crosses in. The
+    # structure used to stand there attached to nothing but the bodywork
+    # that happened to pass through it; placed low and on the centreline top
+    # they clear the bar above and the driveshafts either side.
+    x_gb = spec.POWERTRAIN["gearbox_front_x"] + spec.POWERTRAIN["gearbox_len"]
+    for (sy, sz) in ((-70.0, -110.0), (70.0, -110.0), (0.0, 112.0)):
+        parts.append(mesh.pipe([(x_gb - 12.0, sy, sz), (x + 6.0, sy, sz)],
+                               12.0, 16))
     # the rain light and the jacking point live on the back of it
     parts.append(shapes.rounded_box(x + 352.0, 0.0, 20.0, 26.0, 90.0, 60.0,
                                     9.0, seg=6))

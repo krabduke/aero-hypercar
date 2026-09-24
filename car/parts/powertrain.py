@@ -126,6 +126,11 @@ def build():
     # 36 mm aft and 1.2 mm out through the car's own bodywork.
     bell_v, _bell_f = built["bellhousing"]
     x_rear = max(v[0] for v in bell_v) + PT["engine_x"]
+    # The crash structure bolts to the back of the gearbox from the spec's
+    # number; when the two disagreed it was hung 42 mm behind the casing.
+    assert abs(x_rear - PT["gearbox_front_x"]) < 1.0, \
+        f"gearbox_front_x is {PT['gearbox_front_x']}, the bellhousing is " \
+        f"at {x_rear:.1f}"
     out["gearbox"] = _gearbox(x_rear)
     # A radiator drawn as a solid block is the laziest part on a car. These
     # are cores: tubes with fin packs between them, in a frame, with header

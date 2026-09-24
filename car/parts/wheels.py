@@ -468,14 +468,15 @@ def _tether(x, y, z, w, tag):
         # gearbox, which is the structure back there -- at 228 they went
         # straight through the fan duct.
         front = tag.startswith("f")
-        anchor = 228.0 if front else 108.0
+        anchor = 228.0 if front else 90.0
         # the rears anchor high on the gearbox: the fan duct fills everything
         # under z 448 back there, so a tether across it at hub height goes
         # through the duct, the throat and the fairing.
-        zz = (z + dz - 92.0) if front else 396.0
+        # on the crash cone's shoulder, aft of the tow ring round it
+        zz = (z + dz - 92.0) if front else 378.0
         # the rears anchor forward on the rear impact structure, which is the
         # strong point back there and is clear of the fan
-        px1 = x + dx * 0.8 if front else x + abs(dx) * 0.78
+        px1 = x + dx * 0.8 if front else x + abs(dx) * 1.16
         p1 = (px1, s * anchor, zz)
         # the strap itself, flat in section rather than round
         path = [p0, ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2,

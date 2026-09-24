@@ -115,8 +115,10 @@ CIRCUITS = [
      ['drs_actuator', 'rear_flap']),
     ('beam wing',
      ['beam_wing', 'rear_pylon_l']),
-    ('the rear crash structure is on the car',
-     ['tub', 'crash_structure']),
+    # onto the gearbox, which is what it is bolted to: it used to count as
+    # attached because the old, lower engine cover passed through it
+    ('the rear crash structure bolts to the gearbox',
+     ['engine', 'gearbox', 'crash_structure']),
     ('halo into the tub',
      ['halo', 'halo_pillar', 'halo_mounts', 'tub']),
     ('roll hoop into the tub',

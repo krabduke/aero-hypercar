@@ -5,7 +5,7 @@ halo_mounts,01 Bodywork,titanium,,,,,,,,,588,510,1113.0,2035.0,-233.6,233.6,612.
 halo_pillar,01 Bodywork,titanium,,,,,,,,,364,338,1071.2,1188.3,-16.7,16.7,620.0,962.6
 headrest,10 Cockpit,carbon_matte,,,,,,,,,368,326,1670.0,1949.3,-189.9,189.9,618.0,731.5
 seat,10 Cockpit,carbon_matte,,,,,,,,,3574,3424,1370.0,1950.0,-228.3,228.3,57.7,490.0
-sharkfin,01 Bodywork,carbon_gloss,,,,,,,,,528,497,3100.0,4180.0,-5.6,5.6,418.7,759.0
+sharkfin,01 Bodywork,carbon_gloss,,,,,,,,,528,497,3100.0,4180.0,-5.6,5.6,614.6,758.0
 sidepod_inlets,01 Bodywork,carbon_gloss,,,,,,,,,872,820,1721.0,1910.0,-518.0,518.0,196.6,407.4
 sidepod_l,01 Bodywork,carbon_gloss,,,,,,,,,2415,2237,1700.0,3700.0,-772.0,-162.0,145.8,540.6
 sidepod_r,01 Bodywork,carbon_gloss,,,,,,,,,2415,2237,1700.0,3700.0,162.0,772.0,145.8,540.6
@@ -84,8 +84,8 @@ rim_rl,04 Wheels and Brakes,alu_dark,4050.0,-799.0,345.0,0.0,1.0,0.0,1.0,spin,29
 rim_rr,04 Wheels and Brakes,alu_dark,4050.0,799.0,345.0,0.0,1.0,0.0,1.0,spin,2984,2970,3810.0,4290.0,604.6,993.4,105.0,585.0
 tether_fl,04 Wheels and Brakes,strap,,,,,,,,,780,748,754.1,1045.9,-794.2,-214.0,87.2,309.0
 tether_fr,04 Wheels and Brakes,strap,,,,,,,,,780,748,754.1,1045.9,214.0,794.2,87.2,309.0
-tether_rl,04 Wheels and Brakes,strap,,,,,,,,,780,748,3986.6,4192.9,-765.1,-94.0,175.2,422.0
-tether_rr,04 Wheels and Brakes,strap,,,,,,,,,780,748,3986.6,4192.9,94.0,765.1,175.2,422.0
+tether_rl,04 Wheels and Brakes,strap,,,,,,,,,780,748,3986.6,4249.9,-765.1,-76.0,175.2,404.0
+tether_rr,04 Wheels and Brakes,strap,,,,,,,,,780,748,3986.6,4249.9,76.0,765.1,175.2,404.0
 tyre_fl,04 Wheels and Brakes,rubber_tyre,900.0,-830.0,335.0,0.0,1.0,0.0,1.0,spin,2528,2528,565.1,1234.9,-981.0,-679.0,0.0,670.0
 tyre_fr,04 Wheels and Brakes,rubber_tyre,900.0,830.0,335.0,0.0,1.0,0.0,1.0,spin,2528,2528,565.1,1234.9,679.0,981.0,0.0,670.0
 tyre_rl,04 Wheels and Brakes,rubber_tyre,4050.0,-799.0,345.0,0.0,1.0,0.0,1.0,spin,2528,2528,3705.1,4394.9,-999.5,-598.5,0.0,690.0
@@ -182,8 +182,8 @@ bargeboard_r3,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1272.0,1716.4,345.2,47
 bargeboard_r4,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1318.0,1693.1,319.9,455.7,198.0,262.0
 beam_wing,03 Wings,carbon_gloss,,,,,,,,,1008,868,4281.1,4615.1,-550.0,550.0,669.6,789.4
 cameras,09 Aero Detail,carbon_matte,,,,,,,,,588,510,635.0,2525.0,-145.0,145.0,407.0,1029.5
-cooling_louvres,09 Aero Detail,carbon_matte,,,,,,,,,2352,2040,3145.0,3695.0,-168.3,168.3,582.4,701.3
-exhaust,09 Aero Detail,steel,,,,,,,,,1044,1014,3476.9,4530.0,-62.0,62.0,520.4,667.9
+cooling_louvres,09 Aero Detail,carbon_matte,,,,,,,,,2352,2040,3145.0,3695.0,-168.3,168.3,612.4,700.8
+exhaust,09 Aero Detail,steel,,,,,,,,,2676,2646,3536.5,4530.0,-62.0,132.8,486.0,649.4
 fan_fairing_l,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,-657.9,-234.0,240.0,664.0
 fan_fairing_r,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,234.1,658.0,240.0,664.0
 floor_edge_wings,03 Wings,carbon_matte,,,,,,,,,3400,3304,1900.0,3640.0,-989.4,989.4,53.0,161.7
@@ -204,11 +204,11 @@ turning_vane_l2,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1380.0,1641.1,-337.8
 turning_vane_r1,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1320.0,1640.5,350.0,397.8,86.0,330.0
 turning_vane_r2,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1380.0,1641.1,288.1,337.8,86.0,282.0
 airbox,11 Structure and Service,carbon_gloss,,,,,,,,,374,342,2020.0,3100.0,-174.7,174.7,550.8,907.1
-crash_structure,11 Structure and Service,carbon_matte,,,,,,,,,3746,3880,4113.0,4485.0,-146.0,146.0,184.0,476.0
+crash_structure,11 Structure and Service,carbon_matte,,,,,,,,,3920,3973,4066.0,4485.0,-146.0,146.0,184.0,476.0
 driver,10 Cockpit,suit,,,,,,,,,4448,3768,914.0,1913.5,-220.1,220.1,222.5,673.5
-gills,09 Aero Detail,carbon_matte,,,,,,,,,5096,4420,3001.8,3653.2,-261.1,261.1,470.6,686.9
+gills,09 Aero Detail,carbon_matte,,,,,,,,,5096,4420,3001.8,3653.2,-261.1,261.1,483.0,686.7
 helmet,10 Cockpit,helmet,,,,,,,,,5056,4946,1614.8,1896.0,-118.8,124.1,578.0,842.0
-jack_points,11 Structure and Service,alu_bright,,,,,,,,,3876,3936,350.1,4129.9,-70.0,70.0,127.1,245.7
+jack_points,11 Structure and Service,alu_bright,,,,,,,,,3876,3936,350.1,4129.9,-70.0,70.0,127.1,241.8
 nose_cape,09 Aero Detail,carbon_gloss,,,,,,,,,572,568,340.0,760.0,-300.0,300.0,76.0,158.7
 side_impact,11 Structure and Service,carbon_matte,,,,,,,,,1232,1128,1660.6,2076.8,-700.0,700.0,189.2,480.8
 tow_hooks,11 Structure and Service,alu_bright,,,,,,,,,1456,1456,226.0,4194.0,-107.1,107.1,142.9,437.1
