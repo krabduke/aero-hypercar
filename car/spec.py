@@ -205,10 +205,14 @@ BODY = [
     (  90.0,  72.0, 214.0, 318.0, 2.3,  0.02),
     ( 210.0, 116.0, 176.0, 352.0, 2.5,  0.05),
     ( 380.0, 158.0, 132.0, 392.0, 2.7,  0.08),
-    ( 560.0, 196.0,  96.0, 430.0, 2.9,  0.10),
-    ( 760.0, 224.0,  74.0, 486.0, 3.1,  0.12),
-    ( 980.0, 240.0,  64.0, 556.0, 3.2,  0.12),
-    (1180.0, 248.0,  60.0, 618.0, 3.3,  0.10),
+    # The chassis stands tall over the front axle, the way a single-seater's
+    # does, because the front suspension's rockers, heave damper and
+    # anti-roll bar live under its top. It was 50 mm lower here and all
+    # three stood out through the skin.
+    ( 560.0, 196.0,  96.0, 452.0, 2.9,  0.10),
+    ( 760.0, 224.0,  74.0, 540.0, 3.1,  0.12),
+    ( 980.0, 250.0,  64.0, 612.0, 3.2,  0.12),
+    (1180.0, 248.0,  60.0, 652.0, 3.3,  0.10),
     (1420.0, 252.0,  58.0, 690.0, 3.3,  0.06),
     (1680.0, 256.0,  58.0, 742.0, 3.2,  0.02),
     (1980.0, 262.0,  60.0, 772.0, 3.1, -0.02),
@@ -603,7 +607,10 @@ SUSP = {
     # only at mid-height; down at the lower arm's pickup the section has
     # closed well inside that, so at 250 both front wishbones picked up
     # outboard of the chassis and carried wheel load into nothing.
-    "inboard_front_y": 195.0, "inboard_rear_y": 300.0,
+    # The rear rockers, torsion bars and anti-roll bar hang off the gearbox
+    # at this half width, inside the engine cover. At 300 the rockers stood
+    # 124 mm outside the cover, in the open above the floor.
+    "inboard_front_y": 195.0, "inboard_rear_y": 190.0,
     # and the rear lower arm picks up on the gearbox casing. The case is a
     # 175 mm cylinder on the crank line, so its usable width runs out fast
     # below the centre -- at z 155 it is a knife edge -- while the dampers
@@ -614,7 +621,7 @@ SUSP = {
     "upright_h": 300.0,
     "arm_r": 17.0, "rod_r": 13.0,
     "front_layout": "pushrod", "rear_layout": "pullrod",
-    "rear_rocker_z": 250.0,
+    "rear_rocker_z": 330.0,
 }
 
 POWERTRAIN = {

@@ -159,10 +159,16 @@ def build():
             # roof, into the tunnel, and into the outermost strake.
             # +20, not +60: the rear upright tops out at z 492 and a pullrod
             # picking up at 522 was 30 mm above the casting it pulls on.
+            # Forward and in, on the casing's flank where the engine cover is
+            # still wide enough to hold it: at x - 160 the cover has drawn in
+            # to 185 mm of half width and the rocker stood 35 mm out of it.
+            # The rod ends on the rocker's pullrod corner (see _rocker), not
+            # at a point near the rocker it happened to pass.
+            ry = sgn * inb_y * 0.88
             rod = [(x, y * 0.77, S["upper_z"] + 20.0),
-                   (x - 150.0, sgn * inb_y, S["rear_rocker_z"])]
+                   (x - REAR_ROCKER_DX - 86.0, ry, S["rear_rocker_z"] + 48.0)]
             rockers.append((f"rocker_{tag}",
-                            _rocker(x - 160.0, sgn * inb_y,
+                            _rocker(x - REAR_ROCKER_DX, ry,
                                     S["rear_rocker_z"], -1.0)))
         # A pushrod is the most heavily loaded member on the car and it is
         # also right in the flow, so it is an aerofoil member with a rod end
@@ -244,7 +250,9 @@ def _inboard():
         # group was placed at 560 with the anti-roll bar at 656 and the heave
         # element at 710 -- so the whole inboard suspension stood up to 160 mm
         # proud of the car, in clean air, ahead of the driver.
-        z = 455.0 if front else 200.0
+        # the rear group rides 60 mm higher than it did, off the cover's
+        # floor: at 200 its bars came 30 mm out through the bottom of it
+        z = 455.0 if front else 260.0
         dx = 130.0 if front else -160.0
 
         dampers = []
@@ -253,8 +261,15 @@ def _inboard():
         out[f"dampers_{tag}"] = mesh.join(*dampers)
 
         # torsion bars across the car, and the heave damper on the centreline
-        out[f"torsion_bars_{tag}"] = _torsion_bars(
-            ax + dx - 10.0, inb_y * 0.9, z - 36.0)
+        # At the rear they run across between the rockers' pivots, which is
+        # what a torsion bar is sprung from; the heave damper sits on them.
+        if front:
+            out[f"torsion_bars_{tag}"] = _torsion_bars(
+                ax + dx - 10.0, inb_y * 0.9, z - 36.0)
+        else:
+            out[f"torsion_bars_{tag}"] = _torsion_bars(
+                ax - REAR_ROCKER_DX - 10.0, inb_y * 0.88,
+                S["rear_rocker_z"] - 70.0)
         # the heave element is a third damper, working only when both
         # wheels move together -- which is what holds the ride height under
         # aerodynamic load
@@ -264,8 +279,11 @@ def _inboard():
         # the car ahead of the heave damper, not through it -- at ax + dx - 60
         # it ran straight through the heave damper's body and reservoir --
         # and longer levers take the drop links back to the rockers.
-        out[f"antiroll_{tag}"] = _antiroll(ax + dx - 195.0, inb_y, z + 62.0,
-                                           reach=135.0)
+        if front:
+            out[f"antiroll_{tag}"] = _antiroll(ax + dx - 195.0, inb_y,
+                                               z + 62.0, reach=135.0)
+        else:
+            out[f"antiroll_{tag}"] = _antiroll_rear(ax, inb_y * 0.88)
 
     # steering: rack, column and track rods
     ax = spec.FRONT_AXLE_X
@@ -477,6 +495,49 @@ def _antiroll(x, half_y, z, reach=0.0):
         parts.append(shapes.suspension_link(
             (x + 140.0 + reach, yy, z - 6.0),
             (x + 150.0 + reach, yy * 0.86, z - 108.0),
+            common.section_points(20, 0.34, 0.0), 26.0, 24.0,
+            n_sta=7, end_r=9.0))
+    return mesh.join(*parts)
+
+
+# how far ahead of the rear axle the rear rockers pivot, on the casing
+REAR_ROCKER_DX = 235.0
+
+
+def _antiroll_rear(ax, y_rocker):
+    """The rear bar crosses the car in the gap between the gearbox's tail
+    and the crash structure, and its levers reach forward to the rockers.
+
+    Across the middle of the gearbox bay there is no room for it: every
+    height it was tried at crossed the heave damper, the lower wishbones'
+    pickups on the casing, or came out through the floor of the cover.
+    """
+    S = spec.SUSP
+    # the case ends at x 4078 and the crash structure starts at 4113
+    x_t = ax + 48.0
+    # above the driveshafts and the lower wishbones' pickups, under the
+    # upper ones'
+    z = 408.0
+    x_r = ax - REAR_ROCKER_DX               # the rocker, see build()
+    boss = (x_r - 74.0 * -1.0, S["rear_rocker_z"] + 62.0)    # damper corner
+    # the cover is only 175 mm of half width back here, so the tube is short
+    # and the levers splay out to the rockers as they run forward
+    y_t = 100.0
+    parts = [mesh.pipe([(x_t, -y_t, z), (x_t, y_t, z)], 14.0, 22, subdiv=4)]
+    for sgn in (-1.0, 1.0):
+        yy = sgn * y_rocker
+        # bearing block, on the crash structure's front face
+        parts.append(shapes.rounded_box(x_t, sgn * y_t * 0.55, z,
+                                        40.0, 30.0, 44.0, 9.0, seg=6))
+        x_end = boss[0] + 18.0
+        # lever forward along the casing's flank, with its blade on edge
+        parts.append(mesh.pipe([(x_t, sgn * y_t, z),
+                                (x_end + 60.0, yy, z), (x_end, yy, z)],
+                               10.0, 18, subdiv=3))
+        # its adjustable blade is hardware.antiroll_blade_r
+        # drop link down to the rocker's damper boss
+        parts.append(shapes.suspension_link(
+            (x_end, yy, z - 14.0), (boss[0], yy, boss[1] + 14.0),
             common.section_points(20, 0.34, 0.0), 26.0, 24.0,
             n_sta=7, end_r=9.0))
     return mesh.join(*parts)

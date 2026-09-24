@@ -159,30 +159,46 @@ def _antiroll_blades():
     # (214, 608) it was 66 mm above the torsion tube, which runs z 497-542 at
     # this station -- an adjuster clamped to nothing, on the one part of the
     # suspension whose whole job is to be adjustable.
+    # The rear blades are on the rear bar's levers, which run fore and aft
+    # up the casing's flanks to the rockers (suspension._antiroll_rear).
     for tag, (x, y, z) in (("f", (1039.0, 168.0, 520.0)),
-                           ("r", (3899.0, 258.0, 248.0))):
+                           ("r", (3925.0, 167.2, 404.0))):
         parts = []
         for sy in (-1.0, 1.0):
-            parts.append(_disc(x, sy * y, z, A["collar_r"], 34.0,
-                               axis="y", seg=18))
+            # on the rear bar the collar clamps the lever, which runs fore
+            # and aft, so it turns about x and is sized to a 20 mm lever
+            if tag == "f":
+                parts.append(_disc(x, sy * y, z, A["collar_r"], 34.0,
+                                   axis="y", seg=18))
+            else:
+                parts.append(_disc(x, sy * y, z, 15.0, 30.0,
+                                   axis="x", seg=18))
             # the flat blade, whose stiffness is set by which way it is turned
             # 84 long from x + 42, not 108 from x + 54: at the old reach the
             # front blade ran back into the dash bulkhead.
             # and set back to x + 80 on the rear bar, which is where the
             # rear lower wishbone's inboard leg sweeps past
-            dx0 = 42.0 if tag == "f" else 80.0
+            dx0 = 42.0 if tag == "f" else 30.0
+            # the rear one hangs below its lever: above it, the cover has
+            # drawn in round the gearbox
+            zp = z if tag == "f" else z - 12.0
+            ph = A["plate_h"] if tag == "f" else 40.0
+            pl = 84.0 if tag == "f" else 56.0
             parts.append(shapes.rounded_box(
-                x + dx0, sy * y, z, 84.0, A["plate_t"], A["plate_h"], r=3.0))
+                x + dx0, sy * y, zp, pl, A["plate_t"], ph, r=3.0))
             # the detent steps that index the setting
             for k in range(A["steps"]):
                 a = math.pi * (k + 0.5) / A["steps"]
-                parts.append(_disc(
-                    x, sy * y, z, A["collar_r"] + 5.0, 6.0, axis="y", seg=8))
+                if tag == "f":
+                    parts.append(_disc(x, sy * y, z, A["collar_r"] + 5.0,
+                                       6.0, axis="y", seg=8))
                 break
-            parts.append(mesh.pipe(
-                [(x + dx0 + 42.0, sy * y, z),
-                 (x + dx0 + 76.0, sy * (y + 26.0), z)],
-                7.0, segments=10))
+            # the link off the blade's end; the rear blade's is its lever
+            if tag == "f":
+                parts.append(mesh.pipe(
+                    [(x + dx0 + 42.0, sy * y, z),
+                     (x + dx0 + 76.0, sy * (y + 26.0), z)],
+                    7.0, segments=10))
         out[f"antiroll_blade_{tag}"] = mesh.join(*parts)
     return out
 

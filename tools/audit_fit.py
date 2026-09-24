@@ -23,7 +23,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(HERE, "car"))
 
 import spec
-from parts import chassis, powertrain, systems, detail
+from parts import chassis, powertrain, systems, detail, suspension
 
 # Named exceptions, each with the reason it is allowed outside the bodywork.
 OUTSIDE = {
@@ -147,7 +147,11 @@ def cockpit_top(x):
 
 def check(slack=6.0):
     built = {}
-    for m in (powertrain, systems, detail):
+    # suspension too: the comment below says the inboard suspension is under
+    # the skin "so the test does its job", but the test never built it --
+    # and the front heave damper and anti-roll bar stood 30-45 mm out
+    # through the top of the nose.
+    for m in (powertrain, systems, detail, suspension):
         built.update(m.build())
 
     x0 = spec.BODY[0][0]

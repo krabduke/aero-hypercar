@@ -38,13 +38,23 @@ EXPECTED = [
     ("wiring_loom", "battery"),   # the loom starts at it
     ("wiring_loom", "driveshaft_"),
     # a jack point is part of the structure it lifts the car by
-    ("jack_points", "crash_structure"), ("jack_points", "heave_"),
+    ("jack_points", "crash_structure"),
 
     # running gear: the studs are in the hub, the caliper wraps the disc and
     # the pads sit in the caliper. The hub runs in the upright's bearing bore
     # and touches it nowhere else.
     ("wheel_stud", "hub_"), ("wheel_stud", "rim_"),
     ("brake_pad", "caliper_"),
+    # the rear rockers pivot on the gearbox casing; the halo's front pillar
+    # comes up through the cockpit rim to its mount on the tub
+    ("gearbox", "rocker_r"), ("cockpit_coaming", "halo"),
+    # and the rear anti-roll bar's bearings are on the crash structure's face
+    ("antiroll_r", "crash_structure"),
+    # the rear rocker sits on the casing, so the pullrod's clevis on it is
+    # in the casing's flank; and each damper's eye is on its rocker
+    ("gearbox", "pushrod_r"), ("dampers_", "rocker_"),
+    # the rear heave damper sits on the torsion bars between the rockers
+    ("heave_", "torsion_bars"),
     # the fuel line screws into the engine's fuel rail; the plenum edge is
     # bonded along the tunnel's outer wall; the diffuser fences are bonded
     # to the tunnel roof; the fan fairings sit on the diffuser's trailing
@@ -69,9 +79,7 @@ EXPECTED = [
     # inboard suspension: rods into rockers, rockers onto bars and dampers
     ("rocker_", "pushrod_"), ("rocker_", "torsion_bars"),
     ("rocker_", "antiroll_"), ("rocker_", "tub"),
-    ("damper", "torsion_bars"), ("damper", "tub"), ("heave_", "tub"),
-    ("antiroll_", "tub"), ("antiroll_blade_", "antiroll_"),
-    ("torsion_bars", "tub"),
+    ("damper", "torsion_bars"), ("antiroll_blade_", "antiroll_"),
     ("steering_column", "steering_rack"), ("steering_column", "steering"),
     ("trackrod_", "steering_rack"), ("wishbone_", "tub"),
     ("pushrod_", "tub"), ("driveshaft_", "gearbox"),
@@ -101,7 +109,7 @@ EXPECTED = [
     ("crash_structure", "tub"), ("side_impact", "tub"),
     ("roll_hoop", "tub"), ("halo", "tub"),
     ("halo_mounts", "tub"), ("halo_pillar", "halo"), ("halo_mounts", "halo"),
-    ("mirrors", "tub"), ("cameras", "tub"),
+    ("mirrors", "tub"),
     ("rainlight", "crash_structure"), ("rear_light_panel", "crash_structure"),
 
     # wings: elements onto endplates and pylons, furniture onto elements
@@ -231,9 +239,8 @@ EXPECTED = [
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it
 
-    # a bulkhead is a mounting face: the dash lands on one, and the battery
-    # is bolted to the engine bulkhead's flange
-    ("bulkhead_", "dash"), ("battery", "bulkhead_engine"),
+    # the battery is bolted to the engine bulkhead's flange
+    ("battery", "bulkhead_engine"),
     # the fuel cell stands on the pack by its collector's foot, and the
     # control boxes stand on the cell's lid
     ("battery", "fuel_cell"), ("control_boxes", "fuel_cell"),
@@ -322,23 +329,23 @@ KNOWN = {
     ("side_impact", "side_intrusion"): 11.6,   # at (1802.3, 238.7, 419.9)
     ("driveshaft_rl", "wishbone_rl_lower_aft"): 11.3,   # at (4067.5, -191.7, 327.3)
     ("driveshaft_rr", "wishbone_rr_lower_aft"): 11.3,   # at (4067.5, 191.7, 327.3)
-    ("brake_lines", "wishbone_rl_upper_fwd"): 11.0,   # at (4079.2, -581.1, 459.1)
-    ("brake_lines", "wishbone_rr_upper_fwd"): 11.0,   # at (4079.2, 581.1, 459.1)
     ("brake_lines", "wishbone_fl_upper_aft"): 10.6,   # at (929.1, -601.9, 449.1)
-    ("brake_lines", "wishbone_rl_upper_aft"): 10.2,   # at (4073.1, -584.0, 457.4)
-    ("brake_lines", "wishbone_rr_upper_aft"): 10.2,   # at (4073.1, 584.0, 457.4)
     ("floor_inlet_lip", "turning_vane_l1"): 10.2,   # at (1321.0, -351.1, 103.0)
     ("floor_inlet_lip", "turning_vane_r1"): 10.2,   # at (1321.0, 351.1, 103.0)
     ("floor_plenum_edge_l", "floor_strake_l4"): 9.7,   # at (3889.8, -548.0, 61.8)
     ("floor_plenum_edge_r", "floor_strake_r4"): 9.7,   # at (3889.8, 548.0, 61.8)
+    ("brake_lines", "wishbone_rl_upper_fwd"): 9.5,   # at (4078.5, -582.9, 457.2)
+    ("brake_lines", "wishbone_rr_upper_fwd"): 9.5,   # at (4078.5, 582.9, 457.2)
     ("bduct_drum_rl", "brake_lines"): 9.3,   # at (4064.8, -648.7, 538.4)
     ("bduct_drum_rr", "brake_lines"): 9.3,   # at (4064.8, 648.7, 538.4)
     ("bargeboard_l4", "turning_vane_l1"): 9.1,   # at (1586.5, -372.8, 250.2)
     ("bargeboard_r4", "turning_vane_r1"): 9.1,   # at (1586.4, 372.8, 250.2)
     ("brake_lines", "driveshaft_rl"): 9.0,   # at (4060.7, -533.4, 352.5)
     ("brake_lines", "driveshaft_rr"): 9.0,   # at (4060.7, 533.4, 352.5)
-    ("brake_lines", "pushrod_rl"): 8.8,   # at (4077.3, -584.6, 462.1)
-    ("brake_lines", "pushrod_rr"): 8.8,   # at (4077.3, 584.6, 462.1)
+    ("brake_lines", "pushrod_rl"): 8.8,   # at (4074.7, -577.8, 467.2)
+    ("brake_lines", "pushrod_rr"): 8.8,   # at (4074.7, 577.8, 467.2)
+    ("brake_lines", "wishbone_rl_upper_aft"): 8.7,   # at (4078.5, -582.8, 456.6)
+    ("brake_lines", "wishbone_rr_upper_aft"): 8.7,   # at (4078.5, 582.8, 456.6)
     ("trackrod_fl", "tyre_sensors"): 8.7,   # at (827.6, -674.9, 229.6)
     ("trackrod_fr", "tyre_sensors"): 8.7,   # at (827.6, 674.9, 229.6)
     ("floor_surface", "tub"): 8.2,   # at (2333.4, -0.0, 45.7)
@@ -350,8 +357,8 @@ KNOWN = {
     ("brake_lines", "sidepod_r"): 6.9,   # at (2710.4, 321.5, 257.2)
     ("bduct_drum_fl", "brake_lines"): 6.7,   # at (902.0, -709.7, 514.2)
     ("bduct_drum_fr", "brake_lines"): 6.7,   # at (902.0, 709.7, 514.2)
-    ("trackrod_rl", "tyre_sensors"): 6.5,   # at (4045.3, -528.2, 205.5)
-    ("trackrod_rr", "tyre_sensors"): 6.5,   # at (4045.3, 528.2, 205.5)
+    ("trackrod_rl", "tyre_sensors"): 6.4,   # at (4038.0, -536.7, 207.3)
+    ("trackrod_rr", "tyre_sensors"): 6.4,   # at (4038.0, 536.7, 207.3)
     ("seat", "side_intrusion"): 6.1,   # at (1599.4, -228.3, 479.4)
     ("fan_fairing_l", "tunnel_l"): 5.9,   # at (4560.0, -482.8, 249.3)
     ("bduct_fence_rl", "brake_lines"): 5.1,   # at (4074.5, -578.9, 424.3)
