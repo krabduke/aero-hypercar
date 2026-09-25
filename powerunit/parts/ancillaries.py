@@ -130,9 +130,13 @@ def _cooling():
     """Thermostat and its housing, on the timing case's front face.
 
     The heads' water comes forward through the case and out of the boss in
-    its vee, which is where the housing bolts on. The housing carries the
-    stub the radiator hose clamps to, on its left, and the bypass port back
-    to the pump on its right; detail.py plumbs both.
+    its vee, which is where the housing bolts on. The housing carries two
+    radiator outlet stubs, one each side, because the vehicle has a
+    radiator in each sidepod and the front of this engine is too full for a
+    hose to cross it: its bulkhead is 9 mm ahead of the damper. The bypass
+    back to the pump runs inside the timing case's casting, as it does on
+    most race engines; it used to be an external hose looping down the
+    right-hand side of the case, which left the housing only one outlet.
 
     It used to stand behind the case on the block's front face, 104 mm
     across in a gap between the two banks' gear trains that is 30 mm wide at
@@ -148,16 +152,14 @@ def _cooling():
         [(0.0, 0.0), (0.0, 30.0), (4.0, 34.0), (x1 - x0 - 6.0, 34.0),
          (x1 - x0 - 6.0, 42.0), (x1 - x0, 42.0), (x1 - x0, 0.0)],
         x0, 0.0, zc, axis="x", seg=28))
-    xm = x0 + 11.0
-    # the radiator hose stub, with its bead
-    parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 14.0), (34.0, 14.0), (38.0, 17.0),
-         (42.0, 17.0), (46.0, 14.0), (52.0, 14.0), (52.0, 0.0)],
-        xm, -28.0, zc, axis="y", seg=18, flip=True))
-    # the bypass port
-    parts.append(_lathe(
-        [(0.0, 0.0), (0.0, 13.0), (18.0, 13.0), (18.0, 0.0)],
-        xm, 28.0, zc, axis="y", seg=18))
+    xm = x0 + spec.STAT_STUB_X
+    # the two radiator hose stubs, with their beads, under the axis
+    zs = zc - spec.STAT_STUB_DROP
+    for flip in (True, False):
+        parts.append(_lathe(
+            [(0.0, 0.0), (0.0, 14.0), (47.0, 14.0), (51.0, 17.0),
+             (55.0, 17.0), (59.0, 14.0), (65.0, 14.0), (65.0, 0.0)],
+            xm, -15.0 if flip else 15.0, zs, axis="y", seg=18, flip=flip))
     # four bolts through the flange into the case, clear of the two ports
     # and the header tank on top
     for k in range(4):

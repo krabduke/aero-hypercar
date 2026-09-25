@@ -152,8 +152,9 @@ BULGES = [
     # x0, x1, |y| centre, half-width, z centre, half-height, exponent, taper
     {"x0": 2990.0, "x1": 3490.0, "yc": 300.0, "hy": 105.0,
      "zc": 515.0, "hz": 140.0, "n": 3.0, "taper": 0.35},     # charge pipes
-    {"x0": 3040.0, "x1": 3430.0, "yc": 250.0, "hy": 64.0,
-     "zc": 235.0, "hz": 74.0, "n": 2.6, "taper": 0.4},       # oil cooler
+    # the oil cooler, and forward of it the water pump's return stub
+    {"x0": 2950.0, "x1": 3430.0, "yc": 250.0, "hy": 64.0,
+     "zc": 235.0, "hz": 74.0, "n": 2.6, "taper": 0.3},
 ]
 
 

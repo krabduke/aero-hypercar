@@ -177,37 +177,7 @@ def build():
                     x + dx, y, (z_tank + z_floor) / 2 + 2.0, 40.0, 70.0,
                     z_tank - z_floor + 4.0, 6.0))
         out[f"rad_tanks_{tag}"] = mesh.join(*tanks)
-        hoses = []
-        # Both hoses leave the aft tank, which is divided: in at the top,
-        # across the core, back through its lower half, out at the bottom.
-        x_t = x + sx / 2 + 26.0
-        # The hose stays OUTBOARD of the fuel cell and the battery until it
-        # is past both of them, then comes in to the engine. Cutting the
-        # corner took it through the bladder and through the battery
-        # modules. The upper one runs high over the pod's inboard wall; the
-        # lower one ducks under the brake line that runs aft along y 320,
-        # z 250, and both land on the engine's stubs 95 mm either side of
-        # the crank.
-        for s_ in (1.0, -1.0):
-            zs = [z + s_ * sz * 0.30] + [PT["engine_z"] + v for v in (
-                (126.0, 156.0, 117.0, 95.0) if s_ > 0 else
-                (-74.0, -139.0, -112.0, -95.0))]
-            ys = (abs(y), 470.0, 296.0, 195.0, 94.0)
-            xs = (x_t, x_t + 100.0, 2760.0, 2990.0, PT["engine_x"])
-            path = [(px, sgn * py, pz) for px, py, pz in zip(xs, ys, zs)]
-            # a moulded hose swells where it is unsupported and necks down
-            # into each stub
-            hoses.append(mesh.pipe(
-                path, [30.0, 35.0, 37.0, 35.0, 30.0], 24, subdiv=4))
-            # and it is held on by a clamp at each end, which is the part
-            # that actually fails
-            for (pt, nxt) in ((path[0], path[1]), (path[-1], path[-2])):
-                d = tuple(nxt[k] - pt[k] for k in range(3))
-                cv, cf = mesh.revolve_closed(
-                    [(14.0, 31.0), (30.0, 31.0), (30.0, 37.0),
-                     (14.0, 37.0)], 24)
-                hoses.append((shapes.orient(cv, pt, d), cf))
-        out[f"rad_hoses_{tag}"] = mesh.join(*hoses)
+    out.update(_rad_hoses(espec))
     out.update(_lt_loop(espec))
 
     bx, by, bz = PT["battery_x"], 0.0, PT["battery_z"]
@@ -260,6 +230,105 @@ def build():
         shapes.rounded_box(fx - sx * 0.3, 0.0, fz + sz * 0.5 + 18.0,
                            110.0, 110.0, 36.0, 12.0))
     return out
+
+
+def _rad_hoses(espec):
+    """The main radiators' hoses, onto the engine's own cooling stubs.
+
+    The engine has an outlet stub each side of its thermostat and a return
+    stub on the tee at its water pump's inlet, on the right. Each radiator
+    is fed from the stub on its own side; both return through a Y beside
+    the pump. The left radiator's return is the one hose that has to cross
+    the car, and it crosses in the bay between the fuel cell and the engine
+    bulkhead, over the battery -- the front of the engine is 9 mm from the
+    bulkhead, and nothing crosses there.
+
+    These used to land on nothing: all four ended at the engine's mid-length,
+    95 mm either side of the crank, in the middle of its cylinder banks,
+    where the engine has no port of any kind. They were 60 to 74 mm moulded
+    hoses; the stubs are 28 mm, and so, now, are the hoses' bores.
+    """
+    out = {}
+    r = 18.0
+    P, yj, ret = rad_hose_paths(espec)
+    # the two feeds as one part and the returns as another: the two sides
+    # are not mirror images -- each feed takes the one way out past the
+    # front of the engine that its side has, and both returns meet in one Y
+    groups = {"hot": [P["l"][0], P["r"][0]],
+              "return": P["l"][1:] + P["r"][1:]}
+    for tag, paths in groups.items():
+        hoses = []
+        for path in paths:
+            hoses.append(mesh.pipe(path, r, 24, subdiv=3))
+            for (pt, nxt) in ((path[0], path[1]), (path[-1], path[-2])):
+                if pt == yj:
+                    continue
+                d = tuple(nxt[k] - pt[k] for k in range(3))
+                cv, cf = mesh.revolve_closed(
+                    [(4.0, r + 0.5), (16.0, r + 0.5), (16.0, r + 3.5),
+                     (4.0, r + 3.5)], 24)
+                hoses.append((shapes.orient(cv, pt, d), cf))
+        if tag == "return":
+            # the Y, a moulded junction the two returns and the pump hose
+            # push onto
+            hoses.append(shapes.rounded_box(*yj, 50.0, 50.0, 50.0, 22.0))
+        out[f"rad_hoses_{tag}"] = mesh.join(*hoses)
+    return out
+
+
+def rad_hose_paths(espec):
+    """({"l": [path, ...], "r": [...]}, the return Y, the return stub):
+    every main-radiator hose's centreline, stub end last where it has one."""
+    ex, ez = PT["engine_x"], PT["engine_z"]
+
+    def eng(p):
+        return (p[0] + ex, p[1], p[2] + ez)
+
+    C = espec.COOLANT
+    drop = espec.STAT_STUB_DROP
+    stat = {s: eng((C["stat_x"] + espec.STAT_STUB_X, s * 80.0,
+                    C["stat_z"] - drop)) for s in (-1.0, 1.0)}
+    ret = eng((C["pump_x"] + 52.0, C["pump_y"] + 75.0, C["pump_z"]))
+    x, z = PT["rad_x"], PT["rad_z"]
+    sx, sy, sz = PT["radiator"]
+    x_t = x + sx / 2 + 26.0                  # the aft tank, which is divided
+    z_in, z_out = z + sz * 0.30, z - sz * 0.30
+    y_r = PT["rad_y"]
+    yj = (ret[0] - 82.0, ret[1] + 40.0, ret[2] + 4.0)    # the return Y
+    P = {}
+    for sgn, tag in ((-1.0, "l"), (1.0, "r")):
+        st = stat[sgn]
+        paths = []
+        # this side's radiator, in at the top of its aft tank <- the stub
+        # The front of the engine is a belt, its idler and tensioner, the
+        # HP fuel pump and the breather hose, all within 60 mm of the
+        # bulkhead, and these are the ways out found clear of all of it by
+        # tools/route_solve: on the left over the breather's descent and in
+        # front of it, on the right down under the HP pump and out along
+        # its underside, then forward past the bulkhead's edge into the pod.
+        if sgn < 0:
+            mid = [(2910.0, -192.0, 444.0), (st[0] - 2.0, -174.0, st[2])]
+        else:
+            mid = [(2652.0, 480.0, 396.0), (st[0] - 2.0, 204.0, 396.0),
+                   (st[0] - 2.0, 162.0, 396.0)]
+        paths.append([(x_t, sgn * y_r, z_in), (x_t + 43.0, sgn * y_r, z_in)]
+                     + mid
+                     + [(st[0], sgn * 130.0, st[2]),
+                        (st[0], st[1] - sgn * 18.0, st[2])])
+        # out at the bottom, back to the Y
+        if sgn > 0:
+            paths.append([(x_t, y_r, z_out), (x_t + 78.0, y_r - 10.0, z_out - 2.0),
+                          yj])
+            # and the one hose from the Y onto the pump's return stub
+            paths.append([yj, (ret[0] - 12.0, yj[1] + 2.0, ret[2] + 2.0),
+                          (ret[0], ret[1] + 28.0, ret[2]),
+                          (ret[0], ret[1] - 18.0, ret[2])])
+        else:
+            paths.append([(x_t, -y_r, z_out), (x_t + 78.0, -y_r + 10.0, z_out + 6.0),
+                          (2745.0, 0.0, 300.0), (2790.0, 250.0, 276.0),
+                          (2870.0, 326.0, 252.0), yj])
+        P[tag] = paths
+    return P, yj, ret
 
 
 def _lt_loop(espec):

@@ -246,7 +246,7 @@ def main():
             "side_intrusion", "gun_sockets", "tyre_sensors",
             "exit_louvres_l", "fanduct", "fan_rotor_l", "fan_rotor_r",
             "fan_stators", "engine", "gearbox", "radiator_l", "radiator_r",
-            "rad_tanks_l", "rad_hoses_r", "battery", "battery_modules",
+            "rad_tanks_l", "rad_hoses_hot", "rad_hoses_return", "battery", "battery_modules",
             "fuel_cell"]
     want = [w for w in want if w not in ("fan_rotors", "rear_wing")]
     missing = [w for w in want if w not in by]

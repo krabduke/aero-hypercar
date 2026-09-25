@@ -418,11 +418,24 @@ def coolant_node(which):
         return (C["pump_x"] + 6.0, C["pump_y"] - 76.0, C["pump_z"] - 14.0)
     if which == "pump_in":
         return (C["pump_x"] + 32.0, C["pump_y"], C["pump_z"])
-    if which == "stat_top":        # the bypass port, back to the pump
-        return (C["stat_x"] + 11.0, C["stat_y"] + 46.0, C["stat_z"])
-    if which == "stat_hose":       # the stub the radiator hose clamps to
-        return (C["stat_x"] + 11.0, C["stat_y"] - 80.0, C["stat_z"])
+    # the two radiator outlet stubs' ends, one to each radiator, and the
+    # return stub's end on the pump's inlet tee: where a vehicle's hoses go
+    if which in ("stat_hose_l", "stat_hose_r"):
+        s = -1.0 if which.endswith("l") else 1.0
+        return (C["stat_x"] + STAT_STUB_X, C["stat_y"] + s * 80.0,
+                C["stat_z"] - STAT_STUB_DROP)
+    if which == "pump_return":
+        return (C["pump_x"] + 52.0, C["pump_y"] + 75.0, C["pump_z"])
     raise KeyError(which)
+
+
+# The thermostat's two outlet stubs are this far under its axis: level with
+# it, each pointed straight at the post of the belt idler (left) or the
+# tensioner (right), 28 mm away, and no hose could have been pushed on.
+STAT_STUB_DROP = 24.0
+# ...and this far ahead of the housing's back face: at 11 their axis was
+# 17 mm off the timing case, and a hose over a 28 mm stub is 36 across
+STAT_STUB_X = 8.0
 
 
 def oil_pump_port(k):

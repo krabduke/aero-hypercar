@@ -282,13 +282,14 @@ def _pumps():
     #
     # The loop is: pump into the block, up through the liners into the heads,
     # out of the eight outlets, forward to the thermostat on the front face,
-    # and back down to the pump's eye. Everything forward of x -250 has to
+    # out of its two stubs to the vehicle's radiators (or, cold, through the
+    # bypass in the timing case), and back through the radiators to the tee
+    # on the pump's eye. Everything forward of x -250 has to
     # miss the timing gears at -269..-255, and everything on the centreline
     # has to miss the crank nose.
     wp = []
     pump_out = spec.coolant_node("pump_out")
     pump_in = spec.coolant_node("pump_in")
-    stat = spec.coolant_node("stat_top")
     F = spec.FRONT
     xb = spec.BLOCK["x_front"]
 
@@ -319,15 +320,22 @@ def _pumps():
         path = [rear, front, (x_in, front[1] * 0.97, front[2] * 0.97 + 8.0),
                 (x_in, front[1] * k, front[2] * k)]
         wp.append(mesh.pipe(mesh.smooth_path(path, 2), K["rail_r"], SM))
-    # the thermostat's bypass back to the pump's eye, which faces aft: down
-    # the right of the case, behind the pump and in from behind
-    wp.append(mesh.pipe(
-        [stat, (stat[0], stat[1] + 26.0, stat[2] - 8.0),
-         (stat[0] + 10.0, pump_in[1] + 25.0, 50.0),
-         (pump_in[0] + 10.0, pump_in[1] + 25.0, 50.0),
-         (pump_in[0] + 40.0, pump_in[1], 20.0),
-         (pump_in[0] + 40.0, pump_in[1], pump_in[2]), pump_in],
-        13.0, SM, subdiv=3))
+    # The pump's inlet: its eye faces aft, and a tee on it takes the water
+    # back from the radiators through a stub pointing outboard. The
+    # thermostat's bypass reaches the pump inside the timing case. This was
+    # an external bypass hose looping down the case into the eye, and the
+    # radiators' water had no way back into the engine at all.
+    ret = spec.coolant_node("pump_return")
+    tee_x = ret[0]
+    wp.append(mesh.pipe([(pump_in[0] - 4.0, pump_in[1], pump_in[2]),
+                         (tee_x + 18.0, pump_in[1], pump_in[2])], 16.0, SM,
+                        bend=0.0))
+    tv, tf = mesh.revolve_closed(
+        [(0.0, 0.0), (0.0, 14.0), (47.0, 14.0), (51.0, 17.0), (55.0, 17.0),
+         (59.0, 14.0), (65.0, 14.0), (65.0, 0.0)], SM)
+    # the lathe runs along its own +x; stand it along +y from the tee
+    wp.append(([(tee_x + pz, pump_in[1] + 10.0 + px, pump_in[2] + py)
+                for (px, py, pz) in tv], tf))
     # the header tank, sitting on top of the thermostat housing
     tv, tf = mesh.tube(K["stat_x"] - 6.0, F["case_front"] - 7.0, 0.0, 20.0, 22)
     tv = [(px, py, pz + K["stat_z"] + 34.0 + 20.0) for (px, py, pz) in tv]

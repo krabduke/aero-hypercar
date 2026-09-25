@@ -321,14 +321,14 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 11,
-   "faces": 2443629
+   "faces": 2436984
   },
   {
    "key": "08 Cooling and Energy",
    "label": "Cooling",
    "color": "#4E6E7A",
    "parts": 17,
-   "faces": 64404
+   "faces": 65565
   },
   {
    "key": "09 Aero Detail",
@@ -1926,7 +1926,7 @@
    "mat": "alu_cast",
    "x0": 2861.0,
    "x1": 3598.3,
-   "f": 2368571
+   "f": 2361926
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -2026,19 +2026,19 @@
    "x1": 2879.0,
    "f": 546
   },
-  "rad_hoses_l": {
+  "rad_hoses_hot": {
    "g": "08 Cooling and Energy",
    "mat": "hose",
-   "x0": 2552.0,
-   "x1": 3251.5,
-   "f": 7400
+   "x0": 2562.0,
+   "x1": 2951.5,
+   "f": 9077
   },
-  "rad_hoses_r": {
+  "rad_hoses_return": {
    "g": "08 Cooling and Energy",
    "mat": "hose",
-   "x0": 2552.0,
-   "x1": 3251.5,
-   "f": 7400
+   "x0": 2559.3,
+   "x1": 3033.5,
+   "f": 6884
   },
   "rad_lt_hoses_l": {
    "g": "08 Cooling and Energy",

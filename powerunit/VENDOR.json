@@ -1,7 +1,7 @@
 {
  "source": "car-engine",
  "files": {
-  "spec.py": "186dcb277b04",
+  "spec.py": "cf89638bb11e",
   "mesh.py": "7a61f9dcccf1",
   "shapes.py": "1d7ea5dea4e8",
   "gaspath.py": "ffb7db964e43",
@@ -16,9 +16,9 @@
   "parts/turbo.py": "717463100e20",
   "parts/hybrid.py": "963e88c7ad97",
   "parts/drive.py": "1c7efa1db825",
-  "parts/detail.py": "aeaa59201de5",
-  "parts/ancillaries.py": "9cdbbe27f207",
+  "parts/detail.py": "fd003711468d",
+  "parts/ancillaries.py": "548b01165dd8",
   "parts/harness.py": "14a65300996b"
  },
- "commit": "a7b7ca0"
+ "commit": "c1c67dc"
 }
