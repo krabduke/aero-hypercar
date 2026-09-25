@@ -207,9 +207,19 @@ def _plenum():
         # which is 456 mm of room at this height.
         tr = I["throttle_r"]
         h0 = I["plenum_r"] * 0.86
-        tparts = [mesh.tube(h0, h0 + 56.0, tr - 7.0, tr, 32)]
-        tparts.append(mesh.tube(h0 + 48.0, h0 + 56.0, tr, tr + 10.0, 32))
-        tparts.append(mesh.tube(h0, h0 + 7.0, tr, tr + 10.0, 32))
+        # The body: its mounting flange on the plenum, the butterfly's bore,
+        # then a taper down to a beaded spigot the charge pipe's size. It
+        # used to be a plain 78 mm bore to its mouth, and the 60 mm charge
+        # pipe stopped 1 mm inside it: a 9 mm annulus open to the air all
+        # round, which is a boost leak the size of the pipe.
+        sp = CHARGE_SPIGOT
+        tparts = [mesh.revolve_ring(
+            [(h0, tr - 7.0), (h0, tr + 10.0), (h0 + 7.0, tr + 10.0),
+             (h0 + 7.0, tr), (h0 + 34.0, tr), (h0 + 46.0, sp + 2.5),
+             (h0 + 52.0, sp + 2.5), (h0 + 52.0, sp), (h0 + 55.0, sp + 2.5),
+             (h0 + 58.0, sp + 2.5), (h0 + 60.0, sp), (h0 + 62.0, sp),
+             (h0 + 62.0, sp - 4.0), (h0 + 46.0, sp - 4.0),
+             (h0 + 34.0, tr - 7.0)], 32)]
         bv, bf = mesh.revolve_closed(
             [(-2.0, 0.0), (-2.0, tr - 8.0), (2.0, tr - 8.0), (2.0, 0.0)], 32)
         tparts.append(([(px + h0 + 27.0, py, pz) for (px, py, pz) in bv], bf))
@@ -220,6 +230,18 @@ def _plenum():
         tv = [(pz, sgn * px + y, py + I["plenum_z"]) for (px, py, pz) in tv]
         out[f"throttle_{tag}"] = (tv, tf)
     return out
+
+
+# the throttle's inlet spigot: the charge pipe's own outside radius, so the
+# two butt inside one coupler (ancillaries._charge)
+CHARGE_SPIGOT = 32.0
+
+
+def throttle_mouth(bank):
+    """The end of a bank's throttle inlet spigot, on its axis."""
+    sgn = -1.0 if bank == 0 else 1.0
+    return (0.0, sgn * (I["plenum_y"] + I["plenum_r"] * 0.86 + 62.0),
+            I["plenum_z"])
 
 
 def _trumpets():

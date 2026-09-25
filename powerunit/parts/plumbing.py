@@ -530,6 +530,16 @@ def _breathers():
         if bank == 1:                      # the right bank crosses the front
             way.append((xc, 40.0, 222.0))
         way.append(junction)
+        # the union itself, screwed into the cover's crown on the hose's own
+        # axis: a hex body let into the cover and a barbed spigot the hose
+        # pushes onto. The hose used to start at the cover's skin with
+        # nothing under it.
+        u = [way[1][k] - way[0][k] for k in range(3)]
+        m = math.sqrt(sum(c * c for c in u))
+        u = [c / m for c in u]
+        at = lambda t: tuple(way[0][k] + u[k] * t for k in range(3))
+        pipes.append(mesh.pipe([at(-10.0), at(2.0)], 11.0, 6, bend=0.0))
+        pipes.append(mesh.pipe([at(2.0), at(9.0)], 8.5, SM, bend=0.0))
         # 7 mm, not 11: a breather is a light hose, and at 11 the crossover
         # and its drop read as a roll bar across the front of the engine
         pipes.append(mesh.pipe(way, 7.0, SM, subdiv=3))

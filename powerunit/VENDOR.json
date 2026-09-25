@@ -11,14 +11,14 @@
   "parts/block.py": "f8e24d697e31",
   "parts/bottomend.py": "d37a18bb0b22",
   "parts/heads.py": "453b247ff239",
-  "parts/plumbing.py": "6e46ce5e1275",
-  "parts/induction.py": "30ff68ca4aef",
+  "parts/plumbing.py": "e0819548f1bc",
+  "parts/induction.py": "e536da3b9d24",
   "parts/turbo.py": "717463100e20",
   "parts/hybrid.py": "963e88c7ad97",
   "parts/drive.py": "1c7efa1db825",
   "parts/detail.py": "aeaa59201de5",
-  "parts/ancillaries.py": "795a11ed6a8d",
+  "parts/ancillaries.py": "9cdbbe27f207",
   "parts/harness.py": "14a65300996b"
  },
- "commit": "20f6a92"
+ "commit": "a7b7ca0"
 }

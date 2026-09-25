@@ -321,7 +321,7 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 11,
-   "faces": 2446113
+   "faces": 2443629
   },
   {
    "key": "08 Cooling and Energy",
@@ -1926,7 +1926,7 @@
    "mat": "alu_cast",
    "x0": 2861.0,
    "x1": 3598.3,
-   "f": 2371055
+   "f": 2368571
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",

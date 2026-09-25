@@ -199,6 +199,7 @@ def _charge():
     on the roof and back, which is what was here: two open-ended trunks
     arcing over and around the engine and touching nothing at the far end.
     """
+    from parts import induction
     out = {}
     runs = []
     I = spec.INTAKE
@@ -272,14 +273,22 @@ def _charge():
                 (out_x, s_ * 322.0, 176.0),
                 (out_x * 0.4, s_ * 350.0, 104.0),
                 (0.0, s_ * 352.0, cz),
-                # 1 mm into the throttle's mouth, on both sides: "+ 8" put
-                # the right-hand pipe 8 mm short of its throttle, bore open
-                # to the air, and the left-hand one 8 mm inside its throttle
-                (0.0, thr_y + s_ * 1.0, cz)]
+                # butted onto the throttle's inlet spigot, which is this
+                # pipe's size, inside a coupler
+                induction.throttle_mouth(bank)]
         r = 30.0
         pipe_parts = [mesh.pipe(path, r, segments=18, subdiv=3)]
-        # a coupling bead at each end, which is where a clamp lands
-        for pt, nxt in ((path[0], path[1]), (path[-1], path[-2])):
+        # the silicone coupler over the joint, with a clamp each side of it
+        jm = path[-1]
+        cpl = [(jm[0], jm[1] - s_ * 16.0, jm[2]), (jm[0], jm[1] + s_ * 16.0, jm[2])]
+        pipe_parts.append(mesh.pipe(cpl, induction.CHARGE_SPIGOT + 4.0,
+                                    segments=20, bend=0.0))
+        for dy in (-9.0, 9.0):
+            pipe_parts.append(mesh.pipe(
+                [(jm[0], jm[1] + dy - 3.0, jm[2]), (jm[0], jm[1] + dy + 3.0, jm[2])],
+                induction.CHARGE_SPIGOT + 6.0, segments=20, bend=0.0))
+        # a coupling bead at the turbo end, which is where a clamp lands
+        for pt, nxt in ((path[0], path[1]),):
             m = math.dist(pt, nxt) or 1.0
             step = tuple((nxt[k] - pt[k]) / m * 14.0 for k in range(3))
             pipe_parts.append(mesh.pipe(
