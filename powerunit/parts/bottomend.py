@@ -373,6 +373,11 @@ def _damper():
     # and the timing mark notch
     nv, nf = mesh.cylinder(x0 + 34.0, x0 + 38.0, 5.0, 8)
     parts.append((mesh.translate(nv, 0.0, 90.0, 0.0), nf))
+    # the crank bolt that clamps it all to the nose: a hardened washer on
+    # the nose's end face and an M16 head, 24 across flats
+    from parts.plumbing import _hex_prism
+    parts.append(mesh.cylinder(x0 + 1.0, x0 + 4.0, C["nose_r"] + 6.0, 28))
+    parts.append(_hex_prism(x0 - 9.0, x0 + 1.0, 13.9))
     return {"crank_damper": mesh.join(*parts)}
 
 

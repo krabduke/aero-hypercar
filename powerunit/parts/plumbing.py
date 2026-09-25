@@ -423,14 +423,38 @@ def _accessories():
 
 def pulley(x, r, w=None, bore=None):
     """A flat-belt pulley on the x axis: a crowned rim between two low
-    flanges that keep the belt on, a web and a hub."""
+    flanges that keep the belt on, a web dished in from both faces, and a
+    hub standing proud of the front. A pulley that runs on a stud (bore
+    None) carries its retaining bolt and washer on the hub's front face."""
     w = spec.FRONT["pulley_w"] if w is None else w
     h = w / 2.0
+    stud = bore is None
     bore = 0.0 if bore is None else bore
-    return mesh.revolve_closed(
-        [(x - h, bore), (x - h, r + 3.0), (x - h + 1.0, r + 3.0),
-         (x - h + 1.0, r), (x + h - 1.0, r), (x + h - 1.0, r + 3.0),
-         (x + h, r + 3.0), (x + h, bore)], 40)
+    rim_in = r - 5.0                        # the rim's underside
+    hub = max(bore + 7.0, 0.3 * r, 11.0)    # the hub's outside
+    web = 2.5                               # half the web's thickness
+    xf = x - h - 1.5                        # the hub's front face, proud
+    body = mesh.revolve_closed(
+        [(xf, bore), (xf, hub - 1.5), (xf + 1.5, hub), (x - web, hub),
+         (x - web, rim_in), (x - h, rim_in), (x - h, r + 3.0),
+         (x - h + 1.0, r + 3.0), (x - h + 1.0, r), (x + h - 1.0, r),
+         (x + h - 1.0, r + 3.0), (x + h, r + 3.0), (x + h, rim_in),
+         (x + web, rim_in), (x + web, hub), (x + h, hub), (x + h, bore)], 40)
+    if not stud:
+        return body
+    washer = mesh.cylinder(xf - 1.5, xf, min(hub - 1.0, 10.0), 20)
+    head = _hex_prism(xf - 7.0, xf - 1.5, 6.9)      # M8, 12 across flats
+    return mesh.join(body, washer, head)
+
+
+def _hex_prism(x0, x1, r):
+    """A hexagonal bolt head on the x axis, x0 < x1, corners at radius r."""
+    ring = [(r * math.cos(math.pi * k / 3), r * math.sin(math.pi * k / 3))
+            for k in range(6)]
+    verts = [(x0, y, z) for (y, z) in ring] + [(x1, y, z) for (y, z) in ring]
+    faces = [tuple(range(5, -1, -1)), tuple(range(6, 12))]
+    faces += [(k, (k + 1) % 6, 6 + (k + 1) % 6, 6 + k) for k in range(6)]
+    return verts, faces
 
 
 def belt(path, x, w, t):
