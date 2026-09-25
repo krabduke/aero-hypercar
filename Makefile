@@ -18,6 +18,7 @@ verify:
 	python3 tools/audit_intersect.py
 	python3 tools/audit_joints.py
 	python3 tools/audit_support.py
+	python3 tools/audit_ports.py
 	python3 tools/check_floor.py
 	python3 tools/check_fan_exhaust.py
 	python3 tools/check_laptime.py

@@ -249,7 +249,10 @@ def _details():
     # and join the turbo's elbow through its side.
     PT = spec.POWERTRAIN
     ex_x, ex_z = PT["engine_x"], PT["engine_z"]
-    flange = (ex_x + 320.0, 92.0, ex_z + 282.0)
+    # (the flanges' centres, from the engine's turbo.py: 317.7 mm either
+    # side of the engine's middle, 88 out and 281 up; they were placed 4 mm
+    # off, beside the bores they are meant to be on)
+    flange = (ex_x + 317.7, 88.0, ex_z + 281.0)
     ex.append(mesh.pipe(
         # then straight back in to the centreline, where the engine cover
         # is tall enough for it: outboard at y 128 the cover is down at z 585
@@ -264,7 +267,7 @@ def _details():
     # along the inside of the engine cover, over the port cam cover -- the
     # one clear lane down the engine, 60-100 mm between the cam cover's top
     # and the cover's skin -- then in behind the engine to join the tailpipe.
-    f0 = (ex_x - 320.0, -92.0, ex_z + 282.0)
+    f0 = (ex_x - 317.7, -88.0, ex_z + 281.0)
     ex.append(mesh.pipe(
         [f0, (f0[0] - 8.0, -112.0, f0[2] + 4.0),
          (f0[0] - 2.0, -150.0, f0[2] + 7.0),

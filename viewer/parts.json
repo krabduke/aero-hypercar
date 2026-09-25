@@ -316,7 +316,7 @@
    "label": "Suspension",
    "color": "#7C8690",
    "parts": 45,
-   "faces": 131768
+   "faces": 132284
   },
   {
    "key": "06 Fan System",
@@ -330,7 +330,7 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 11,
-   "faces": 2475019
+   "faces": 2481771
   },
   {
    "key": "08 Cooling and Energy",
@@ -344,7 +344,7 @@
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 53,
-   "faces": 47058
+   "faces": 47026
   },
   {
    "key": "10 Cockpit",
@@ -358,7 +358,7 @@
    "label": "Structure",
    "color": "#6A6E72",
    "parts": 17,
-   "faces": 104395
+   "faces": 104735
   }
  ],
  "parts": {
@@ -1592,14 +1592,14 @@
    "mat": "steel",
    "x0": 3999.6,
    "x1": 4100.4,
-   "f": 4302
+   "f": 4560
   },
   "driveshaft_rr": {
    "g": "05 Suspension",
    "mat": "steel",
    "x0": 3999.6,
    "x1": 4100.4,
-   "f": 4302
+   "f": 4560
   },
   "heave_f": {
    "g": "05 Suspension",
@@ -1949,7 +1949,7 @@
    "mat": "alu_cast",
    "x0": 2861.0,
    "x1": 3598.3,
-   "f": 2399961
+   "f": 2406713
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -2283,9 +2283,9 @@
   "exhaust": {
    "g": "09 Aero Detail",
    "mat": "steel",
-   "x0": 2885.6,
+   "x0": 2887.6,
    "x1": 4530.0,
-   "f": 7256
+   "f": 7224
   },
   "fan_fairing_l": {
    "g": "06 Fan System",
@@ -2808,9 +2808,9 @@
   "roll_hoop": {
    "g": "11 Structure and Service",
    "mat": "titanium",
-   "x0": 2334.7,
+   "x0": 2347.0,
    "x1": 2545.0,
-   "f": 2804
+   "f": 3144
   },
   "steering_arm_fl": {
    "g": "05 Suspension",

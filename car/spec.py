@@ -686,7 +686,7 @@ ROLL_HOOP = {
     "half_w": 206.0,         # legs stand either side of the airbox intake
     "leg_r": 26.0,
     "plate_len": 190.0, "plate_w": 260.0, "plate_t": 16.0,
-    "brace_z": 640.0,        # where the forward braces meet the headrest
+    "brace_z": 701.0,        # where the braces land on the tub's top skin
 }
 
 # DRS: the actuator is a body, a rod and a clevis on the flap underside just

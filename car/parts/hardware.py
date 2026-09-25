@@ -77,11 +77,15 @@ def _roll_hoop():
         for dx in (-R["plate_len"] * 0.32, R["plate_len"] * 0.32):
             parts.append(_disc(x + dx, sy * hw, T["top_z"] - R["plate_t"],
                                13.0, 10.0, axis="z", seg=12))
-    # the rear brace down to the bulkhead
+    # the braces, from high on the hoop down onto the tub's top skin on
+    # spreader plates of their own. They used to run on through the skin and
+    # stop in the empty bay above the fuel cell, fastened to nothing.
     for sy in (-1.0, 1.0):
-        parts.append(_tube((x - 10.0, sy * hw * 0.45, top - 40.0),
-                           (x - 100.0, sy * hw * 0.55, R["brace_z"]),
+        foot = (x - 80.0, sy * hw * 0.528, R["brace_z"])
+        parts.append(_tube((x - 10.0, sy * hw * 0.45, top - 40.0), foot,
                            r * 0.62))
+        parts.append(shapes.rounded_box(foot[0], foot[1], foot[2] - 2.0,
+                                        46.0, 38.0, 8.0, r=3.0))
     return {"roll_hoop": mesh.join(*parts)}
 
 

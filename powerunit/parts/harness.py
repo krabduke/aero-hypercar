@@ -200,6 +200,15 @@ def branches():
     return out
 
 
+def _closest(p, a, b):
+    """The point on segment ab nearest p."""
+    ab = [b[i] - a[i] for i in range(3)]
+    L = sum(c * c for c in ab)
+    t = 0.0 if L == 0 else max(0.0, min(1.0, sum((p[i] - a[i]) * ab[i]
+                                                 for i in range(3)) / L))
+    return tuple(a[i] + ab[i] * t for i in range(3))
+
+
 ROUTES = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                       "harness_routes.json")
 
@@ -210,13 +219,27 @@ def build():
         return {}
     solved = json.load(open(ROUTES))
     parts = []
+    lines = []
     for name, pts in solved.items():
         r = (TRUNK_R if name == "trunk_cross" else
              PFI_R if name.startswith("trunk_pfi") else
              LOOM_R if name.startswith("trunk") else PIG_R)
         parts.append(mesh.pipe([tuple(p) for p in pts], r, 12, bend=3.0 * r))
+        # the centreline as built, corners rounded
+        lines.append(mesh.fillet_path([tuple(p) for p in pts], [r] * len(pts),
+                                      3.0 * r)[0])
     for name, pts in branches():
-        parts.append(mesh.pipe([tuple(p) for p in pts], PIG_R, 12))
+        # A trunk threads each lead-out point as a via, but rounds the corner
+        # it turns there, so where it doubles back to reach a plug it passes
+        # a few millimetres short of the point: the pigtail ended beside its
+        # loom, not in it. It carries on to the trunk's actual centreline.
+        lead = tuple(pts[-1])
+        on = min((_closest(lead, a, b) for ln in lines
+                  for a, b in zip(ln, ln[1:])), key=lambda q: math.dist(q, lead))
+        path = [tuple(p) for p in pts]
+        if math.dist(on, lead) > 1.0:
+            path.append(on)
+        parts.append(mesh.pipe(path, PIG_R, 12))
         # the mating plug on the device's connector
         parts.append(shapes.rounded_box(*pts[0], 12.0, 12.0, 12.0, 2.5))
     return {"harness": mesh.join(*parts)}

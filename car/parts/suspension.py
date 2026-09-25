@@ -416,10 +416,13 @@ def _driveshaft(x, sgn, y, od):
     y0, y1 = sgn * 95.0, y * 0.875
     z = od / 2
     parts = []
-    # the bar itself, waisted between the two joints
+    # the bar itself, waisted between the two joints, and on into each
+    # joint's housing, where its tripod runs. It used to stop inside the
+    # boots, 41 mm short of the housings, driving nothing.
     parts.append(mesh.pipe(
-        [(x, y0 + (y1 - y0) * f, z) for f in (0.16, 0.32, 0.50, 0.68, 0.84)],
-        [25.0, 21.0, 19.5, 21.0, 25.0], 24, subdiv=3))
+        [(x, y0 + (y1 - y0) * f, z)
+         for f in (0.03, 0.16, 0.32, 0.50, 0.68, 0.84, 0.97)],
+        [22.0, 25.0, 21.0, 19.5, 21.0, 25.0, 22.0], 24, subdiv=3))
 
     def place(verts, yy, dirn):
         return [(x + pz, yy + dirn * px, z + py) for (px, py, pz) in verts]

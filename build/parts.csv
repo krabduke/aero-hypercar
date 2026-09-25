@@ -110,8 +110,8 @@ antiroll_f,05 Suspension,steel,,,,,,,,,5952,5730,808.0,1135.2,-182.6,182.6,395.8
 antiroll_r,05 Suspension,steel,,,,,,,,,6536,6350,3873.5,4118.0,-180.7,180.7,378.1,430.0
 dampers_f,05 Suspension,alu_bright,,,,,,,,,8884,8838,862.6,1165.4,-141.2,141.2,421.0,545.9
 dampers_r,05 Suspension,alu_bright,,,,,,,,,8884,8838,3722.6,4025.4,-138.5,138.5,226.0,350.9
-driveshaft_rl,05 Suspension,steel,,,,,,,,,4343,4302,3999.6,4100.4,-699.1,-95.0,294.5,395.5
-driveshaft_rr,05 Suspension,steel,,,,,,,,,4343,4302,3999.6,4100.4,95.0,699.1,294.5,395.5
+driveshaft_rl,05 Suspension,steel,,,,,,,,,4601,4560,3999.6,4100.4,-699.1,-95.0,294.5,395.5
+driveshaft_rr,05 Suspension,steel,,,,,,,,,4601,4560,3999.6,4100.4,95.0,699.1,294.5,395.5
 heave_f,05 Suspension,alu_bright,,,,,,,,,4442,4419,847.6,1150.4,-34.0,34.0,459.0,583.9
 heave_r,05 Suspension,alu_bright,,,,,,,,,4442,4419,3707.6,4010.4,-34.0,34.0,264.0,388.9
 pushrod_fl,05 Suspension,carbon_matte,,,,,,,,,3016,2946,879.0,1056.9,-659.1,-175.0,129.2,475.8
@@ -157,7 +157,7 @@ fanduct,06 Fan System,carbon_matte,,,,,,,,,1840,1840,4410.0,4560.0,-645.9,646.0,
 battery,08 Cooling and Energy,anodised,,,,,,,,,2548,2210,2040.4,2831.6,-149.6,149.6,86.9,205.0
 battery_hv_terminals,08 Cooling and Energy,hv_orange,,,,,,,,,720,740,2769.0,2808.1,-74.0,74.0,205.0,219.0
 battery_modules,08 Cooling and Energy,alu_dark,,,,,,,,,980,850,2055.3,2816.7,-144.0,144.0,111.5,188.5
-engine,07 Power Unit,alu_cast,,,,,,,,,2396987,2399961,2861.0,3598.3,-381.2,381.2,80.0,689.2
+engine,07 Power Unit,alu_cast,,,,,,,,,2403739,2406713,2861.0,3598.3,-381.2,381.2,80.0,689.2
 engine_block_bank_l,07 Power Unit,alu_cast,,,,,,,,,9224,8131,3008.9,3471.1,-126.2,122.2,289.8,440.2
 engine_block_bank_r,07 Power Unit,alu_cast,,,,,,,,,9230,8131,3008.9,3471.1,-122.2,126.2,289.8,440.2
 engine_block_crankcase,07 Power Unit,alu_cast,,,,,,,,,29437,27970,3008.4,3471.6,-101.1,101.1,218.0,342.0
@@ -205,7 +205,7 @@ bargeboard_r4,09 Aero Detail,carbon_gloss,,,,,,,,,780,704,1318.0,1693.1,319.9,45
 beam_wing,03 Wings,carbon_gloss,,,,,,,,,1008,868,4281.1,4615.1,-550.0,550.0,669.6,789.4
 cameras,09 Aero Detail,carbon_matte,,,,,,,,,1260,1320,633.4,2525.0,-150.0,149.1,506.0,1029.5
 cooling_louvres,09 Aero Detail,carbon_matte,,,,,,,,,1656,1608,3190.0,3650.1,-170.0,170.0,626.6,707.2
-exhaust,09 Aero Detail,steel,,,,,,,,,7316,7256,2885.6,4530.0,-209.9,132.8,486.0,649.4
+exhaust,09 Aero Detail,steel,,,,,,,,,7284,7224,2887.6,4530.0,-209.9,131.9,486.0,649.4
 fan_fairing_l,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,-657.9,-234.0,240.0,664.0
 fan_fairing_r,06 Fan System,alu_bright,,,,,,,,,1035,1035,4414.0,4690.0,234.1,658.0,240.0,664.0
 floor_edge_wings,03 Wings,carbon_matte,,,,,,,,,3400,3304,1900.0,3640.0,-989.4,989.4,53.0,161.7
@@ -280,7 +280,7 @@ antiroll_blade_f,05 Suspension,alu_bright,,,,,,,,,760,708,1008.8,1123.0,-185.0,1
 antiroll_blade_r,05 Suspension,alu_bright,,,,,,,,,648,596,3910.0,3983.0,-182.2,182.2,372.0,419.0
 drs_actuator,03 Wings,alu_bright,,,,,,,,,824,696,4666.0,4872.0,-25.5,25.5,937.0,1025.0
 rear_light_panel,09 Aero Detail,alu_bright,,,,,,,,,628,602,4440.0,4466.0,-45.0,45.0,258.0,392.0
-roll_hoop,11 Structure and Service,titanium,,,,,,,,,2940,2804,2334.7,2545.0,-271.0,271.0,634.8,978.0
+roll_hoop,11 Structure and Service,titanium,,,,,,,,,3332,3144,2347.0,2545.0,-271.0,271.0,695.0,978.0
 steering_arm_fl,05 Suspension,alu_bright,,,,,,,,,478,429,756.0,910.0,-761.9,-690.0,222.1,281.0
 steering_arm_fr,05 Suspension,alu_bright,,,,,,,,,478,429,756.0,910.0,690.1,762.0,222.1,281.0
 wing_mount_l,03 Wings,alu_bright,,,,,,,,,788,762,4428.0,4528.0,-185.0,-111.0,810.0,898.0
