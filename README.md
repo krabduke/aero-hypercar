@@ -103,7 +103,10 @@ against the F1 reference:
 - Power-to-weight, top speed
 
 The width check caught a real error: a broken rotation was throwing the
-radiators a metre outside the bodywork.
+radiators a metre outside the bodywork. The fit check caught another when
+the engine's ancillaries were vendored in: its charge pipes and oil cooler
+stood out of the engine cover. The tub skin now carries two blisters over
+them, lofted into the skin itself rather than bolted on as a shell.
 
 ## The performance model
 
