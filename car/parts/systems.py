@@ -360,21 +360,39 @@ def _electrical():
     # z 178 at the front now the driver's hips sit there, and in the footwell
     # it passes outboard of the pedal box and under the driver's heels.
     PT = spec.POWERTRAIN
-    spine = [(PT["battery_x"] - PT["battery"][0] / 2 - 4.0, 60.0,
-              PT["battery_z"]),
+    # It plugs into the pack's front face at one end and into a bulkhead
+    # connector on the front bulkhead at the other -- the nose's sensors
+    # and the pedal box plug in on its far side. It used to stop 4 mm short
+    # of the pack and 29 mm short of the bulkhead, in the air at both ends.
+    bx0 = PT["battery_x"] - PT["battery"][0] / 2
+    fb_aft = T["x_front"] + 11.0                 # the front bulkhead's aft face
+    spine = [(bx0 - 12.0, 60.0, PT["battery_z"]),
              (1990.0, 112.0, 160.0),
              (1400.0, 140.0, 156.0),
              (T["cockpit_x0"], 100.0, 192.0),
              (900.0, 150.0, 180.0),
              (770.0, 150.0, 215.0),
-             (T["x_front"] + 40.0, 60.0, 300.0)]
+             (fb_aft + 40.0, 60.0, 300.0),
+             (fb_aft + 14.0, 60.0, 300.0)]
     # A loom is a taped bundle, so it is fattest where the most circuits are
     # still in it -- at the battery -- and thins as branches leave. Drawing it
     # at one diameter end to end says every circuit runs the whole length.
-    grow = [1.00, 0.90, 0.80, 0.72, 0.62, 0.56, 0.52]
+    grow = [1.00, 0.90, 0.80, 0.72, 0.62, 0.56, 0.52, 0.52]
+    denses = {}
     for sy in (1.0, -1.0):
+        # the connectors at its two ends: a plug on the pack's face, and the
+        # bulkhead connector's receptacle, both let 3 mm into what they are
+        # on
+        runs.append(shapes.rounded_box(bx0 - 7.0, sy * 60.0, PT["battery_z"],
+                                       20.0, 44.0, 44.0, 5.0))
+        cv, cf = mesh.revolve_closed(
+            [(-3.0, 0.0), (-3.0, 24.0), (4.0, 24.0), (4.0, 19.0),
+             (20.0, 19.0), (22.0, 16.0), (22.0, 0.0)], 20)
+        runs.append(([(px + fb_aft, py + sy * 60.0, pz + 300.0)
+                      for (px, py, pz) in cv], cf))
         path = [(px, sy * py, pz) for (px, py, pz) in spine]
         dense = mesh.smooth_path(path, 8)
+        denses[sy] = dense
         radii = []
         for i in range(len(dense)):
             f = i / (len(dense) - 1) * (len(grow) - 1)
@@ -392,8 +410,14 @@ def _electrical():
             runs.append((shapes.orient(tv, dense[i], d), tf))
     for (tag, x, y, w, od) in wheels.corners():
         sgn = 1.0 if y > 0 else -1.0
+        # a front corner's lead breaks out of the main loom, which passes
+        # under it; it used to start 130 mm above the loom, in the air
+        start = []
+        if x < spec.TUB["x_rear"]:
+            near = min(denses[sgn], key=lambda q: abs(q[0] - (x - 110.0)))
+            start = [near, (x - 100.0, sgn * 140.0, 290.0)]
         # it stops inboard of the brake duct fence rather than through it
-        branch = mesh.smooth_path(
+        branch = mesh.smooth_path(start +
             [(x - 90.0, sgn * 130.0, 340.0), (x - 20.0, sgn * 210.0, 330.0),
              (x + 30.0, y * 0.52, od / 2 + 120.0),
              (x + 10.0, y * 0.64, od / 2 + 86.0)], 7)

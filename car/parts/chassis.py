@@ -712,10 +712,13 @@ def _seat(cx):
     # They loop up, not out: out to y 245 they were 5 mm into the side
     # impact tubes, which pass the bolsters 20 mm outboard.
     for sgn in (-1.0, 1.0):
+        # each foot is let into the bolster's top, which is at z 311-329
+        # here: the loop used to hang 80 mm above it, attached to nothing
         parts.append(mesh.pipe(
-            [(1560.0, sgn * 214.0, 440.0),
-             (1600.0, sgn * 218.0, 486.0),
-             (1640.0, sgn * 214.0, 450.0)], 11.0, 16, subdiv=3))
+            [(1556.0, sgn * 210.0, 318.0), (1558.0, sgn * 213.0, 372.0),
+             (1600.0, sgn * 218.0, 440.0),
+             (1642.0, sgn * 213.0, 368.0), (1644.0, sgn * 210.0, 294.0)],
+            11.0, 16, subdiv=3))
     return mesh.join(*parts)
 
 

@@ -342,14 +342,14 @@
    "label": "Cockpit",
    "color": "#9A5A52",
    "parts": 12,
-   "faces": 17762
+   "faces": 20024
   },
   {
    "key": "11 Structure and Service",
    "label": "Structure",
    "color": "#6A6E72",
    "parts": 17,
-   "faces": 100295
+   "faces": 104395
   }
  ],
  "parts": {
@@ -393,7 +393,7 @@
    "mat": "carbon_matte",
    "x0": 1370.0,
    "x1": 1950.0,
-   "f": 3424
+   "f": 5686
   },
   "sharkfin": {
    "g": "01 Bodywork",
@@ -2680,9 +2680,9 @@
   "wiring_loom": {
    "g": "11 Structure and Service",
    "mat": "hose",
-   "x0": 653.6,
+   "x0": 628.0,
    "x1": 4087.5,
-   "f": 16028
+   "f": 20128
   },
   "antiroll_blade_f": {
    "g": "05 Suspension",
