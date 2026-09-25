@@ -328,7 +328,7 @@
    "label": "Cooling",
    "color": "#4E6E7A",
    "parts": 17,
-   "faces": 65565
+   "faces": 65373
   },
   {
    "key": "09 Aero Detail",
@@ -2045,14 +2045,14 @@
    "mat": "hose",
    "x0": 2858.0,
    "x1": 3423.0,
-   "f": 6052
+   "f": 5956
   },
   "rad_lt_hoses_r": {
    "g": "08 Cooling and Energy",
    "mat": "hose",
    "x0": 2858.0,
    "x1": 3423.0,
-   "f": 6052
+   "f": 5956
   },
   "rad_lt_l": {
    "g": "08 Cooling and Energy",

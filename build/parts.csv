@@ -172,8 +172,8 @@ lt_pump_lead_l,01 Bodywork,hose,,,,,,,,,592,546,2829.0,2879.0,-409.5,-89.0,151.0
 lt_pump_lead_r,01 Bodywork,hose,,,,,,,,,592,546,2829.0,2879.0,89.0,409.5,151.0,324.5
 rad_hoses_hot,08 Cooling and Energy,hose,,,,,,,,,9159,9077,2562.0,2951.5,-501.5,501.4,378.0,463.5
 rad_hoses_return,08 Cooling and Energy,hose,,,,,,,,,7033,6884,2559.3,3033.5,-500.8,500.8,232.5,317.9
-rad_lt_hoses_l,08 Cooling and Energy,hose,,,,,,,,,6112,6052,2858.0,3423.0,-538.5,-298.0,281.7,440.3
-rad_lt_hoses_r,08 Cooling and Energy,hose,,,,,,,,,6112,6052,2858.0,3423.0,298.0,538.5,281.7,440.3
+rad_lt_hoses_l,08 Cooling and Energy,hose,,,,,,,,,6016,5956,2858.0,3423.0,-538.5,-298.0,281.7,440.3
+rad_lt_hoses_r,08 Cooling and Energy,hose,,,,,,,,,6016,5956,2858.0,3423.0,298.0,538.5,281.7,440.3
 rad_lt_l,08 Cooling and Energy,rad_core,,,,,,,,,6468,5610,2595.0,2895.0,-587.5,-532.5,223.6,467.0
 rad_lt_pump_l,08 Cooling and Energy,anodised,,,,,,,,,1095,1016,2837.1,2927.0,-534.5,-406.5,268.0,358.7
 rad_lt_pump_r,08 Cooling and Energy,anodised,,,,,,,,,1095,1016,2837.0,2927.0,406.5,534.5,268.0,358.7

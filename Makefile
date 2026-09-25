@@ -22,6 +22,7 @@ verify:
 	python3 tools/check_fan_exhaust.py
 	python3 tools/check_laptime.py
 	python3 tools/audit_fit.py
+	python3 tools/check_hoses.py
 	python3 tools/audit_manifest.py
 	python3 tools/check_vendor.py
 	node tools/check_panels.mjs

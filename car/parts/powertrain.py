@@ -397,21 +397,8 @@ def _lt_loop(espec):
         out[f"rad_lt_pump_{tag}"] = mesh.join(*pump)
 
         hoses = []
-        r_h = 13.5
-        # pump outlet -> the charge cooler's inlet, the plenum's front stub
-        p_in = [(out_pt[0] + 6.0, out_pt[1], out_pt[2]),
-                (out_pt[0] + 60.0, out_pt[1], out_pt[2]),
-                (ex - L - 20.0, sgn * (y_stub + 60.0), zs - 30.0),
-                (ex - L, sgn * (y_stub + 40.0), zs),
-                (ex - L, sgn * (y_stub - 18.0), zs)]
-        # the charge cooler's outlet, the aft stub -> the tank's upper port
-        p_out = [(ex + L, sgn * (y_stub - 18.0), zs),
-                 (ex + L, sgn * (y_stub + 44.0), zs),
-                 (ex + L - 120.0, sgn * (y_stub + 90.0), zs + 30.0),
-                 (xt + 120.0, sgn * (cy - 60.0), cz + sz * 0.27),
-                 (xt, sgn * (cy - 50.0), cz + sz * 0.27),
-                 (xt, y_face + sgn * 6.0, cz + sz * 0.27)]
-        for path in (p_in, p_out):
+        r_h = LT_HOSE_R
+        for path in lt_hose_paths(espec)[tag]:
             hoses.append(mesh.pipe(path, r_h, 18, subdiv=3))
             for (pt, nxt) in ((path[0], path[1]), (path[-1], path[-2])):
                 d = tuple(nxt[k] - pt[k] for k in range(3))
@@ -434,6 +421,43 @@ def _lt_loop(espec):
         out[f"lt_pump_lead_{tag}"] = mesh.join(
             mesh.pipe(lead, 4.0, 12, bend=20.0),
             shapes.rounded_box(*plug, 14.0, 22.0, 18.0, 3.0))
+    return out
+
+
+LT_HOSE_R = 13.5
+
+
+def lt_hose_paths(espec):
+    """{"l": [path, ...], "r": [...]}: each side's two charge-cooler hoses,
+    the engine's stub end last."""
+    I = espec.INTAKE
+    ex, ez = PT["engine_x"], PT["engine_z"]
+    L0 = I["plenum_len"] / 2 - 34.0
+    xf, xa = ex - L0 + 14.0, ex + L0 + 14.0     # the stubs, mid-tank
+    y_stub = I["plenum_y"] + 84.0
+    zs = ez + I["plenum_z"]
+    cx, cy, cz = PT["lt_x"], PT["lt_y"], PT["lt_z"]
+    sx, sy, sz = PT["lt_core"]
+    xt = cx + sx / 2 + 20.0
+    out = {}
+    for sgn, tag in ((-1.0, "l"), (1.0, "r")):
+        y_face = sgn * (cy - sy * 0.625)
+        zp = cz - sz * 0.27
+        out_pt = (xt + 38.0, y_face - sgn * 25.0, zp - 22.0)
+        # pump outlet -> the charge cooler's inlet, the plenum's front stub
+        p_in = [(out_pt[0] + 6.0, out_pt[1], out_pt[2]),
+                (out_pt[0] + 60.0, out_pt[1], out_pt[2]),
+                (xf - 20.0, sgn * (y_stub + 60.0), zs - 30.0),
+                (xf, sgn * (y_stub + 40.0), zs),
+                (xf, sgn * (y_stub - 18.0), zs)]
+        # the core's upper port -> the charge cooler's outlet, the aft stub
+        p_out = [(xt, y_face + sgn * 6.0, cz + sz * 0.27),
+                 (xt, sgn * (cy - 50.0), cz + sz * 0.27),
+                 (xt + 120.0, sgn * (cy - 60.0), cz + sz * 0.27),
+                 (xa - 120.0, sgn * (y_stub + 90.0), zs + 30.0),
+                 (xa, sgn * (y_stub + 44.0), zs),
+                 (xa, sgn * (y_stub - 18.0), zs)]
+        out[tag] = [p_in, p_out]
     return out
 
 
