@@ -321,14 +321,14 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 11,
-   "faces": 2444865
+   "faces": 2446113
   },
   {
    "key": "08 Cooling and Energy",
    "label": "Cooling",
    "color": "#4E6E7A",
-   "parts": 11,
-   "faces": 39048
+   "parts": 17,
+   "faces": 64404
   },
   {
    "key": "09 Aero Detail",
@@ -1926,7 +1926,7 @@
    "mat": "alu_cast",
    "x0": 2861.0,
    "x1": 3598.3,
-   "f": 2369807
+   "f": 2371055
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -2025,6 +2025,48 @@
    "x0": 2552.0,
    "x1": 3251.5,
    "f": 7400
+  },
+  "rad_lt_hoses_l": {
+   "g": "08 Cooling and Energy",
+   "mat": "hose",
+   "x0": 2858.0,
+   "x1": 3423.0,
+   "f": 6052
+  },
+  "rad_lt_hoses_r": {
+   "g": "08 Cooling and Energy",
+   "mat": "hose",
+   "x0": 2858.0,
+   "x1": 3423.0,
+   "f": 6052
+  },
+  "rad_lt_l": {
+   "g": "08 Cooling and Energy",
+   "mat": "rad_core",
+   "x0": 2595.0,
+   "x1": 2895.0,
+   "f": 5610
+  },
+  "rad_lt_pump_l": {
+   "g": "08 Cooling and Energy",
+   "mat": "anodised",
+   "x0": 2837.1,
+   "x1": 2927.0,
+   "f": 1016
+  },
+  "rad_lt_pump_r": {
+   "g": "08 Cooling and Energy",
+   "mat": "anodised",
+   "x0": 2837.0,
+   "x1": 2927.0,
+   "f": 1016
+  },
+  "rad_lt_r": {
+   "g": "08 Cooling and Energy",
+   "mat": "rad_core",
+   "x0": 2595.0,
+   "x1": 2895.0,
+   "f": 5610
   },
   "rad_tanks_l": {
    "g": "08 Cooling and Energy",

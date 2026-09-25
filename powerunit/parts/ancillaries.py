@@ -170,6 +170,23 @@ def _cooling():
     return out
 
 
+# how far out of the plenum's axis the charge coolers' water stubs reach
+LT_STUB = 84.0
+
+
+def lt_stubs(bank):
+    """(inlet, outlet) hose-stub ends of a bank's charge cooler, and the
+    direction each points: the vehicle's low-temperature loop connects
+    here."""
+    I = spec.INTAKE
+    s_ = -1.0 if bank == 0 else 1.0
+    L = I["plenum_len"] / 2 - 34.0
+    y = s_ * (I["plenum_y"] + LT_STUB)
+    # each end tank runs 28 mm aft from its station; the union is mid-tank
+    return (((-L + 14.0, y, I["plenum_z"]), (0.0, s_, 0.0)),
+            ((L + 14.0, y, I["plenum_z"]), (0.0, s_, 0.0)))
+
+
 def _charge():
     """Water-to-air charge coolers, and the pipe from each turbo to them.
 
@@ -200,11 +217,21 @@ def _charge():
                  (8.0, I["plenum_r"] * 0.80), (22.0, I["plenum_r"] * 0.80),
                  (28.0, I["plenum_r"] * 0.72), (28.0, 0.0)],
                 dx, cy, cz, axis="x", seg=20))
-            # the water union out of the top of each end tank
+            # The water union out of each end tank, through the plenum's
+            # outboard wall to a beaded hose stub: the front one is the
+            # charge cooler's inlet, the aft one its outlet. They used to
+            # stand 22 mm up out of the plenum's crown and end there, with
+            # nothing on them -- a water-to-air cooler with no water. The
+            # low-temperature loop (pump, core, hoses) is the vehicle's, as
+            # the main radiator is; these stubs are where it connects, and
+            # outboard is where the car's sidepod and its cores are.
             parts.append(_lathe(
-                [(0.0, 0.0), (22.0, 0.0), (22.0, 12.0), (17.0, 12.0),
-                 (17.0, 9.0), (0.0, 9.0)],
-                dx, cy, cz + I["plenum_r"] * 0.62, axis="z", seg=12))
+                [(20.0, 0.0), (20.0, 9.0), (I["plenum_r"] * 1.04 - 2.0, 9.0),
+                 (I["plenum_r"] * 1.04 - 2.0, 15.0), (I["plenum_r"] * 1.04 + 6.0, 15.0),
+                 (I["plenum_r"] * 1.04 + 6.0, 10.0), (LT_STUB - 14.0, 10.0),
+                 (LT_STUB - 11.0, 12.5), (LT_STUB - 7.0, 12.5),
+                 (LT_STUB - 4.0, 10.0), (LT_STUB, 10.0), (LT_STUB, 0.0)],
+                dx + 14.0, cy, cz, axis="y", seg=16, flip=(bank == 0)))
         out[f"intercooler_{tag}"] = mesh.join(*parts)
 
         # compressor outlet -> over the cam cover -> that bank's throttle.

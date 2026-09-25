@@ -654,6 +654,10 @@ POWERTRAIN = {
     # tanks, and it is thicker to keep the heat it rejects.
     "radiator": (400.0, 120.0, 280.0),
     "rad_x": 2336.0, "rad_y": 480.0, "rad_z": 358.0,
+    # the charge coolers' low-temperature core, aft of the main one in the
+    # same pod (see powertrain._lt_loop)
+    "lt_core": (220.0, 44.0, 190.0),
+    "lt_x": 2745.0, "lt_y": 560.0, "lt_z": 372.0,
     # back to the engine bulkhead, which carries it
     "battery": (792.0, 300.0, 110.0),
     "battery_x": 2436.0, "battery_z": 150.0,
@@ -833,6 +837,9 @@ MATERIAL_MAP = {
     "fuel_fittings": "alu_bright",
     "battery_modules": "alu_dark",
     "rad_hoses": "hose",
+    "rad_lt_hoses": "hose",
+    "rad_lt_pump": "anodised",
+    "rad_lt_": "rad_core",
     "rad_tanks": "alu_bright",
     "radiator_": "rad_core",
     "tub": "carbon_gloss", "nose": "carbon_gloss", "floor": "carbon_matte",

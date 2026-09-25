@@ -208,6 +208,7 @@ def build():
                      (14.0, 37.0)], 24)
                 hoses.append((shapes.orient(cv, pt, d), cf))
         out[f"rad_hoses_{tag}"] = mesh.join(*hoses)
+    out.update(_lt_loop(espec))
 
     bx, by, bz = PT["battery_x"], 0.0, PT["battery_z"]
     sx, sy, sz = PT["battery"]
@@ -259,6 +260,105 @@ def build():
         shapes.rounded_box(fx - sx * 0.3, 0.0, fz + sz * 0.5 + 18.0,
                            110.0, 110.0, 36.0, 12.0))
     return out
+
+
+def _lt_loop(espec):
+    """The charge coolers' low-temperature loop, one per side.
+
+    The engine's charge coolers are water-to-air, in its plenums, and each
+    ends in two hose stubs on the plenum's outboard face -- the engine
+    leaves its cooling loops to the vehicle, as it does the main one. This is
+    that loop: a small core in the sidepod behind the main radiator, where
+    the pod's air has already been through the main core but is still far
+    colder than charge air; an electric pump on its outlet; and the two
+    hoses in to the stubs. The core's aft tank is divided, in at the top
+    and out at the bottom, so both hoses leave the same end and neither has
+    to cross the other.
+    """
+    out = {}
+    I = espec.INTAKE
+    ex, ez = PT["engine_x"], PT["engine_z"]
+    L = I["plenum_len"] / 2 - 34.0 + 14.0
+    y_stub = I["plenum_y"] + 84.0            # the stubs' ends
+    zs = ez + I["plenum_z"]
+    cx, cy, cz = PT["lt_x"], PT["lt_y"], PT["lt_z"]
+    sx, sy, sz = PT["lt_core"]
+    xt = cx + sx / 2 + 20.0                 # the aft tank's centre
+    for sgn, tag in ((-1.0, "l"), (1.0, "r")):
+        y = sgn * cy
+        parts = [shapes.core(cx, y, cz, sx, sy, sz, n_tubes=10, n_fins=18)]
+        for xc in (cx - sx / 2 - 20.0, xt):
+            parts.append(shapes.rounded_box(xc, y, cz, 40.0, sy * 1.25,
+                                            sz * 0.98, 12.0))
+            # a foot under each tank, down to the pod's floor
+            z_tank = cz - sz * 0.49
+            z_floor = chassis.sidepod_floor(xc, y) + 0.5
+            if z_tank - z_floor > 1.0:
+                parts.append(shapes.rounded_box(
+                    xc, y, (z_tank + z_floor) / 2 + 2.0, 34.0, 50.0,
+                    z_tank - z_floor + 4.0, 5.0))
+        out[f"rad_lt_{tag}"] = mesh.join(*parts)
+
+        # the pump, on the tank's lower port, its axis inboard: volute
+        # against the tank, motor inboard of it, the outlet tangential and
+        # aft, and the motor's connector on its end
+        y_face = sgn * (cy - sy * 0.625)        # the tank's inboard face
+        zp = cz - sz * 0.27
+        pump = [
+            _lathe_y([(0.0, 0.0), (0.0, 16.0), (12.0, 16.0), (12.0, 0.0)],
+                     xt, y_face + sgn * 2.0, zp, -sgn),         # port spigot
+            _lathe_y([(0.0, 0.0), (0.0, 36.0), (4.0, 38.0), (26.0, 38.0),
+                      (30.0, 34.0), (30.0, 0.0)],
+                     xt, y_face - sgn * 10.0, zp, -sgn),        # volute
+            _lathe_y([(0.0, 0.0), (0.0, 28.0), (70.0, 28.0), (74.0, 24.0),
+                      (74.0, 0.0)],
+                     xt, y_face - sgn * 40.0, zp, -sgn),        # motor
+            shapes.rounded_box(xt, y_face - sgn * 118.0, zp, 24.0, 16.0,
+                               20.0, 3.0),                      # connector
+        ]
+        out_pt = (xt + 38.0, y_face - sgn * 25.0, zp - 22.0)
+        pump.append(mesh.pipe([(xt + 20.0, out_pt[1], out_pt[2]),
+                               (out_pt[0] + 14.0, out_pt[1], out_pt[2])],
+                              11.0, 16))                        # outlet
+        # and a bracket from the motor down to the pod's floor
+        z_floor = chassis.sidepod_floor(xt, y_face - sgn * 75.0) + 0.5
+        pump.append(shapes.rounded_box(xt, y_face - sgn * 75.0,
+                                       (zp - 27.0 + z_floor) / 2, 30.0, 20.0,
+                                       zp - 27.0 - z_floor + 4.0, 3.0))
+        out[f"rad_lt_pump_{tag}"] = mesh.join(*pump)
+
+        hoses = []
+        r_h = 13.5
+        # pump outlet -> the charge cooler's inlet, the plenum's front stub
+        p_in = [(out_pt[0] + 6.0, out_pt[1], out_pt[2]),
+                (out_pt[0] + 60.0, out_pt[1], out_pt[2]),
+                (ex - L - 20.0, sgn * (y_stub + 60.0), zs - 30.0),
+                (ex - L, sgn * (y_stub + 40.0), zs),
+                (ex - L, sgn * (y_stub - 18.0), zs)]
+        # the charge cooler's outlet, the aft stub -> the tank's upper port
+        p_out = [(ex + L, sgn * (y_stub - 18.0), zs),
+                 (ex + L, sgn * (y_stub + 44.0), zs),
+                 (ex + L - 120.0, sgn * (y_stub + 90.0), zs + 30.0),
+                 (xt + 120.0, sgn * (cy - 60.0), cz + sz * 0.27),
+                 (xt, sgn * (cy - 50.0), cz + sz * 0.27),
+                 (xt, y_face + sgn * 6.0, cz + sz * 0.27)]
+        for path in (p_in, p_out):
+            hoses.append(mesh.pipe(path, r_h, 18, subdiv=3))
+            for (pt, nxt) in ((path[0], path[1]), (path[-1], path[-2])):
+                d = tuple(nxt[k] - pt[k] for k in range(3))
+                cv, cf = mesh.revolve_closed(
+                    [(6.0, r_h + 0.5), (18.0, r_h + 0.5), (18.0, r_h + 3.5),
+                     (6.0, r_h + 3.5)], 20)
+                hoses.append((shapes.orient(cv, pt, d), cf))
+        out[f"rad_lt_hoses_{tag}"] = mesh.join(*hoses)
+    return out
+
+
+def _lathe_y(profile, x, y, z, sgn):
+    """Revolve an (along, radius) profile about a line parallel to y
+    through (x, y, z), growing toward sgn * y."""
+    v, f = mesh.revolve_closed(list(profile), 24)
+    return shapes.orient(v, (x, y, z), (0.0, sgn, 0.0)), f
 
 
 def _bladder(cx, cy, cz, sx, sy, sz, n_z=18, n_a=44):

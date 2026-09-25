@@ -255,6 +255,12 @@ EXPECTED = [
     # hoses and driveshafts out to the sidepods and wheels, the tanks where
     # the sidepods meet it, louvres and the filler set into it.
     ("rad_hoses_", "tub"),
+    # the charge coolers' loop: its hoses go through the tub the same way,
+    # onto the engine's stubs, the core's upper port and the pump's outlet;
+    # the pump's spigot is in the core's lower port
+    ("rad_lt_hoses_", "tub"),
+    ("rad_lt_hoses_", "engine"), ("rad_lt_hoses_", "rad_lt_"),
+    ("rad_lt_pump_", "rad_lt_"),
     ("driveshaft_", "tub"),
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it
