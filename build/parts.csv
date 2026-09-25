@@ -168,6 +168,8 @@ engine_timing_cover,07 Power Unit,alu_cast,,,,,,,,,2840,2020,2950.0,3008.1,-240.
 fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,204.0,564.0
 fuel_fittings,08 Cooling and Energy,alu_bright,,,,,,,,,1934,1872,2157.0,3068.5,-55.0,259.9,419.7,571.6
 gearbox,07 Power Unit,magnesium,,,,,,,,,6695,6427,3550.5,4078.5,-206.5,206.5,123.5,536.5
+lt_pump_lead_l,01 Bodywork,hose,,,,,,,,,592,546,2829.0,2879.0,-409.5,-89.0,151.0,324.5
+lt_pump_lead_r,01 Bodywork,hose,,,,,,,,,592,546,2829.0,2879.0,89.0,409.5,151.0,324.5
 rad_hoses_l,08 Cooling and Energy,hose,,,,,,,,,7482,7400,2552.0,3251.5,-515.5,-64.9,140.1,505.1
 rad_hoses_r,08 Cooling and Energy,hose,,,,,,,,,7482,7400,2552.0,3251.5,64.9,515.5,140.2,505.2
 rad_lt_hoses_l,08 Cooling and Energy,hose,,,,,,,,,6112,6052,2858.0,3423.0,-538.5,-298.0,281.7,440.3

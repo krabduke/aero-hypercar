@@ -261,6 +261,10 @@ EXPECTED = [
     ("rad_lt_hoses_", "tub"),
     ("rad_lt_hoses_", "engine"), ("rad_lt_hoses_", "rad_lt_"),
     ("rad_lt_pump_", "rad_lt_"),
+    # the pumps' leads: into the motor's connector, through the pod's wall
+    # and the tub's, onto the pack's plug
+    ("lt_pump_lead_", "rad_lt_pump_"), ("lt_pump_lead_", "sidepod_"),
+    ("lt_pump_lead_", "tub"), ("lt_pump_lead_", "battery"),
     ("driveshaft_", "tub"),
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it

@@ -838,6 +838,7 @@ MATERIAL_MAP = {
     "battery_modules": "alu_dark",
     "rad_hoses": "hose",
     "rad_lt_hoses": "hose",
+    "lt_pump_lead": "hose",
     "rad_lt_pump": "anodised",
     "rad_lt_": "rad_core",
     "rad_tanks": "alu_bright",

@@ -278,8 +278,8 @@
    "key": "01 Bodywork",
    "label": "Bodywork",
    "color": "#5A6066",
-   "parts": 21,
-   "faces": 64719
+   "parts": 23,
+   "faces": 65811
   },
   {
    "key": "02 Floor and Diffuser",
@@ -2011,6 +2011,20 @@
    "x0": 3550.5,
    "x1": 4078.5,
    "f": 6427
+  },
+  "lt_pump_lead_l": {
+   "g": "01 Bodywork",
+   "mat": "hose",
+   "x0": 2829.0,
+   "x1": 2879.0,
+   "f": 546
+  },
+  "lt_pump_lead_r": {
+   "g": "01 Bodywork",
+   "mat": "hose",
+   "x0": 2829.0,
+   "x1": 2879.0,
+   "f": 546
   },
   "rad_hoses_l": {
    "g": "08 Cooling and Energy",

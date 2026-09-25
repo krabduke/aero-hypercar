@@ -351,6 +351,20 @@ def _lt_loop(espec):
                      (6.0, r_h + 3.5)], 20)
                 hoses.append((shapes.orient(cv, pt, d), cf))
         out[f"rad_lt_hoses_{tag}"] = mesh.join(*hoses)
+
+        # and its power: a lead from the motor's connector, in through the
+        # pod's wall and the tub's (the path tools/route_solve found clear),
+        # to a plug on the pack's aft face -- the pack's low-voltage side
+        bx1 = PT["battery_x"] + PT["battery"][0] / 2
+        plug = (bx1 + 4.0, sgn * 100.0, PT["battery_z"] + 10.0)
+        lead = [(xt, y_face - sgn * 124.0, zp),
+                (xt, y_face - sgn * 170.0, zp - 12.0),
+                (xt - 4.0, sgn * 130.0, PT["battery_z"] + 40.0),
+                (plug[0] + 8.0, plug[1], plug[2] + 6.0),
+                (plug[0] + 2.0, plug[1], plug[2])]
+        out[f"lt_pump_lead_{tag}"] = mesh.join(
+            mesh.pipe(lead, 4.0, 12, bend=20.0),
+            shapes.rounded_box(*plug, 14.0, 22.0, 18.0, 3.0))
     return out
 
 
