@@ -306,8 +306,8 @@
    "key": "05 Suspension",
    "label": "Suspension",
    "color": "#7C8690",
-   "parts": 44,
-   "faces": 131546
+   "parts": 45,
+   "faces": 131768
   },
   {
    "key": "06 Fan System",
@@ -1673,8 +1673,15 @@
    "g": "05 Suspension",
    "mat": "alu_bright",
    "x0": 635.0,
-   "x1": 759.7,
-   "f": 2774
+   "x1": 755.6,
+   "f": 2702
+  },
+  "torsion_anchor_f": {
+   "g": "05 Suspension",
+   "mat": "steel",
+   "x0": 995.0,
+   "x1": 1045.0,
+   "f": 334
   },
   "torsion_bars_f": {
    "g": "05 Suspension",
@@ -2688,8 +2695,8 @@
    "g": "05 Suspension",
    "mat": "alu_bright",
    "x0": 1008.8,
-   "x1": 1161.3,
-   "f": 748
+   "x1": 1123.0,
+   "f": 708
   },
   "antiroll_blade_r": {
    "g": "05 Suspension",

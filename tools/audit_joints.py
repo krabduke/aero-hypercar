@@ -50,6 +50,8 @@ CIRCUITS = [
      ['upright_fl', 'wishbone_fl_upper_fwd', 'tub']),
     ('front left pushrod to the heave spring',
      ['upright_fl', 'pushrod_fl', 'rocker_fl', 'torsion_bars_f', 'dampers_f']),
+    ('the front torsion bars twist against the tub',
+     ['torsion_bars_f', 'torsion_anchor_f', 'tub']),
     ('front anti-roll',
      ['rocker_fl', 'antiroll_f', 'antiroll_blade_f']),
     ('rear left suspension carries wheel load into the gearbox',

@@ -275,6 +275,7 @@ def _inboard():
         if front:
             out[f"torsion_bars_{tag}"] = _torsion_bars(
                 ax + dx - 10.0, inb_y * 0.9, z - 36.0)
+            out["torsion_anchor_f"] = _torsion_anchor(ax + dx - 10.0, z - 36.0)
         else:
             out[f"torsion_bars_{tag}"] = _torsion_bars(
                 ax - REAR_ROCKER_DX - 10.0, inb_y * 0.88,
@@ -483,6 +484,22 @@ def _rocker(x, y, z, dirn):
     return mesh.join(*parts)
 
 
+def _torsion_anchor(x, z):
+    """What the front torsion bars twist against. A torsion bar is a spring
+    only if one end is held: each bar's inboard end is splined into this
+    block, and the block hangs from the inside of the tub's top skin on two
+    plates -- either side of the heave damper, inboard of the corner
+    dampers, clear above the steering column. The bars' inner ends used to
+    stop 42 mm apart on the centreline, held by nothing."""
+    top = 652.0                  # 3 mm into the top skin's inside here
+    parts = [shapes.rounded_box(x, 0.0, z, 50.0, 100.0, 44.0, 8.0, seg=6)]
+    for sgn in (-1.0, 1.0):
+        parts.append(shapes.rounded_box(x, sgn * 44.0, (z + 18.0 + top) / 2,
+                                        40.0, 12.0, top - z - 18.0, 3.0,
+                                        seg=4))
+    return mesh.join(*parts)
+
+
 def _antiroll(x, half_y, z, reach=0.0):
     """A blade anti-roll bar: a cross tube on bearings, a lever arm each side,
     and a flat blade the driver can rotate to change the rate. `reach`
@@ -574,10 +591,18 @@ def _rack(x, half_y):
         gv, gf = mesh.revolve_closed(loop, 24)
         parts.append(([(x + pz, sgn * px, z + py)
                        for (px, py, pz) in gv], gf))
-    # pinion boss and the two mounting feet
-    parts.append(mesh.pipe([(x + 10.0, -40.0, z + 20.0),
-                            (x + 40.0, -70.0, z + 96.0)], [26.0, 21.0],
-                           20, subdiv=3))
+    # The pinion boss, on the column's own axis where the column comes down
+    # into the rack -- the column's first run climbs at 102 in 350. It was
+    # 70 mm off to the left and pointing somewhere else, so the column went
+    # into the housing where there is no pinion and the pinion's boss stood
+    # on its own with nothing in it.
+    d = (350.0, 0.0, 102.0)
+    m = math.hypot(d[0], d[2])
+    d = (d[0] / m, 0.0, d[2] / m)
+    b0 = (x - 4.0, 0.0, z + 14.0)
+    parts.append(mesh.pipe([b0, (b0[0] + d[0] * 56.0, 0.0, b0[2] + d[2] * 56.0)],
+                           [26.0, 21.0], 20, bend=0.0))
+    # and the two mounting feet
     for sgn in (-1.0, 1.0):
         parts.append(shapes.rounded_box(x - 30.0, sgn * half_y * 0.44,
                                         z - 30.0, 70.0, 36.0, 40.0, 8.0,

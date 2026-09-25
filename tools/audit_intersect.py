@@ -79,6 +79,9 @@ EXPECTED = [
     ("gearbox", "pushrod_r"), ("dampers_", "rocker_"),
     # the rear heave damper sits on the torsion bars between the rockers
     ("heave_", "torsion_bars"),
+    # the front bars' inboard splines are in their anchor, which hangs from
+    # the tub's top skin
+    ("torsion_anchor_f", "torsion_bars_f"), ("torsion_anchor_f", "tub"),
     # the fuel line screws into the engine's fuel rail; the plenum edge is
     # bonded along the tunnel's outer wall; the diffuser fences are bonded
     # to the tunnel roof; the fan fairings sit on the diffuser's trailing

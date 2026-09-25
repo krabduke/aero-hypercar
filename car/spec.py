@@ -833,6 +833,7 @@ MATERIAL_MAP = {
     "antiroll_": "steel",
     "heave_": "alu_bright",
     "torsion_bars": "steel",
+    "torsion_anchor": "steel",
     "dampers_": "alu_bright",
     "fuel_fittings": "alu_bright",
     "battery_modules": "alu_dark",

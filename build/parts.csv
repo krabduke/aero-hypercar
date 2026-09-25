@@ -123,7 +123,8 @@ rocker_fr,05 Suspension,alu_bright,,,,,,,,,1078,1134,931.0,1141.0,165.0,225.0,38
 rocker_rl,05 Suspension,alu_bright,,,,,,,,,1078,1134,3704.0,3914.0,-197.2,-137.2,235.1,417.0
 rocker_rr,05 Suspension,alu_bright,,,,,,,,,1078,1134,3704.0,3914.0,137.2,197.2,235.1,417.0
 steering_column,05 Suspension,steel,,,,,,,,,2346,2308,695.8,1378.3,-36.0,35.9,243.6,607.3
-steering_rack,05 Suspension,alu_bright,,,,,,,,,2860,2774,635.0,759.7,-197.9,197.9,190.0,346.2
+steering_rack,05 Suspension,alu_bright,,,,,,,,,2788,2702,635.0,755.6,-197.9,197.9,190.0,289.8
+torsion_anchor_f,05 Suspension,steel,,,,,,,,,396,334,995.0,1045.0,-50.0,50.0,397.0,652.0
 torsion_bars_f,05 Suspension,steel,,,,,,,,,1400,1200,1000.5,1104.0,-179.5,179.5,399.8,443.0
 torsion_bars_r,05 Suspension,steel,,,,,,,,,1400,1200,3785.5,3889.0,-171.2,171.2,240.8,284.0
 trackrod_fl,05 Suspension,carbon_matte,,,,,,,,,2872,2802,682.4,811.0,-753.9,-126.5,216.7,255.3
@@ -264,7 +265,7 @@ side_intrusion,11 Structure and Service,carbon_matte,,,,,,,,,900,896,1200.0,1960
 starter_socket,11 Structure and Service,alu_bright,,,,,,,,,1004,978,4122.0,4304.0,-48.0,48.0,282.0,378.0
 tyre_sensors,04 Wheels and Brakes,alu_dark,,,,,,,,,9952,9656,813.0,3990.7,-681.2,681.2,190.0,268.8
 wiring_loom,11 Structure and Service,hose,,,,,,,,,20106,20128,628.0,4087.5,-550.0,550.0,128.0,475.6
-antiroll_blade_f,05 Suspension,alu_bright,,,,,,,,,832,748,1008.8,1161.3,-199.6,199.6,488.0,552.0
+antiroll_blade_f,05 Suspension,alu_bright,,,,,,,,,760,708,1008.8,1123.0,-185.0,185.0,488.0,552.0
 antiroll_blade_r,05 Suspension,alu_bright,,,,,,,,,648,596,3910.0,3983.0,-182.2,182.2,372.0,419.0
 drs_actuator,03 Wings,alu_bright,,,,,,,,,824,696,4666.0,4872.0,-25.5,25.5,937.0,1025.0
 rear_light_panel,09 Aero Detail,alu_bright,,,,,,,,,628,602,4440.0,4466.0,-45.0,45.0,258.0,392.0

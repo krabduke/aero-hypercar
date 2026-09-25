@@ -193,12 +193,9 @@ def _antiroll_blades():
                     parts.append(_disc(x, sy * y, z, A["collar_r"] + 5.0,
                                        6.0, axis="y", seg=8))
                 break
-            # the link off the blade's end; the rear blade's is its lever
-            if tag == "f":
-                parts.append(mesh.pipe(
-                    [(x + dx0 + 42.0, sy * y, z),
-                     (x + dx0 + 76.0, sy * (y + 26.0), z)],
-                    7.0, segments=10))
+            # (no link off the front blade's end: the bar's drop link to
+            # the rocker is on its lever, suspension._antiroll. There was
+            # one here, and it ended in the air 14 mm short of the rocker.)
         out[f"antiroll_blade_{tag}"] = mesh.join(*parts)
     return out
 
