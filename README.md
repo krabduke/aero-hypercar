@@ -7,7 +7,7 @@ a Formula 1 car on a Formula 1 circuit?**
 The power unit is the [RX-8V V8 hybrid](https://github.com/krabduke/car-engine-v8-hybrid)
 from the sibling project, imported and installed — not re-modelled.
 
-**275 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 650 kg of fan downforce, 10.7 s a lap faster than F1**
+**286 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 650 kg of fan downforce, 10.7 s a lap faster than F1**
 
 ![hero](renders/01_hero.png)
 
@@ -65,7 +65,8 @@ tyres do.**
 | Wheelbase / track | 3,150 / 1,660 front, 1,600 rear |
 | Mass | 700 kg, 56.5 % rear, CG 258 mm |
 | ClA / CdA | 4.55 / 1.28 (ClA 3.30 with the active aero shed) |
-| Fan system | 2 × 340 mm ducted fans at the tail, blowing aft; 11 blades, 7,200 rpm, 38 kW each; 650 kg of suction, eased back on the straights |
+| Fan system | 2 × 340 mm ducted fans at the tail, blowing aft; 11 blades, 7,200 rpm, 38 kW for the pair; 650 kg of suction, eased back on the straights |
+| High voltage | The pack's two cables run aft under the sump to the inverter on the bellhousing, which drives the MGU-K and both MGU-Hs and feeds a controller for each fan; orange cable, P-clipped to the floor, the gearbox and the crash structure |
 | Engine | RX-8V 2.0 L V8 twin-turbo hybrid, 935 kW |
 | Tyres | 305/670 front, 405/690 rear on 18-inch rims |
 | Ride height | 22 mm front, 58 mm rear (rake feeds the tunnels) |

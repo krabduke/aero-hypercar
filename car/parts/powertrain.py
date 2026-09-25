@@ -97,9 +97,17 @@ def build():
     # crank sensor's bracket, and it is what starts the engine.
     # (and the port covers are the engine's shipping plugs: in the car the
     # airbox and the exhaust are on those flanges instead)
+    #
+    # ...but it never did have its own power electronics: nothing in the car
+    # was an inverter, and with the engine's left out and its motor cables
+    # with it, the MGU-K and both MGU-Hs were connected to nothing. So the
+    # engine's inverter, on its bellhousing, and its cables to the three
+    # machines are the car's too now -- the gearbox is placed at the
+    # bellhousing's flange, not at the rearmost vertex, so the MGU-K cable no
+    # longer moves it. Only the engine's pack, and the cables to it, are
+    # left out: the car's pack feeds the inverter (_hv).
     CAR_PROVIDES = ("battery", "battery_modules", "battery_terminals",
-                    "inverter", "inverter_connectors",
-                    "hv_store", "hv_motor", "port_covers")
+                    "hv_store", "port_covers")
     # The castings the engine cuts -- its bores out of the block, its
     # chambers out of the heads -- are carried as parts of their own with
     # their cutters. Joined into the one "engine" mesh, a cutter would either
@@ -179,6 +187,7 @@ def build():
         out[f"rad_tanks_{tag}"] = mesh.join(*tanks)
     out.update(_rad_hoses(espec))
     out.update(_lt_loop(espec))
+    out.update(_hv(espec))
 
     bx, by, bz = PT["battery_x"], 0.0, PT["battery_z"]
     sx, sy, sz = PT["battery"]
@@ -459,6 +468,223 @@ def lt_hose_paths(espec):
                  (xa, sgn * (y_stub - 18.0), zs)]
         out[tag] = [p_in, p_out]
     return out
+
+
+def hv_ends(espec):
+    """Where each high-voltage cable starts and finishes, and which way it
+    leaves: {name: (a, a_lead, b_lead, b)}. `a`/`b` are on the connectors;
+    the leads are the points the cable reaches straight out of each one."""
+    ex, ez = PT["engine_x"], PT["engine_z"]
+    Y = espec.HYBRID
+    ix, iy, iz = Y["inverter_pos"]
+    sx, sy, sz = Y["inverter"]
+    ix, iz = ix + ex, iz + ez
+    bx, bz = PT["battery_x"], PT["battery_z"]
+    top = bz + PT["battery"][2] / 2
+    x_t = bx + PT["battery"][0] / 2 - 46.0          # the terminals
+    ends = {}
+    for sgn, tag in ((1.0, "pos"), (-1.0, "neg")):
+        # the pack's terminal, out of its aft face, to the inverter's DC
+        # socket on the same side, into it from outboard
+        a = (x_t + 17.0, sgn * 64.0, top + 7.0)
+        s = (ix + 4.0, sgn * (sy / 2 + 10.0), iz + sz * 0.1)
+        ends[f"hv_pack_{tag}"] = (a, (a[0] + 12.0, a[1], a[2]),
+                                  (s[0], s[1] + sgn * 26.0, s[2]),
+                                  (s[0], s[1] + sgn * 12.0, s[2]))
+    for sgn, tag in ((1.0, "r"), (-1.0, "l")):
+        # the fan feeds leave the DC-out plug under the pack's socket on the
+        # same side, and reach the controller from inside the engine cover,
+        # square through the grommet in its wall into the plug on the
+        # controller's inboard face
+        a = (ix - 18.0, sgn * (sy / 2 + 17.0), iz - sz * 0.32)
+        c = CTRL_AT[0], sgn * CTRL_AT[1], CTRL_AT[2]
+        g = GROMMET
+        ends[f"hv_fan_{tag}"] = (a, (a[0], a[1] + sgn * 16.0, a[2]),
+                                 (g[0], sgn * 100.0, g[2]),
+                                 (g[0], sgn * (c[1] * sgn - CTRL[1] / 2 - 10.0),
+                                  g[2]))
+        # and the three-phase lead from its aft face to the gland on the
+        # fan's cowl, over the stator vane the conductors run down
+        o = (c[0] + CTRL[0] / 2 + 10.0, c[1], c[2] - 6.0)
+        g = fan_gland(tag)
+        ends[f"fan_lead_{tag}"] = (o, (o[0] + 20.0, o[1], o[2]), g[3], g[2])
+    return ends
+
+
+# The fan controllers: one per fan, hung under the rear frame's outboard
+# ends between the crash structure and the fan cowls, where the air under
+# the tail reaches their fins.
+CTRL = (120.0, 60.0, 84.0)
+CTRL_AT = (4400.0, 195.0, 336.0)
+# where the fan feeds cross the engine cover's wall, which is 6 mm thick
+# and centred on y 136.5 there
+GROMMET = (4370.0, 136.5, 350.0)
+# which stator vane each fan's conductors run down: the one pointing inboard
+# and down, toward its controller (fans.py numbers them from +y)
+FAN_VANE = {"r": 4, "l": 6}
+
+
+def fan_gland(tag):
+    """(root, face, cable end, lead point) of the gland on a fan cowl's
+    outside, over the stator vane its motor's conductors come out through.
+    The cowl is 207 mm out from the fan's axis at the stators' station."""
+    F = spec.FAN
+    sgn = 1.0 if tag == "r" else -1.0
+    ang = 2 * math.pi * FAN_VANE[tag] / F["stator_vanes"] + math.pi / F["blades"]
+    ca, sa = math.cos(ang), math.sin(ang)
+    cy, cz = sgn * F["y"], F["z"]
+    x = F["x"] + 58.0                        # the stators' station
+    at = lambda r: (x, cy + r * ca, cz + r * sa)
+    return at(200.0), at(216.0), at(228.0), at(250.0)
+
+
+def _hv(espec):
+    """The car's high-voltage system: the pack to the engine's inverter, and
+    the inverter to the two fan controllers and on to the fans.
+
+    The fans are 38 kW between them and they are the car. They were drawn
+    with motors and no way for power to reach them."""
+    out = {}
+    ex, ez = PT["engine_x"], PT["engine_z"]
+    Y = espec.HYBRID
+    ix, iy, iz = Y["inverter_pos"]
+    sx, sy, sz = Y["inverter"]
+    ix, iz = ix + ex, iz + ez
+    bx, bz = PT["battery_x"], PT["battery_z"]
+    top = bz + PT["battery"][2] / 2
+    x_t = bx + PT["battery"][0] / 2 - 46.0
+    out["battery_hv_terminals"] = mesh.join(*[
+        shapes.connector(x_t, sgn * 64.0, top + 7.0, 34.0, 20.0, 14.0, 2)
+        for sgn in (1.0, -1.0)])
+    # the inverter's DC-out plugs for the fans, one low on each side face
+    # under the pack's socket and ahead of the MGU-K cable, which drops out
+    # of the left socket. Not on the lid: the tailpipe crosses 11 mm over
+    # it, and the engine's own plug for the MGU-H leads is there.
+    out["inverter_fan_plugs"] = mesh.join(*[
+        shapes.connector(ix - 18.0, sgn * (sy / 2 + 8.0), iz - sz * 0.32,
+                         16.0, 18.0, 13.0, 2) for sgn in (1.0, -1.0)])
+    boxes = []
+    for sgn in (1.0, -1.0):
+        c = (CTRL_AT[0], sgn * CTRL_AT[1], CTRL_AT[2])
+        boxes.append(shapes.finned_case(*c, *CTRL, n_fins=9, fin_h=8.0,
+                                        fin_t=3.0, r=6.0, side=-1.0))
+        # DC in on the inboard face, facing the grommet; three-phase out at
+        # the back
+        yi = c[1] - sgn * CTRL[1] / 2
+        boxes.append(shapes.rounded_box(GROMMET[0], yi - sgn * 3.0,
+                                        GROMMET[2], 30.0, 10.0, 26.0, 3.0))
+        boxes.append(mesh.pipe([(GROMMET[0], yi - sgn * 6.0, GROMMET[2]),
+                                (GROMMET[0], yi - sgn * 16.0, GROMMET[2])],
+                               7.5, 16))
+        boxes.append(shapes.connector(c[0] + CTRL[0] / 2 + 2.0, c[1],
+                                      c[2] - 6.0, 20.0, 30.0, 18.0, 3))
+        # two straps up to the rear frame's lower face, which is at z 438
+        for dy in (-18.0, 18.0):
+            boxes.append(shapes.rounded_box(
+                c[0] + 15.0, c[1] + dy, (c[2] + CTRL[2] / 2 + 441.0) / 2,
+                24.0, 8.0, 441.0 - c[2] - CTRL[2] / 2 + 4.0, 2.0))
+    out["fan_controllers"] = mesh.join(*boxes)
+    # A flanged rubber grommet where each feed goes through the engine cover,
+    # and the hole in the cover it sits in.
+    gv, gf = mesh.revolve_closed(
+        [(-5.2, 5.2), (5.2, 5.2), (5.2, 14.0), (3.2, 14.0), (3.2, 10.0),
+         (-3.2, 10.0), (-3.2, 14.0), (-5.2, 14.0)], 24)
+    gx, gy, gz = GROMMET
+    grommets, holes = [], []
+    for sgn in (1.0, -1.0):
+        grommets.append(([(gx - py, sgn * (gy + px), gz + pz)
+                          for (px, py, pz) in gv],
+                         [tuple(reversed(f)) for f in gf] if sgn < 0
+                         else list(gf)))
+        holes.append(mesh.pipe([(gx, sgn * (gy - 14.0), gz),
+                                (gx, sgn * (gy + 14.0), gz)], 10.0, 16))
+    out["hv_grommets"] = mesh.join(*grommets)
+    out["cut:tub"] = mesh.join(*holes)
+    glands = []
+    for tag in ("l", "r"):
+        root, face, end, _lead = fan_gland(tag)
+        glands.append(mesh.pipe([root, face], 11.0, 16))
+        glands.append(mesh.pipe([face, end], 6.5, 16))
+    out["fan_glands"] = mesh.join(*glands)
+    ends = hv_ends(espec)
+    for name, path in HV_ROUTES.items():
+        a, al, bl, b = ends[name]
+        out[name] = mesh.pipe([a, al] + [tuple(p) for p in path] + [bl, b],
+                              HV_R[name.split("_")[1]], 12, bend=12.0)
+    # P-clips holding the cables to structure, each on a stud bonded to it:
+    # the pack's on the engine bay's floor, the fans' on the gearbox's top
+    # and the crash structure's shoulder. Unclipped, a cable this heavy
+    # hangs in loops and chafes through on whatever it swings against.
+    clips = []
+    for name, cp, d, gap in hv_clip_points():
+        cr = HV_R[name.split("_")[1]]
+        v, f = mesh.ring_torus(0.0, cr + 1.6, 1.5, 20, 8)
+        clips.append(([(px + cp[0], py + cp[1], pz + cp[2])
+                       for (px, py, pz) in v], f))
+        at = lambda t: tuple(cp[k] + d[k] * t for k in range(3))
+        clips.append(mesh.pipe([at(cr + 2.8), at(gap + 1.0)], 2.2, 10))
+        clips.append(mesh.pipe([at(gap - 1.2), at(gap + 1.0)], 6.0, 16))
+    out["hv_clips"] = mesh.join(*clips)
+    # The two fans' stator vanes are not mirror images of each other -- seven
+    # vanes offset by half a blade pitch -- so neither are the vanes their
+    # leads come out over, and the two leads are one part rather than a
+    # left and a right that do not mirror.
+    out["fan_leads"] = mesh.join(out.pop("fan_lead_l"), out.pop("fan_lead_r"))
+    return out
+
+
+def hv_clip_points():
+    """(cable, centre, unit direction to the surface, distance to it) for
+    each clip. The distances are to the floor, the gearbox's top and the
+    crash cone as they stand under each point (tools/route_check has the
+    cables' clearances; these are the gaps a clip's stud spans)."""
+    out = []
+    c55, s55 = math.cos(math.radians(55.0)), math.sin(math.radians(55.0))
+    for sgn, pk, fn in ((1.0, "hv_pack_pos", "hv_fan_r"),
+                        (-1.0, "hv_pack_neg", "hv_fan_l")):
+        down = (0.0, 0.0, -1.0)
+        # the engine bay's floor rises aft at about 1 in 10
+        for x, z, floor in ((2960.0, 92.0, 78.0), (3130.0, 103.0, 87.4),
+                            (3300.0, 114.0, 100.3)):
+            out.append((pk, (x, sgn * 128.0, z), down, z - floor))
+        # the gearbox's top at y 120
+        for x, z, top in ((3750.0, 473.0, 461.4), (3865.0, 485.0, 472.6)):
+            out.append((fn, (x, sgn * 120.0, z), down, z - top))
+        # the crash cone, 12 mm under the cable at 55 degrees up its side
+        for (x, y, z) in HV_ROUTES[fn][-2:]:
+            out.append((fn, (x, y, z), (0.0, -sgn * c55, -s55), 12.0))
+    return out
+
+
+HV_R = {"pack": 5.0, "fan": 4.5, "lead": 5.0}
+# Between each cable's two leads, found clear by tools/route_solve and kept
+# as its corners. The pack's cables run aft through the engine bulkhead's
+# aperture, under the sump beside the keel -- the gap the engine's own pack
+# cables ran in -- and up the bellhousing's flank to the inverter's DC
+# sockets. The fan feeds go aft over the gearbox under the engine cover and
+# down behind it, inboard of the cover's wall, to the grommets.
+HV_ROUTES = {
+    "hv_pack_pos": [(2840.0, 65.0, 210.0), (2960.0, 128.0, 92.0),
+                    (3300.0, 128.0, 114.0), (3494.0, 146.0, 164.0),
+                    (3510.0, 160.0, 180.0), (3510.0, 160.0, 455.0),
+                    (3516.0, 150.0, 501.6)],
+    "hv_pack_neg": [(2840.0, -65.0, 210.0), (2960.0, -128.0, 92.0),
+                    (3300.0, -128.0, 114.0), (3494.0, -146.0, 164.0),
+                    (3535.0, -160.0, 205.0), (3535.0, -160.0, 455.0),
+                    (3524.0, -150.0, 501.6)],
+    "hv_fan_r": [(3545.0, 130.0, 500.0), (3610.0, 130.0, 500.0),
+                 (3620.0, 120.0, 489.0), (3750.0, 120.0, 473.0),
+                 (3865.0, 120.0, 485.0), (3920.0, 120.0, 485.0),
+                 (3935.0, 120.0, 468.0), (4120.0, 131.0, 422.0),
+                 (4205.0, 66.0, 424.2), (4290.0, 57.4, 411.9)],
+    "hv_fan_l": [(3545.0, -130.0, 500.0), (3610.0, -130.0, 500.0),
+                 (3620.0, -120.0, 489.0), (3750.0, -120.0, 473.0),
+                 (3865.0, -120.0, 485.0), (3920.0, -120.0, 485.0),
+                 (3935.0, -120.0, 468.0), (4120.0, -131.0, 422.0),
+                 (4205.0, -66.0, 424.2), (4290.0, -57.4, 411.9)],
+    "fan_lead_r": [],
+    "fan_lead_l": [],
+}
 
 
 def _lathe_y(profile, x, y, z, sgn):

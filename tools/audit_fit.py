@@ -76,6 +76,8 @@ OUTSIDE = {
     # to expect that. It is under the skin now, so the test does its job.
     "steering_rack": "ahead of the tub, in the nose",
     "fan_": "the fan pods at the tail, outside the body",
+    "hv_fan_": "the fans' feeds leave the cover through their grommets "
+               "for the controllers beside the fans",
     "fanduct": "the fan pods at the tail, outside the body",
     "radiator": "in the sidepod, checked against the sidepod",
     "rad_": "in the sidepod, checked against the sidepod",

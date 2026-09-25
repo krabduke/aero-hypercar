@@ -183,29 +183,39 @@ def _hv_loom():
     out["inverter_connectors"] = mesh.join(
         out["inverter_connectors"],
         shapes.connector(*top_plug, 22.0, 40.0, 10.0, 6))
-    D = gaspath.COLLECTOR_DRUM
+    # The MGU-H leads. Each MGU-H is on its turbo's shaft, inside the
+    # bearing housing, and its connector is on the housing's side, level
+    # with the shaft; the lead runs from it aft along the vee's left side,
+    # under the collectors, to the plug on the inverter's lid. They used to
+    # land on bulkhead connectors on top of the collectors' heat blankets and
+    # arch over the compressor inlets to z 404: in the car that is 27 mm out
+    # through the engine cover, and the inverter they went to was left out
+    # of the car -- so the car's MGU-Hs were wired to nothing. These paths
+    # are the ones tools/route_solve found clear, under the car's cover.
+    LEADS = (
+        [(-144.0, 26.0, 214.0), (-144.0, 26.0, 203.0), (-144.0, 24.0, 196.0),
+         (-116.0, 24.0, 168.0), (196.0, 24.0, 168.0), (276.0, -50.0, 250.0),
+         (276.0, -50.0, top_plug[2] + 2.0)],
+        [(144.0, -26.0, 214.0), (144.0, -26.0, 203.0), (156.0, -24.0, 168.0),
+         (196.0, -24.0, 168.0), (276.0, -40.0, 250.0),
+         (276.0, -40.0, top_plug[2] + 2.0)])
     for index, x in enumerate(spec.TURBO["x"]):
-        c = gaspath.collector_path(0 if x < 0 else 2)[0]
-        top = c[2] + D["r"] + 4.0
-        term = (c[0] + 9.0, c[1], top + 7.0)
-        out[f"hv_motor_h_connector_{index}"] = shapes.connector(
-            c[0], c[1], top + 7.0, 18.0, 16.0, 14.0, 3)
-        lane = -44.0 if x < 0 else -28.0     # side by side down the middle
-        path = [term]
-        if x < 0:
-            path += [(term[0] + 20.0, -12.0, top + 22.0),
-                     (-96.0, lane, top + 26.0), (96.0, lane, top + 26.0),
-                     (130.0, lane, top + 22.0)]
-        else:
-            path += [(term[0] + 24.0, lane * 0.5, top + 10.0)]
-        path += [(200.0, lane, top + 16.0),
-                 (264.0, lane, top + 2.0),
-                 (ix + 18.0, lane, top - 44.0),
-                 (ix + 18.0, lane, lid + 40.0),
-                 (ix + 4.0, lane, lid + 12.0),
-                 (ix, lane, top_plug[2])]
-        out[f"hv_motor_h_{index}"] = mesh.pipe(
-            mesh.smooth_path(path, 3), 3.6, SM, subdiv=2)
+        tx = -144.0 if x < 0 else 144.0
+        cz = spec.TURBO["z"]
+        # The connector is under the bearing housing, out of its waist and
+        # down beside the oil drain's boss: the only way out of a housing
+        # with a volute 80 mm across on either side of it. The front
+        # turbo's is on the right of the oil lines, the rear one's on the
+        # left.
+        sy = 1.0 if tx < 0 else -1.0
+        body = mesh.pipe([(tx, sy * 16.0, cz - 12.0), (tx, sy * 26.0, cz - 34.0),
+                          (tx, sy * 26.0, cz - 48.0)], 6.0, SM, bend=8.0)
+        ring = mesh.pipe([(tx, sy * 26.0, cz - 38.0), (tx, sy * 26.0, cz - 44.0)],
+                         7.5, SM, bend=0.0)
+        out[f"hv_motor_h_connector_{index}"] = mesh.join(body, ring)
+        # on the solved path itself, corners barely rounded: smoothed, it
+        # cut the corners into the rear turbine's housing
+        out[f"hv_motor_h_{index}"] = mesh.pipe(LEADS[index], 3.6, SM, bend=6.0)
     return out
 
 

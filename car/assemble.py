@@ -39,7 +39,8 @@ def collection_for(name):
     n = name.lower()
     if n.startswith(("engine", "gearbox")):
         return "07 Power Unit"
-    if n.startswith(("radiator", "rad_", "battery", "fuel", "accumulator")):
+    if n.startswith(("radiator", "rad_", "battery", "fuel", "accumulator",
+                     "hv_", "inverter_")):
         return "08 Cooling and Energy"
     if n.startswith("fan"):
         return "06 Fan System"

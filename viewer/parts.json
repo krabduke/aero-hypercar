@@ -271,6 +271,15 @@
    ],
    "metal": 0.1,
    "rough": 0.55
+  },
+  "hv_orange": {
+   "rgb": [
+    0.78,
+    0.2,
+    0.03
+   ],
+   "metal": 0.0,
+   "rough": 0.55
   }
  },
  "groups": [
@@ -279,7 +288,7 @@
    "label": "Bodywork",
    "color": "#5A6066",
    "parts": 23,
-   "faces": 65811
+   "faces": 65889
   },
   {
    "key": "02 Floor and Diffuser",
@@ -313,22 +322,22 @@
    "key": "06 Fan System",
    "label": "Fans",
    "color": "#C06A30",
-   "parts": 9,
-   "faces": 9446
+   "parts": 12,
+   "faces": 15898
   },
   {
    "key": "07 Power Unit",
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 11,
-   "faces": 2436984
+   "faces": 2475019
   },
   {
    "key": "08 Cooling and Energy",
    "label": "Cooling",
    "color": "#4E6E7A",
-   "parts": 17,
-   "faces": 65373
+   "parts": 25,
+   "faces": 87185
   },
   {
    "key": "09 Aero Detail",
@@ -435,7 +444,7 @@
    "mat": "carbon_gloss",
    "x0": 0.0,
    "x1": 4560.0,
-   "f": 26838
+   "f": 26916
   },
   "diffuser_fences": {
    "g": "01 Bodywork",
@@ -1921,6 +1930,13 @@
    "x1": 2831.6,
    "f": 2210
   },
+  "battery_hv_terminals": {
+   "g": "08 Cooling and Energy",
+   "mat": "hv_orange",
+   "x0": 2769.0,
+   "x1": 2808.1,
+   "f": 740
+  },
   "battery_modules": {
    "g": "08 Cooling and Energy",
    "mat": "alu_dark",
@@ -1933,7 +1949,7 @@
    "mat": "alu_cast",
    "x0": 2861.0,
    "x1": 3598.3,
-   "f": 2361926
+   "f": 2399961
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -1998,6 +2014,27 @@
    "x1": 3008.1,
    "f": 2020
   },
+  "fan_controllers": {
+   "g": "06 Fan System",
+   "mat": "alu_dark",
+   "x0": 4340.2,
+   "x1": 4475.0,
+   "f": 5422
+  },
+  "fan_glands": {
+   "g": "06 Fan System",
+   "mat": "alu_bright",
+   "x0": 4537.0,
+   "x1": 4559.0,
+   "f": 124
+  },
+  "fan_leads": {
+   "g": "06 Fan System",
+   "mat": "hv_orange",
+   "x0": 4470.0,
+   "x1": 4553.0,
+   "f": 906
+  },
   "fuel_cell": {
    "g": "08 Cooling and Energy",
    "mat": "anodised",
@@ -2018,6 +2055,55 @@
    "x0": 3550.5,
    "x1": 4078.5,
    "f": 6427
+  },
+  "hv_clips": {
+   "g": "08 Cooling and Energy",
+   "mat": "alu_dark",
+   "x0": 2954.0,
+   "x1": 4296.0,
+   "f": 13454
+  },
+  "hv_fan_l": {
+   "g": "08 Cooling and Energy",
+   "mat": "hv_orange",
+   "x0": 3493.5,
+   "x1": 4374.5,
+   "f": 1872
+  },
+  "hv_fan_r": {
+   "g": "08 Cooling and Energy",
+   "mat": "hv_orange",
+   "x0": 3493.5,
+   "x1": 4374.5,
+   "f": 1872
+  },
+  "hv_grommets": {
+   "g": "08 Cooling and Energy",
+   "mat": "rubber_seal",
+   "x0": 4356.0,
+   "x1": 4384.0,
+   "f": 688
+  },
+  "hv_pack_neg": {
+   "g": "08 Cooling and Energy",
+   "mat": "hv_orange",
+   "x0": 2803.0,
+   "x1": 3540.0,
+   "f": 1212
+  },
+  "hv_pack_pos": {
+   "g": "08 Cooling and Energy",
+   "mat": "hv_orange",
+   "x0": 2803.0,
+   "x1": 3525.0,
+   "f": 1234
+  },
+  "inverter_fan_plugs": {
+   "g": "08 Cooling and Energy",
+   "mat": "hv_orange",
+   "x0": 3490.0,
+   "x1": 3508.4,
+   "f": 740
   },
   "lt_pump_lead_l": {
    "g": "01 Bodywork",

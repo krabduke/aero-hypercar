@@ -272,6 +272,20 @@ EXPECTED = [
     ("fuel_coupling", "tub"), ("sidepod_", "rad_hoses_"),
     ("fuel_coupling", "fuel_cell"),     # it is the filler for it
 
+    # The high-voltage system (powertrain._hv). The pack's cables leave its
+    # terminals; the fan feeds through their grommets in the engine cover
+    # into the plugs on the controllers' inboard faces, and the controllers
+    # hang off the rear frame by their straps; each fan's lead leaves its
+    # controller and ends in the gland set into the fan's cowl. The fan DC
+    # plugs are set into the inverter's side faces, which are in "engine".
+    ("battery_hv_terminals", "hv_pack_"),
+    ("hv_grommets", "tub"), ("fan_controllers", "hv_fan_"),
+    ("fan_controllers", "rear_frame"), ("fan_controllers", "fan_leads"),
+    ("fan_glands", "fan_fairing_"), ("engine", "inverter_fan_plugs"),
+    # the P-clips grip their cables and stand on studs bonded to the floor,
+    # the gearbox's top and the crash cone
+    ("hv_clips", "hv_"), ("hv_clips", "gearbox"),
+    ("hv_clips", "crash_structure"),
     # the battery is bolted to the engine bulkhead's flange
     ("battery", "bulkhead_engine"),
     # the fuel cell stands on the pack by its collector's foot, and the

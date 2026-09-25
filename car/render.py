@@ -226,7 +226,9 @@ def section(centre):
             continue
         m = o.modifiers.new("sec", "BOOLEAN")
         m.operation = "DIFFERENCE"
-        m.solver = "FLOAT"
+        # EXACT: the float solver gave up on the engine cover once it had
+        # the HV grommets' holes cut in it and left the whole skin on
+        m.solver = "EXACT"
         m.object = cut
 
 

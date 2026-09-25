@@ -840,6 +840,10 @@ MATERIAL_MAP = {
     "rad_hoses": "hose",
     "rad_lt_hoses": "hose",
     "lt_pump_lead": "hose",
+    "hv_pack": "hv_orange", "hv_fan": "hv_orange", "fan_leads": "hv_orange",
+    "battery_hv_terminals": "hv_orange", "inverter_fan_plugs": "hv_orange",
+    "hv_grommets": "rubber_seal", "fan_controllers": "alu_dark",
+    "fan_glands": "alu_bright", "hv_clips": "alu_dark",
     "rad_lt_pump": "anodised",
     "rad_lt_": "rad_core",
     "rad_tanks": "alu_bright",
@@ -898,6 +902,8 @@ PALETTE = {
     "anodised":     ((0.108, 0.136, 0.170), 1.00, 0.40),
     "steel":        ((0.480, 0.492, 0.510), 1.00, 0.28),
     "strap":        ((0.520, 0.075, 0.050), 0.10, 0.55),
+    # high-voltage cable and plugs are orange, by rule, so nobody cuts one
+    "hv_orange":    ((0.780, 0.200, 0.030), 0.00, 0.55),
 }
 
 # Resolution. Eight spanwise stations and thirty section points made the rear

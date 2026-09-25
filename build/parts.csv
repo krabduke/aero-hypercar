@@ -10,7 +10,7 @@ sidepod_inlets,01 Bodywork,carbon_gloss,,,,,,,,,872,820,1721.0,1910.0,-518.0,518
 sidepod_l,01 Bodywork,carbon_gloss,,,,,,,,,2567,2277,1700.0,3700.0,-772.0,-162.0,145.8,540.6
 sidepod_r,01 Bodywork,carbon_gloss,,,,,,,,,2567,2277,1700.0,3700.0,162.0,772.0,145.8,540.6
 steering,10 Cockpit,carbon_matte,,,,,,,,,3072,2792,1291.0,1376.5,-129.0,129.0,469.0,671.0
-tub,01 Bodywork,carbon_gloss,,,,,,,,,27240,26838,0.0,4560.0,-405.0,405.0,45.7,763.9
+tub,01 Bodywork,carbon_gloss,,,,,,,,,27388,26916,0.0,4560.0,-405.0,405.0,45.7,763.9
 diffuser_fences,01 Bodywork,carbon_matte,,,,,,,,,240,128,3860.0,4560.0,-294.8,294.8,8.0,192.3
 diffuser_kick,01 Bodywork,carbon_matte,,,,,,,,,176,164,4440.0,4560.0,-586.0,586.0,239.5,253.7
 diffuser_lip,01 Bodywork,carbon_matte,,,,,,,,,240,224,4554.0,4564.6,-586.0,586.0,248.4,268.8
@@ -155,8 +155,9 @@ fan_rotor_r,06 Fan System,alu_bright,4490.0,446.0,452.0,1.0,0.0,0.0,-1.0,spin,19
 fan_stators,06 Fan System,alu_bright,,,,,,,,,392,224,4534.3,4561.7,-619.0,615.5,279.0,621.8
 fanduct,06 Fan System,carbon_matte,,,,,,,,,1840,1840,4410.0,4560.0,-645.9,646.0,252.0,652.0
 battery,08 Cooling and Energy,anodised,,,,,,,,,2548,2210,2040.4,2831.6,-149.6,149.6,86.9,205.0
+battery_hv_terminals,08 Cooling and Energy,hv_orange,,,,,,,,,720,740,2769.0,2808.1,-74.0,74.0,205.0,219.0
 battery_modules,08 Cooling and Energy,alu_dark,,,,,,,,,980,850,2055.3,2816.7,-144.0,144.0,111.5,188.5
-engine,07 Power Unit,alu_cast,,,,,,,,,2359179,2361926,2861.0,3598.3,-381.2,381.2,80.0,689.2
+engine,07 Power Unit,alu_cast,,,,,,,,,2396987,2399961,2861.0,3598.3,-381.2,381.2,80.0,689.2
 engine_block_bank_l,07 Power Unit,alu_cast,,,,,,,,,9224,8131,3008.9,3471.1,-126.2,122.2,289.8,440.2
 engine_block_bank_r,07 Power Unit,alu_cast,,,,,,,,,9230,8131,3008.9,3471.1,-122.2,126.2,289.8,440.2
 engine_block_crankcase,07 Power Unit,alu_cast,,,,,,,,,29437,27970,3008.4,3471.6,-101.1,101.1,218.0,342.0
@@ -166,9 +167,19 @@ engine_compressor_inlet,07 Power Unit,alu_cast,,,,,,,,,15570,14156,3188.0,3291.9
 engine_head_l,07 Power Unit,alu_cast,,,,,,,,,1707,1547,3002.7,3458.3,-215.1,-47.4,372.7,538.4
 engine_head_r,07 Power Unit,alu_cast,,,,,,,,,1705,1542,3021.7,3477.3,47.4,215.1,372.7,538.4
 engine_timing_cover,07 Power Unit,alu_cast,,,,,,,,,2840,2020,2950.0,3008.1,-240.1,240.1,250.0,554.1
+fan_controllers,06 Fan System,alu_dark,,,,,,,,,6096,5422,4340.2,4475.0,-224.8,224.8,286.8,443.0
+fan_glands,06 Fan System,alu_bright,,,,,,,,,232,124,4537.0,4559.0,-288.6,304.9,294.4,346.1
+fan_leads,06 Fan System,hv_orange,,,,,,,,,946,906,4470.0,4553.0,-262.3,280.1,282.6,334.9
 fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,204.0,564.0
 fuel_fittings,08 Cooling and Energy,alu_bright,,,,,,,,,1934,1872,2157.0,3068.5,-55.0,259.9,419.7,571.6
 gearbox,07 Power Unit,magnesium,,,,,,,,,6695,6427,3550.5,4078.5,-206.5,206.5,123.5,536.5
+hv_clips,08 Cooling and Energy,alu_dark,,,,,,,,,14056,13454,2954.0,4296.0,-136.1,136.1,77.0,492.6
+hv_fan_l,08 Cooling and Energy,hv_orange,,,,,,,,,1892,1872,3493.5,4374.5,-155.0,-53.3,345.5,504.5
+hv_fan_r,08 Cooling and Energy,hv_orange,,,,,,,,,1892,1872,3493.5,4374.5,53.3,155.0,345.5,504.5
+hv_grommets,08 Cooling and Energy,rubber_seal,,,,,,,,,688,688,4356.0,4384.0,-141.7,141.7,336.0,364.0
+hv_pack_neg,08 Cooling and Energy,hv_orange,,,,,,,,,1232,1212,2803.0,3540.0,-165.0,-59.0,87.4,506.6
+hv_pack_pos,08 Cooling and Energy,hv_orange,,,,,,,,,1254,1234,2803.0,3525.0,59.0,165.0,87.4,506.6
+inverter_fan_plugs,08 Cooling and Energy,hv_orange,,,,,,,,,720,740,3490.0,3508.4,-96.0,96.0,471.6,484.6
 lt_pump_lead_l,01 Bodywork,hose,,,,,,,,,592,546,2829.0,2879.0,-409.5,-89.0,151.0,324.5
 lt_pump_lead_r,01 Bodywork,hose,,,,,,,,,592,546,2829.0,2879.0,89.0,409.5,151.0,324.5
 rad_hoses_hot,08 Cooling and Energy,hose,,,,,,,,,9159,9077,2562.0,2951.5,-501.5,501.4,378.0,463.5
