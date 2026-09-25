@@ -1,22 +1,24 @@
 {
  "source": "car-engine",
  "files": {
-  "spec.py": "3078daef4c4c",
+  "spec.py": "186dcb277b04",
   "mesh.py": "7a61f9dcccf1",
   "shapes.py": "1d7ea5dea4e8",
   "gaspath.py": "ffb7db964e43",
+  "harness_routes.json": "47f4a82cb0c0",
   "parts/__init__.py": "e3b0c44298fc",
   "parts/common.py": "d46ee4408ed8",
   "parts/block.py": "f8e24d697e31",
   "parts/bottomend.py": "7654d3bf5225",
-  "parts/heads.py": "2490f1b08816",
-  "parts/plumbing.py": "b15492a1193a",
-  "parts/induction.py": "6d6fead73b53",
+  "parts/heads.py": "453b247ff239",
+  "parts/plumbing.py": "d836ebb16ae0",
+  "parts/induction.py": "30ff68ca4aef",
   "parts/turbo.py": "717463100e20",
   "parts/hybrid.py": "963e88c7ad97",
   "parts/drive.py": "1c7efa1db825",
-  "parts/detail.py": "6a8c33cf9cc2",
-  "parts/ancillaries.py": "b42f17a611bb"
+  "parts/detail.py": "aeaa59201de5",
+  "parts/ancillaries.py": "d27b2d8d7865",
+  "parts/harness.py": "14a65300996b"
  },
- "commit": "5e973e5"
+ "commit": "acedec9"
 }

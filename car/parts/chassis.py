@@ -27,6 +27,11 @@ def build():
     out = {}
     out.update(_body())
     out.update(_sidepods())
+    # the sidepods are opened under the upper bulges, where the charge pipes
+    # come down through their tops to the throttles
+    for side, sgn in (("l", -1.0), ("r", 1.0)):
+        out[f"cut:sidepod_{side}"] = mesh.join(out[f"cut:sidepod_{side}"],
+                                               _bulge_hollow(sgn))
     out.update(_cockpit_surround())
     out.update(_sharkfin())
     out.update(_halo())
@@ -91,17 +96,32 @@ def _stations(table, n):
     return out
 
 
+SEG_BODY = 144          # enough points round a section to carry the bulges
+
 # The body's skin. It was a solid from nose to tail, so the seat, the driver,
 # the engine and everything else in the car were inside a block of carbon,
 # and every one of them "touched" the body whether or not anything held it.
 SKIN = 6.0
 
 
+def body_stations():
+    """The stations the body is lofted through: the table's, and more
+    through the bulges, so their ends are round."""
+    B = BULGES[0]
+    return sorted(set(_stations(spec.BODY, 68))
+                  | {B["x0"] + (B["x1"] - B["x0"]) * i / 28 for i in range(29)})
+
+
+def body_ring(x, inset=0.0):
+    """The body's section at x as meshed: the table's, with the bulges."""
+    return _bulged(body_section(x, inset=inset, segments=SEG_BODY), x, inset)
+
+
 def _body():
-    xs = _stations(spec.BODY, 68)
-    rings = [body_section(x) for x in xs]
+    xs = body_stations()
+    rings = [body_ring(x) for x in xs]
     # the space inside the skin, over the length where there is room for one
-    inner = [body_section(x, inset=SKIN) for x in xs[2:-2]]
+    inner = [body_ring(x, SKIN) for x in xs[2:-2]]
     # and the cockpit opening through the top of it, under the coaming's lip
     rim = cockpit_outline()
     opening = []
@@ -111,6 +131,98 @@ def _body():
                         (x, w, z + 160.0), (x, -w, z + 160.0)])
     return {"tub": common.loft(rings),
             "cut:tub": mesh.join(common.loft(inner), common.loft(opening))}
+
+
+# --------------------------------------------------------------------------
+# bulges in the engine cover
+#
+# Each turbo's charge pipe leaves the vee over its bank's cam cover and comes
+# down outboard of it to the throttle on the plenum's outboard face; that
+# loop stands 100 mm outside the cover and above the sidepod. Low down, the
+# engine's oil cooler stands 30 mm outside the flank. The car was shaped
+# round an engine without either -- its ancillaries were never vendored --
+# so the cover now bulges over both, both sides, as a twin-turbo car's does.
+#
+# A bulge is part of the body's own skin, not a separate shell: each body
+# section is the union of the section and the bulges at its station, found
+# along rays from the section's centre, so the skin is one surface with no
+# wall of its own inside the engine bay.
+
+BULGES = [
+    # x0, x1, |y| centre, half-width, z centre, half-height, exponent, taper
+    {"x0": 2990.0, "x1": 3490.0, "yc": 300.0, "hy": 105.0,
+     "zc": 515.0, "hz": 140.0, "n": 3.0, "taper": 0.35},     # charge pipes
+    {"x0": 3040.0, "x1": 3430.0, "yc": 250.0, "hy": 64.0,
+     "zc": 235.0, "hz": 74.0, "n": 2.6, "taper": 0.4},       # oil cooler
+]
+
+
+def _bulge_half(Bg, x, inset):
+    t = (x - Bg["x0"]) / (Bg["x1"] - Bg["x0"])
+    if not 0.0 < t < 1.0:
+        return None
+    f = math.sin(math.pi * t) ** Bg["taper"]
+    return Bg["hy"] * f - inset, Bg["hz"] * f - inset
+
+
+def bulge_contains(x, y, z, slack=0.0, inset=0.0):
+    for Bg in BULGES:
+        h = _bulge_half(Bg, x, inset - slack)
+        if h is None or h[0] <= 0 or h[1] <= 0:
+            continue
+        u = abs(abs(y) - Bg["yc"]) / h[0]
+        v = abs(z - Bg["zc"]) / h[1]
+        if u ** Bg["n"] + v ** Bg["n"] <= 1.0:
+            return True
+    return False
+
+
+def _bulged(ring, x, inset):
+    """A body section with the bulges at its station joined to it."""
+    if not any(_bulge_half(Bg, x, inset) for Bg in BULGES):
+        return ring
+    zc = sum(p[2] for p in ring) / len(ring)
+    out = []
+    for (px, py, pz) in ring:
+        dy, dz = py, pz - zc
+        r0 = math.hypot(dy, dz)
+        if r0 < 1e-6:
+            out.append((px, py, pz))
+            continue
+        uy, uz = dy / r0, dz / r0
+        # march out along the ray while inside a bulge
+        r = r0
+        step = 4.0
+        while bulge_contains(x, uy * (r + step), zc + uz * (r + step), inset=inset):
+            r += step
+            if r > r0 + 400.0:
+                break
+        if r > r0:
+            # refine the edge
+            lo, hi = r, r + step
+            for _ in range(8):
+                mid = 0.5 * (lo + hi)
+                if bulge_contains(x, uy * mid, zc + uz * mid, inset=inset):
+                    lo = mid
+                else:
+                    hi = mid
+            r = lo
+        out.append((px, uy * r, zc + uz * r))
+    return out
+
+
+def _bulge_hollow(sgn):
+    """The inside of the upper bulge, as a solid, on one side."""
+    Bg = BULGES[0]
+    xs = [Bg["x0"] + (Bg["x1"] - Bg["x0"]) * i / 24 for i in range(2, 23)]
+    rings = []
+    for x in xs:
+        hy, hz = _bulge_half(Bg, x, SKIN)
+        p = 2.0 / Bg["n"]
+        rings.append([(x, sgn * (Bg["yc"] + hy * math.copysign(abs(math.cos(a)) ** p, math.cos(a))),
+                       Bg["zc"] + hz * math.copysign(abs(math.sin(a)) ** p, math.sin(a)))
+                      for a in (2.0 * math.pi * i / 40 for i in range(40))])
+    return common.loft(rings)
 
 
 def _sidepod_section(x, segments=40, inset=0.0):
@@ -495,9 +607,8 @@ def skin_point(x, angle_deg, standoff=0.0):
     def centre(x):
         hw, z_bot, z_top, nn, bias = _sample(spec.BODY, x)
         return 0.0, (z_bot + z_top) / 2 + bias * (z_top - z_bot) * 0.5
-    return _meshed_point(_stations(spec.BODY, 68),
-                         lambda x: body_section(x, 0.0, SEG), SEG, centre,
-                         x, angle_deg, standoff)
+    return _meshed_point(body_stations(), lambda xx: body_ring(xx), SEG_BODY,
+                         centre, x, angle_deg, standoff)
 
 
 def sidepod_skin_point(x, sgn, angle_deg, standoff=0.0):

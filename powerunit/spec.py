@@ -471,6 +471,7 @@ def oil_tank_union(which):
 # --------------------------------------------------------------------------
 
 MATERIAL_MAP = {
+    "harness": "rubber_blk",
     "accessory_belt": "rubber_blk",
     "head_gasket": "steel_nitrided",
     "valve_guide": "copper_wound",

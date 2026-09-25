@@ -108,6 +108,8 @@ def inside_body(x, y, z, slack):
     """
     if inside_sidepod(x, y, z, slack):
         return 0.0
+    if chassis.bulge_contains(x, y, z, slack):
+        return 0.0
     ring = chassis.body_section(x, inset=-slack, segments=96)
     if not ring:
         return 0.0

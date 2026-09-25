@@ -408,8 +408,12 @@ def _sensors():
                 [(0.0, 0.0), (0.0, 13.0), (14.0, 13.0), (14.0, 19.0),
                  (20.0, 19.0), (20.0, 10.0), (30.0, 10.0), (30.0, 0.0)],
                 spec.HEAD["x_rear"] - 6.0, y, z, axis="x", seg=14))
-            parts.append(shapes.connector(spec.HEAD["x_rear"] + 26.0, y, z,
-                                          18.0, 14.0, 11.0, pins=3))
+            # pins facing outboard: aft of it, 12 mm off, is the inverter's
+            # own connector block, and there is no room for a plug between
+            cx, cy = spec.HEAD["x_rear"] + 26.0, y
+            cv, cf = shapes.connector(cx, cy, z, 18.0, 14.0, 11.0, pins=3)
+            cv = [(cx - s * (py - cy), cy + s * (px - cx), pz) for (px, py, pz) in cv]
+            parts.append((cv, cf))
         out[f"cam_sensor_{tag}"] = mesh.join(*parts)
     return out
 

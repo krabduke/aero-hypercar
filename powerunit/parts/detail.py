@@ -515,7 +515,8 @@ def _sensors():
     wall = spec.BLOCK["half_width"] * 0.86
     spots = [(spec.BLOCK["x_front"] + 20.0, 1.0, -40.0),
              (spec.BLOCK["x_rear"] - 40.0, -1.0, -30.0),
-             (0.0, 1.0, 20.0), (-90.0, -1.0, 20.0)]
+             # (clear of the knock sensors' plugs at x -86, 16 and 118)
+             (50.0, 1.0, 20.0), (-40.0, -1.0, 20.0)]
     for (x, side, z) in spots:
         v, f = mesh.cylinder(wall - 4.0, wall + 36.0, 9.0, SM)
         v = [(-ly, lx, lz) for (lx, ly, lz) in v]            # axis along +y

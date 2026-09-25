@@ -122,7 +122,12 @@ def _injection():
         # on the right bank's cam drive from x -36 to 36, and cylinder 4's
         # connector at tip + 10 landed inside it, 214 vertices deep
         plug = (tip[0] - 10.0, tip[1] + u[1] * plug_at, tip[2] + u[2] * plug_at)
-        out[f"pfi_plug_{n}"] = shapes.connector(*plug, 14.0, 12.0, 10.0, 2)
+        # pins facing forward, away from the injector: they faced along +x,
+        # into the injector's own body, and up is the head's cam carrier
+        cv, cf = shapes.connector(*plug, 14.0, 12.0, 10.0, 2)
+        cv = [(2.0 * plug[0] - px, py, pz) for (px, py, pz) in cv]
+        cf = [tuple(reversed(f)) for f in cf]
+        out[f"pfi_plug_{n}"] = (cv, cf)
         inlet = tuple(tip[k] + u[k] * (reach - FEED_LEN) for k in range(3))
         out[f"pfi_feed_{n}"] = mesh.pipe([inlet, rail], 3.5, SM)
     ends = []

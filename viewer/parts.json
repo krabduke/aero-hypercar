@@ -279,7 +279,7 @@
    "label": "Bodywork",
    "color": "#5A6066",
    "parts": 21,
-   "faces": 44513
+   "faces": 64719
   },
   {
    "key": "02 Floor and Diffuser",
@@ -321,7 +321,7 @@
    "label": "Power unit",
    "color": "#A8763E",
    "parts": 11,
-   "faces": 2349273
+   "faces": 2437937
   },
   {
    "key": "08 Cooling and Energy",
@@ -335,7 +335,7 @@
    "label": "Aero detail",
    "color": "#8A929A",
    "parts": 53,
-   "faces": 47442
+   "faces": 47058
   },
   {
    "key": "10 Cockpit",
@@ -414,14 +414,14 @@
    "mat": "carbon_gloss",
    "x0": 1700.0,
    "x1": 3700.0,
-   "f": 2237
+   "f": 2277
   },
   "sidepod_r": {
    "g": "01 Bodywork",
    "mat": "carbon_gloss",
    "x0": 1700.0,
    "x1": 3700.0,
-   "f": 2237
+   "f": 2277
   },
   "steering": {
    "g": "10 Cockpit",
@@ -435,7 +435,7 @@
    "mat": "carbon_gloss",
    "x0": 0.0,
    "x1": 4560.0,
-   "f": 6712
+   "f": 26838
   },
   "diffuser_fences": {
    "g": "01 Bodywork",
@@ -1926,7 +1926,7 @@
    "mat": "alu_cast",
    "x0": 2872.0,
    "x1": 3598.3,
-   "f": 2275913
+   "f": 2362879
   },
   "engine_block_bank_l": {
    "g": "07 Power Unit",
@@ -1954,14 +1954,14 @@
    "mat": "alu_cast",
    "x0": 3019.0,
    "x1": 3461.0,
-   "f": 1718
+   "f": 2567
   },
   "engine_camcover_r": {
    "g": "07 Power Unit",
    "mat": "alu_cast",
    "x0": 3019.0,
    "x1": 3461.0,
-   "f": 1718
+   "f": 2567
   },
   "engine_compressor_inlet": {
    "g": "07 Power Unit",
@@ -2128,7 +2128,7 @@
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
    "x0": 3190.0,
-   "x1": 3650.2,
+   "x1": 3650.1,
    "f": 1608
   },
   "exhaust": {
@@ -2295,9 +2295,9 @@
   "gills": {
    "g": "09 Aero Detail",
    "mat": "carbon_matte",
-   "x0": 3049.9,
-   "x1": 3510.4,
-   "f": 2652
+   "x0": 3440.2,
+   "x1": 3810.3,
+   "f": 2268
   },
   "helmet": {
    "g": "10 Cockpit",

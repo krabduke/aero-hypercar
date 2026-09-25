@@ -563,9 +563,11 @@ BODY_DETAIL = {
     # both on the same side; the mirror is applied in code, not by sign here.
     # engine-cover louvres, on the central body: (x0, x1, angle, n, len, h)
     # (x0, x1, clock angle, slats, angular span, slat height)
+    # (aft of the bulges over the charge pipes, over the turbos, where the engine
+    # bay's heat is)
     "gills": [
-        (3060.0, 3500.0,  49.0, 12, 11.0, 11.0),
-        (3160.0, 3400.0,  22.0, 7, 11.0, 10.0),
+        (3450.0, 3800.0,  49.0, 10, 11.0, 11.0),
+        (3480.0, 3720.0,  22.0, 6, 11.0, 10.0),
     ],
     "nose_pylon_x": 300.0, "nose_pylon_y": 96.0, "nose_pylon_t": 34.0,
     "cape_x0": 340.0, "cape_x1": 760.0, "cape_y": 300.0,

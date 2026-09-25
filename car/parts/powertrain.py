@@ -59,7 +59,8 @@ def _load_engine():
         # detail and plumbing were absent and the car was 111 parts behind.
         mods = [importlib.import_module(f"parts.{m}") for m in
                 ("block", "bottomend", "heads", "plumbing", "induction",
-                 "turbo", "hybrid", "drive", "detail")]
+                 "turbo", "hybrid", "drive", "detail", "ancillaries",
+                 "harness")]
         built = {}
         for m in mods:
             built.update(m.build())

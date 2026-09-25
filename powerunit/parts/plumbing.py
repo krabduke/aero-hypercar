@@ -182,8 +182,12 @@ def _fuel():
         # On the INTAKE side, which on a hot vee is outboard. At +62 the rail
         # sat on the head's inner face, in the vee, where the exhaust
         # primaries leave -- and the primaries went through it.
-        along = spec.DECK_HEIGHT + H["height"] * 0.12
-        offs = -80.0
+        # On the injectors' own axis, just beyond their ends, so each one
+        # sits in a cup on the rail -- which is how a direct injector is fed.
+        from parts import heads
+        # (8 mm past their ends: the coolant rail from the heads' outlets
+        # runs along 20 mm further out)
+        along, offs = heads.di_end(heads.DI_LEN + 8.0)
         # clear of the accessory drive on the front face
         p0 = (H["x_front"] + 46.0,
               d[1] * along + lat[1] * offs, d[2] * along + lat[2] * offs)
@@ -191,12 +195,12 @@ def _fuel():
         # A 350 bar rail is a thick-walled forging with a boss at every
         # injector and a fitting at each end, not a length of tube. It was
         # twenty-four vertices.
-        rail = [mesh.pipe([p0, p1], 14.0, spec.RES["pipe"], subdiv=4)]
+        rail = [mesh.pipe([p0, p1], 9.0, spec.RES["pipe"], subdiv=4)]
         for (n2, pair2, b3, x2, a2) in spec.cylinders():
             if b3 != bank:
                 continue
             bv, bf = mesh.revolve_closed(
-                [(-9.0, 0.0), (-9.0, 19.0), (9.0, 19.0), (9.0, 0.0)], SM)
+                [(-9.0, 0.0), (-9.0, 12.0), (9.0, 12.0), (9.0, 0.0)], SM)
             rail.append(([(px + x2, py + p0[1], pz + p0[2])
                           for (px, py, pz) in bv], bf))
         # the end fittings screw into the rail's ends; they started 12 mm
@@ -215,12 +219,13 @@ def _fuel():
         for (n, pair, b2, x, a) in spec.cylinders():
             if b2 != bank:
                 continue
-            inj = (x, d[1] * (spec.DECK_HEIGHT + 20.0) - lat[1] * 40.0,
-                   d[2] * (spec.DECK_HEIGHT + 20.0) - lat[2] * 40.0)
-            feeds.append(mesh.pipe([(x, p0[1], p0[2]),
-                                    (x, (p0[1] + inj[1]) / 2,
-                                     (p0[2] + inj[2]) / 2 - 14.0),
-                                    inj], 4.5, SM))
+            # the cup: from the rail's boss down the injector's axis over
+            # its end, where its O-ring seals
+            a0, l0 = heads.di_end(heads.DI_LEN - 8.0)
+            a1, l1 = heads.di_end(heads.DI_LEN + 8.0)
+            c0 = (x, d[1] * a0 + lat[1] * l0, d[2] * a0 + lat[2] * l0)
+            c1 = (x, d[1] * a1 + lat[1] * l1, d[2] * a1 + lat[2] * l1)
+            feeds.append(mesh.pipe([c0, c1], 12.0, SM))
         out[f"fuel_feeds_di_{'lr'[bank]}"] = mesh.join(*feeds)
 
     # The pump is on the timing case's front plate, coaxial with the right
@@ -281,12 +286,19 @@ def _fuel():
     # and the same station, 22 mm higher, carries the pressure across to the
     # other bank. Above the crankcase, which stops at z 28, and below the
     # inverter, which starts at 153.
+    # It turns inboard off the rail's end before it climbs: the rails run
+    # under the runners now, on the injectors' axis, and straight up from
+    # there is the heads' water outlets.
+    p1l = rail_ends[0][1]
+    kin = 0.84
     out["fuel_rail_di_crossover"] = mesh.pipe(
-        [(p1r[0] + 12.0, p1r[1], p1r[2]), (x_back, p1r[1], p1r[2]),
-         (x_back, p1r[1], 132.0), (x_back, p0l[1], 132.0),
-         (x_back, p0l[1], rail_ends[0][1][2]),
-         (rail_ends[0][1][0] + 12.0, rail_ends[0][1][1],
-          rail_ends[0][1][2])], 4.0, SM, subdiv=3)
+        [(p1r[0] + 12.0, p1r[1], p1r[2]),
+         (p1r[0] + 16.0, p1r[1] * kin, p1r[2] - 4.0),
+         (x_back, p1r[1] * kin, p1r[2]),
+         (x_back, p1r[1] * kin, 132.0), (x_back, p1l[1] * kin, 132.0),
+         (x_back, p1l[1] * kin, p1l[2]),
+         (p1l[0] + 16.0, p1l[1] * kin, p1l[2] - 4.0),
+         (p1l[0] + 12.0, p1l[1], p1l[2])], 4.0, SM, subdiv=3)
     return out
 
 
@@ -474,9 +486,9 @@ def _breathers():
         # The union is at the FRONT of the cover, not the back: from the back
         # the hose ran the whole length of the cover's crown and read, from
         # every angle, as a handrail round the heads.
-        way = [(H["x_front"] + 92.0, d[1] * (along - 20.0), d[2] * (along - 20.0)),
-               (H["x_front"] + 74.0, d[1] * along, d[2] * along),
-               (H["x_front"] + 48.0, d[1] * along, d[2] * along),
+        # (from the cover's front corner, ahead of the first coil's head)
+        way = [(H["x_front"] + 30.0, d[1] * (along - 20.0), d[2] * (along - 20.0)),
+               (H["x_front"] + 22.0, d[1] * along, d[2] * along),
                # Outboard of the cam drive gears, which are 241 of half
                # width and stand to z 241, rather than over the top of them
                # -- and the whole transit across their station has to be

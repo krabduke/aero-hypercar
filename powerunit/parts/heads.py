@@ -457,6 +457,79 @@ def _cams():
     return out
 
 
+# The coil runs from its boot on the plug (191.5 up the bore) up through
+# the cam cover to a head seated just clear of the ribs on the cover's
+# crown (the crown is 294.5 up the bore, its ribs 5 mm proud of it).
+COIL_BODY = 118.0
+COIL_HEAD = (36.0, 26.0, 16.0)      # along the crank, across, up the bore
+
+
+def _remap(part):
+    """A part built with x along the crank, y across and z up the bore,
+    turned to along_bank's order (up the bore, across, along the crank)."""
+    v, f = part
+    return [(pz, py, px) for (px, py, pz) in v], f
+
+
+def coil_head_along():
+    """How far up the bore the coil's head sits: on the cam cover's crown."""
+    return spec.DECK_HEIGHT + 64.0 + COIL_BODY + COIL_HEAD[2] / 2 - 2.0
+
+
+# on the inboard side: the charge pipe arches over each cover's outboard
+# shoulder, and the ignition loom runs along the inboard one
+COIL_CONN_LAT = COIL_HEAD[1] / 2 + 9.0
+
+
+def coil_connector(x):
+    """Bank-local (crank x, along, lateral) of the coil's connector: on the
+    inboard side of its head, pins facing inboard, where the ignition loom
+    runs along the cover's shoulder."""
+    return (x, coil_head_along(), COIL_CONN_LAT)
+
+
+def _coil_head(x, bank):
+    sx, sy, sz = COIL_HEAD
+    head = _remap(shapes.rounded_box(0.0, 0.0, 0.0, sx, sy, sz, 4.0))
+    cv, cf = shapes.connector(0.0, 0.0, 0.0, 18.0, 16.0, 12.0, pins=3)
+    # pins along +x turned to face +y (inboard), and out to the side
+    cv = [(-py, px + COIL_CONN_LAT, pz) for (px, py, pz) in cv]
+    conn = _remap((cv, cf))
+    v, f = mesh.join(head, conn)
+    return common.along_bank(v, x, coil_head_along(), bank, 0.0), f
+
+
+# Under the intake runner, which leaves the port face 180 up the bore and
+# climbs outward: at 15 degrees the injector and the rail cupping its end
+# pass under it, and stay inboard of the plenum, which fills the intake side
+# from 192 mm out.
+DI_TILT = math.radians(15.0)
+DI_TIP = (spec.DECK_HEIGHT + 8.0, -34.0)      # along, lateral: the chamber's edge
+DI_LEN = 48.0
+DI_CONN_S = 30.0                              # its connector, this far up
+
+
+def di_end(s=DI_LEN):
+    """Bank-local (along, lateral) of a point s up the injector from its tip."""
+    return (DI_TIP[0] + s * math.sin(DI_TILT), DI_TIP[1] - s * math.cos(DI_TILT))
+
+
+def _di_injector(x, bank):
+    v, f = mesh.revolve_open(
+        [(0.0, 0.0), (0.0, 3.0), (6.0, 4.2), (12.0, 4.2),
+         (15.0, 7.0), (36.0, 7.0), (39.0, 8.5), (DI_LEN, 8.5), (DI_LEN, 0.0)],
+        SM, cap_start=True, cap_end=True)
+    # its connector on the side of the body, pins facing forward: the fuel
+    # goes in at the end, into the rail's cup
+    cv, cf = shapes.connector(0.0, 0.0, 0.0, 16.0, 12.0, 10.0, pins=2)
+    cv = [(pz + DI_CONN_S, py, -px - 16.0) for (px, py, pz) in cv]
+    v, f = mesh.join((v, f), (cv, cf))
+    ct, st = math.cos(DI_TILT), math.sin(DI_TILT)
+    a0, l0 = DI_TIP
+    local = [(a0 + s_ * st + ry * ct, l0 - s_ * ct + ry * st, rz) for (s_, ry, rz) in v]
+    return common.along_bank(local, x, 0.0, bank, 0.0), f
+
+
 def _covers():
     """Cam covers, oil filler and the bolt flange that holds them down.
 
@@ -501,6 +574,14 @@ def _covers():
                          H["half_width"] * 2.2, 80.0)
         cv, cf = mesh.join((cv, cf), below)
         cv = [(x, y + 2.0, zz) for (x, y, zz) in cv]
+        # and a hole through its crown for every coil
+        holes = []
+        for (_n, _p, b, cx, _a) in spec.cylinders():
+            if b != bank:
+                continue
+            hv, hf = mesh.cylinder(z - 10.0, z + 60.0, 12.5, SM)
+            holes.append(([(cx + hy, hz, hx) for (hx, hy, hz) in hv], hf))
+        cv, cf = mesh.join((cv, cf), *holes)
         out[f"cut:camcover_{'lr'[bank]}"] = (rot(cv), cf)
 
         # A cam cover's bolts go round the injector bosses, not through
@@ -530,7 +611,10 @@ def _covers():
         fv, ff = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 21.0), (9.0, 23.0), (17.0, 20.0), (17.0, 0.0)],
             SM, cap_start=True, cap_end=True)
-        fv = [(pz + H["x_front"] + 46.0, py + 8.0, px + z + 26.0)
+        # between the first two coils of the bank, not over one of them
+        xs_b = sorted(cx for (_n, _p, b, cx, _a) in spec.cylinders() if b == bank)
+        x_fill = 0.5 * (xs_b[0] + xs_b[1])
+        fv = [(pz + x_fill, py + 8.0, px + z + 26.0)
               for (px, py, pz) in fv]
         out[f"oil_filler_{'lr'[bank]}"] = (rot(fv), ff)
     return out
@@ -554,25 +638,28 @@ def _ignition():
     """
     out = {}
     for (n, pair, bank, x, a) in spec.cylinders():
-        iv, if_ = mesh.revolve_open(
-            [(0.0, 0.0), (0.0, 3.0), (6.0, 4.2), (14.0, 4.2),
-             (18.0, 7.0), (48.0, 7.0), (52.0, 9.5), (62.0, 9.5), (62.0, 0.0)],
-            SM, cap_start=True, cap_end=True)
-        iv = [(z, y, px) for (px, y, z) in iv]
-        out[f"injector_di_{n}"] = (common.along_bank(
-            iv, x, spec.DECK_HEIGHT + 20.0, bank, -40.0), if_)
+        # The direct injector goes in from the intake side, under the
+        # port, its tip at the edge of the chamber and its body angled 25
+        # degrees up and out of the head's outer face, where its connector
+        # is. It was built along the crank, lying in the head parallel to
+        # the camshafts, which is not a place an injector can be fitted.
+        out[f"injector_di_{n}"] = _di_injector(x, bank)
 
+        # ...up through its hole in the cam cover to a head seated on the
+        # cover's crown, where its connector is. It stopped 100 mm short,
+        # inside the cover, with no connector at all.
         cv, cf = mesh.revolve_open(
             [(0.0, 0.0), (0.0, 5.5), (10.0, 6.5), (26.0, 7.5),
-             (30.0, 11.0), (74.0, 11.0), (74.0, 0.0)],
+             (30.0, 11.0), (COIL_BODY, 11.0), (COIL_BODY, 0.0)],
             SM, cap_start=True, cap_end=True)
         # A coil-on-plug stands UP the bore, in the well between the two
         # camshafts, with its boot on the plug. The `(z, y, px)` swap the
         # camshaft needs sends the axis along the crank instead, which laid
         # all eight coils on their sides across the engine and buried them
         # in the block.
-        out[f"coil_{n}"] = (common.along_bank(
-            cv, x, spec.DECK_HEIGHT + 64.0, bank, 0.0), cf)
+        out[f"coil_{n}"] = mesh.join(
+            (common.along_bank(cv, x, spec.DECK_HEIGHT + 64.0, bank, 0.0), cf),
+            _coil_head(x, bank))
 
         # 14 mm across the flats, which is what fits between four valves
         pv, pf = mesh.revolve_open(
