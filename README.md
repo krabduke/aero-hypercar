@@ -7,7 +7,7 @@ a Formula 1 car on a Formula 1 circuit?**
 The power unit is the [RX-8V V8 hybrid](https://github.com/krabduke/car-engine-v8-hybrid)
 from the sibling project, imported and installed — not re-modelled.
 
-**286 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 650 kg of fan downforce, 10.7 s a lap faster than F1**
+**287 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 650 kg of fan downforce, 10.7 s a lap faster than F1**
 
 ![hero](renders/01_hero.png)
 

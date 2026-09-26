@@ -500,6 +500,7 @@ MATERIAL_MAP = {
     "blowoff": "rubber_blk",
     "boost_reference": "rubber_blk",
     "throttle_motor": "rubber_blk",
+    "harness_clips": "steel_nitrided",
     "intercooler": "anodised",
     "charge_pipes": "rubber_blk",
     "engine_mount": "rubber_blk",

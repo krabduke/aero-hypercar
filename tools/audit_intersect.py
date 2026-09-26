@@ -286,6 +286,9 @@ EXPECTED = [
     # the gearbox's top and the crash cone
     ("hv_clips", "hv_"), ("hv_clips", "gearbox"),
     ("hv_clips", "crash_structure"),
+    # the hose clips' stand-offs, bolted to the sidepods and the engine
+    # bulkhead
+    ("hose_clips", "sidepod_"), ("bulkhead_engine", "hose_clips"),
     # the battery is bolted to the engine bulkhead's flange
     ("battery", "bulkhead_engine"),
     # the fuel cell stands on the pack by its collector's foot, and the

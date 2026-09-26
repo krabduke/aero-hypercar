@@ -287,8 +287,8 @@
    "key": "01 Bodywork",
    "label": "Bodywork",
    "color": "#5A6066",
-   "parts": 23,
-   "faces": 65889
+   "parts": 24,
+   "faces": 74859
   },
   {
    "key": "02 Floor and Diffuser",
@@ -2055,6 +2055,13 @@
    "x0": 3550.5,
    "x1": 4078.5,
    "f": 6427
+  },
+  "hose_clips": {
+   "g": "01 Bodywork",
+   "mat": "alu_dark",
+   "x0": 2743.0,
+   "x1": 3243.3,
+   "f": 8970
   },
   "hv_clips": {
    "g": "08 Cooling and Energy",

@@ -842,7 +842,7 @@ MATERIAL_MAP = {
     "lt_pump_lead": "hose",
     "hv_pack": "hv_orange", "hv_fan": "hv_orange", "fan_leads": "hv_orange",
     "battery_hv_terminals": "hv_orange", "inverter_fan_plugs": "hv_orange",
-    "hv_grommets": "rubber_seal", "fan_controllers": "alu_dark",
+    "hv_grommets": "rubber_seal", "fan_controllers": "alu_dark", "hose_clips": "alu_dark",
     "fan_glands": "alu_bright", "hv_clips": "alu_dark",
     "rad_lt_pump": "anodised",
     "rad_lt_": "rad_core",

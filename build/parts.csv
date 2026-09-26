@@ -173,6 +173,7 @@ fan_leads,06 Fan System,hv_orange,,,,,,,,,946,906,4470.0,4553.0,-262.3,280.1,282
 fuel_cell,08 Cooling and Energy,anodised,,,,,,,,,1638,1596,2100.4,2659.6,-210.0,210.0,204.0,564.0
 fuel_fittings,08 Cooling and Energy,alu_bright,,,,,,,,,1934,1872,2157.0,3068.5,-55.0,259.9,419.7,571.6
 gearbox,07 Power Unit,magnesium,,,,,,,,,6695,6427,3550.5,4078.5,-206.5,206.5,123.5,536.5
+hose_clips,01 Bodywork,alu_dark,,,,,,,,,9222,8970,2743.0,3243.3,-510.8,510.8,264.1,476.7
 hv_clips,08 Cooling and Energy,alu_dark,,,,,,,,,14056,13454,2954.0,4296.0,-136.1,136.1,77.0,492.6
 hv_fan_l,08 Cooling and Energy,hv_orange,,,,,,,,,1892,1872,3493.5,4374.5,-155.0,-53.3,345.5,504.5
 hv_fan_r,08 Cooling and Energy,hv_orange,,,,,,,,,1892,1872,3493.5,4374.5,53.3,155.0,345.5,504.5

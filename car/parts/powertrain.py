@@ -188,6 +188,7 @@ def build():
     out.update(_rad_hoses(espec))
     out.update(_lt_loop(espec))
     out.update(_hv(espec))
+    out["hose_clips"] = _hose_clips()
 
     bx, by, bz = PT["battery_x"], 0.0, PT["battery_z"]
     sx, sy, sz = PT["battery"]
@@ -468,6 +469,54 @@ def lt_hose_paths(espec):
                  (xa, sgn * (y_stub - 18.0), zs)]
         out[tag] = [p_in, p_out]
     return out
+
+
+HOSE_CLIPS = os.path.join(HERE, "car", "hose_clips.json")
+
+
+def _hose_clips():
+    """P-clips along the coolant hoses, each on a stand-off to the tub, the
+    engine bulkhead, a sidepod or the engine -- where tools/clip_solve found
+    structure beside the hose. The left radiator's return crosses the whole
+    bay over the battery, and it and the rest were held by nothing between
+    their ends."""
+    import json
+    if not os.path.exists(HOSE_CLIPS):
+        return mesh.join()
+    parts = []
+    for run in json.load(open(HOSE_CLIPS)).values():
+        for c in run:
+            at, on, r, d = c["at"], c["on"], c["r"], c["d"]
+            a = (1.0, 0.0, 0.0) if abs(d[0]) < 0.9 else (0.0, 1.0, 0.0)
+            u = (d[1] * a[2] - d[2] * a[1], d[2] * a[0] - d[0] * a[2],
+                 d[0] * a[1] - d[1] * a[0])
+            n = math.sqrt(sum(q * q for q in u))
+            u = tuple(q / n for q in u)
+            w = (d[1] * u[2] - d[2] * u[1], d[2] * u[0] - d[0] * u[2],
+                 d[0] * u[1] - d[1] * u[0])
+            # (4.5 mm off the hose: between its bends a moulded hose's
+            # sections tilt, and it is a little oval across a square band)
+            v, f = mesh.ring_torus(0.0, r + 4.5, 1.8, 24, 8)
+            parts.append(([tuple(at[i] + x * d[i] + y * u[i] + z * w[i] for i in range(3))
+                           for (x, y, z) in v], f))
+            g = [on[i] - at[i] for i in range(3)]
+            L = math.sqrt(sum(q * q for q in g))
+            t = tuple(q / L for q in g)
+            # the stand-off leaves the band square to the hose, then runs to
+            # its pad: straight at the pad it leaned along an angled bulkhead
+            # and started beside the hose
+            td = sum(t[i] * d[i] for i in range(3))
+            tp = [t[i] - td * d[i] for i in range(3)]
+            nt = math.sqrt(sum(q * q for q in tp))
+            tp = [q / nt for q in tp]
+            parts.append(mesh.pipe([tuple(at[i] + tp[i] * (r + 5.9) for i in range(3)),
+                                    tuple(at[i] + tp[i] * (r + 12.0) for i in range(3)),
+                                    tuple(on[i] - t[i] * 0.5 for i in range(3))], 3.0, 10,
+                                   bend=4.0))
+            parts.append(mesh.pipe([tuple(on[i] - t[i] * 2.0 for i in range(3)),
+                                    tuple(on[i] + t[i] * 1.0 for i in range(3))], 7.0, 12,
+                                   bend=0.0))
+    return mesh.join(*parts)
 
 
 def hv_ends(espec):

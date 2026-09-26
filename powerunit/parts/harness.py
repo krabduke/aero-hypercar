@@ -307,7 +307,44 @@ def build():
                 if k == 0 or math.dist(q, path[k - 1]) > 0.5]
         parts.append(mesh.pipe(path, PIG_R, 12, bend=8.0))
         parts.append(shapes.rounded_box(*plug, 12.0, 12.0, 12.0, 2.5))
-    return {"harness": mesh.join(*parts)}
+    return {"harness": mesh.join(*parts), "harness_clips": clips_from(CLIPS)}
+
+
+CLIPS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     "harness_clips.json")
+
+
+def p_clip(at, on, r, d):
+    """A P-clip round a loom of radius r at `at`, running along d, on a
+    stand-off to the surface point `on`: the band, the stalk and its pad.
+    The looms were laid through the engine and held by nothing between
+    their ends."""
+    import math as _m
+    a = (1.0, 0.0, 0.0) if abs(d[0]) < 0.9 else (0.0, 1.0, 0.0)
+    u = (d[1] * a[2] - d[2] * a[1], d[2] * a[0] - d[0] * a[2], d[0] * a[1] - d[1] * a[0])
+    n = _m.sqrt(sum(c * c for c in u))
+    u = tuple(c / n for c in u)
+    w = (d[1] * u[2] - d[2] * u[1], d[2] * u[0] - d[0] * u[2], d[0] * u[1] - d[1] * u[0])
+    v, f = mesh.ring_torus(0.0, r + 1.6, 1.5, 20, 8)
+    band = ([tuple(at[i] + x * d[i] + y * u[i] + z * w[i] for i in range(3))
+             for (x, y, z) in v], f)
+    g = [on[i] - at[i] for i in range(3)]
+    L = _m.sqrt(sum(c * c for c in g))
+    t = tuple(c / L for c in g)
+    stalk = mesh.pipe([tuple(at[i] + t[i] * (r + 2.6) for i in range(3)),
+                       tuple(on[i] + t[i] * 1.0 for i in range(3))], 2.2, 10, bend=0.0)
+    pad = mesh.pipe([tuple(on[i] - t[i] * 1.5 for i in range(3)),
+                     tuple(on[i] + t[i] * 1.0 for i in range(3))], 5.5, 12, bend=0.0)
+    return mesh.join(band, stalk, pad)
+
+
+def clips_from(path):
+    import json
+    if not os.path.exists(path):
+        return mesh.join()
+    clips = json.load(open(path))
+    return mesh.join(*[p_clip(c["at"], c["on"], c["r"], c["d"])
+                       for run in clips.values() for c in run])
 
 
 if __name__ == "__main__":
