@@ -132,11 +132,16 @@ def _fan_intake(sgn, n=28, m=40, wall=5.0, bore_only=False):
     y = sgn * fan["y"]
     R = fan["duct_r"]
     lip_x = fan["x"] - 80.0
-    # open through the floor's underside, facing down onto the track: this
-    # is where the air under the floor comes up into the fan
-    p0 = (lip_x - 80.0, y, 2.0)
+    # open in the tunnel's roof, facing down into the sealed floor: this is
+    # where the air under the floor comes up into the fan. (It used to open
+    # at z = 2 mm, facing the track 2 mm away -- the road itself shut it,
+    # and a CFD run of the car with the fans on showed them drawing on
+    # nothing: the aero study, aero-study/README.md.) 2 mm into the roof so
+    # the duct is sealed onto it.
+    x_mouth = lip_x - 80.0
+    p0 = (x_mouth, y, tunnel_roof_under(x_mouth, y) - 2.0)
     p3 = (lip_x, y, fan["z"])             # the fan's lip, facing aft
-    p1 = (p0[0], y, p0[2] + 280.0)
+    p1 = (p0[0], y, p0[2] + 0.6 * (p3[2] - p0[2]))
     p2 = (p3[0] - 70.0, y, p3[2])
 
     def at(t):

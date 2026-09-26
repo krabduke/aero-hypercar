@@ -23,8 +23,8 @@ sidepod_inlets,01 Bodywork,carbon_gloss,4,189.0,1036.0,210.8
 sidepod_l,01 Bodywork,carbon_gloss,1,2000.0,610.0,394.9
 sidepod_r,01 Bodywork,carbon_gloss,1,2000.0,610.0,394.9
 tub,01 Bodywork,carbon_gloss,1,4560.0,810.0,718.2
-floor_fan_throat_l,02 Floor and Diffuser,carbon_matte,1,334.0,396.0,648.0
-floor_fan_throat_r,02 Floor and Diffuser,carbon_matte,1,334.0,396.0,648.0
+floor_fan_throat_l,02 Floor and Diffuser,carbon_matte,1,307.4,396.0,460.0
+floor_fan_throat_r,02 Floor and Diffuser,carbon_matte,1,307.4,396.0,460.0
 floor_inlet_lip,02 Floor and Diffuser,carbon_matte,1,22.0,1216.0,16.0
 floor_plank,02 Floor and Diffuser,wood,37,3260.0,420.0,12.0
 floor_plenum_edge_l,02 Floor and Diffuser,carbon_matte,1,2924.0,335.8,184.1

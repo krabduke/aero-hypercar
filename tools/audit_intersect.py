@@ -228,7 +228,7 @@ EXPECTED = [
     # carried on the rear pylons, which pass through it
     ("fan_motors", "fan_stators"), ("fan_stators", "fanduct"),
     ("floor_fan_throat_", "fan_fairing_"), ("floor_fan_throat_", "tunnel_"),
-    ("beam_wing", "rear_pylon_"), ("diffuser_kick", "floor_fan_throat_"),
+    ("beam_wing", "rear_pylon_"),
     # the rear frame: fan cowls bonded to its ends, pylons on top, and its
     # post on the crash structure's spine
     ("rear_frame", "fan_fairing_"), ("rear_frame", "rear_pylon_"),
@@ -318,9 +318,7 @@ EXPECTED = [
     # cut through the floor's own surface and strakes.
     # ----------------------------------------------------------------
     ("fan_rotor_", "floor_fan_throat_"), ("fanduct", "floor_fan_throat_"),
-
     ("floor_fan_throat_", "floor_strake_"),
-    ("floor_fan_throat_", "floor_surface"),
 
     # The floor's own edges and leading edge are part of the floor, and the
     # diffuser's fences, kick and lip all land on each other at the exit.

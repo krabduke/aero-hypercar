@@ -124,8 +124,11 @@ CIRCUITS = [
      ['fan_rotor_l', 'fan_motors', 'fan_stators', 'fanduct']),
     ('the fan pods are carried on the rear frame, on the crash structure',
      ['fanduct', 'fan_fairing_l', 'rear_frame', 'crash_structure']),
+    # each fan's intake opens in its tunnel's roof, over the sealed floor
+    # (it opened onto the track, 2 mm off it, and breathed nothing)
     ('the fans breathe from the floor, not from outside it',
-     ['floor_surface', 'floor_fan_throat_l']),
+     ['tunnel_l', 'floor_fan_throat_l']),
+    ('', ['tunnel_r', 'floor_fan_throat_r']),
     ('underbody, left: inlet to tunnel to diffuser',
      ['floor_inlet_lip', 'tunnel_l', 'diffuser_kick', 'diffuser_lip']),
     ('the plank and the skirts are on the floor',
