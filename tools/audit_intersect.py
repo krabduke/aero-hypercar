@@ -145,7 +145,7 @@ EXPECTED = [
     ("rear_louvre_", "rear_endplate_"),
     ("rear_pylon_", "rear_wing_main"),
     ("wing_mount_", "rear_wing_main"), ("wing_mount_", "rear_pylon_"),
-    ("drs_actuator", "rear_flap"),
+    
 
     # the pylon runs up through the cape shelf to the nose underside: that
     # crossing is the joint, and on a real car they are bonded there
@@ -350,7 +350,7 @@ EXPECTED = [
     # gearbox and the tethers' anchors on the structure.
     ("airbox", "engine"),
     ("floor_inlet_lip", "floor_plenum_edge_"), ("floor_inlet_lip", "tub"),
-    ("front_diveplane_", "front_wing_main"),
+    
     ("caliper_", "hub_"), ("turning_vane_", "tunnel_"),
     ("wishbone_rl_lower_fwd", "gearbox"), ("wishbone_rr_lower_fwd", "gearbox"),
     ("tether_", "tub"),

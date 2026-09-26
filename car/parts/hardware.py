@@ -89,6 +89,18 @@ def _roll_hoop():
     return {"roll_hoop": mesh.join(*parts)}
 
 
+def drs_clevis():
+    """The clevis on the rear flap: DRS['clevis_frac'] along its chord from
+    the leading edge and DRS['clevis_off'] off the chord line."""
+    D = spec.DRS
+    x, z, c, a = spec.rear_elements()[1]
+    le = spec.chord_point(x, z, c, a, 0.0)
+    te = spec.chord_point(x, z, c, a, 1.0)
+    ux, uz = (te[0] - le[0]) / c, (te[1] - le[1]) / c
+    f, n = D["clevis_frac"] * c, D["clevis_off"]
+    return le[0] + ux * f - uz * n, le[1] + uz * f + ux * n
+
+
 def _drs():
     """The actuator that opens the rear flap."""
     D = spec.DRS
@@ -97,13 +109,15 @@ def _drs():
     parts.append(mesh.pipe(
         [(x0, 0.0, z), (x0 + D["body_len"], 0.0, z)], D["body_r"], segments=18))
     parts.append(_disc(x0, 0.0, z, D["body_r"] * 1.5, 14.0, axis="x", seg=18))
-    # rod out to the clevis on the flap
+    # rod out to the clevis on the flap: a point fixed in the flap's own
+    # frame, so it goes where the flap goes when its incidence changes (at
+    # a fixed point it was left 61 mm behind when the rear wing came down
+    # from 17 degrees to 4)
+    cx, cz = drs_clevis()
     parts.append(mesh.pipe(
-        [(x0 + D["body_len"], 0.0, z), (D["clevis_x"], 0.0, D["clevis_z"])],
-        D["rod_r"], segments=12))
+        [(x0 + D["body_len"], 0.0, z), (cx, 0.0, cz)], D["rod_r"], segments=12))
     for sy in (-1.0, 1.0):
-        parts.append(shapes.rounded_box(
-            D["clevis_x"], sy * 11.0, D["clevis_z"], 44.0, 8.0, 30.0, r=3.0))
+        parts.append(shapes.rounded_box(cx, sy * 11.0, cz, 44.0, 8.0, 30.0, r=3.0))
     # the pivot bracket carrying the body off the wing pylon
     parts.append(shapes.rounded_box(
         x0 - 14.0, 0.0, z - 26.0, 40.0, 46.0, 44.0, r=5.0))

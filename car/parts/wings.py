@@ -421,6 +421,13 @@ def _rear():
     # outboard of the wing rather than inside its tip.
     lv = []
     te_x, te_z = spec.chord_point(*spec.rear_elements()[-1], 1.0)
+    # the plate bows outboard towards its trailing edge (_rear_endplate):
+    # each louvre sits on the bowed plate, not on its flat centre plane,
+    # where the aft ones stood in the air beside it once the rear wing was
+    # trimmed flatter
+    le_x = spec.chord_point(*spec.rear_elements()[0], 0.0)[0]
+    px0, px1 = le_x - 130.0, te_x + 96.0
+    bow = lambda x: 46.0 * max(0.0, (x - px0) / max(1.0, px1 - px0) - 0.35) ** 2 / 0.42
     for sgn in (-1.0, 1.0):
         # on the plate's own centre plane, not 22 mm outboard of the wing's
         # semi-span. The endplate is at span/2 - 6, so the louvres were
@@ -431,7 +438,8 @@ def _rear():
             # 40 mm apart from te_x - 300, not 52 from - 250. The plate's
             # upper trailing edge falls away aft of x 4880 and the last two
             # of the five were marching off the end of it into open air.
-            lv.append(shapes.rounded_box(te_x - 300.0 + k * 40.0, y,
+            xl = te_x - 300.0 + k * 40.0
+            lv.append(shapes.rounded_box(xl, y + sgn * bow(xl),
                                te_z - 60.0 + k * 20.0, 40.0, 14.0, 56.0))
     # louvres are individually cut slots, not one lump
     half = len(lv) // 2

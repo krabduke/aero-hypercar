@@ -7,16 +7,16 @@ front_diveplane_l1,01 Bodywork,carbon_matte,1,135.8,92.0,52.7
 front_diveplane_l2,01 Bodywork,carbon_matte,1,107.4,92.0,49.5
 front_diveplane_r1,01 Bodywork,carbon_matte,1,135.8,92.0,52.7
 front_diveplane_r2,01 Bodywork,carbon_matte,1,107.4,92.0,49.5
-front_flap_1,01 Bodywork,carbon_gloss,2,181.4,1825.9,71.9
-front_flap_2,01 Bodywork,carbon_gloss,2,139.0,1846.0,95.8
-front_flap_3,01 Bodywork,carbon_gloss,2,103.4,1866.2,113.9
+front_flap_1,01 Bodywork,carbon_gloss,2,179.1,1825.9,91.5
+front_flap_2,01 Bodywork,carbon_gloss,2,136.3,1846.0,118.9
+front_flap_3,01 Bodywork,carbon_gloss,2,99.4,1866.2,134.5
 halo,01 Bodywork,titanium,1,912.8,746.6,301.2
 halo_mounts,01 Bodywork,titanium,3,922.0,467.2,68.0
 halo_pillar,01 Bodywork,titanium,1,117.1,33.4,342.6
 hose_clips,01 Bodywork,alu_dark,21,500.3,1021.6,212.6
 lt_pump_lead_l,01 Bodywork,hose,2,50.0,320.5,173.5
 lt_pump_lead_r,01 Bodywork,hose,2,50.0,320.5,173.5
-rear_flap,01 Bodywork,carbon_gloss,1,182.6,1420.0,104.9
+rear_flap,01 Bodywork,carbon_gloss,1,200.4,1420.0,66.9
 rear_frame,01 Bodywork,carbon_gloss,2,60.0,490.0,81.0
 sharkfin,01 Bodywork,carbon_gloss,1,1080.0,11.2,143.3
 sidepod_inlets,01 Bodywork,carbon_gloss,4,189.0,1036.0,210.8
@@ -42,15 +42,15 @@ floor_surface,02 Floor and Diffuser,carbon_matte,3,3260.0,1766.8,97.8
 tunnel_l,02 Floor and Diffuser,carbon_matte,1,3260.0,631.9,239.6
 tunnel_r,02 Floor and Diffuser,carbon_matte,1,3260.0,631.9,239.6
 beam_wing,03 Wings,carbon_gloss,2,334.0,1100.0,119.8
-drs_actuator,03 Wings,alu_bright,6,206.0,51.0,88.0
+drs_actuator,03 Wings,alu_bright,6,228.1,51.0,81.8
 floor_edge_wings,03 Wings,carbon_matte,2,1740.0,1978.9,108.7
 front_endplate_l,03 Wings,carbon_gloss,5,500.0,112.5,417.9
 front_endplate_r,03 Wings,carbon_gloss,5,500.0,112.5,417.9
-front_wing_main,03 Wings,carbon_gloss,3,330.0,1816.7,51.8
+front_wing_main,03 Wings,carbon_gloss,3,330.0,1816.7,67.1
 front_y250_vanes,03 Wings,carbon_gloss,2,246.3,560.0,118.0
-rear_endplate_l,03 Wings,carbon_gloss,4,746.7,147.9,520.1
-rear_endplate_r,03 Wings,carbon_gloss,4,746.7,147.9,520.1
-rear_gurney,03 Wings,carbon_gloss,1,54.6,1392.0,55.6
+rear_endplate_l,03 Wings,carbon_gloss,4,788.4,147.9,399.0
+rear_endplate_r,03 Wings,carbon_gloss,4,788.4,147.9,399.0
+rear_gurney,03 Wings,carbon_gloss,1,61.8,1392.0,45.1
 rear_louvre_l1,03 Wings,carbon_gloss,1,40.0,14.0,56.0
 rear_louvre_l2,03 Wings,carbon_gloss,1,40.0,14.0,56.0
 rear_louvre_l3,03 Wings,carbon_gloss,1,40.0,14.0,56.0
@@ -63,7 +63,7 @@ rear_louvre_r4,03 Wings,carbon_gloss,1,40.0,14.0,56.0
 rear_louvre_r5,03 Wings,carbon_gloss,1,40.0,14.0,56.0
 rear_pylon_l,03 Wings,carbon_gloss,1,295.0,52.0,495.1
 rear_pylon_r,03 Wings,carbon_gloss,1,295.0,52.0,495.1
-rear_wing_main,03 Wings,carbon_gloss,1,343.8,1420.0,120.1
+rear_wing_main,03 Wings,carbon_gloss,1,358.4,1420.0,61.8
 wing_mount_l,03 Wings,alu_bright,7,100.0,74.0,88.0
 wing_mount_r,03 Wings,alu_bright,7,100.0,74.0,88.0
 brake_pad_fl,04 Wheels and Brakes,cf_disc,8,207.5,63.0,64.0

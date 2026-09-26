@@ -363,10 +363,14 @@ FRONT_WING = {
         # wings.endplate_sweep. The taper that matters on a front wing is in
         # chord and incidence, and both are still here.
         #  dx     dz   c_root  c_tip  span_f  aoa_r  aoa_t  tip_rise
-        (   0.0,   0.0, 330.0, 250.0, 1.000,   2.0,   5.0,   46.0),
-        (  96.0,  64.0, 190.0, 168.0, 1.000,   9.0,  17.0,   72.0),
-        ( 186.0, 106.0, 152.0, 138.0, 1.000,  16.0,  26.0,   96.0),
-        ( 262.0, 168.0, 118.0, 110.0, 1.000,  23.0,  34.0, 116.0),
+        # Incidence up 4 degrees on the mainplane and 3 on each flap, and the
+        # rear wing down from 17 to 4: the aero study's CFD put only 32 % of
+        # the downforce on the front axle, the fans pulling at the back of
+        # the floor, against the 40-50 % a car needs to turn in.
+        (   0.0,   0.0, 330.0, 250.0, 1.000,   6.0,   9.0,   46.0),
+        (  96.0,  64.0, 190.0, 168.0, 1.000,  12.0,  20.0,   72.0),
+        ( 186.0, 106.0, 152.0, 138.0, 1.000,  19.0,  29.0,   96.0),
+        ( 262.0, 168.0, 118.0, 110.0, 1.000,  26.0,  37.0, 116.0),
     ],
     "endplate_x0": -60.0, "endplate_x1": 440.0,
     # No cascades. They were floating 130 mm above the top flap attached to
@@ -389,7 +393,7 @@ REAR_WING = {
     "span": 1420.0, "chord": 360.0,
     "elements": 2, "gap": 22.0, "overlap": 8.0,
     "endplate_h": 360.0, "endplate_t": 10.0,
-    "aoa": 17.0, "drs_aoa": 2.0,
+    "aoa": 4.0, "drs_aoa": 0.0,      # 17 -> 4 for the balance (see FRONT_WING)
     "pylon_t": 26.0,
 }
 
@@ -695,7 +699,8 @@ ROLL_HOOP = {
 DRS = {
     "body_r": 17.0, "body_x0": 4700.0, "body_len": 100.0, "body_z": 985.0,
     "rod_r": 8.0,
-    "clevis_x": 4850.0, "clevis_z": 1010.0,
+    # on the flap, in its own frame: along the chord and off it
+    "clevis_frac": 0.2254, "clevis_off": 10.9,
 }
 
 # Front steering arm: a forged lever from the upright's steering pickup to
