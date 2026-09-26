@@ -64,3 +64,6 @@ vendor:
 
 vendor-viewer:
 	python3 tools/vendor_viewer.py
+
+bom:                         ## bill of materials: every part, its group, material, pieces, size
+	python3 ../_shared/tools/make_bom.py . build/car.blend bom.csv

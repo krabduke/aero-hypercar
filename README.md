@@ -79,6 +79,7 @@ Requires Blender (`brew install --cask blender`). Nothing else.
 make build      # generate geometry, assemble build/car.blend, write parts.csv
 make verify     # the car's 45 design checks, then every audit of the build
 make render     # hero, plan, cutaway and exploded views
+make bom        # bom.csv: every part, its group, material, pieces and size
 make export     # build/car.glb
 make manifest   # viewer/parts.json
 make viewer     # serve the interactive viewer
