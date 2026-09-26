@@ -35,7 +35,50 @@ def build():
     out.update(_belt())
     out.update(_sensors())
     out.update(_exhaust_joints())
+    out["boost_reference_lines"] = _boost_references()
     return out
+
+
+def _boost_references():
+    """The pressure lines the boost control listens on, which were not
+    there: each wastegate canister's reference nipple had nothing on it, so
+    neither gate knew what the boost was, and the blow-off valve could not
+    tell the throttle had shut.
+
+    Each canister's hose runs from its nipple to a tap in its own
+    compressor's scroll beside it, which is at boost everywhere. The
+    blow-off valve's runs from a nipple on its side to a tap in the top of
+    the left plenum, downstream of the throttle, which is the pressure that
+    drops when the throttle closes."""
+    parts = []
+    for s in (1.0, -1.0):         # the turbos are a half turn apart about z
+        f = lambda p: (s * p[0], s * p[1], p[2])
+        # the tap, measured off the housing: its surface point and normal
+        P, n = (-118.4, 70.7, 272.8), (0.0, 0.975, 0.221)
+        s0 = tuple(P[i] - 2.0 * n[i] for i in range(3))
+        s1 = tuple(P[i] + 12.0 * n[i] for i in range(3))
+        parts.append(mesh.pipe([f(s0), f(s1)], 3.2, 12, bend=0.0))
+        parts.append(mesh.pipe([f(P), f(tuple(P[i] + 4.0 * n[i] for i in range(3)))],
+                               6.0, 12, bend=0.0))            # its hex
+        hose = [(-116.4, 77.0, 317.0), (-116.4, 94.0, 316.0), (-118.0, 97.0, 296.0),
+                tuple(s1[i] + 8.0 * n[i] for i in range(3)),
+                tuple(s1[i] - 6.0 * n[i] for i in range(3))]
+        parts.append(mesh.pipe([f(p) for p in hose], 4.2, 12, bend=6.0))
+    # the blow-off valve's nipple, out of the front of its cap, and its line
+    # down outboard of the port injectors' rail to a tap in the plenum's
+    # outboard shoulder. Inboard of the valve there are 10 mm to the cam
+    # cover, and under it the rail and the cover's bolts.
+    bx, by, bz = -120.4, -280.0, 164.0
+    parts.append(mesh.pipe([(bx - 19.0, by, bz), (bx - 34.0, by, bz)], 3.2, 12, bend=0.0))
+    P = (-160.0, -262.0, 70.0 + (38.0 ** 2 - 30.0 ** 2) ** 0.5)
+    n = (0.0, -30.0 / 38.0, (38.0 ** 2 - 30.0 ** 2) ** 0.5 / 38.0)
+    at = lambda t: tuple(P[i] + n[i] * t for i in range(3))
+    parts.append(mesh.pipe([at(-2.0), at(12.0)], 3.2, 12, bend=0.0))
+    parts.append(mesh.pipe([P, at(4.0)], 6.0, 12, bend=0.0))
+    parts.append(mesh.pipe([(bx - 26.0, by, bz), (bx - 40.0, by, bz - 4.0),
+                            (-160.0, by + 8.0, 136.0), at(20.0), at(6.0)],
+                           4.2, 12, bend=8.0))
+    return mesh.join(*parts)
 
 
 def _lathe(profile, cx, cy, cz, axis="z", seg=24, flip=False):

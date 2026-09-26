@@ -200,6 +200,56 @@ def branches():
     return out
 
 
+def extra_devices():
+    """The devices the trunks were never routed through, each wired by its
+    own pigtail onto the nearest trunk: the crank sensor at the nose and the
+    phase sensor at the flywheel, the oil pressure and coolant temperature
+    senders, the oil temperature sensor in the sump's floor, and each
+    throttle's motor. Every one of them had a plug and nothing in it.
+    (name, plug face, direction its pins face)"""
+    from parts import induction
+    wall = spec.BLOCK["half_width"] * 0.86
+    out = []
+    for name, x, side, z in (("crank", spec.BLOCK["x_front"] + 20.0, 1.0, -40.0),
+                             ("phase", spec.BLOCK["x_rear"] - 40.0, -1.0, -30.0),
+                             ("oil_pressure", 50.0, 1.0, 20.0),
+                             ("coolant_temp", -40.0, -1.0, 20.0)):
+        out.append((f"sensor_{name}", (x, side * (wall + 54.0), z), (0.0, side, 0.0)))
+    a = spec.ANCILLARY
+    floor = -spec.BLOCK["skirt_depth"] - 22.0 - a["sump_depth"]
+    # its plug faces aft: under it, between the pan and the hybrid pack's
+    # two lobes, there is no room for a lead to leave downward
+    out.append(("sensor_oil_temp", (a["sump_len"] * 0.18 - 32.0 + 13.0, 0.0, floor - 44.0),
+                (1.0, 0.0, 0.0)))
+    for tag, sgn in (("l", -1.0), ("r", 1.0)):
+        x, y, z = induction.throttle_motor_plug(sgn)
+        out.append((f"throttle_motor_{tag}", (x, y, z - 1.0), (0.0, 0.0, 1.0)))
+    return out
+
+
+EXTRA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     "harness_extra.json")
+
+
+def trunk_lines():
+    """Each solved trunk's centreline as built, corners rounded."""
+    import json
+    solved = json.load(open(ROUTES))
+    lines = []
+    for name, pts in solved.items():
+        r = (TRUNK_R if name == "trunk_cross" else
+             PFI_R if name.startswith("trunk_pfi") else
+             LOOM_R if name.startswith("trunk") else PIG_R)
+        lines.append(mesh.fillet_path([tuple(p) for p in pts], [r] * len(pts),
+                                      3.0 * r)[0])
+    return lines
+
+
+def nearest_on_trunk(p, lines):
+    return min((_closest(p, a, b) for ln in lines for a, b in zip(ln, ln[1:])),
+               key=lambda q: math.dist(q, p))
+
+
 def _closest(p, a, b):
     """The point on segment ab nearest p."""
     ab = [b[i] - a[i] for i in range(3)]
@@ -242,6 +292,21 @@ def build():
         parts.append(mesh.pipe(path, PIG_R, 12))
         # the mating plug on the device's connector
         parts.append(shapes.rounded_box(*pts[0], 12.0, 12.0, 12.0, 2.5))
+    # and the pigtails of the devices the trunks do not thread, on the paths
+    # tools/route_solve found for them, each ending on its trunk's
+    # centreline
+    extra = json.load(open(EXTRA)) if os.path.exists(EXTRA) else {}
+    for name, plug, d in extra_devices():
+        if name not in extra:
+            continue
+        lead = tuple(plug[i] + d[i] * 9.0 for i in range(3))
+        path = [tuple(plug), lead] + [tuple(p) for p in extra[name]]
+        path.append(nearest_on_trunk(path[-1], lines))
+        # (the solver's last point is often on the trunk already)
+        path = [q for k, q in enumerate(path)
+                if k == 0 or math.dist(q, path[k - 1]) > 0.5]
+        parts.append(mesh.pipe(path, PIG_R, 12, bend=8.0))
+        parts.append(shapes.rounded_box(*plug, 12.0, 12.0, 12.0, 2.5))
     return {"harness": mesh.join(*parts)}
 
 

@@ -229,7 +229,32 @@ def _plenum():
         # the lathe runs along its own +x; point it outboard, along y
         tv = [(pz, sgn * px + y, py + I["plenum_z"]) for (px, py, pz) in tv]
         out[f"throttle_{tag}"] = (tv, tf)
+        # The throttle is electronic, so something turns the spindle: a DC
+        # motor and its reduction gears in a case on the spindle's aft end,
+        # with the position sensor and its plug on top. It had a butterfly
+        # on a spindle and nothing to turn it.
+        out[f"throttle_motor_{tag}"] = mesh.join(*throttle_motor(sgn))
     return out
+
+
+def throttle_motor_plug(sgn):
+    """The top of the throttle motor's plug, where its pigtail leaves."""
+    x, y, z = _throttle_motor_at(sgn)
+    return (x + 6.0, y, z + 26.0 + 14.0)
+
+
+def _throttle_motor_at(sgn):
+    h0 = I["plenum_r"] * 0.86
+    return (I["throttle_r"] + 30.0, sgn * (I["plenum_y"] + h0 + 27.0), I["plenum_z"])
+
+
+def throttle_motor(sgn):
+    x, y, z = _throttle_motor_at(sgn)
+    x0 = I["throttle_r"] - 2.0              # 2 mm into the body's side
+    case = shapes.rounded_box(0.5 * (x0 + x + 28.0), y, z, x + 28.0 - x0, 36.0, 52.0,
+                              5.0)
+    plug = shapes.connector(x + 6.0, y, z + 26.0 + 6.0, 22.0, 18.0, 14.0, 4)
+    return [case, plug]
 
 
 # the throttle's inlet spigot: the charge pipe's own outside radius, so the

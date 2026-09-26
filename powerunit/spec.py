@@ -498,6 +498,8 @@ MATERIAL_MAP = {
     "oil_cooler": "anodised",
     "thermostat": "alu_cast",
     "blowoff": "rubber_blk",
+    "boost_reference": "rubber_blk",
+    "throttle_motor": "rubber_blk",
     "intercooler": "anodised",
     "charge_pipes": "rubber_blk",
     "engine_mount": "rubber_blk",
