@@ -3,3 +3,5 @@ __pycache__/
 build/*
 !build/car.glb
 !build/parts.csv
+!build/car_web.glb
+!build/car_web.json

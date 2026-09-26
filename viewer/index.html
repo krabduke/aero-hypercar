@@ -350,7 +350,11 @@ async function init(){
 
   const draco = new DRACOLoader().setDecoderPath(
     'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/draco/gltf/');
-  new GLTFLoader().setDRACOLoader(draco).load('../build/car.glb?nocache=' + Date.now(),
+  // the decimated model, under its own hash: the browser keeps it until it
+  // changes, rather than fetching 7 MB again on every visit
+  let ver = '';
+  try { ver = (await (await fetch('../build/car_web.json', {cache: 'no-cache'})).json()).v; } catch (e) {}
+  new GLTFLoader().setDRACOLoader(draco).load('../build/car_web.glb?v=' + ver,
     g => ready(g.scene),
     ev => {
       if(!ev.total) return;
@@ -363,7 +367,7 @@ async function init(){
     e => {
       console.error(e);
       const why = e && e.message ? `<br><small>${e.message}</small>` : '';
-      fail('Could not load <code>build/car.glb</code>. Run '
+      fail('Could not load <code>build/car_web.glb</code>. Run '
          + `<code>make export</code>.${why}`);
     });
 }

@@ -102,6 +102,41 @@ def export_glb(name="car.glb", draco=True):
     print(f"  -> {path}  ({os.path.getsize(path) / 1e6:.1f} MB)")
 
 
+def export_web(target_faces=800000):
+    """The model the viewer loads: every part still there under its own name,
+    decimated in proportion to how dense it is, Draco-compressed. The full
+    GLB is over 12 MB, and a page that makes you wait that long to see a
+    part is one nobody opens twice.
+
+    Beside it goes build/car_web.json, holding a hash of the file: the page
+    asks for the GLB under that version, so the browser keeps a cached copy
+    until the model actually changes -- rather than downloading all of it
+    on every visit, which is what a cache-busting timestamp did."""
+    import hashlib
+    import json
+    total = sum(len(o.data.polygons) for o in meshes())
+    ratio = min(1.0, target_faces / max(total, 1))
+    print(f"  decimating {total:,} faces -> target {target_faces:,} (ratio {ratio:.3f})")
+    for o in meshes():
+        n_f = len(o.data.polygons)
+        if n_f < 400:                    # small hardware keeps its shape
+            continue
+        r = max(0.08, min(1.0, ratio * (1.0 + 0.35 * (1.0 - n_f / total))))
+        m = o.modifiers.new("dec", "DECIMATE")
+        m.ratio = r
+        bpy.context.view_layer.objects.active = o
+        try:
+            bpy.ops.object.modifier_apply(modifier=m.name)
+        except RuntimeError:
+            o.modifiers.remove(m)
+    now = sum(len(o.data.polygons) for o in meshes())
+    print(f"  decimated to {now:,} faces")
+    export_glb("car_web.glb", draco=True)
+    path = os.path.join(BUILD, "car_web.glb")
+    v = hashlib.sha1(open(path, "rb").read()).hexdigest()[:12]
+    json.dump({"v": v, "faces": now}, open(os.path.join(BUILD, "car_web.json"), "w"))
+
+
 def export_stl():
     out = os.path.join(BUILD, "stl")
     os.makedirs(out, exist_ok=True)
@@ -128,5 +163,7 @@ if __name__ == "__main__":
     split_sharp()
     if mode in ("glb", "all"):
         export_glb()
+    if mode == "web":
+        export_web()
     if mode in ("stl", "all"):
         export_stl()

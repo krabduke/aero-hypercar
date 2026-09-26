@@ -34,8 +34,9 @@ verify:
 render:
 	$(BLENDER) -b $(BLEND) -P car/render.py -- all $(SAMPLES)
 
-export:
+export:                      ## full GLB, and the decimated one the viewer loads
 	$(BLENDER) -b $(BLEND) -P car/export.py -- glb
+	$(BLENDER) -b $(BLEND) -P car/export.py -- web
 
 stl:
 	$(BLENDER) -b $(BLEND) -P car/export.py -- stl
