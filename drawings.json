@@ -1,0 +1,5 @@
+{"title": "VX-1 Vortex", "front": "nose",
+ "dims": [{"sheet": "ga", "view": "elev", "a": [900, 0, 0], "b": [4050, 0, 0],
+           "label": "Wheelbase", "off": -24},
+          {"sheet": "ga", "view": "end", "a": [900, 830, 0], "b": [900, -830, 0],
+           "label": "Front track", "off": -24}]}

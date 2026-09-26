@@ -2,7 +2,7 @@ BLENDER := /Applications/Blender.app/Contents/MacOS/Blender
 BLEND   := build/car.blend
 SAMPLES ?= 128
 
-.PHONY: vendor all build verify render export stl manifest viewer validate aero clean
+.PHONY: vendor all build verify render export stl manifest viewer validate aero clean bom drawings
 
 all: build verify render export
 
@@ -67,3 +67,7 @@ vendor-viewer:
 
 bom:                         ## bill of materials: every part, its group, material, pieces, size
 	python3 ../_shared/tools/make_bom.py . build/car.blend bom.csv
+
+drawings:                    ## drawings.pdf: a GA sheet and one per assembly, A1, dimensioned, with parts lists
+	python3 ../_shared/tools/make_drawings.py . build/car.blend build/drawings
+	cp build/drawings/drawings.pdf drawings.pdf
