@@ -226,6 +226,7 @@
   <div id="groups"></div>
   <div id="controls">
     <button class="btn" id="skin" type="button" aria-pressed="false">Show engine</button>
+    <button class="btn" id="cut" type="button" aria-pressed="false">Cut away the left side</button>
     <button class="btn" id="tunnel-btn" type="button" aria-pressed="false">Wind tunnel</button>
     <button class="btn" id="fans" type="button" aria-pressed="true">Fan off</button>
     <button class="btn" id="spin" type="button" aria-pressed="false">Turntable</button>
@@ -262,6 +263,8 @@ import {drawLegend, speedColour, pressureColour}
   from './cfd-view.js';
 
 const MM = 0.001;
+// what the section control cuts with; far off until it is used
+const cutPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 1e6);
 const $ = s => document.querySelector(s);
 
 // Anything inside named(...) or matching(...) is a claim that these are
@@ -303,6 +306,7 @@ async function init(){
   renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(stage.clientWidth, stage.clientHeight);
+  renderer.localClippingEnabled = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.62;
   // Self-shadowing. Without it every recess is exactly as bright as the
@@ -466,6 +470,7 @@ function ready(model){
       o.material.roughness = Math.max(alloy.rough, 0.14);
     }
     o.material.side = THREE.DoubleSide;
+    o.material.clippingPlanes = [cutPlane];
     info.set(o, nfo);
     byName.set(o.name, o);
     pickable.push(o);
@@ -909,7 +914,8 @@ function onMove(e){
   ndc.x = ((e.clientX-r.left)/r.width)*2 - 1;
   ndc.y = -((e.clientY-r.top)/r.height)*2 + 1;
   raycaster.setFromCamera(ndc, camera);
-  const hit = raycaster.intersectObjects(pickable.filter(o => o.visible), false)[0];
+  const hit = raycaster.intersectObjects(pickable.filter(o => o.visible), false)
+    .find(h => cutPlane.distanceToPoint(h.point) >= 0);
   setProbe(hit ? hit.object : null);
 }
 
@@ -965,6 +971,17 @@ function buildRail(){
       ? 'Click an assembly to hide it. Drag to orbit.'
       : 'Bodywork off. The RX-8V V8 is installed as a stressed member between '
         + 'the tub and the gearbox — with its radiators, fuel cell, battery and fans.';
+  });
+  // A plane down the car's centreline: the left half goes, and everything
+  // inside -- the tub, the engine, the gearbox, the fans -- shows in place.
+  $('#cut').addEventListener('click', () => {
+    const b = $('#cut');
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? 'Put the left side back' : 'Cut away the left side';
+    // the model is re-centred on load, so its centreline is where the root
+    // has been moved to
+    cutPlane.constant = on ? root.position.z : 1e6;
   });
   $('#tunnel-btn').addEventListener('click', () => {
     setTunnel($('#tunnel-btn').getAttribute('aria-pressed') !== 'true');
