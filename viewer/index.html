@@ -139,6 +139,17 @@
   .tlab{font-size:11px; color:#96A3AB}
   .trow output{font-size:11px; color:#DCE6EB; text-align:right;
                font-variant-numeric:tabular-nums}
+  #apartrow{display:flex; align-items:center; gap:9px}
+  #apartrow label{font-size:11px; color:var(--ink-soft)}
+  #apartval{font-size:11px; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums;
+            min-width:56px}
+  #apart{-webkit-appearance:none; appearance:none; width:118px; height:2px; background:#36444B;
+         border-radius:2px; outline:none}
+  #apart::-webkit-slider-thumb{-webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+         background:#C99A5E; cursor:grab; border:2px solid #12181B}
+  #apart::-moz-range-thumb{width:13px; height:13px; border-radius:50%; background:#C99A5E;
+         cursor:grab; border:2px solid #12181B}
+  #apart:focus-visible{outline:2px solid #C99A5E; outline-offset:3px}
   .trow input[type=range]{
     -webkit-appearance:none; appearance:none; height:2px; background:#36444B;
     border-radius:2px; outline:none;
@@ -225,6 +236,12 @@
   </div>
   <div id="groups"></div>
   <div id="controls">
+    <div id="apartrow">
+      <label for="apart">apart</label>
+      <input type="range" id="apart" min="0" max="100" step="1" value="0">
+      <span id="apartval">together</span>
+    </div>
+    <button class="btn" id="build" type="button">Assemble it</button>
     <button class="btn" id="skin" type="button" aria-pressed="false">Show engine</button>
     <button class="btn" id="cut" type="button" aria-pressed="false">Cut away the left side</button>
     <button class="btn" id="tunnel-btn" type="button" aria-pressed="false">Wind tunnel</button>
@@ -297,6 +314,7 @@ let hidden = new Set(), hovered = null, corners = [], viewDir;
  * what the car is for.
  */
 let spinning = false, fansOn = true;
+let apartParts = [], apart = {s: 0, target: 0, playing: false, then: null};
 let spinners = [], byName = new Map(), tunnel = null, panel = null;
 
 init();
@@ -518,6 +536,7 @@ function ready(model){
   addEventListener('resize', onResize);
   renderer.domElement.addEventListener('pointermove', onMove);
   renderer.domElement.addEventListener('pointerleave', () => setProbe(null));
+  setupApart(box);
   window.__dbg = {scene, camera, renderer, root, byGroup, tunnel, controls};
   $('#load').classList.add('done');
   renderer.setAnimationLoop(tick);
@@ -867,6 +886,10 @@ function setTunnel(on){
   $('#tunnel').classList.toggle('on', on);
   $('#tunnel-btn').setAttribute('aria-pressed', String(on));
   tunnel.setOn(on);
+  if(on && apart.s > 0){
+    apart.playing = false; apart.then = null; apart.target = 0; apart.s = 0;
+    $('#apart').value = 0; applyApart();
+  }
   if(on){
     panel.sync(tunnel.state);
     wireFlowViews();
@@ -878,9 +901,77 @@ function setTunnel(on){
   }
 }
 
+/* Taking it apart, the way a team strips the car in the garage: the tub
+ * stays on the stand, the bodywork and the driver's things lift off, the
+ * wheels and the suspension come off outboard, the floor drops, the wings
+ * go fore and aft with their ends of the car, and the power unit rolls out
+ * aft. Each part goes up, outboard and fore or aft by its group's amounts
+ * (metres), outboard and fore/aft on whichever side of the car it sits.
+ * They go back in the order the car is built, which "Assemble it" plays.
+ */
+const APART = {        // group -> [order, up, out, fore/aft]
+  '05 Suspension':          [0,  0.10, 0.55, 0.00],
+  '07 Power Unit':          [1,  0.35, 0.00, 1.10],
+  '08 Cooling and Energy':  [2,  0.25, 0.75, 0.00],
+  '06 Fan System':          [3, -0.55, 0.00, 0.00],
+  '02 Floor and Diffuser':  [4, -1.00, 0.00, 0.00],
+  '04 Wheels and Brakes':   [5,  0.00, 1.05, 0.00],
+  '01 Bodywork':            [6,  0.95, 0.25, 0.00],
+  '03 Wings':               [7,  0.30, 0.00, 0.95],
+  '09 Aero Detail':         [8,  0.45, 0.55, 0.00],
+  '10 Cockpit':             [9,  1.55, 0.00, 0.00],
+};
+const APART_STAY = ['tub'];
+function setupApart(box){
+  const n = Math.max(...Object.values(APART).map(a => a[0])) + 1;
+  const q = new THREE.Quaternion();
+  const mid = new THREE.Vector3();          // the car's middle, root-centred
+  for(const m of pickable){
+    const g = info.get(m).g;
+    if(APART_STAY.includes(m.name) || !(g in APART)) continue;
+    const [k, up, out, fore] = APART[g];
+    const c = new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).sub(mid);
+    // Blender x (length) is three x; Blender y (across) is three -z
+    const side = Math.abs(c.z) > 0.12 ? Math.sign(c.z) : 0;
+    const end = Math.abs(c.x) > 0.3 ? Math.sign(c.x) : 0;
+    const off = new THREE.Vector3(fore * end, up, out * side);
+    m.parent.getWorldQuaternion(q).invert();
+    off.applyQuaternion(q);
+    apartParts.push({m, base: m.position.clone(), off, k, n});
+  }
+}
+function applyApart(){
+  const STAGGER = 0.06;
+  for(const a of apartParts){
+    const w = 1 - (a.n - 1) * STAGGER;
+    const p = Math.min(1, Math.max(0, (apart.s - (a.n - 1 - a.k) * STAGGER) / w));
+    const e = p * p * (3 - 2 * p);
+    a.m.position.copy(a.base).addScaledVector(a.off, e);
+  }
+  const pct = Math.round(apart.s * 100);
+  $('#apartval').textContent = pct === 0 ? 'together' : pct === 100 ? 'all apart' : `${pct} %`;
+}
+function startApart(){
+  // the tunnel's flow is solved round the whole car, not its pieces
+  if(tunnel && tunnel.state.on) setTunnel(false);
+}
+
 function tick(){
   const dt = Math.min(clock.getDelta(), 0.05);
   if(spinning && root) root.rotation.y += dt * 0.32;
+  // apart and back: a slider drag follows quickly; the build plays slowly
+  if(apart.s !== apart.target){
+    const v = dt / (apart.playing ? 8.0 : 0.6);
+    apart.s = reducedMotion ? apart.target
+      : Math.abs(apart.target - apart.s) < v ? apart.target
+      : apart.s + Math.sign(apart.target - apart.s) * v;
+    if(apart.playing) $('#apart').value = Math.round(apart.s * 100);
+    if(apart.s === apart.target && apart.playing){
+      if(apart.then != null){ apart.target = apart.then; apart.then = null; }
+      else apart.playing = false;
+    }
+    applyApart();
+  }
   /* Each fan turns about its own shaft.
    *
    * This used to rotate the single joined `fan_rotors` mesh about x. Two
@@ -996,6 +1087,24 @@ function buildRail(){
     // are not in the lattice); only the picture re-solves.
     if(tunnel && tunnel.state.on) tunnel.retraceProgressive();
   });
+  $('#apart').addEventListener('input', e => {
+    apart.playing = false;
+    apart.target = +e.target.value / 100;
+    if(apart.target > 0) startApart();
+  });
+  $('#build').addEventListener('click', () => {
+    // from wherever it is, out to all apart and back together, in order
+    startApart();
+    apart.playing = true;
+    apart.target = apart.s > 0.5 ? 0 : 1;
+    apart.then = apart.target === 1 ? 0 : null;
+    // stand back far enough to see it all apart
+    const d = camera.position.distanceTo(controls.target);
+    const want = fitDistance(viewDir) * 1.45;
+    if(d < want) flyCamera(camera, controls,
+      controls.target.clone().add(camera.position.clone().sub(controls.target).setLength(want)),
+      {duration: 1100});
+  });
   $('#spin').addEventListener('click', () => {
     spinning = !spinning;
     $('#spin').setAttribute('aria-pressed', String(spinning));
@@ -1003,6 +1112,7 @@ function buildRail(){
   $('#reset').addEventListener('click', () => {
     resetView();
     if(root) root.rotation.y = 0;
+    apart.playing = false; apart.then = null; apart.target = 0; $('#apart').value = 0;
     spinning = false; fansOn = true;
     $('#spin').setAttribute('aria-pressed','false');
     $('#fans').setAttribute('aria-pressed','true');
