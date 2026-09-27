@@ -174,10 +174,11 @@ def main():
            f"{spec.F1['mass'] - spec.MASS_KG:.0f} kg advantage")
 
     print("\nAERODYNAMICS")
-    c.band("total ClA", spec.cla(), 4.5, 7.0, "",
+    # measured with the fans running, at 180 km/h: the car is never without them
+    c.band("total ClA, fans running", spec.cla_total(), 4.5, 7.0, "",
            f"F1 reference {spec.F1['cla']:.2f}")
-    c.band("ClA with active aero shed", spec.cla(drs=True), 3.0, 6.0, "")
-    c.band("lift-to-drag at full downforce", spec.cla() / spec.cda(), 2.5, 5.0, "")
+    c.band("ClA with active aero shed", spec.cla_total(drs=True), 3.0, 6.0, "")
+    c.band("lift-to-drag at full downforce", spec.cla_total() / spec.cda(), 2.5, 5.0, "")
     c.band("aero balance", spec.AERO["aero_balance"] * 100, 40.0, 50.0, " %front")
     c.band("fan downforce", spec.FAN["downforce_kg"], 300.0, 1200.0, " kg",
            "near constant with speed")
@@ -185,10 +186,18 @@ def main():
            " kW", "from the hybrid system")
 
     print("\nGRIP -- the whole point")
-    for kph in (80, 150, 250):
+    for kph in (80, 150):
         ours, theirs = spec.lateral_g(kph), spec.f1_lateral_g(kph)
         c.true(f"out-grips F1 at {kph} km/h", ours > theirs,
                f"{ours:.2f} g vs {theirs:.2f} g  (+{(ours/theirs-1)*100:.0f} %)")
+    # Not at every speed. The CFD (the aero study) found the car's
+    # downforce all but constant -- 771 kg at 180 km/h, 732 at 250 -- where
+    # an F1 car's grows with speed squared, so above a crossover the F1 car
+    # grips harder. That is what a fan car is: this checks the crossover
+    # is where the measurements put it, not that it is not there.
+    x = next(k for k in range(60, 400) if spec.lateral_g(k) < spec.f1_lateral_g(k))
+    c.band("grip crossover with F1", x, 170.0, 240.0, " km/h",
+           f"faster than F1 through corners taken below it, slower above")
     c.true("biggest advantage is at low speed",
            (spec.lateral_g(80)/spec.f1_lateral_g(80)) >
            (spec.lateral_g(250)/spec.f1_lateral_g(250)),
@@ -197,10 +206,13 @@ def main():
            spec.DRIVER_G_LIMIT, " g", "driver limit")
 
     print("\nCORNER SPEEDS vs F1")
-    for r in (25, 60, 120):
+    for r in (25, 60):
         a, b = spec.corner_speed_kph(r), spec.f1_corner_speed_kph(r)
         c.true(f"faster through an R{r} m corner", a > b + 1.0,
                f"{a:.0f} vs {b:.0f} km/h  (+{a-b:.0f})")
+    a, b = spec.corner_speed_kph(120), spec.f1_corner_speed_kph(120)
+    print(f"  --  R120 m corner, past the crossover       {a:.0f} vs {b:.0f} km/h  "
+          f"(F1 {b - a:.0f} faster)")
 
     print("\nPOWER")
     c.band("power to weight", spec.power_to_weight(), 0.95, 1.8, " kW/kg",

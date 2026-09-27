@@ -84,14 +84,30 @@ F1 = {
 # What actually sets the optimum is load sensitivity: past about ClA 4.5 the
 # extra vertical load buys so little extra grip that the drag to make it is a
 # straight loss. The optimum holds at 4.13 for every driver limit from 6 g up.
+# Measured, not targets. These were written in as targets and never
+# computed; the aero study ran the car through OpenFOAM (model-gallery/aero).
+# Fans stopped, the sealed floor lifts: the whole car made 0.88 m2 of LIFT.
+# Fans running -- after their intakes were fixed (they opened onto the track)
+# and the wings retrimmed for balance (32 % front was far too far aft) --
+# the finished car was run at 180 and at 250 km/h, and made 771 and 732 kg
+# of downforce: very nearly constant, which is the fan car's whole idea.
+# Split between the two speeds, the part that grows with speed squared is
+# a slight LIFT, CL.A -0.26 -- at speed the floor's ram-air lift outweighs
+# the wings -- and the fans hold a constant 811 kg. The drag splits the same
+# way: CD.A 1.32, less 534 N of thrust from the fans' jets.
 AERO = {
-    "cla_wings": 1.20,         # both wings, trimmed for a medium-downforce track
-    "cla_floor": 3.35,         # venturi tunnels and diffuser
-    "cda": 1.28,   # follows the wing coming off
+    "cla_wings": 1.45,         # both wings, fans running, as retrimmed
+    "cla_floor": -1.71,        # the floor and everything else, the part that scales with v^2
+    "cda": 1.32,
     "frontal_area": 1.52,      # m^2, already folded into the coefficients
-    "aero_balance": 0.445,     # fraction of downforce on the front axle
-    "drs_cla_drop": 1.25,      # active aero shed on a straight
-    "drs_cda_drop": 0.52,
+    # fraction of downforce on the front axle at 180 km/h; it drifts aft to
+    # 36 % by 250, where the wings' share falls away
+    "aero_balance": 0.414,
+    # the rear wing is flat now and makes 0.36 m2 of the total, 0.19 of the
+    # drag: DRS sheds most of it (an estimate, not a run)
+    "drs_cla_drop": 0.25,
+    "drs_cda_drop": 0.09,
+    "ref_kph": 180.0,          # the speed the balance and totals are quoted at
 }
 
 FAN = {
@@ -112,7 +128,10 @@ FAN = {
     # 38 kW at the shaft is that at 0.65 efficiency. It was 62 for a fan
     # sized for four times the leakage the skirts let in.
     "power_kw": 38.0,          # drawn from the hybrid system, both fans
-    "downforce_kg": 650.0,     # near-constant, this is the point of the car
+    # near-constant, this is the point of the car. It was 650, a target;
+    # the CFD at two speeds gives 811 kg (see AERO)
+    "downforce_kg": 811.0,
+    "jet_thrust_n": 534.0,     # the two fans' jets, pushing (CFD, see AERO)
     "duct_r": 170.0,
     # blade geometry. A fan blade is twisted: to pull a uniform axial velocity
     # the blade angle has to fall with radius, beta = atan(Va / (omega r)).
@@ -338,7 +357,7 @@ FRONT_WING = {
     # far enough forward that the endplate's trailing edge clears the front
     # tyre; at x = 150 the whole outboard stack was inside the wheel
     "x": 60.0, "z": 112.0,
-    "span": 1780.0, "chord": 470.0,
+    "span": 1780.0, "chord": 508.0,
     "elements": 4, "gap": 16.0,
     # 280 mm, not 500. An endplate only has to enclose the flap stack, which
     # tops out at 367 mm from a datum of 16; taller than that it stops being
@@ -347,7 +366,7 @@ FRONT_WING = {
     # 418, though, not 366: with the tip rises below, the top flap reaches
     # z 428, which is 412 above the datum. At 366 the endplate stopped 46 mm
     # under the element it is supposed to enclose.
-    "endplate_h": 418.0, "endplate_t": 9.0,
+    "endplate_h": 436.0, "endplate_t": 9.0,
     "aoa_root": 6.0, "aoa_tip": 14.0,
     "neutral_half_w": 250.0,   # regulated flat centre section
     "arch": 44.0,              # how much the mainplane arches over the nose
@@ -363,16 +382,19 @@ FRONT_WING = {
         # wings.endplate_sweep. The taper that matters on a front wing is in
         # chord and incidence, and both are still here.
         #  dx     dz   c_root  c_tip  span_f  aoa_r  aoa_t  tip_rise
-        # Incidence up 4 degrees on the mainplane and 3 on each flap, and the
-        # rear wing down from 17 to 4: the aero study's CFD put only 32 % of
-        # the downforce on the front axle, the fans pulling at the back of
-        # the floor, against the 40-50 % a car needs to turn in.
-        (   0.0,   0.0, 330.0, 250.0, 1.000,   6.0,   9.0,   46.0),
-        (  96.0,  64.0, 190.0, 168.0, 1.000,  12.0,  20.0,   72.0),
-        ( 186.0, 106.0, 152.0, 138.0, 1.000,  19.0,  29.0,   96.0),
-        ( 262.0, 168.0, 118.0, 110.0, 1.000,  26.0,  37.0, 116.0),
+        # The balance, in two steps, each checked in CFD (the aero study).
+        # It had 32 % of the downforce on the front axle -- the fans pull at
+        # the back of the floor -- against the 40-50 % a car needs to turn
+        # in. Step one, incidence up 4 on the mainplane and 3 on each flap
+        # and the rear wing from 17 to 4 degrees, made 37.7 %. Step two:
+        # every element 8 % larger in chord and spacing, 2 degrees more on
+        # each, and the rear wing flat.
+        (   0.0,   0.0, 356.0, 270.0, 1.000,   8.0,  11.0,   46.0),
+        ( 104.0,  69.0, 205.0, 181.0, 1.000,  14.0,  22.0,   72.0),
+        ( 201.0, 114.0, 164.0, 149.0, 1.000,  21.0,  31.0,   96.0),
+        ( 283.0, 181.0, 127.0, 119.0, 1.000,  28.0,  39.0, 116.0),
     ],
-    "endplate_x0": -60.0, "endplate_x1": 440.0,
+    "endplate_x0": -60.0, "endplate_x1": 475.0,
     # No cascades. They were floating 130 mm above the top flap attached to
     # nothing, which read as debris rather than aerodynamics -- and they have
     # been illegal in Formula 1 since 2019 for exactly the reason they looked
@@ -393,7 +415,7 @@ REAR_WING = {
     "span": 1420.0, "chord": 360.0,
     "elements": 2, "gap": 22.0, "overlap": 8.0,
     "endplate_h": 360.0, "endplate_t": 10.0,
-    "aoa": 4.0, "drs_aoa": 0.0,      # 17 -> 4 for the balance (see FRONT_WING)
+    "aoa": 0.0, "drs_aoa": -6.0,     # 17 -> 0 for the balance (see FRONT_WING)
     "pylon_t": 26.0,
 }
 
@@ -933,6 +955,14 @@ def cla(drs=False):
     return v - AERO["drs_cla_drop"] if drs else v
 
 
+def cla_total(drs=False, kph=None):
+    """The whole car's downforce as a CL.A at `kph` (the study's 180 by
+    default), the fans' included -- what the CFD measured."""
+    v = (kph or AERO["ref_kph"]) / 3.6
+    q = 0.5 * RHO * v * v
+    return cla(drs) + FAN["downforce_kg"] * 9.81 / q
+
+
 def cda(drs=False):
     return AERO["cda"] - AERO["drs_cda_drop"] if drs else AERO["cda"]
 
@@ -947,8 +977,9 @@ def downforce_kg(kph, drs=False, with_fan=True):
 
 
 def drag_kg(kph, drs=False):
+    """Net: the aero drag less the fans' jet thrust."""
     v = kph / 3.6
-    return 0.5 * RHO * v * v * cda(drs) / 9.81
+    return (0.5 * RHO * v * v * cda(drs) - FAN["jet_thrust_n"]) / 9.81
 
 
 def f1_downforce_kg(kph):
@@ -1016,7 +1047,7 @@ def top_speed_kph(power_kw=935.0):
     for _ in range(80):
         mid = (lo + hi) / 2
         v = mid / 3.6
-        p = 0.5 * RHO * v ** 3 * cda(drs=True) / 1000.0
+        p = (0.5 * RHO * v * v * cda(drs=True) - FAN["jet_thrust_n"]) * v / 1000.0
         if p < power_kw * 0.90:      # 10 % to driveline and fans
             lo = mid
         else:

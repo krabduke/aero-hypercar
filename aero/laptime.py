@@ -45,13 +45,14 @@ K_BAND = (0.15, 0.25)
 
 class Car:
     def __init__(self, name, mass, power_kw, cla, cda, fan_kg=0.0,
-                 fan_power_kw=0.0, mu_ref=None, fan_control=None):
+                 fan_power_kw=0.0, mu_ref=None, fan_control=None, jet_n=0.0):
         self.name = name
         self.mass = mass
         self.power = power_kw * 1000.0
         self.cla = cla
         self.cda = cda
         self.fan_n = fan_kg * G
+        self.jet_n = jet_n              # the fans' jets push, as the fans run
         self.fan_power = fan_power_kw * 1000.0
         self.fan_control = fan_control
         self.mu_ref = mu_ref if mu_ref is not None else spec.F1["mu"]
@@ -80,7 +81,7 @@ class Car:
         return 0.5 * RHO * self.cla * v * v + self.fan_n * self.fan_frac(v) * seal
 
     def drag(self, v):
-        return 0.5 * RHO * self.cda * v * v
+        return 0.5 * RHO * self.cda * v * v - self.jet_n * self.fan_frac(v)
 
     def normal(self, v, seal=1.0):
         return self.mass * G + self.downforce(v, seal)
@@ -217,7 +218,7 @@ def build_cars():
                spec.AERO["cla_wings"] + spec.AERO["cla_floor"],
                spec.AERO["cda"], fan_kg=spec.FAN["downforce_kg"],
                fan_power_kw=spec.FAN["power_kw"],
-               fan_control=spec.FAN_CONTROL)
+               fan_control=spec.FAN_CONTROL, jet_n=spec.FAN["jet_thrust_n"])
     f1 = Car("Formula 1 reference", spec.F1["mass"], spec.F1["power_kw"],
              spec.F1["cla"], spec.F1["cda"])
     return ours, f1

@@ -36,32 +36,32 @@ front_diveplane_l1,01 Bodywork,carbon_matte,,,,,,,,,288,218,91.7,227.5,-988.0,-8
 front_diveplane_l2,01 Bodywork,carbon_matte,,,,,,,,,288,218,132.0,239.4,-988.0,-896.0,162.2,211.7
 front_diveplane_r1,01 Bodywork,carbon_matte,,,,,,,,,288,218,91.7,227.5,896.0,988.0,98.3,150.9
 front_diveplane_r2,01 Bodywork,carbon_matte,,,,,,,,,288,218,132.0,239.4,896.0,988.0,162.2,211.7
-front_endplate_l,03 Wings,carbon_gloss,,,,,,,,,3490,3384,0.0,500.0,-998.5,-886.0,16.0,433.9
-front_endplate_r,03 Wings,carbon_gloss,,,,,,,,,3490,3384,0.0,500.0,886.0,998.5,16.0,433.9
-front_flap_1,01 Bodywork,carbon_gloss,156.0,0.0,220.0,0.0,1.0,0.0,1.0,hinge,4464,4324,156.0,335.1,-912.9,912.9,203.7,295.2
-front_flap_2,01 Bodywork,carbon_gloss,246.0,0.0,262.0,0.0,1.0,0.0,1.0,hinge,4464,4324,246.0,382.3,-923.0,923.0,248.4,367.3
-front_flap_3,01 Bodywork,carbon_gloss,322.0,0.0,324.0,0.0,1.0,0.0,1.0,hinge,4464,4324,322.0,421.4,-933.1,933.1,313.4,447.9
-front_wing_main,03 Wings,carbon_gloss,,,,,,,,,6696,6486,60.0,390.0,-908.4,908.4,126.8,193.9
-front_y250_vanes,03 Wings,carbon_gloss,,,,,,,,,736,648,172.8,419.1,-279.8,280.2,122.0,240.0
+front_endplate_l,03 Wings,carbon_gloss,,,,,,,,,3490,3384,0.0,535.0,-998.5,-886.0,16.0,451.9
+front_endplate_r,03 Wings,carbon_gloss,,,,,,,,,3490,3384,0.0,535.0,886.0,998.5,16.0,451.9
+front_flap_1,01 Bodywork,carbon_gloss,164.0,0.0,225.0,0.0,1.0,0.0,1.0,hinge,4464,4324,164.0,355.3,-912.7,912.7,206.1,316.7
+front_flap_2,01 Bodywork,carbon_gloss,261.0,0.0,270.0,0.0,1.0,0.0,1.0,hinge,4464,4324,261.0,405.9,-922.8,922.8,253.8,389.3
+front_flap_3,01 Bodywork,carbon_gloss,343.0,0.0,337.0,0.0,1.0,0.0,1.0,hinge,4464,4324,343.0,448.0,-932.9,932.9,324.4,472.1
+front_wing_main,03 Wings,carbon_gloss,,,,,,,,,6696,6486,60.0,416.0,-908.1,908.1,124.6,217.2
+front_y250_vanes,03 Wings,carbon_gloss,,,,,,,,,736,648,181.9,447.8,-279.8,280.2,122.0,240.0
 nose_pylons,09 Aero Detail,carbon_gloss,,,,,,,,,832,784,198.0,539.0,-163.5,239.3,117.6,180.9
-rear_endplate_l,03 Wings,carbon_gloss,,,,,,,,,596,688,4350.7,5139.1,-754.2,-606.3,646.9,1045.9
-rear_endplate_r,03 Wings,carbon_gloss,,,,,,,,,596,688,4350.7,5139.1,606.3,754.2,646.9,1045.9
-rear_flap,01 Bodywork,carbon_gloss,4829.8,0.0,920.2,0.0,1.0,0.0,1.0,hinge,1872,1802,4829.7,5030.1,-710.0,710.0,910.8,977.7
+rear_endplate_l,03 Wings,carbon_gloss,,,,,,,,,596,688,4350.5,5145.4,-754.2,-606.3,653.2,1013.5
+rear_endplate_r,03 Wings,carbon_gloss,,,,,,,,,596,688,4350.5,5145.4,606.3,754.2,653.2,1013.5
+rear_flap,01 Bodywork,carbon_gloss,4832.0,0.0,902.0,0.0,1.0,0.0,1.0,hinge,1872,1802,4831.9,5035.8,-710.0,710.0,889.6,945.3
 rear_frame,01 Bodywork,carbon_gloss,,,,,,,,,392,340,4385.0,4445.0,-245.0,245.0,385.0,466.0
-rear_gurney,03 Wings,carbon_gloss,,,,,,,,,1044,1017,4968.5,5030.3,-696.0,696.0,952.4,997.6
-rear_louvre_l1,03 Wings,carbon_gloss,,,,,,,,,196,170,4710.5,4750.5,-713.1,-699.1,889.8,945.8
-rear_louvre_l2,03 Wings,carbon_gloss,,,,,,,,,196,170,4750.5,4790.5,-715.0,-701.0,909.8,965.8
-rear_louvre_l3,03 Wings,carbon_gloss,,,,,,,,,196,170,4790.5,4830.5,-717.5,-703.5,929.8,985.8
-rear_louvre_l4,03 Wings,carbon_gloss,,,,,,,,,196,170,4830.5,4870.5,-720.5,-706.5,949.8,1005.8
-rear_louvre_l5,03 Wings,carbon_gloss,,,,,,,,,196,170,4870.5,4910.5,-724.1,-710.1,969.8,1025.8
-rear_louvre_r1,03 Wings,carbon_gloss,,,,,,,,,196,170,4710.5,4750.5,699.1,713.1,889.8,945.8
-rear_louvre_r2,03 Wings,carbon_gloss,,,,,,,,,196,170,4750.5,4790.5,701.0,715.0,909.8,965.8
-rear_louvre_r3,03 Wings,carbon_gloss,,,,,,,,,196,170,4790.5,4830.5,703.5,717.5,929.8,985.8
-rear_louvre_r4,03 Wings,carbon_gloss,,,,,,,,,196,170,4830.5,4870.5,706.5,720.5,949.8,1005.8
-rear_louvre_r5,03 Wings,carbon_gloss,,,,,,,,,196,170,4870.5,4910.5,710.1,724.1,969.8,1025.8
+rear_gurney,03 Wings,carbon_gloss,,,,,,,,,1044,1017,4972.6,5035.9,-696.0,696.0,924.3,965.7
+rear_louvre_l1,03 Wings,carbon_gloss,,,,,,,,,196,170,4716.2,4756.2,-713.3,-699.3,742.4,798.4
+rear_louvre_l2,03 Wings,carbon_gloss,,,,,,,,,196,170,4756.2,4796.2,-715.2,-701.2,754.4,810.4
+rear_louvre_l3,03 Wings,carbon_gloss,,,,,,,,,196,170,4796.2,4836.2,-717.6,-703.6,766.4,822.4
+rear_louvre_l4,03 Wings,carbon_gloss,,,,,,,,,196,170,4836.2,4876.2,-720.7,-706.7,778.4,834.4
+rear_louvre_l5,03 Wings,carbon_gloss,,,,,,,,,196,170,4876.2,4916.2,-724.3,-710.3,790.4,846.4
+rear_louvre_r1,03 Wings,carbon_gloss,,,,,,,,,196,170,4716.2,4756.2,699.3,713.3,742.4,798.4
+rear_louvre_r2,03 Wings,carbon_gloss,,,,,,,,,196,170,4756.2,4796.2,701.2,715.2,754.4,810.4
+rear_louvre_r3,03 Wings,carbon_gloss,,,,,,,,,196,170,4796.2,4836.2,703.6,717.6,766.4,822.4
+rear_louvre_r4,03 Wings,carbon_gloss,,,,,,,,,196,170,4836.2,4876.2,706.7,720.7,778.4,834.4
+rear_louvre_r5,03 Wings,carbon_gloss,,,,,,,,,196,170,4876.2,4916.2,710.3,724.3,790.4,846.4
 rear_pylon_l,03 Wings,carbon_gloss,,,,,,,,,494,470,4304.4,4599.4,-224.5,-172.4,457.0,952.2
 rear_pylon_r,03 Wings,carbon_gloss,,,,,,,,,494,470,4304.4,4599.4,172.4,224.5,457.0,952.2
-rear_wing_main,03 Wings,carbon_gloss,,,,,,,,,1872,1802,4480.2,4838.6,-710.0,710.0,836.9,898.8
+rear_wing_main,03 Wings,carbon_gloss,,,,,,,,,1872,1802,4480.0,4839.3,-710.0,710.0,833.1,884.5
 brake_pad_fl,04 Wheels and Brakes,cf_disc,,,,,,,,,856,968,796.2,1003.8,-855.4,-792.4,455.0,519.0
 brake_pad_fr,04 Wheels and Brakes,cf_disc,,,,,,,,,856,968,796.2,1003.8,792.4,855.4,455.0,519.0
 brake_pad_rl,04 Wheels and Brakes,cf_disc,,,,,,,,,856,968,3946.2,4153.8,-822.4,-759.4,465.0,529.0
@@ -279,7 +279,7 @@ tyre_sensors,04 Wheels and Brakes,alu_dark,,,,,,,,,9952,9656,813.0,3990.7,-681.2
 wiring_loom,11 Structure and Service,hose,,,,,,,,,20106,20128,628.0,4087.5,-550.0,550.0,128.0,475.6
 antiroll_blade_f,05 Suspension,alu_bright,,,,,,,,,760,708,1008.8,1123.0,-185.0,185.0,488.0,552.0
 antiroll_blade_r,05 Suspension,alu_bright,,,,,,,,,648,596,3910.0,3983.0,-182.2,182.2,372.0,419.0
-drs_actuator,03 Wings,alu_bright,,,,,,,,,824,696,4666.0,4894.1,-25.5,25.5,928.7,1010.5
+drs_actuator,03 Wings,alu_bright,,,,,,,,,824,696,4666.0,4897.8,-25.5,25.5,907.4,1010.5
 rear_light_panel,09 Aero Detail,alu_bright,,,,,,,,,628,602,4440.0,4466.0,-45.0,45.0,258.0,392.0
 roll_hoop,11 Structure and Service,titanium,,,,,,,,,3332,3144,2347.0,2545.0,-271.0,271.0,695.0,978.0
 steering_arm_fl,05 Suspension,alu_bright,,,,,,,,,478,429,756.0,910.0,-761.9,-690.0,222.1,281.0

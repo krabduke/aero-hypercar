@@ -438,9 +438,12 @@ def _rear():
             # 40 mm apart from te_x - 300, not 52 from - 250. The plate's
             # upper trailing edge falls away aft of x 4880 and the last two
             # of the five were marching off the end of it into open air.
+            # under the elements, stepping up aft: with the wing trimmed flat
+            # (the balance, spec.FRONT_WING) the elements' tips run through
+            # the band the louvres stood in over them
             xl = te_x - 300.0 + k * 40.0
             lv.append(shapes.rounded_box(xl, y + sgn * bow(xl),
-                               te_z - 60.0 + k * 20.0, 40.0, 14.0, 56.0))
+                               te_z - 175.0 + k * 12.0, 40.0, 14.0, 56.0))
     # louvres are individually cut slots, not one lump
     half = len(lv) // 2
     for i, m in enumerate(lv):

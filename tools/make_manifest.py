@@ -76,7 +76,7 @@ def main():
         "height": round(max(float(r["z_max_mm"]) for r in rows)
                         - min(float(r["z_min_mm"]) for r in rows)),
         "wheelbase": spec.WHEELBASE, "mass": spec.MASS_KG,
-        "cla": spec.cla(), "cda": spec.cda(),
+        "cla": spec.cla_total(), "cda": spec.cda(),
         "fan_kg": spec.FAN["downforce_kg"],
         "power_kw": 935.0, "hp": 935.0 * 1.341,
         "top_speed": spec.top_speed_kph(),
