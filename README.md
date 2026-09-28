@@ -9,6 +9,8 @@ from the sibling project, imported and installed — not re-modelled.
 
 **291 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 2,100 kg held by its fans at every speed · out-grips F1 to 367 km/h · 9.2 s a lap faster, worst case**
 
+![studio](renders/studio/vx1_hero.jpg)
+
 ![hero](renders/01_hero.png)
 
 ## The argument
