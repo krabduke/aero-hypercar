@@ -741,7 +741,7 @@ function buildTunnel(box){
         `Wings solved; underbody from the CFD. The fans hold the sealed `
         + `floor at ${(und.suction/1000).toFixed(1)} kPa, which is a flat `
         + `${und.fanShare.toFixed(0)} kg at any speed — `
-        + `${(und.fanFrac*100).toFixed(0)}% of the underbody at `
+        + `${(100*und.fanShare/(wings + und.total)).toFixed(0)}% of the car's downforce at `
         + `${(r.v*3.6).toFixed(0)} km/h and all of it at a standstill, where `
         + `a wing has nothing. They only have to move the air that leaks in `
         + `under the skirts, so they draw tens of kilowatts, not hundreds. `
