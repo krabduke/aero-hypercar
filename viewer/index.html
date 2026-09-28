@@ -571,43 +571,26 @@ function onResize(){
   renderer.setSize(s.clientWidth, s.clientHeight);
 }
 
-/* What the underbody makes, at this speed, with the fan running.
+/* What the underbody makes, at this speed, with the fans running.
  *
- * The venturi tunnels and the fan are not two downforce generators to be
- * added up: they are one duct and one flow. Air is drawn under the car by
- * whatever head is available -- the car's own dynamic pressure from moving,
- * plus the pressure rise the fan puts into the circuit -- and the suction
- * under the floor follows that total. Adding a flat 650 kg of "fan" to a
- * speed-squared "floor" says the fan is still worth 650 kg at 360 km/h, where
- * the tunnels are already pulling 1786 Pa and the fan can only make 1151.
+ * The floor is a sealed plenum each side -- skirts down both edges, across
+ * the front and across the back -- and the fans hold it at a set suction.
+ * So the underbody is two things that really do add up: the plenum's load,
+ * that suction times its plan area, the same at 40 km/h as at 340; and
+ * what the rest of the floor and body make with speed squared, measured in
+ * the aero study's CFD. Switch the fans off and the plenum's share goes.
  *
- * So: one constant, calibrated so that at the reference speed with the fan on
- * the answer is the car's design figure, and everything else follows from the
- * head. At rest that leaves the fan holding the car down on its own, which is
- * what a fan car is for and what no wing can do.
+ * (It was an open venturi with a fan in each tunnel, and the CFD showed the
+ * air the car drove into the tunnels swamping the fans by 180 km/h.)
  */
 function underbody(v){
   const T = data.tunnel;
-  const plan = T.floor_plan_m2 || 5.54;
-  const dpFan = (T.fan_kg * 9.81) / plan;
   const q = 0.5 * 1.225 * v * v;
-  const qRef = 0.5 * 1.225 * T.v_default * T.v_default;
-  const on = fansOn ? 1 : 0;
-  const k = ((T.cla_floor || 0) * qRef + T.fan_kg * 9.81)
-          / ((qRef + dpFan) * plan);
-  const total = k * (q + dpFan * on) * plan / 9.81;
-  const without = k * q * plan / 9.81;
-  /* The fan's share comes out CONSTANT, and that is the answer rather than
-   * an approximation of one: flow through a duct goes as the square root of
-   * the head, and the suction at the throat goes as the flow squared, so the
-   * suction is LINEAR in head and a fixed pressure rise buys a fixed
-   * increment. It is 465 kg, not the 650 the car is quoted at -- the 650 is
-   * what the fan could hold under a sealed plenum, and this floor is not
-   * sealed, it is a pair of tunnels with the fan helping them along. What
-   * changes with speed is not the fan's contribution but its SHARE. */
-  return {total, dpFan, q,
-          fanShare: total - without,
-          fanFrac: total > 0 ? (total - without)/total : 0};
+  const plenum = fansOn ? T.fan_kg : 0;
+  const rest = (T.cla_floor || 0) * q / 9.81;
+  const total = plenum + rest;
+  return {total, q, suction: T.suction_pa, fanShare: plenum,
+          fanFrac: total > 0 ? plenum / total : 0};
 }
 
 /* The drag a potential flow cannot produce.
@@ -679,7 +662,9 @@ function buildTunnel(box){
    */
   function flowPorts(state){
     const v = state && state.v ? state.v/68 : 1;
-    const fq = fansOn ? 4.0*v : 0;   // m3/s a fan, at the reference speed
+    // m3/s a fan: a sealed plenum only needs the air that leaks in under
+    // the skirts, the same at any speed
+    const fq = fansOn ? (data.tunnel.leak_m3s || 0.63) : 0;
     /* The fan pair balances itself -- what it pulls out of the floor it blows
      * out at the rear. The engine did not: the airbox was a sink with nothing
      * answering it, which leaves a net monopole that the source solve reads as
@@ -704,9 +689,9 @@ function buildTunnel(box){
     const ports = [
       {p: [2.20, 0.00, 0.78], Q: -aq,      r: 0.10},  // airbox -> engine
       {p: [4.53, 0.00, 0.47], Q:  aq*2.6,  r: 0.11},  // tailpipe, above the diffuser
-      // The fans lie on their sides at the tail: each draws up through a
-      // slot in the floor behind the axle and blows straight back over the
-      // diffuser exit from its nozzle.
+      // The fans lie on their sides at the tail: each draws up out of its
+      // side's plenum through a mouth in the tunnel roof and blows straight
+      // back over the diffuser from its nozzle.
       {p: [4.33, -0.446, 0.03], Q: -fq, r: 0.12},  // fan L intake, the floor
       {p: [4.33,  0.446, 0.03], Q: -fq, r: 0.12},  // fan R intake
       {p: [4.69, -0.446, 0.452], Q: fq, r: 0.12},  // fan L nozzle, aft
@@ -753,15 +738,14 @@ function buildTunnel(box){
         `${r.panels} panels · ${(r.v*3.6).toFixed(0)} km/h`;
       $('#t-note').className = 'tnote';
       $('#t-note').textContent =
-        `Wings solved; underbody modelled. The tunnels and the fan drive one `
-        + `duct, so they do not add up — the fan puts `
-        + `${und.dpFan.toFixed(0)} Pa into the circuit and at `
-        + `${(r.v*3.6).toFixed(0)} km/h the car's own motion is already worth `
-        + `${und.q.toFixed(0)} Pa of it. The fan is worth a flat `
-        + `${und.fanShare.toFixed(0)} kg, which is `
-        + `${(und.fanFrac*100).toFixed(0)}% of the underbody here and `
-        + `essentially all of it at a standstill. That is the argument for a `
-        + `fan: a wing gives you nothing until you are moving. Drag: the `
+        `Wings solved; underbody from the CFD. The fans hold the sealed `
+        + `floor at ${(und.suction/1000).toFixed(1)} kPa, which is a flat `
+        + `${und.fanShare.toFixed(0)} kg at any speed — `
+        + `${(und.fanFrac*100).toFixed(0)}% of the underbody at `
+        + `${(r.v*3.6).toFixed(0)} km/h and all of it at a standstill, where `
+        + `a wing has nothing. They only have to move the air that leaks in `
+        + `under the skirts, so they draw tens of kilowatts, not hundreds. `
+        + `Drag: the `
         + `wings' induced drag is solved, the rest is built up from measured `
         + `areas — `
         + bluff.parts.map(([k, x]) => `${k} ${x.toFixed(2)}`).join(', ')
@@ -780,13 +764,13 @@ function buildTunnel(box){
 }
 
 const ABOUT =
-  'Two fans pull air out of a sealed underfloor. A wing makes downforce with '
-  + 'the square of speed, so in a hairpin it has almost none left; a fan holds '
-  + 'a pressure difference under a sealed floor, so its downforce barely '
-  + 'changes with speed — worth little at 300 km/h and everything at 80. It '
-  + 'also costs shaft power rather than induced drag, so the car can run less '
-  + 'wing for the same total load and go faster in a straight line. Brabham '
-  + 'won with one and withdrew it; the concept was banned, not beaten.';
+  'Two fans hold the sealed floor at 5.5 kPa of suction: 1.9 tonnes of '
+  + 'downforce at every speed, on a 700 kg car. A wing makes downforce with '
+  + 'the square of speed, so in a hairpin it has almost none; the plenum does '
+  + 'not care how fast the car is going, and the wings add to it as speed '
+  + 'rises -- which is why this car out-grips an F1 car at every speed, not '
+  + 'only in the slow corners. Brabham won with one and withdrew it; the '
+  + 'concept was banned, not beaten.';
 
 // --- flow view switches (injected) ---
 

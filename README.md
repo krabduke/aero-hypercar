@@ -7,7 +7,7 @@ a Formula 1 car on a Formula 1 circuit?**
 The power unit is the [RX-8V V8 hybrid](https://github.com/krabduke/car-engine-v8-hybrid)
 from the sibling project, imported and installed — not re-modelled.
 
-**287 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 650 kg of fan downforce, 10.7 s a lap faster than F1**
+**291 parts · 5,101 × 1,999 mm · 700 kg · 1,254 hp · 2,100 kg held by its fans at every speed · out-grips F1 to 367 km/h · 9.2 s a lap faster, worst case**
 
 ![hero](renders/01_hero.png)
 
@@ -24,8 +24,19 @@ electrically driven fans extract air from sealed underfloor plenums and produce
 downforce that barely varies with road speed. This is the single biggest win,
 and the car is shaped around it.
 
-**2. Ground effect without a rulebook.** Full-length venturi tunnels with a
-steep diffuser, sealed by skirts that the fans keep loaded.
+**2. A sealed floor.** Skirts all round — down both edges, across the front
+behind the front wheels and across the back under the diffuser — so each
+side of the floor is a plenum the fans hold at 7 kPa of suction. That is
+2,100 kg of downforce at 40 km/h and at 340, and the fans only have to move
+the air that leaks in under the skirts: 42 kW for the pair.
+
+It was an open venturi with a fan in each tunnel, and an outside CFD study
+(OpenFOAM, [the aero study](https://krabduke.github.io/model-gallery/aero/))
+showed why that could not work: the air the car drove into the tunnels
+swamped the fans by 180 km/h, the fans were being credited with work they
+could not do, and above 195 km/h an F1 car out-gripped it. Sealed, measured
+again at 180, 250 and 340 km/h, it out-grips F1 at every speed an F1 car
+reaches.
 
 **3. Active aero.** Front and rear elements trim continuously, so the car never
 has to compromise between a low-drag straight and a high-downforce corner.
@@ -37,19 +48,25 @@ roughly 750 kW.
 
 | | VX-1 | F1 reference | |
 |---|---|---|---|
-| Lateral g at 80 km/h | **3.34** | 2.03 | +65 % |
-| Lateral g at 150 km/h | **3.98** | 2.69 | +48 % |
-| Lateral g at 250 km/h | **5.48** | 4.22 | +30 % |
-| R25 m hairpin | **106 km/h** | 80 km/h | +26 |
-| R60 m corner | **183 km/h** | 140 km/h | +43 |
-| R120 m corner | **327 km/h** | 258 km/h | +69 |
+| Lateral g at 80 km/h | **5.67** | 2.03 | +179 % |
+| Lateral g at 150 km/h | **5.83** | 2.69 | +117 % |
+| Lateral g at 250 km/h | **6.21** | 4.22 | +47 % |
+| Lateral g at 340 km/h | **6.70** | 6.07 | +10 % |
+| R25 m hairpin | **136 km/h** | 80 km/h | +56 |
+| R60 m corner | **215 km/h** | 140 km/h | +75 |
+| R120 m corner | **316 km/h** | 258 km/h | +58 |
 | Power to weight | **1.34 kW/kg** | 0.94 | +42 % |
-| Top speed | **439 km/h** | ~340 | |
-| Lap, worst case | **10.7 s faster** | 91.9 s | |
+| Top speed | **337 km/h** | ~340 | |
+| Lap, worst case | **9.2 s faster** | 91.9 s | |
 
-The advantage is **largest at low speed and shrinks as speed rises** — which is
-exactly the signature of a fan car, and the reason this layout was chosen over
-simply adding more wing.
+Measured downforce (OpenFOAM, both sides): 2,291 kg at 180 km/h, 2,481 at
+250, 2,789 at 340 — a constant 2,100 kg from the plenum plus ClA 1.22 from the
+wings, less the bodywork's lift. The grip advantage is largest at low speed
+and never goes negative: the crossover with F1 is at 367 km/h, past F1's top
+speed. The honest limits: on a kerb, with 30 % of the suction lost as the
+skirts lift, it holds its advantage only to 307 km/h; and with the jet
+thrust the open floor was wrongly credited with gone and the rear wing back
+at 17°, its top speed is 337 km/h, level with F1's.
 
 The lap figure is the worst case the lap simulation finds: the pessimistic end
 of the tyre load-sensitivity band, with 30 % of the fan's suction lost every
@@ -64,8 +81,8 @@ tyres do.**
 | Length × width × height | 5,101 × 1,999 × 1,147 mm |
 | Wheelbase / track | 3,150 / 1,660 front, 1,600 rear |
 | Mass | 700 kg, 56.5 % rear, CG 258 mm |
-| ClA / CdA | 4.55 / 1.28 (ClA 3.30 with the active aero shed) |
-| Fan system | 2 × 340 mm ducted fans at the tail, blowing aft; 11 blades, 7,200 rpm, 38 kW for the pair; 650 kg of suction, eased back on the straights |
+| Downforce / CdA | 2,100 kg held + ClA 1.22 / CdA 1.77 (measured); 41 % front at 180 km/h |
+| Fan system | 2 × 340 mm ducted fans at the tail, blowing aft; 11 blades, 8,500 rpm, 42 kW for the pair; hold the sealed floor at 7 kPa at every speed |
 | High voltage | The pack's two cables run aft under the sump to the inverter on the bellhousing, which drives the MGU-K and both MGU-Hs and feeds a controller for each fan; orange cable, P-clipped to the floor, the gearbox and the crash structure |
 | Engine | RX-8V 2.0 L V8 twin-turbo hybrid, 935 kW |
 | Tyres | 305/670 front, 405/690 rear on 18-inch rims |
@@ -77,7 +94,7 @@ Requires Blender (`brew install --cask blender`). Nothing else.
 
 ```
 make build      # generate geometry, assemble build/car.blend, write parts.csv
-make verify     # the car's 45 design checks, then every audit of the build
+make verify     # the car's 46 design checks, then every audit of the build
 make render     # hero, plan, cutaway and exploded views
 make bom        # bom.csv: every part, its group, material, pieces and size
 make drawings   # drawings.pdf: A1 GA and assembly sheets, third angle, to scale, dimensioned,
@@ -89,7 +106,7 @@ make viewer     # serve the interactive viewer
 
 ## Verification
 
-`make verify` runs `car/verify.py`, 45 checks, and then seventeen audits of
+`make verify` runs `car/verify.py`, 46 checks, and then seventeen audits of
 the build: structure, geometry, closed surfaces, interference between parts,
 joints and supports, the underfloor, the fan exhaust, the lap simulation,
 fit inside the bodywork, every coolant hose's path past the engine, the
@@ -101,10 +118,14 @@ against the F1 reference:
 - Plan dimensions, wheelbase, track inside overall width, rake
 - Mass, weight distribution, CG height, and that it undercuts the F1 minimum
 - ClA, lift-to-drag, aero balance, fan downforce and fan power draw
-- **Out-grips F1 at 80, 150 and 250 km/h**, and that the advantage is largest
-  at low speed — if that ever inverts, the fan has stopped being the point
-- Peak sustained lateral g inside the driver limit
+- **Out-grips F1 at every speed to 350 km/h**, on its own tyres and on F1's,
+  at both ends of the load-sensitivity band, and on the kerbs to 300; and
+  that the advantage is largest at low speed
+- The driver's 7 g is reached only past F1's fastest corner
 - Faster through R25, R60 and R120 m corners
+- The sealed floor: skirts close the plenum all round, the fans' flow covers
+  the skirt leak twice over, their pressure is one an axial fan can make and
+  their power is inside the rating
 - Power-to-weight, top speed
 
 The width check caught a real error: a broken rotation was throwing the
@@ -185,7 +206,7 @@ car/
                  performance model. No geometry module holds a literal dimension
   parts/
     chassis.py   tub, nose, sidepods, engine cover, airbox, halo, cockpit
-    floor.py     plank, venturi tunnels, diffuser, strakes, skirts
+    floor.py     plank, tunnels, diffuser, strakes, side, front and rear skirts
     wings.py     4-element front wing, 2-element rear wing, endplates, pylons
     wheels.py    per corner: tyre, rim with spokes, wheel cover and nut,
                  ventilated disc, six-pot caliper, upright

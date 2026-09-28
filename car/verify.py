@@ -174,45 +174,65 @@ def main():
            f"{spec.F1['mass'] - spec.MASS_KG:.0f} kg advantage")
 
     print("\nAERODYNAMICS")
-    # measured with the fans running, at 180 km/h: the car is never without them
-    c.band("total ClA, fans running", spec.cla_total(), 4.5, 7.0, "",
-           f"F1 reference {spec.F1['cla']:.2f}")
-    c.band("ClA with active aero shed", spec.cla_total(drs=True), 3.0, 6.0, "")
-    c.band("lift-to-drag at full downforce", spec.cla_total() / spec.cda(), 2.5, 5.0, "")
-    c.band("aero balance", spec.AERO["aero_balance"] * 100, 40.0, 50.0, " %front")
-    c.band("fan downforce", spec.FAN["downforce_kg"], 300.0, 1200.0, " kg",
-           "near constant with speed")
+    # Measured (the aero study's OpenFOAM runs), split the way the car makes
+    # it: a sealed floor held at a set suction, the same at every speed, and
+    # wings and body whose load grows with speed squared.
+    c.band("plenum downforce, every speed", spec.FAN["downforce_kg"],
+           1000.0, 2500.0, " kg", f"{spec.PLENUM['suction_pa'] / 1000:.1f} kPa held")
+    c.band("ClA growing with speed (wings, body)", spec.cla(), 1.0, 3.5, "",
+           f"F1 reference {spec.F1['cla']:.2f}, all of it growing with speed")
+    c.band("ClA with active aero shed", spec.cla(drs=True), 0.5, 3.0, "")
+    c.band("wings-and-body lift-to-drag", spec.cla() / spec.cda(), 0.5, 3.0, "")
+    c.band("aero balance at 180 km/h", spec.AERO["aero_balance"] * 100,
+           40.0, 50.0, " %front")
+    c.band("aero balance at 340 km/h", spec.AERO["aero_balance_hi"] * 100,
+           40.0, 50.0, " %front", "the fans' share falls as the wings' grows")
     c.band("fan power draw", spec.FAN["power_kw"] * spec.FAN["n"] / 2, 20.0, 120.0,
            " kW", "from the hybrid system")
 
     print("\nGRIP -- the whole point")
-    for kph in (80, 150):
-        ours, theirs = spec.lateral_g(kph), spec.f1_lateral_g(kph)
-        c.true(f"out-grips F1 at {kph} km/h", ours > theirs,
-               f"{ours:.2f} g vs {theirs:.2f} g  (+{(ours/theirs-1)*100:.0f} %)")
-    # Not at every speed. The CFD (the aero study) found the car's
-    # downforce all but constant -- 771 kg at 180 km/h, 732 at 250 -- where
-    # an F1 car's grows with speed squared, so above a crossover the F1 car
-    # grips harder. That is what a fan car is: this checks the crossover
-    # is where the measurements put it, not that it is not there.
-    x = next(k for k in range(60, 400) if spec.lateral_g(k) < spec.f1_lateral_g(k))
-    c.band("grip crossover with F1", x, 170.0, 240.0, " km/h",
-           f"faster than F1 through corners taken below it, slower above")
+    # Everywhere, not below a crossover. It had one: open at the front, the
+    # floor's downforce was flat with speed and small, and above 195 km/h
+    # an F1 car's, growing with speed squared, overtook it. The sealed floor
+    # holds 1.9 tonnes at every speed and the wings add to it; this checks
+    # every 5 km/h to 350, F1's top speed, and does it three ways:
+    # on the car's own tyres; on F1's (the same rubber, mu 1.75, which is
+    # the lap simulation's assumption); and at both ends of the sourced
+    # load-sensitivity band. On the kerbs, where the skirts lift, it runs
+    # with 30 % of the suction gone; there it holds to 307 km/h and no
+    # further (the CFD, 2026-09-28), so it is checked to 300, not claimed
+    # past it.
+    speeds = range(40, 351, 5)
+
+    def worst(mu, k, seal=1.0, top=350):
+        m = min(((spec.lateral_g(v, mu=mu, k=k, seal=seal)
+                  / spec.f1_lateral_g(v, k=k) - 1.0, v)
+                 for v in speeds if v <= top))
+        return m
+
+    for label, mu, ks, seal, top in (
+            ("on its own tyres", spec.TYRE_MU, (spec.TYRE_LOAD_SENS,), 1.0, 350),
+            ("on F1's tyres, k 0.15 and 0.25", spec.F1["mu"], (0.15, 0.25), 1.0, 350),
+            ("on the kerbs, 30 % of suction gone", spec.F1["mu"], (0.15, 0.25), 0.7, 300)):
+        m, v = min(worst(mu, k, seal, top) for k in ks)
+        c.true(f"out-grips F1 at every speed to {top} km/h, {label}", m > 0.0,
+               f"narrowest at {v} km/h, +{m * 100:.1f} %")
     c.true("biggest advantage is at low speed",
            (spec.lateral_g(80)/spec.f1_lateral_g(80)) >
-           (spec.lateral_g(250)/spec.f1_lateral_g(250)),
+           (spec.lateral_g(300)/spec.f1_lateral_g(300)),
            "which is what a fan buys you")
-    c.band("peak sustained lateral g", spec.lateral_g(250), 0.0,
-           spec.DRIVER_G_LIMIT, " g", "driver limit")
+    cap = next((v for v in range(40, 401) if spec.lateral_g(v)
+                >= spec.DRIVER_G_LIMIT - 1e-9), 400)
+    c.true("the driver's limit is reached only past F1's fastest corner",
+           cap > 330, f"{spec.DRIVER_G_LIMIT:.0f} g at {cap} km/h; below it more "
+           "downforce is more grip, not waste")
 
     print("\nCORNER SPEEDS vs F1")
-    for r in (25, 60):
+    # (past about R200 both cars reach the driver's 7 g and tie)
+    for r in (25, 60, 120):
         a, b = spec.corner_speed_kph(r), spec.f1_corner_speed_kph(r)
         c.true(f"faster through an R{r} m corner", a > b + 1.0,
                f"{a:.0f} vs {b:.0f} km/h  (+{a-b:.0f})")
-    a, b = spec.corner_speed_kph(120), spec.f1_corner_speed_kph(120)
-    print(f"  --  R120 m corner, past the crossover       {a:.0f} vs {b:.0f} km/h  "
-          f"(F1 {b - a:.0f} faster)")
 
     print("\nPOWER")
     c.band("power to weight", spec.power_to_weight(), 0.95, 1.8, " kW/kg",

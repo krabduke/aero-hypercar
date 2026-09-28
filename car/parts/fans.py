@@ -124,9 +124,14 @@ def _nozzle(cx, cy, cz):
 def _blade(spin):
     """One twisted, raked fan blade, in the fan frame about the +x axis.
 
-    Blade angle falls with radius so the axial velocity is uniform across the
-    disc: beta = atan(Va / (omega r)). Built from that relation rather than
-    from two numbers picked by eye, so changing the rpm changes the twist.
+    Each section is set on the mean of the air's relative angles in and
+    out: in at atan(Va / U), out after the blade has put in the swirl dc_u
+    that Euler's equation needs for the pressure, dP = rho U dc_u. So
+    beta = atan(Va / (U - dc_u / 2)). A pressure fan cannot do its work
+    evenly: near the hub U is small and the dc_u for the full rise would
+    exceed U itself, so the hub sections are capped at 0.8 U and the tips
+    do the rest. Built from those relations rather than from two numbers
+    picked by eye, so changing the rpm or the duty changes the twist.
     """
     r0 = F["hub_r"] - 6.0
     r1 = R - 4.0
@@ -140,7 +145,9 @@ def _blade(spin):
         r = r0 + (r1 - r0) * t
         chord = (F["blade_root_chord"]
                  + (F["blade_tip_chord"] - F["blade_root_chord"]) * t)
-        beta = math.atan2(F["axial_velocity"] * 1000.0, omega * r)
+        u = omega * r / 1000.0                       # m/s
+        dcu = min(spec.PLENUM["fan_rise_pa"] / (spec.RHO * u), 0.8 * u)
+        beta = math.atan2(F["axial_velocity"], u - dcu / 2.0)
         rake = math.radians(F["blade_rake"]) * t * spin
         cb, sb = math.cos(beta), math.sin(beta)
         for (u, v) in sect:

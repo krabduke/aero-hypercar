@@ -76,16 +76,17 @@ def main():
                          "a stated limit of %.2f and is not being clamped"
                          % (ro["gmax"], cap))
 
-    if fails:
-        for f in fails:
-            print("FAIL  " + f)
-        sys.exit(1)
-
-        # 5. and it is still the faster car when the skirts lift
+        # 5. and it is still the faster car when the skirts lift. This sat
+        # after the sys.exit below, inside its `if`, so it never ran.
         if ro["time"] >= rf["time"]:
             fails.append("SEAL: with %.0f %% of the fan's suction lost at the "
                          "kerbs (k=%.2f) the car is no faster than F1"
                          % (100 * loss, k))
+
+    if fails:
+        for f in fails:
+            print("FAIL  " + f)
+        sys.exit(1)
 
     worst = max(laptime.simulate(ours, segs, k, seal_loss=loss,
                                  kerb_frac=C["kerb_frac"])["time"]

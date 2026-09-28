@@ -1,7 +1,20 @@
-"""Floor, venturi tunnels, diffuser, strakes and skirts.
+"""Floor, tunnels, diffuser, strakes and skirts -- one sealed plenum a side.
 
-The tunnels are the car's main downforce source below 200 km/h once the fans
-are discounted, and the skirts are what let the fans seal them.
+The floor is closed all round: side skirts down each edge, a front skirt
+across the tunnels' mouths behind the front wheels and a rear skirt across
+their exits, under the diffuser's kick. Each side is a sealed plenum the
+fans hold at a set suction, so its downforce is that suction times its plan
+area, at 40 km/h exactly as at 340. The tunnels, strakes and diffuser keep
+their shape inside it: the strakes are the ribs that carry the floor's load
+into the tub, and the diffuser's volume is plenum like the rest.
+
+It was an open venturi with a fan in each tunnel, and the aero study
+(OpenFOAM, model-gallery/aero) showed why that cannot work. Open at the
+front, a tunnel swallows the air the car drives into; by 180 km/h that is
+more than the fans can draw, and the fans need tens of kilowatts more than
+they have just to hold the flow. The strakes, standing 10 mm off the road,
+split each tunnel into five channels, and the fans reached only the one
+over their mouths. With the fans off the floor lifted.
 """
 
 import math
@@ -24,6 +37,7 @@ def build():
     out.update(_diffuser())
     out.update(_strakes())
     out.update(_skirts())
+    out.update(_seals())
     out.update(_inlet_lip())
     out.update(_plenum())
     # the floor panel is open under each tunnel: the tunnel's roof is the
@@ -455,9 +469,11 @@ def _diffuser():
             y = sgn * (F["tunnel_inner_y"] +
                        (F["tunnel_half_w"] - F["tunnel_inner_y"]) * frac)
             lo, hi = [], []
+            # they end on the rear skirt's bulkhead, which closes the exit
+            x_f = SEAL_REAR_X - SEAL_T / 2.0
             for i in range(15):
                 t = i / 14.0
-                x = x_d + (x_e - x_d) * t
+                x = x_d + (x_f - x_d) * t
                 # up to the underside of the roof at its own y, which the
                 # arch puts well below the roof line at the centre
                 z = tunnel_roof_under(x, y)
@@ -521,8 +537,15 @@ def _diffuser():
 
 
 def _strakes():
-    """Vertical fences inside each tunnel, keeping the flow attached through
-    the diffuser expansion."""
+    """Ribs inside each tunnel, running aft through the diffuser.
+
+    They were diffuser strakes, for an open floor. The floor is a sealed
+    plenum now, still air at a set suction, and at 5.5 kPa each side's roof
+    carries nine tonnes of load: these are what carry it, from the roof to
+    the plank and the tub. They stand 10 mm off the road, so every channel
+    between them is open to the next along the whole length -- the plenum's
+    pressure is one pressure.
+    """
     parts = []
     for sgn in (-1.0, 1.0):
         for k in range(F["n_strakes"]):
@@ -559,6 +582,96 @@ def _strakes():
             for i, m in enumerate(parts)}
 
 
+# Where the plenum is closed, fore and aft. The front skirt runs across the
+# tunnels' mouths just behind the floor's rolled lip and ahead of the
+# turning vanes (x 1320); the rear one across the exits, under the
+# diffuser's kick and behind the fans' intake mouths (which end at x 4429).
+SEAL_FRONT_X = F["x0"] + 10.0
+SEAL_REAR_X = F["x1"] - 30.0
+SEAL_T = 16.0          # the bulkhead; the skirt it carries is 12
+
+
+def _seals():
+    """The plenum's two ends: a carbon bulkhead from the tunnel roof down,
+    and a sliding skirt in its foot that rides the road like the side
+    skirts it meets.
+
+    The bulkhead fills the tunnel's bore, wall to wall, and its top follows
+    the roof it is bonded into -- at the rear, the diffuser's kick, which is
+    lower. The skirt rides the road in the bulkhead's foot, and below the
+    floor's 10 mm underside it runs on under both tunnel walls: inboard to
+    the plank and outboard into the side skirt, so the corners are closed.
+    """
+    out = {}
+    t = TUNNEL_T
+    for name, x in (("front", SEAL_FRONT_X), ("rear", SEAL_REAR_X)):
+        heads, skirts = [], []
+        for sgn in (-1.0, 1.0):
+            y_in = F["tunnel_inner_y"]
+            y_out = max(half_width(x) - 34.0, y_in + 60.0)
+            y_sk = half_width(x) - 19.0
+
+            def top(y, x=x, sgn=sgn):
+                z = tunnel_roof_under(x, sgn * y)
+                if x > F["x1"] - 120.0:        # under the kick
+                    u = (x - (F["x1"] - 120.0)) / 120.0
+                    z = min(z, _floor_z(x) - 22.0 * u * u)
+                return z + 3.0
+
+            # half a millimetre inside the bore's walls, not on them: two
+            # coincident faces are neither touching nor apart
+            b0, b1 = y_in + t + 0.5, y_out - t - 0.5
+            n = 28
+            ys = [b0 + (b1 - b0) * i / (n - 1) for i in range(n)]
+            prof = ([(y, 30.0) for y in ys]
+                    + [(y, top(y)) for y in reversed(ys)])
+            heads.append(_plate_x(x, prof, SEAL_T, sgn))
+            skirts.append(_seal_skirt(x, y_in, b0, b1, y_out, y_sk, sgn))
+        out[f"floor_bulkhead_{name}"] = mesh.join(*heads)
+        out[f"floor_skirt_{name}"] = mesh.join(*skirts)
+    return out
+
+
+def _seal_skirt(x, y_in, b0, b1, y_out, y_sk, sgn):
+    """The sliding skirt in a bulkhead's foot, in the side skirts' section:
+    a blade with a wear strip along the bottom and a rebate up the back
+    where it slides in its carrier, 44 mm deep across the bore with its top
+    14 mm up inside the bulkhead. Under each tunnel wall, which stops 10 mm
+    off the road, a 9.5 mm tongue carries it on -- into the plank inboard
+    and into the side skirt outboard -- so the corners are closed."""
+    t, h = 12.0, 44.0
+    sect = [(-t / 2, 0.0), (t / 2, 0.0), (t / 2, h * 0.30),
+            (t / 2 - 3.5, h * 0.36), (t / 2 - 3.5, h * 0.80),
+            (t / 2, h * 0.86), (t / 2, h), (-t / 2, h)]
+    loop = shapes.rounded_polygon(sect, [3.5, 3.5, 2.0, 1.5, 1.5, 2.0,
+                                         3.0, 3.0], seg=3)
+    n = 10
+    rings = [[(x + dx, b0 + (b1 - b0) * i / (n - 1), dz) for (dx, dz) in loop]
+             for i in range(n)]
+    blade = _loft(rings)
+    lo = 9.5
+    tongues = [shapes.rounded_box(x, (y_in - 1.0 + b0 + 2.0) / 2.0, lo / 2.0,
+                                  t, b0 + 2.0 - (y_in - 1.0), lo, r=2.0, seg=3),
+               shapes.rounded_box(x, (b1 - 2.0 + y_sk) / 2.0, lo / 2.0,
+                                  t, y_sk - (b1 - 2.0), lo, r=2.0, seg=3)]
+    verts, faces = mesh.join(blade, *tongues)
+    if sgn < 0:
+        verts = [(px, -py, pz) for (px, py, pz) in verts]
+        faces = [tuple(reversed(f)) for f in faces]
+    return verts, faces
+
+
+def _plate_x(x, prof, t, sgn):
+    """A plate `t` thick in x through a closed (y, z) profile, y >= 0, laid
+    on the side `sgn`. Mirroring flips the winding, so it is flipped back."""
+    rings = [[(x + dx, sgn * y, z) for (y, z) in prof]
+             for dx in (-t / 2.0, t / 2.0)]
+    verts, faces = _loft(rings)
+    if sgn < 0:
+        faces = [tuple(reversed(f)) for f in faces]
+    return verts, faces
+
+
 def _skirts():
     """Sliding skirts down each floor edge, following the plan outline.
 
@@ -567,7 +680,9 @@ def _skirts():
     wherever the floor waists in.
     """
     parts = []
-    x0, x1 = F["x0"] + 120.0, F["x1"] - 60.0
+    # from the front skirt to the rear one, which they meet at the corners:
+    # a plenum is only as sealed as its worst corner
+    x0, x1 = SEAL_FRONT_X - 6.0, SEAL_REAR_X + 6.0
     # as finely stationed as the tunnels beside them, and clear of the
     # tunnel's outer wall rather than 1 mm off it between stations
     n = 48

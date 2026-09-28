@@ -117,6 +117,22 @@ EXPECTED = [
     ("floor_fence_", "floor_surface"),
     # the edge wing hangs off the floor's outer lip, bonded along it
     ("floor_edge_wings", "floor_surface"),
+    # the plenum's ends: each bulkhead is bonded into the tunnel roof (at the
+    # front, under the rolled lip),
+    # its skirt slides in the carrier in its foot, and the skirt runs under
+    # the tunnel walls into the plank inboard and the side skirt outboard --
+    # the corners of a sealed floor are where it leaks, so they overlap
+    ("floor_bulkhead_", "tunnel_"),
+    ("floor_bulkhead_front", "floor_inlet_lip"),
+    ("floor_bulkhead_front", "floor_skirt_front"),
+    ("floor_bulkhead_rear", "floor_skirt_rear"),
+    ("floor_skirt_", "floor_skirts"), ("floor_plank", "floor_skirt_"),
+    ("floor_skirt_", "tunnel_"),
+    # and both are let into the floor panel where it wraps the tunnel's
+    # walls: the channel is cut from the panel on a loft of straight
+    # chords, so near the waisted rear the panel stands a few mm inside
+    # the bore the seals fill
+    ("floor_skirt_", "floor_surface"), ("floor_bulkhead_", "floor_surface"),
 
     # power unit and cooling: hoses clamp to what they feed
     ("rad_hoses_", "engine"),
@@ -239,9 +255,6 @@ EXPECTED = [
     # service hardware roots into whatever carries the load
     ("jack_points", "gearbox"), ("jack_points", "nose_cape"),
     ("jack_points", "nose_pylons"), ("jack_points", "front_wing_main"),
-
-    # the fan is one machine
-    ("fan_rotor_", "fan_motors"),
 
     # the loom plugs into the boxes it feeds
     ("wiring_loom", "gearbox"),

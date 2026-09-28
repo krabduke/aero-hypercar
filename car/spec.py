@@ -20,8 +20,11 @@ the rulebook and there are four places to take time, in order of value:
    electrically driven fans extract air from sealed underfloor plenums and make
    downforce that barely varies with speed. This is the single biggest win and
    it is why the car is shaped around it.
-2. GROUND EFFECT WITHOUT A RULEBOOK. Full-length venturi tunnels with a steep
-   diffuser, sealed by skirts that the fans keep loaded.
+2. A SEALED FLOOR. Skirts all round -- down both edges, across the front and
+   across the back -- so each side of the floor is a plenum the fans hold at
+   a set suction, which no rulebook since 1983 has allowed. (It was an open
+   venturi with a fan in each tunnel. The CFD showed the ram air swamping
+   the fans; see PLENUM.)
 3. ACTIVE AERO. Front and rear elements trim continuously, so the car is not
    forced to compromise between a low-drag straight and a high-downforce corner.
 4. MASS AND POWER. 700 kg against F1's 798 kg minimum, and the RX-8V hybrid V8
@@ -84,27 +87,30 @@ F1 = {
 # What actually sets the optimum is load sensitivity: past about ClA 4.5 the
 # extra vertical load buys so little extra grip that the drag to make it is a
 # straight loss. The optimum holds at 4.13 for every driver limit from 6 g up.
-# Measured, not targets. These were written in as targets and never
-# computed; the aero study ran the car through OpenFOAM (model-gallery/aero).
-# Fans stopped, the sealed floor lifts: the whole car made 0.88 m2 of LIFT.
-# Fans running -- after their intakes were fixed (they opened onto the track)
-# and the wings retrimmed for balance (32 % front was far too far aft) --
-# the finished car was run at 180 and at 250 km/h, and made 771 and 732 kg
-# of downforce: very nearly constant, which is the fan car's whole idea.
-# Split between the two speeds, the part that grows with speed squared is
-# a slight LIFT, CL.A -0.26 -- at speed the floor's ram-air lift outweighs
-# the wings -- and the fans hold a constant 811 kg. The drag splits the same
-# way: CD.A 1.32, less 534 N of thrust from the fans' jets.
+# Measured, not targets. They were written in as targets and never
+# computed, and the aero study (OpenFOAM, model-gallery/aero) found the
+# first car's open floor lifting with its fans off and swamped with them
+# on: 771 kg at 180 km/h, 732 at 250, less than an F1 car's above 195.
+# Sealed all round, held at 7 kPa, and with the front wing enlarged twice
+# for the balance, it is the car below.
 AERO = {
-    "cla_wings": 1.45,         # both wings, fans running, as retrimmed
-    "cla_floor": -1.71,        # the floor and everything else, the part that scales with v^2
-    "cda": 1.32,
+    # Measured: the aero study's OpenFOAM runs of the sealed-floor car at
+    # 180, 250 and 340 km/h (aero-study/results/vx1_seal2_*), 2291, 2481
+    # and 2789 kg. Split between the speeds: the plenum holds a constant
+    # 2100 kg (FAN) and the rest grows with speed squared, CL.A 1.22 --
+    # the wings' 1.93 less 0.71 of lift from the bodywork above the floor
+    # (the sidepod and cockpit tops, and the wheels).
+    "cla_wings": 1.93,
+    "cla_floor": -0.71,
+    "cda": 1.77,
     "frontal_area": 1.52,      # m^2, already folded into the coefficients
-    # fraction of downforce on the front axle at 180 km/h; it drifts aft to
-    # 36 % by 250, where the wings' share falls away
-    "aero_balance": 0.414,
-    # the rear wing is flat now and makes 0.36 m2 of the total, 0.19 of the
-    # drag: DRS sheds most of it (an estimate, not a run)
+    # fraction of the load on the front axle at 180 km/h, measured
+    "aero_balance": 0.411,
+    # at 340 km/h: 39.7 % measured with the rear flap at its full setting;
+    # the active flap sheds 30 kg of rear-wing load there (a degree and a
+    # half, estimated from the wing's measured load against incidence, not
+    # run), which puts it at 40.4 %
+    "aero_balance_hi": 0.404,
     "drs_cla_drop": 0.25,
     "drs_cda_drop": 0.09,
     "ref_kph": 180.0,          # the speed the balance and totals are quoted at
@@ -123,15 +129,18 @@ FAN = {
     "y": 446.0,
     "z": 452.0,
     "blades": 11,
-    "rpm": 7200.0,             # full speed; the controller runs it slower
-    # 8 m3/s at 1.2 kPa of suction plus the jet's own head is 25 kW of air;
-    # 38 kW at the shaft is that at 0.65 efficiency. It was 62 for a fan
-    # sized for four times the leakage the skirts let in.
-    "power_kw": 38.0,          # drawn from the hybrid system, both fans
-    # near-constant, this is the point of the car. It was 650, a target;
-    # the CFD at two speeds gives 811 kg (see AERO)
-    "downforce_kg": 811.0,
-    "jet_thrust_n": 534.0,     # the two fans' jets, pushing (CFD, see AERO)
+    "rpm": 8500.0,             # full speed; the controller runs it slower
+    # 1.62 m3/s at 6.9 kPa a fan: the plenum's 5.5 held, the intake's loss
+    # and the jet's head. That is 11 kW of air, 36 kW at the shafts of both
+    # at 0.65 -- and at the running leak (check_floor) a third of it. It was
+    # rated 38 kW for 4 m3/s at 1.2 kPa, a duty the open floor made
+    # impossible: the CFD needed -31 kPa at the fan's face to draw it.
+    "power_kw": 42.0,          # drawn from the hybrid system, both fans
+    # the plenums' suction times their plan area, 1906 kg, held at every
+    # speed; the CFD's measure of the whole floor with it is in AERO
+    "downforce_kg": 2100.0,
+    # the jets carry only the leak, a few tens of newtons: nothing
+    "jet_thrust_n": 0.0,
     "duct_r": 170.0,
     # blade geometry. A fan blade is twisted: to pull a uniform axial velocity
     # the blade angle has to fall with radius, beta = atan(Va / (omega r)).
@@ -140,11 +149,9 @@ FAN = {
     "blade_tip_chord": 46.0,
     "blade_thickness": 0.10,
     "blade_camber": 0.045,
-    "blade_beta_root": 52.0,     # deg from the disc plane
-    "blade_beta_tip": 24.0,
     "blade_rake": 16.0,          # deg of sweep, for noise
     "stator_vanes": 7,           # straighten the swirl before the exit
-    "axial_velocity": 50.0,      # m/s through the disc, sets the twist
+    "axial_velocity": 20.0,      # m/s through the disc at design flow, sets the twist
 }
 
 TYRE_MU = 1.80                 # bespoke slick at the reference load
@@ -356,8 +363,10 @@ FLOOR = {
 FRONT_WING = {
     # far enough forward that the endplate's trailing edge clears the front
     # tyre; at x = 150 the whole outboard stack was inside the wheel
-    "x": 60.0, "z": 112.0,
-    "span": 1780.0, "chord": 508.0,
+    # 30 mm further forward than it was, for the larger elements: the
+    # endplate's trailing edge has to stay clear of the front tyre
+    "x": 30.0, "z": 112.0,
+    "span": 1780.0, "chord": 569.0,
     "elements": 4, "gap": 16.0,
     # 280 mm, not 500. An endplate only has to enclose the flap stack, which
     # tops out at 367 mm from a datum of 16; taller than that it stops being
@@ -366,9 +375,13 @@ FRONT_WING = {
     # 418, though, not 366: with the tip rises below, the top flap reaches
     # z 428, which is 412 above the datum. At 366 the endplate stopped 46 mm
     # under the element it is supposed to enclose.
-    "endplate_h": 436.0, "endplate_t": 9.0,
+    "endplate_h": 488.0, "endplate_t": 9.0,
     "aoa_root": 6.0, "aoa_tip": 14.0,
     "neutral_half_w": 250.0,   # regulated flat centre section
+    # degrees taken off each element's incidence at its tip, blended in over
+    # the outer 30 % of the span; negative is wash-IN. -6 is the wing the
+    # aero study ran (it was tied to the rear wing's incidence, see wings.py)
+    "tip_washout": -6.0,
     "arch": 44.0,              # how much the mainplane arches over the nose
     "stack": [
         # dz raised from 34/76/124. A cascade only works if the elements are
@@ -389,12 +402,16 @@ FRONT_WING = {
         # and the rear wing from 17 to 4 degrees, made 37.7 %. Step two:
         # every element 8 % larger in chord and spacing, 2 degrees more on
         # each, and the rear wing flat.
-        (   0.0,   0.0, 356.0, 270.0, 1.000,   8.0,  11.0,   46.0),
-        ( 104.0,  69.0, 205.0, 181.0, 1.000,  14.0,  22.0,   72.0),
-        ( 201.0, 114.0, 164.0, 149.0, 1.000,  21.0,  31.0,   96.0),
-        ( 283.0, 181.0, 127.0, 119.0, 1.000,  28.0,  39.0, 116.0),
+        # Step three, for the sealed floor (the aero study, 2026-09-28):
+        # at 340 km/h only 33 % of the load was on the front axle, the
+        # body's lift sitting ahead of the rear wing's load. Every element
+        # 12 % larger again and 3 degrees more.
+        (   0.0,    0.0, 398.7, 302.4, 1.000,  11.0,  14.0,   51.5),
+        ( 116.5,   77.3, 229.6, 202.7, 1.000,  17.0,  25.0,   80.6),
+        ( 225.1,  134.0, 183.7, 166.9, 1.000,  24.0,  34.0,  107.5),
+        ( 317.0,  211.0, 142.2, 133.3, 1.000,  31.0,  42.0,  129.9),
     ],
-    "endplate_x0": -60.0, "endplate_x1": 475.0,
+    "endplate_x0": -60.0, "endplate_x1": 500.0,
     # No cascades. They were floating 130 mm above the top flap attached to
     # nothing, which read as debris rather than aerodynamics -- and they have
     # been illegal in Formula 1 since 2019 for exactly the reason they looked
@@ -415,7 +432,12 @@ REAR_WING = {
     "span": 1420.0, "chord": 360.0,
     "elements": 2, "gap": 22.0, "overlap": 8.0,
     "endplate_h": 360.0, "endplate_t": 10.0,
-    "aoa": 0.0, "drs_aoa": -6.0,     # 17 -> 0 for the balance (see FRONT_WING)
+    # Back to 17 degrees. It went to 4 and then 0 to move the balance
+    # forward when the fans pulled at the back of an open floor; the floor
+    # is a sealed plenum now, its suction even over an area centred 40 %
+    # of the way back from the front axle, and the car needs this wing's
+    # load at 300 km/h to out-grip F1 there.
+    "aoa": 17.0, "drs_aoa": 2.0,
     "pylon_t": 26.0,
 }
 
@@ -993,14 +1015,19 @@ def _mu(load_kg, static_kg, mu0, k):
     return mu0 * (load_kg / static_kg) ** (-k)
 
 
-def lateral_g(kph):
-    load = MASS_KG + downforce_kg(kph)
-    return _mu(load, MASS_KG, TYRE_MU, TYRE_LOAD_SENS) * load / MASS_KG
+def lateral_g(kph, mu=None, k=TYRE_LOAD_SENS, seal=1.0):
+    """Lateral grip in g at `kph`, capped at the driver's limit. `seal` is
+    the share of the plenum's suction held (the kerbs lift the skirts)."""
+    df = aero_downforce_kg(kph) + FAN["downforce_kg"] * seal
+    load = MASS_KG + df
+    g = _mu(load, MASS_KG, TYRE_MU if mu is None else mu, k) * load / MASS_KG
+    return min(g, DRIVER_G_LIMIT)
 
 
-def f1_lateral_g(kph):
+def f1_lateral_g(kph, k=TYRE_LOAD_SENS):
     load = F1["mass"] + f1_downforce_kg(kph)
-    return _mu(load, F1["mass"], F1["mu"], TYRE_LOAD_SENS) * load / F1["mass"]
+    g = _mu(load, F1["mass"], F1["mu"], k) * load / F1["mass"]
+    return min(g, DRIVER_G_LIMIT)
 
 
 def _corner_speed(radius_m, mass, mu0, cla_v, fan_kg, k=TYRE_LOAD_SENS,
@@ -1083,17 +1110,44 @@ def top_speed_kph(power_kw=935.0):
 #
 # The exit that actually clears everything sits behind the beam wing, below
 # the mainplane, and inboard of the endplates.
-# How the fans are run. Below `full_kph` they are flat out -- that is where
-# a fan earns its place, where a wing has nothing. Above it the controller
-# eases them back, linearly in suction, to `min_frac` by `taper_kph`: by then
-# the tunnels and wings are making most of the load and the car is at the
-# driver's g limit in the fast corners anyway, and a fan's power goes as the
-# cube of its speed, so the suction it keeps costs a fraction of the power.
+# How the fans are run: at every speed, holding the plenums at their set
+# suction. They used to be eased back above 180 km/h to save power, and a
+# fan car that sheds its fan where the corners are fastest is exactly the car
+# an F1 car out-grips there. On a sealed floor the power is small (PLENUM),
+# so there is nothing to save.
 # `kerb_seal_loss` is the band of suction lost where the car rides the kerbs
 # on corner entry and exit and the skirts lift; the lap is run at both ends.
 FAN_CONTROL = {
-    "full_kph": 180.0, "taper_kph": 280.0, "min_frac": 0.35,
     "kerb_seal_loss": (0.0, 0.30), "kerb_frac": 0.15,
+}
+
+# The sealed floor. Each side, plank to skirt and front skirt to rear, is a
+# plenum; the fans hold it at `suction_pa` below the air outside, so its
+# downforce is that times its plan area whatever the car's speed, and they
+# move only the air that leaks in under the skirts. tools/check_floor.py
+# works the leak and the fan's duty from these.
+#
+# Why: the aero study (OpenFOAM, model-gallery/aero) ran the car with its
+# floor open at the front, a venturi tunnel each side with a fan in its
+# roof. At 180 km/h the air the car drove into the tunnels swamped the
+# fans; the strakes, 10 mm off the road, split each tunnel into five
+# channels and the fans drew on one; with the fans off the floor lifted.
+# The 811 kg the fans appeared to make was 4 m3/s forced through an intake
+# choked to -31 kPa: 380 kW of fan work from 38.
+#
+# 5.5 kPa is what the McMurtry Speirling's fans hold, near enough (2000 kg
+# from a floor of about 3 m2), and it is what it takes -- with the rear wing
+# back at 17 degrees -- to out-grip an F1 car at every speed to 350 km/h at
+# both ends of the tyre band, and on the kerbs with 30 % of it gone to
+# 330 (verify.py).
+PLENUM = {
+    "suction_pa": 7000.0,
+    "fan_rise_pa": 8400.0,     # held + intake + jet head, at design flow
+    "skirt_gap": 1.5,          # mm, a worn skirt's clearance to the road
+    "skirt_cd": 0.6,           # discharge coefficient of that slot
+    "mouth_m2": 0.026,         # each intake's mouth in the tunnel roof
+    "intake_k": 0.5,           # its loss, in dynamic heads: entry and bend
+    "fan_eta": 0.65,
 }
 
 FAN_EXHAUST = {

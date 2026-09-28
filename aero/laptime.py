@@ -67,9 +67,10 @@ class Car:
     def fan_frac(self, v):
         """The share of full fan suction the controller runs at speed v:
         flat out up to full_kph, eased back linearly to min_frac by
-        taper_kph. Without a schedule the fan is flat out everywhere."""
+        taper_kph. Without a taper the fan holds its suction everywhere,
+        which is what the sealed floor's controller does."""
         c = self.fan_control
-        if not c:
+        if not c or "full_kph" not in c:
             return 1.0
         kph = v * 3.6
         if kph <= c["full_kph"]:

@@ -40,7 +40,13 @@ def _front_station(k, y):
     load = _smooth(u / 0.20)
     washout = _smooth((abs(y) / half - 0.70) / 0.30)
     incidence = max(aoa_root, aoa_tip)
-    reduction = min(incidence, RW["aoa"] - BW["aoa"] + FW["aoa_root"])
+    # The tips' twist is the front wing's own. It was
+    # min(incidence, RW["aoa"] - BW["aoa"] + FW["aoa_root"]) -- the front
+    # wing's tips set by the REAR wing's incidence -- so putting the rear
+    # wing back to 17 degrees quietly took 17 off the front wing's tips and
+    # ran a dive plane into the mainplane. It is fixed at what the aero
+    # study measured.
+    reduction = min(incidence, FW["tip_washout"])
     return (FW["x"] + dx,
             FW["z"] + dz + FW["arch"] * (1.0 - blend) + rise * blend,
             c_root + (c_tip - c_root) * blend,
@@ -438,12 +444,13 @@ def _rear():
             # 40 mm apart from te_x - 300, not 52 from - 250. The plate's
             # upper trailing edge falls away aft of x 4880 and the last two
             # of the five were marching off the end of it into open air.
-            # under the elements, stepping up aft: with the wing trimmed flat
-            # (the balance, spec.FRONT_WING) the elements' tips run through
-            # the band the louvres stood in over them
+            # Over the elements, stepping up aft, with the wing at its 17
+            # degrees. (Trimmed flat for a while, the elements' tips ran
+            # through this band and the louvres went under them; back at 17
+            # the flap's tip came down through that one.)
             xl = te_x - 300.0 + k * 40.0
             lv.append(shapes.rounded_box(xl, y + sgn * bow(xl),
-                               te_z - 175.0 + k * 12.0, 40.0, 14.0, 56.0))
+                               te_z - 60.0 + k * 20.0, 40.0, 14.0, 56.0))
     # louvres are individually cut slots, not one lump
     half = len(lv) // 2
     for i, m in enumerate(lv):
